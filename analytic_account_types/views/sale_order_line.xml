@@ -1,0 +1,22 @@
+<odoo>
+    <data>
+        <!-- Inherit Form View to Modify it -->
+        <record id="view_inherit_view_order_form" model="ir.ui.view">
+            <field name="name">view_inherit_view_order_form</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                
+                <!-- position: after|before|replace|attributes|inside -->
+                <xpath expr="//notebook/page/field/tree/field[@name='name']" position="after">
+                    <field name="cost_center_id" optional="show"/>
+                    <field name="project_site_id" optional="show"/>
+                    <field name="type_id" optional="show"/>
+                    <field name="location_id" optional="show"/>
+                    <button name="open_account_analytic_types" type="object" string="Set Cost Center" />
+                </xpath>
+                
+            </field>
+        </record>
+    </data>
+</odoo>
