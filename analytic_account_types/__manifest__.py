@@ -26,11 +26,12 @@
     'data': [
         'security/ir.model.access.csv',
         'views/views.xml',
-        'views/templates.xml',
         'views/sale_order_line.xml',
         'views/purchase_order_line.xml',
         'views/account_move_line.xml',
-        'views/account_report.xml',
+        # 'views/account_report.xml',
+        'views/analytic_item.xml',
+        'views/assets.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

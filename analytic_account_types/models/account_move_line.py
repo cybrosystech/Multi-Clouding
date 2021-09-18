@@ -8,7 +8,7 @@ class AccountMoveLine(models.Model):
     project_site_id = fields.Many2one(comodel_name="account.analytic.account", string="Project/Site",domain=[('analytic_account_type','=','project_site')], required=False, )
     type_id = fields.Many2one(comodel_name="account.analytic.account", string="Type",domain=[('analytic_account_type','=','type')], required=False, )
     location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location",domain=[('analytic_account_type','=','location')], required=False, )
-
+    analytic_account_id = fields.Many2one(string='Cost Center')
     def open_account_analytic_types(self):
         return {
             'name': 'Analytic Account Types',

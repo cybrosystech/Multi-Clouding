@@ -1,444 +1,126 @@
 odoo.define('analytic_account_types.account_report', function (require) {
 'use strict';
-
 var core = require('web.core');
-var Context = require('web.Context');
-var AbstractAction = require('web.AbstractAction');
-var Dialog = require('web.Dialog');
-var datepicker = require('web.datepicker');
-var session = require('web.session');
-var field_utils = require('web.field_utils');
 var RelationalFields = require('web.relational_fields');
 var StandaloneFieldManagerMixin = require('web.StandaloneFieldManagerMixin');
-var WarningDialog = require('web.CrashManager').WarningDialog;
 var Widget = require('web.Widget');
-
+var accountReportsWidget = require('account_reports.account_report');
 var QWeb = core.qweb;
 var _t = core._t;
+var datepicker = require('web.datepicker');
+var BasicModel = require('web.BasicModel');
 
-var M2MFilters = Widget.extend(StandaloneFieldManagerMixin, {
-    /**
-     * @constructor
-     * @param {Object} fields
-     */
-    init: function (parent, fields) {
-        this._super.apply(this, arguments);
-        StandaloneFieldManagerMixin.init.call(this);
-        this.fields = fields;
-        this.widgets = {};
-    },
-    /**
-     * @override
-     */
-    willStart: function () {
-        var self = this;
-        var defs = [this._super.apply(this, arguments)];
-        _.each(this.fields, function (field, fieldName) {
-            defs.push(self._makeM2MWidget(field, fieldName));
-        });
-        return Promise.all(defs);
-    },
-    /**
-     * @override
-     */
-    start: function () {
-        var self = this;
-        var $content = $(QWeb.render("m2mWidgetTable", {fields: this.fields}));
-        self.$el.append($content);
-        _.each(this.fields, function (field, fieldName) {
-            self.widgets[fieldName].appendTo($content.find('#'+fieldName+'_field'));
-        });
-        return this._super.apply(this, arguments);
-    },
+BasicModel.include({
+    _getDomain: function (element, options) {
+        if (options && options.fieldName == 'analytic_accounts') {
+            return [['analytic_account_type','=','cost_center']]
+        }
+        else if(options && options.fieldName == 'project_site_ids'){
+            return [['analytic_account_type','=','project_site']]
 
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
+        }
+        else if(options && options.fieldName == 'location_ids'){
+            return [['analytic_account_type','=','location']]
 
-    /**
-     * This method will be called whenever a field value has changed and has
-     * been confirmed by the model.
-     *
-     * @private
-     * @override
-     * @returns {Promise}
-     */
-    _confirmChange: function () {
-        var self = this;
-        var result = StandaloneFieldManagerMixin._confirmChange.apply(this, arguments);
-        var data = {};
-        _.each(this.fields, function (filter, fieldName) {
-            data[fieldName] = self.widgets[fieldName].value.res_ids;
-        });
-        this.trigger_up('value_changed', data);
-        return result;
-    },
-    /**
-     * This method will create a record and initialize M2M widget.
-     *
-     * @private
-     * @param {Object} fieldInfo
-     * @param {string} fieldName
-     * @returns {Promise}
-     */
-    _makeM2MWidget: function (fieldInfo, fieldName) {
-        var self = this;
-        var options = {};
-        options[fieldName] = {
-            options: {
-                no_create_edit: true,
-                no_create: true,
-            }
-        };
-        return this.model.makeRecord(fieldInfo.modelName, [{
-            fields: [{
-                name: 'id',
-                type: 'integer',
-            }, {
-                name: 'display_name',
-                type: 'char',
-            }],
-            name: fieldName,
-            relation: fieldInfo.modelName,
-            type: 'many2many',
-            value: fieldInfo.value,
-        }], options).then(function (recordID) {
-            self.widgets[fieldName] = new RelationalFields.FieldMany2ManyTags(self,
-                fieldName,
-                self.model.get(recordID),
-                {mode: 'edit',}
-            );
-            self._registerWidget(recordID, fieldName, self.widgets[fieldName]);
-        });
+        }
+        else if(options && options.fieldName == 'type_ids'){
+            return [['analytic_account_type','=','type']]
+
+        }
+        else
+        {
+        return this._super(element, options);
+
+        }
+
+
     },
 });
-
-var accountReportsWidget = AbstractAction.extend({
-    hasControlPanel: true,
-
-    events: {
-        'input .o_account_reports_filter_input': 'filter_accounts',
-        'click .o_account_reports_summary': 'edit_summary',
-        'click .js_account_report_save_summary': 'save_summary',
-        'click .o_account_reports_footnote_icons': 'delete_footnote',
-        'click .js_account_reports_add_footnote': 'add_edit_footnote',
-        'click .js_account_report_foldable': 'fold_unfold',
-        'click [action]': 'trigger_action',
-        'click .o_account_reports_load_more span': 'load_more',
-        'click .o_account_reports_table thead th': 'selected_column',
-        'click .o_change_expected_date': '_onChangeExpectedDate',
-        'click .o_search_options .dropdown-menu': '_onClickDropDownMenu',
-    },
-
-    custom_events: {
-        'value_changed': function(ev) {
-             var self = this;
-             self.report_options.partner_ids = ev.data.partner_ids;
-             self.report_options.partner_categories = ev.data.partner_categories;
-             self.report_options.analytic_accounts = ev.data.analytic_accounts;
-//             Analytic Account Project
-             self.report_options.analytic_accounts_project = ev.data.analytic_accounts_project;
-             self.report_options.analytic_tags = ev.data.analytic_tags;
-             return self.reload().then(function () {
-                 self.$searchview_buttons.find('.account_partner_filter').click();
-                 self.$searchview_buttons.find('.account_analytic_filter').click();
-             });
-         },
-    },
-
-    init: function(parent, action) {
-        this.actionManager = parent;
-        this.report_model = action.context.model;
-        if (this.report_model === undefined) {
-            this.report_model = 'account.report';
-        }
-        this.financial_id = false;
-        if (action.context.id) {
-            this.financial_id = action.context.id;
-        }
-        this.odoo_context = action.context;
-        this.report_options = action.params && action.params.options;
-        this.ignore_session = action.params && action.params.ignore_session;
-        if ((this.ignore_session === 'read' || this.ignore_session === 'both') !== true) {
-            var persist_key = 'report:'+this.report_model+':'+this.financial_id+':'+session.company_id;
-            this.report_options = JSON.parse(sessionStorage.getItem(persist_key)) || this.report_options;
-        }
-        return this._super.apply(this, arguments);
-    },
-    willStart: async function () {
-        const reportsInfoPromise = this._rpc({
-            model: this.report_model,
-            method: 'get_report_informations',
-            args: [this.financial_id, this.report_options],
-            context: this.odoo_context,
-        }).then(res => this.parse_reports_informations(res));
-        const parentPromise = this._super(...arguments);
-        return Promise.all([reportsInfoPromise, parentPromise]);
-    },
-    start: async function() {
-        this.renderButtons();
-        this.controlPanelProps.cp_content = {
-            $buttons: this.$buttons,
-            $searchview_buttons: this.$searchview_buttons,
-            $pager: this.$pager,
-            $searchview: this.$searchview,
-        };
-        await this._super(...arguments);
-        this.render();
-
-        // A default value has been set for the filter accounts.
-        // Apply the filter to take this value into account.
-        if("default_filter_accounts" in (this.odoo_context || {}))
-            this.$('.o_account_reports_filter_input').val(this.odoo_context.default_filter_accounts).trigger("input");
-    },
-    parse_reports_informations: function(values) {
-        this.report_options = values.options;
-        this.odoo_context = values.context;
-        this.report_manager_id = values.report_manager_id;
-        this.footnotes = values.footnotes;
-        this.buttons = values.buttons;
-
-        this.main_html = values.main_html;
-        this.$searchview_buttons = $(values.searchview_html);
-        this.persist_options();
-    },
-    persist_options: function() {
-        if ((this.ignore_session === 'write' || this.ignore_session === 'both') !== true) {
-            var persist_key = 'report:'+this.report_model+':'+this.financial_id+':'+session.company_id;
-            sessionStorage.setItem(persist_key, JSON.stringify(this.report_options));
-        }
-    },
-    // We need this method to rerender the control panel when going back in the breadcrumb
-    do_show: function() {
-        this._super.apply(this, arguments);
-        this.update_cp();
-    },
-    // Updates the control panel and render the elements that have yet to be rendered
-    update_cp: function() {
-        if (!this.$buttons) {
-            this.renderButtons();
-        }
-        var status = {
-            cp_content: {
-                $buttons: this.$buttons,
-                $searchview_buttons: this.$searchview_buttons,
-                $pager: this.$pager,
-                $searchview: this.$searchview,
-            },
-        };
-        return this.updateControlPanel(status);
-    },
-    reload: function() {
-        var self = this;
-        return this._rpc({
-                model: this.report_model,
-                method: 'get_report_informations',
-                args: [self.financial_id, self.report_options],
-                context: self.odoo_context,
-            })
-            .then(function(result){
-                self.parse_reports_informations(result);
-                self.render();
-                return self.update_cp();
+var M2MFilters = Widget.extend(StandaloneFieldManagerMixin, {
+        init: function (parent, fields) {
+            this._super.apply(this, arguments);
+            StandaloneFieldManagerMixin.init.call(this);
+            this.fields = fields;
+            this.widgets = {};
+        },
+        willStart: function () {
+            var self = this;
+            var defs = [this._super.apply(this, arguments)];
+            _.each(this.fields, function (field, fieldName) {
+                defs.push(self._makeM2MWidget(field, fieldName));
             });
-    },
-    render: function() {
-        var self = this;
-        this.render_template();
-        this.render_footnotes();
-        this.render_searchview_buttons();
-        this.$('.js_account_report_foldable').each(function() {
-            if(!$(this).data('unfolded')) {
-                self.fold($(this));
-            }
-        });
-    },
-    render_template: function() {
-        this.$('.o_content').html(this.main_html);
-        this.$('.o_content').find('.o_account_reports_summary_edit').hide();
-        this.$('[data-toggle="tooltip"]').tooltip();
-        this._add_line_classes();
-    },
-    _init_line_popups: function(){
-        /*
-            Configure the popover used in the financial reports to display some details about the results given by
-            the report lines like:
-            - the code.
-            - the formula with values.
-            - the domain.
-            - A button to show the account.move.lines.
-        */
-
-        var self = this;
-        _.each(this.$('.o_account_report_popup'), function(popup){
-            $(popup).popover({
-                html: true,
-                template: "<div class='popover' role='tooltip' style='max-width: 100%; margin-right:80px;'><div class='popover-body'></div></div>",
-                placement: 'left',
-                trigger: 'focus',
-                container: 'body',
-                delay: {show: 0, hide: 100},
-                content: function(){
-                    var data = JSON.parse(popup.getAttribute('data'));
-
-                    // Render the content.
-                    var $content = $(QWeb.render(popup.getAttribute('template'), data));
-
-                    // Bind the 'view journal items' button with the 'action_view_journal_entries' python method.
-                    $content.find('.js_view_entries').on('click', function(event){
-                        self._rpc({
-                            model: 'account.financial.html.report.line',
-                            method: 'action_view_journal_entries',
-                            args: [$(event.target).data('id'), self.report_options],
-                            context: self.odoo_context,
-                        })
-                        .then(function(result){
-                            return self.do_action(result);
-                        })
-                    });
-
-                    var formula_element = $content.find('.js_popup_formula');
-
-                    // Highlight involved codes during formula evaluation.
-                    _.each($content.find('.js_popup_formula'), function(element){
-                        $(element).on("mouseenter", function(event){
-                            $(element).addClass('o_financial_report_hover_popup');
-                            self.$("[code='" + element.textContent + "']").addClass('o_financial_report_hover_popup');
-                        });
-                        $(element).on("mouseleave", function(event){
-                            $(element).removeClass('o_financial_report_hover_popup');
-                            self.$("[code='" + element.textContent + "']").removeClass('o_financial_report_hover_popup');
-                        });
-                    });
-
-                    // Redirect to another report.
-                    _.each($content.find('.js_popup_open_report'), function(element){
-                        $(element).on("click", function(event){
-                            var $target = $(event.target);
-                            self._rpc({
-                                model: 'account.financial.html.report',
-                                method: 'action_redirect_to_report',
-                                args: [$target.data('id'), self.report_options, $target.data('target')],
-                                context: self.odoo_context,
-                            })
-                            .then(function(result){
-                                return self.do_action(result);
-                            })
-                        });
-                    });
-
-                    return $content;
+            return Promise.all(defs);
+        },
+        start: function () {
+            var self = this;
+            var $content = $(QWeb.render("m2mWidgetTable", {fields: this.fields}));
+            self.$el.append($content);
+            _.each(this.fields, function (field, fieldName) {
+                self.widgets[fieldName].appendTo($content.find('#'+fieldName+'_field'));
+            });
+            return this._super.apply(this, arguments);
+        },
+        _confirmChange: function () {
+            var self = this;
+            var result = StandaloneFieldManagerMixin._confirmChange.apply(this, arguments);
+            var data = {};
+            _.each(this.fields, function (filter, fieldName) {
+                data[fieldName] = self.widgets[fieldName].value.res_ids;
+            });
+            this.trigger_up('value_changed', data);
+            return result;
+        },
+        _makeM2MWidget: function (fieldInfo, fieldName) {
+            var self = this;
+            var options = {};
+            options[fieldName] = {
+                options: {
+                    no_create_edit: true,
+                    no_create: true,
                 }
-            });
-
-            // Triggered when the popup is closed without mouseleave event.
-            $(popup).on("hidden.bs.popover", function(element){
-                self.$('.js_popup_formula').removeClass('o_financial_report_hover_popup');
-            });
-        });
-    },
-    _add_line_classes: function() {
-        /* Pure JS to improve performance in very cornered case (~200k lines)
-         * Jquery code:
-         *  this.$('.o_account_report_line').filter(function () {
-         *      return $(this).data('unfolded') === 'True';
-         *  }).parent().addClass('o_js_account_report_parent_row_unfolded');
-         */
-        var el = this.$el[0];
-        var report_lines = el.getElementsByClassName('o_account_report_line');
-        for (var l=0; l < report_lines.length; l++) {
-            var line = report_lines[l];
-            var unfolded = line.dataset.unfolded;
-            if (unfolded === 'True') {
-                line.parentNode.classList.add('o_js_account_report_parent_row_unfolded');
-            }
-        }
-        // This selector is not adaptable in pure JS
-        this.$('tr[data-parent-id]').addClass('o_js_account_report_inner_row');
-
-        this._init_line_popups();
-     },
-    filter_accounts: function(e) {
-        var self = this;
-        var query = e.target.value.trim().toLowerCase();
-        this.filterOn = false;
-        this.$('.o_account_searchable_line').each(function(index, el) {
-            var $accountReportLineFoldable = $(el);
-            var line_id = $accountReportLineFoldable.find('.o_account_report_line').data('id');
-            var $childs = self.$('tr[data-parent-id="'+line_id+'"]');
-            var lineText = $accountReportLineFoldable.find('.account_report_line_name')
-                // Only the direct text node, not text situated in other child nodes
-                .contents().get(0).nodeValue
-                .trim();
-
-            // The python does this too
-            var queryFound = lineText.split(' ').some(function (str) {
-                return str.toLowerCase().startsWith(query);
-            });
-
-            $accountReportLineFoldable.toggleClass('o_account_reports_filtered_lines', !queryFound);
-            $childs.toggleClass('o_account_reports_filtered_lines', !queryFound);
-
-            if (!queryFound) {
-                self.filterOn = true;
-            }
-        });
-        if (this.filterOn) {
-            this.$('.o_account_reports_level1.total').hide();
-        }
-        else {
-            this.$('.o_account_reports_level1.total').show();
-        }
-        this.report_options['filter_accounts'] = query;
-        this.render_footnotes();
-    },
-    selected_column: function(e) {
-        var self = this;
-        if (self.report_options.selected_column !== undefined) {
-            var col_number = Array.prototype.indexOf.call(e.currentTarget.parentElement.children, e.currentTarget) + 1; // we can't have negative 0 so lets start index at 1
-            if (self.report_options.selected_column && self.report_options.selected_column == col_number) {
-                self.report_options.selected_column = -col_number;
-            } else {
-                self.report_options.selected_column = col_number;
-            }
-            self.reload()
-        }
-    },
-    _onChangeExpectedDate: function (event) {
-        var self = this;
-        var targetID = parseInt($(event.target).attr('data-id'));
-        var parentID = parseInt($(event.target).attr('parent-id').split("-")[1]);
-        var $content = $(QWeb.render("paymentDateForm", {target_id: targetID}));
-        var paymentDatePicker = new datepicker.DateWidget(this);
-        paymentDatePicker.appendTo($content.find('div.o_account_reports_payment_date_picker'));
-        var save = function () {
-            return this._rpc({
-                model: 'res.partner',
-                method: 'change_expected_date',
-                args: [[parentID], {
-                    move_line_id: parseInt($content.find("#target_id").val()),
-                    expected_pay_date: paymentDatePicker.getValue(),
+            };
+            return this.model.makeRecord(fieldInfo.modelName, [{
+                fields: [{
+                    name: 'id',
+                    type: 'integer',
+                }, {
+                    name: 'display_name',
+                    type: 'char',
                 }],
-            }).then(function() {
-                self.reload();
+                name: fieldName,
+                relation: fieldInfo.modelName,
+                type: 'many2many',
+                value: fieldInfo.value,
+            }], options).then(function (recordID) {
+                self.widgets[fieldName] = new RelationalFields.FieldMany2ManyTags(self,
+                    fieldName,
+                    self.model.get(recordID),
+                    {mode: 'edit',}
+                );
+                self._registerWidget(recordID, fieldName, self.widgets[fieldName]);
             });
-        };
-        new Dialog(this, {
-            title: 'Odoo',
-            size: 'medium',
-            $content: $content,
-            buttons: [{
-                text: _t('Save'),
-                classes: 'btn-primary',
-                close: true,
-                click: save
-            },
-            {
-                text: _t('Cancel'),
-                close: true
-            }]
-        }).open();
-    },
+        },
+    });
+
+accountReportsWidget.include({
+
+        custom_events: _.extend({}, accountReportsWidget.prototype.custom_events, {
+
+            'value_changed': function(ev) {
+                var self = this;
+                self.report_options.project_site_ids = ev.data.project_site_ids;
+                self.report_options.type_ids = ev.data.type_ids;
+                self.report_options.location_ids = ev.data.location_ids;
+                self.report_options.partner_ids = ev.data.partner_ids;
+                self.report_options.partner_categories = ev.data.partner_categories;
+                self.report_options.analytic_accounts = ev.data.analytic_accounts;
+                self.report_options.analytic_tags = ev.data.analytic_tags;
+                return self.reload().then(function () {
+                    self.$searchview_buttons.find('.account_partner_filter').click();
+                    self.$searchview_buttons.find('.account_analytic_filter').click();
+                });
+             },
+        }),
     render_searchview_buttons: function() {
         var self = this;
         // bind searchview buttons/filter to the correct actions
@@ -637,20 +319,38 @@ var accountReportsWidget = AbstractAction.extend({
         if (this.report_options.analytic) {
             if (!this.M2MFilters) {
                 var fields = {};
+                console.log('ffffffffff',this.odoo_context)
                 if (this.report_options.analytic_accounts) {
                     fields['analytic_accounts'] = {
-                        label: _t('Accounts'),
+                        label: _t('Cost Center'),
                         modelName: 'account.analytic.account',
                         value: this.report_options.analytic_accounts.map(Number),
                     };
                 }
-                if (this.report_options.analytic_accounts) {
-                    fields['analytic_accounts_project'] = {
-                        label: _t('Accounts Project'),
-                        modelName: 'account.analytic.account',
-                        value: this.report_options.analytic_accounts_project.map(Number),
-                    };
-                }
+                if ('project_site_ids' in self.report_options) {
+                        fields['project_site_ids'] = {
+                            label: _t('Project Site'),
+                            modelName: 'account.analytic.account',
+                            value: self.report_options.project_site_ids.map(Number),
+
+                        };
+                    }
+                if ('type_ids' in self.report_options) {
+                        fields['type_ids'] = {
+                            label: _t('Type'),
+                            modelName: 'account.analytic.account',
+                            value: self.report_options.type_ids.map(Number),
+
+                        };
+                    }
+                if ('location_ids' in self.report_options) {
+                        fields['location_ids'] = {
+                            label: _t('Location'),
+                            modelName: 'account.analytic.account',
+                            value: self.report_options.type_ids.map(Number),
+
+                        };
+                    }
                 if (this.report_options.analytic_tags) {
                     fields['analytic_tags'] = {
                         label: _t('Tags'),
@@ -667,304 +367,8 @@ var accountReportsWidget = AbstractAction.extend({
             }
         }
     },
-    format_date: function(moment_date) {
-        var date_format = 'YYYY-MM-DD';
-        return moment_date.format(date_format);
-    },
-    renderButtons: function() {
-        var self = this;
-        this.$buttons = $(QWeb.render("accountReports.buttons", {buttons: this.buttons}));
-        // bind actions
-        _.each(this.$buttons.siblings('button'), function(el) {
-            $(el).click(function() {
-                self.$buttons.attr('disabled', true);
-                return self._rpc({
-                        model: self.report_model,
-                        method: $(el).attr('action'),
-                        args: [self.financial_id, self.report_options],
-                        context: self.odoo_context,
-                    })
-                    .then(function(result){
-                        var doActionProm = self.do_action(result);
-                        self.$buttons.attr('disabled', false);
-                        return doActionProm;
-                    })
-                    .guardedCatch(function() {
-                        self.$buttons.attr('disabled', false);
-                    });
-            });
-        });
-        return this.$buttons;
-    },
-    edit_summary: function(e) {
-        var $textarea = $(e.target).parents('.o_account_reports_body').find('textarea[name="summary"]');
-        var height = Math.max($(e.target).parents('.o_account_reports_body').find('.o_account_report_summary').height(), 100); // Compute the height that will be needed
-        // TODO master: remove replacing <br /> (this was kept for existing data)
-        var text = $textarea.val().replace(new RegExp('<br />', 'g'), '\n'); // Remove unnecessary spaces and line returns
-        $textarea.height(height); // Give it the right height
-        $textarea.val(text);
-        $(e.target).parents('.o_account_reports_body').find('.o_account_reports_summary_edit').show();
-        $(e.target).parents('.o_account_reports_body').find('.o_account_reports_summary').hide();
-        $(e.target).parents('.o_account_reports_body').find('textarea[name="summary"]').focus();
-    },
-    save_summary: function(e) {
-        var self = this;
-        var text = $(e.target).siblings().val().replace(/[ \t]+/g, ' ');
-        return this._rpc({
-                model: 'account.report.manager',
-                method: 'write',
-                args: [this.report_manager_id, {summary: text}],
-                context: this.odoo_context,
-            })
-            .then(function(result){
-                self.$el.find('.o_account_reports_summary_edit').hide();
-                self.$el.find('.o_account_reports_summary').show();
-                if (!text) {
-                    var $content = $("<input type='text' class='o_input' name='summary'/>");
-                    $content.attr('placeholder', _t('Add a note'));
-                } else {
-                    var $content = $('<span />').text(text).html(function (i, value) {
-                        return value.replace(/\n/g, '<br>');
-                    });
-                }
-                return $(e.target).parent().siblings('.o_account_reports_summary').find('> .o_account_report_summary').html($content);
-            });
-    },
-    render_footnotes: function() {
-        var self = this;
-        // First assign number based on visible lines
-        var $dom_footnotes = self.$el.find('.js_account_report_line_footnote:not(.folded)');
-        $dom_footnotes.html('');
-        var number = 1;
-        var footnote_to_render = [];
-        _.each($dom_footnotes, function(el) {
-            if ($(el).parents('.o_account_reports_filtered_lines').length > 0) {
-                return;
-            }
-            var line_id = $(el).data('id');
-            var footnote = _.filter(self.footnotes, function(footnote) {return ''+footnote.line === ''+line_id;});
-            if (footnote.length !== 0) {
-                $(el).html('<sup><b class="o_account_reports_footnote_sup"><a href="#footnote'+number+'">'+number+'</a></b></sup>');
-                footnote[0].number = number;
-                number += 1;
-                footnote_to_render.push(footnote[0]);
-            }
-        });
-        // Render footnote template
-        return this._rpc({
-                model: this.report_model,
-                method: 'get_html_footnotes',
-                args: [self.financial_id, footnote_to_render],
-                context: self.odoo_context,
-            })
-            .then(function(result){
-                return self.$el.find('.js_account_report_footnotes').html(result);
-            });
-    },
-    add_edit_footnote: function(e) {
-        // open dialog window with either empty content or the footnote text value
-        var self = this;
-        var line_id = $(e.target).data('id');
-        // check if we already have some footnote for this line
-        var existing_footnote = _.filter(self.footnotes, function(footnote) {
-            return ''+footnote.line === ''+line_id;
-        });
-        var text = '';
-        if (existing_footnote.length !== 0) {
-            text = existing_footnote[0].text;
-        }
-        var $content = $(QWeb.render('accountReports.footnote_dialog', {text: text, line: line_id}));
-        var save = function() {
-            var footnote_text = $('.js_account_reports_footnote_note').val().replace(/[ \t]+/g, ' ');
-            if (!footnote_text && existing_footnote.length === 0) {return;}
-            if (existing_footnote.length !== 0) {
-                if (!footnote_text) {
-                    return self.$el.find('.footnote[data-id="'+existing_footnote[0].id+'"] .o_account_reports_footnote_icons').click();
-                }
-                // replace text of existing footnote
-                return this._rpc({
-                        model: 'account.report.footnote',
-                        method: 'write',
-                        args: [existing_footnote[0].id, {text: footnote_text}],
-                        context: this.odoo_context,
-                    })
-                    .then(function(result){
-                        _.each(self.footnotes, function(footnote) {
-                            if (footnote.id === existing_footnote[0].id){
-                                footnote.text = footnote_text;
-                            }
-                        });
-                        return self.render_footnotes();
-                    });
-            }
-            else {
-                // new footnote
-                return this._rpc({
-                        model: 'account.report.footnote',
-                        method: 'create',
-                        args: [{line: line_id, text: footnote_text, manager_id: self.report_manager_id}],
-                        context: this.odoo_context,
-                    })
-                    .then(function(result){
-                        self.footnotes.push({id: result, line: line_id, text: footnote_text});
-                        return self.render_footnotes();
-                    });
-            }
-        };
-        new Dialog(this, {title: 'Annotate', size: 'medium', $content: $content, buttons: [{text: 'Save', classes: 'btn-primary', close: true, click: save}, {text: 'Cancel', close: true}]}).open();
-    },
-    delete_footnote: function(e) {
-        var self = this;
-        var footnote_id = $(e.target).parents('.footnote').data('id');
-        return this._rpc({
-                model: 'account.report.footnote',
-                method: 'unlink',
-                args: [footnote_id],
-                context: this.odoo_context,
-            })
-            .then(function(result){
-                // remove footnote from report_information
-                self.footnotes = _.filter(self.footnotes, function(element) {
-                    return element.id !== footnote_id;
-                });
-                return self.render_footnotes();
-            });
-    },
-    fold_unfold: function(e) {
-        var self = this;
-        if ($(e.target).hasClass('caret') || $(e.target).parents('.o_account_reports_footnote_sup').length > 0){return;}
-        e.stopPropagation();
-        e.preventDefault();
-        var line = $(e.target).parents('td');
-        if (line.length === 0) {line = $(e.target);}
-        var method = line[0].dataset.unfolded === 'True' ? this.fold(line) : this.unfold(line);
-        Promise.resolve(method).then(function() {
-            self.render_footnotes();
-            self.persist_options();
-        });
-    },
-    fold: function(line) {
-        var self = this;
-        var line_id = line.data('id');
-        line.find('.fa-caret-down').toggleClass('fa-caret-right fa-caret-down');
-        line.toggleClass('folded');
-        $(line).parent('tr').removeClass('o_js_account_report_parent_row_unfolded');
-        var $lines_to_hide = this.$el.find('tr[data-parent-id="'+line_id+'"]');
-        var index = self.report_options.unfolded_lines.indexOf(line_id);
-        if (index > -1) {
-            self.report_options.unfolded_lines.splice(index, 1);
-        }
-        if ($lines_to_hide.length > 0) {
-            line[0].dataset.unfolded = 'False';
-            $lines_to_hide.find('.js_account_report_line_footnote').addClass('folded');
-            $lines_to_hide.hide();
-            _.each($lines_to_hide, function(el){
-                var child = $(el).find('[data-id]:first');
-                if (child) {
-                    self.fold(child);
-                }
-            })
-        }
-        return false;
-    },
-    unfold: function(line) {
-        var self = this;
-        var line_id = line.data('id');
-        line.toggleClass('folded');
-        self.report_options.unfolded_lines.push(line_id);
-        var $lines_in_dom = this.$el.find('tr[data-parent-id="'+line_id+'"]');
-        if ($lines_in_dom.length > 0) {
-            $lines_in_dom.find('.js_account_report_line_footnote').removeClass('folded');
-            $lines_in_dom.show();
-            line.find('.fa-caret-right').toggleClass('fa-caret-right fa-caret-down');
-            line[0].dataset.unfolded = 'True';
-            this._add_line_classes();
-            return true;
-        }
-        else {
-            return this._rpc({
-                    model: this.report_model,
-                    method: 'get_html',
-                    args: [self.financial_id, self.report_options, line.data('id')],
-                    context: self.odoo_context,
-                })
-                .then(function(result){
-                    $(line).parent('tr').replaceWith(result);
-                    self._add_line_classes();
-                });
-        }
-    },
-    load_more: function (ev) {
-        var $line = $(ev.target).parents('td');
-        var id = $line.data('id');
-        var offset = $line.data('offset') || 0;
-        var progress = $line.data('progress') || 0;
-        var remaining = $line.data('remaining') || 0;
-        var options = _.extend({}, this.report_options, {lines_offset: offset, lines_progress: progress, lines_remaining: remaining});
-        var self = this;
-        this._rpc({
-                model: this.report_model,
-                method: 'get_html',
-                args: [this.financial_id, options, id],
-                context: this.odoo_context,
-            })
-            .then(function (result){
-                var $tr = $line.parents('.o_account_reports_load_more');
-                $tr.after(result);
-                $tr.remove();
-                self._add_line_classes();
-            });
-    },
-    unfold_all: function(bool) {
-        var self = this;
-        var lines = this.$el.find('.js_account_report_foldable');
-        self.report_options.unfolded_lines = [];
-        if (bool) {
-            _.each(lines, function(el) {
-                self.report_options.unfolded_lines.push($(el).data('id'));
-            });
-        }
-    },
-    trigger_action: function(e) {
-        e.stopPropagation();
-        var self = this;
-        var action = $(e.target).attr('action');
-        var id = $(e.target).parents('td').data('id');
-        var params = $(e.target).data();
-        var context = new Context(this.odoo_context, params.actionContext || {}, {active_id: id});
 
-        params = _.omit(params, 'actionContext');
-        if (action) {
-            return this._rpc({
-                    model: this.report_model,
-                    method: action,
-                    args: [this.financial_id, this.report_options, params],
-                    context: context.eval(),
-                })
-                .then(function(result){
-                    return self.do_action(result);
-                });
-        }
-    },
 
-    //-------------------------------------------------------------------------
-    // Handlers
-    //-------------------------------------------------------------------------
-
-    /**
-     * When clicking inside a dropdown to modify search options
-     * prevents the bootstrap dropdown to close on itself
-     *
-     * @private
-     * @param {$.Event} ev
-     */
-    _onClickDropDownMenu: function (ev) {
-        ev.stopPropagation();
-    },
-});
-
-core.action_registry.add('account_report', accountReportsWidget);
-
-return accountReportsWidget;
+    });
 
 });
