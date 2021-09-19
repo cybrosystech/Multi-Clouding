@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
+        <record model="ir.actions.act_window" id="analytic.account_analytic_line_action">
+            <field name="domain">['|','|','|',('project_site_id','=', active_id),('type_id','=', active_id),('location_id','=', active_id),('account_id','=', active_id)]</field>
+        </record>
         <record id="view_account_analytic_line_form_inherit_account" model="ir.ui.view">
             <field name="name">account.analytic.line.form.inherit.account</field>
             <field name="model">account.analytic.line</field>
