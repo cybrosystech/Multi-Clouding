@@ -79,13 +79,13 @@ class AccountReport(models.AbstractModel):
             options['selected_partner_categories'] = [self.env['res.partner.category'].browse(int(category)).name for
                                                       category in options['partner_categories']]
 
-        if options.get('project_site_ids'):
+        if options.get('project_site_ids') is not None:
             options['selected_project_sites'] = [self.env['account.analytic.account'].browse(int(project)).name for project in
                                               options['project_site_ids']]
-        if options.get('type_ids'):
+        if options.get('type_ids') is not None:
             options['selected_types'] = [self.env['account.analytic.account'].browse(int(project)).name for project in
                                               options['type_ids']]
-        if options.get('location_ids'):
+        if options.get('location_ids') is not None:
             options['selected_locations'] = [self.env['account.analytic.account'].browse(int(project)).name for project in
                                               options['location_ids']]
 

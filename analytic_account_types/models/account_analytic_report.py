@@ -3,6 +3,76 @@
 
 from odoo import api, fields, models, _
 from odoo.addons.web.controllers.main import clean_action
+from collections import defaultdict
+from odoo import api, fields, models, _
+from odoo.osv import expression
+from odoo.exceptions import ValidationError
+
+
+class Acc(models.Model):
+    _inherit = 'account.analytic.account'
+
+    @api.depends('line_ids.amount')
+    def _compute_debit_credit_balance(self):
+        print('kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk')
+        Curr = self.env['res.currency']
+        analytic_line_obj = self.env['account.analytic.line']
+        # domain = [
+        #     ('account_id', 'in', self.ids),
+        #     ('company_id', 'in', [False] + self.env.companies.ids)
+        # ]
+        domain = [
+            '|', '|', '|', ('account_id', 'in', self.ids), ('project_site_id', 'in', self.ids),
+            ('type_id', 'in', self.ids), ('location_id', 'in', self.ids)
+
+        ]
+        if self._context.get('from_date', False):
+            domain.append(('date', '>=', self._context['from_date']))
+        if self._context.get('to_date', False):
+            domain.append(('date', '<=', self._context['to_date']))
+        if self._context.get('tag_ids'):
+            tag_domain = expression.OR([[('tag_ids', 'in', [tag])] for tag in self._context['tag_ids']])
+            domain = expression.AND([domain, tag_domain])
+
+        user_currency = self.env.company.currency_id
+        credit_groups = analytic_line_obj.read_group(
+            domain=domain + [('amount', '>=', 0.0)],
+            fields=['account_id', 'project_site_id', 'type_id', 'location_id', 'currency_id', 'amount'],
+            groupby=['account_id', 'project_site_id', 'type_id', 'location_id', 'currency_id'],
+            lazy=False,
+        )
+        data_credit = defaultdict(float)
+        for l in credit_groups:
+            data_credit[l['account_id'][0]] += Curr.browse(l['currency_id'][0])._convert(
+                l['amount'], user_currency, self.env.company, fields.Date.today())
+            data_credit[l['project_site_id'][0]] += Curr.browse(l['currency_id'][0])._convert(
+                l['amount'], user_currency, self.env.company, fields.Date.today())
+            data_credit[l['type_id'][0]] += Curr.browse(l['currency_id'][0])._convert(
+                l['amount'], user_currency, self.env.company, fields.Date.today())
+            data_credit[l['location_id'][0]] += Curr.browse(l['currency_id'][0])._convert(
+                l['amount'], user_currency, self.env.company, fields.Date.today())
+
+        debit_groups = analytic_line_obj.read_group(
+            domain=domain + [('amount', '<', 0.0)],
+            fields=['account_id', 'project_site_id', 'type_id', 'location_id', 'currency_id', 'amount'],
+            groupby=['account_id', 'project_site_id', 'type_id', 'location_id', 'currency_id'],
+            lazy=False,
+        )
+        data_debit = defaultdict(float)
+        for l in debit_groups:
+            data_debit[l['account_id'][0]] += Curr.browse(l['currency_id'][0])._convert(
+                l['amount'], user_currency, self.env.company, fields.Date.today())
+            data_debit[l['project_site_id'][0]] += Curr.browse(l['currency_id'][0])._convert(
+                l['amount'], user_currency, self.env.company, fields.Date.today())
+            data_debit[l['type_id'][0]] += Curr.browse(l['currency_id'][0])._convert(
+                l['amount'], user_currency, self.env.company, fields.Date.today())
+            data_debit[l['location_id'][0]] += Curr.browse(l['currency_id'][0])._convert(
+                l['amount'], user_currency, self.env.company, fields.Date.today())
+
+        for account in self:
+            account.debit = abs(data_debit.get(account.id, 0.0))
+            account.credit = data_credit.get(account.id, 0.0)
+            account.balance = account.credit - account.debit
 
 
 class analytic_report(models.AbstractModel):
@@ -13,6 +83,7 @@ class analytic_report(models.AbstractModel):
 
     @api.model
     def _get_lines(self, options, line_id=None):
+        print('pppppppppppppppppp')
         AccountAnalyticGroup = self.env['account.analytic.group']
         lines = []
         parent_group = AccountAnalyticGroup
@@ -31,25 +102,31 @@ class analytic_report(models.AbstractModel):
         analytic_tag_ids = []
         analytic_ids =  []
         if options['analytic_accounts']:
+            print('111111111111111')
             analytic_account_ids = [int(id) for id in options['analytic_accounts']]
             analytic_entries_domain += [('account_id', 'in', analytic_account_ids)]
             analytic_ids +=analytic_account_ids
         if options['project_site_ids']:
+            print('22222222222222222222')
             analytic_account_ids = [int(id) for id in options['project_site_ids']]
             analytic_entries_domain += [('project_site_id', 'in', analytic_account_ids)]
             analytic_ids +=analytic_account_ids
         if options['type_ids']:
+            print('333333333333333')
             analytic_account_ids = [int(id) for id in options['type_ids']]
             analytic_entries_domain += [('type_id', 'in', analytic_account_ids)]
             analytic_ids +=analytic_account_ids
         if options['location_ids']:
+            print('444444444444444444444')
             analytic_account_ids = [int(id) for id in options['location_ids']]
             analytic_entries_domain += [('location_id', 'in', analytic_account_ids)]
             analytic_ids +=analytic_account_ids
         if analytic_ids:
+            print(analytic_ids,'ooooooooooooooooooooo')
             analytic_account_domain += [('id', 'in', analytic_ids)]
 
         if options.get('analytic_tags'):
+            print('6666666666666666666666')
             analytic_tag_ids = [int(id) for id in options['analytic_tags']]
             analytic_entries_domain += [('tag_ids', 'in', analytic_tag_ids)]
             AccountAnalyticAccount = AccountAnalyticAccount.with_context(tag_ids=analytic_tag_ids)
