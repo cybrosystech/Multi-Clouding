@@ -45,12 +45,15 @@ class Acc(models.Model):
         for l in credit_groups:
             data_credit[l['account_id'][0]] += Curr.browse(l['currency_id'][0])._convert(
                 l['amount'], user_currency, self.env.company, fields.Date.today())
-            data_credit[l['project_site_id'][0]] += Curr.browse(l['currency_id'][0])._convert(
-                l['amount'], user_currency, self.env.company, fields.Date.today())
-            data_credit[l['type_id'][0]] += Curr.browse(l['currency_id'][0])._convert(
-                l['amount'], user_currency, self.env.company, fields.Date.today())
-            data_credit[l['location_id'][0]] += Curr.browse(l['currency_id'][0])._convert(
-                l['amount'], user_currency, self.env.company, fields.Date.today())
+            if l['project_site_id']:
+                data_credit[l['project_site_id'][0]] += Curr.browse(l['currency_id'][0])._convert(
+                    l['amount'], user_currency, self.env.company, fields.Date.today())
+            if l['type_id']:
+                data_credit[l['type_id'][0]] += Curr.browse(l['currency_id'][0])._convert(
+                    l['amount'], user_currency, self.env.company, fields.Date.today())
+            if l['location_id']:
+                data_credit[l['location_id'][0]] += Curr.browse(l['currency_id'][0])._convert(
+                    l['amount'], user_currency, self.env.company, fields.Date.today())
 
         debit_groups = analytic_line_obj.read_group(
             domain=domain + [('amount', '<', 0.0)],
@@ -62,12 +65,15 @@ class Acc(models.Model):
         for l in debit_groups:
             data_debit[l['account_id'][0]] += Curr.browse(l['currency_id'][0])._convert(
                 l['amount'], user_currency, self.env.company, fields.Date.today())
-            data_debit[l['project_site_id'][0]] += Curr.browse(l['currency_id'][0])._convert(
-                l['amount'], user_currency, self.env.company, fields.Date.today())
-            data_debit[l['type_id'][0]] += Curr.browse(l['currency_id'][0])._convert(
-                l['amount'], user_currency, self.env.company, fields.Date.today())
-            data_debit[l['location_id'][0]] += Curr.browse(l['currency_id'][0])._convert(
-                l['amount'], user_currency, self.env.company, fields.Date.today())
+            if l['project_site_id']:
+                data_debit[l['project_site_id'][0]] += Curr.browse(l['currency_id'][0])._convert(
+                    l['amount'], user_currency, self.env.company, fields.Date.today())
+            if l['type_id']:
+                data_debit[l['type_id'][0]] += Curr.browse(l['currency_id'][0])._convert(
+                    l['amount'], user_currency, self.env.company, fields.Date.today())
+            if l['location_id']:
+                data_debit[l['location_id'][0]] += Curr.browse(l['currency_id'][0])._convert(
+                    l['amount'], user_currency, self.env.company, fields.Date.today())
 
         for account in self:
             account.debit = abs(data_debit.get(account.id, 0.0))
