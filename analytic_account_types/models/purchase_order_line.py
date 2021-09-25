@@ -10,6 +10,12 @@ class PurchaseOrderLine(models.Model):
     type_id = fields.Many2one(comodel_name="account.analytic.account", string="Type",domain=[('analytic_account_type','=','type')], required=False, )
     location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location",domain=[('analytic_account_type','=','location')], required=False, )
 
+    @api.onchange('project_site_id')
+    def get_location_and_types(self):
+        for rec in self:
+            rec.type_id = rec.project_site_id.analytic_type_filter_id.id
+            rec.location_id = rec.project_site_id.analytic_location_id.id
+
     def open_account_analytic_types(self):
         return {
             'name': 'Analytic Account Types',

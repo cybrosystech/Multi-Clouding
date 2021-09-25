@@ -12,9 +12,15 @@ from odoo.exceptions import ValidationError
 class Acc(models.Model):
     _inherit = 'account.analytic.account'
 
+    crossovered_budget_proj_line = fields.One2many('crossovered.budget.lines', 'project_site_id', 'Budget Lines')
+    crossovered_budget_type_line = fields.One2many('crossovered.budget.lines', 'type_id', 'Budget Lines')
+    crossovered_budget_loc_line = fields.One2many('crossovered.budget.lines', 'location_id', 'Budget Lines')
+    analytic_location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location", required=False,domain=[('analytic_account_type','=','location')], )
+    analytic_type_filter_id = fields.Many2one(comodel_name="account.analytic.account", string="Type", required=False,domain=[('analytic_account_type','=','type')], )
+
+
     @api.depends('line_ids.amount')
     def _compute_debit_credit_balance(self):
-        print('kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk')
         Curr = self.env['res.currency']
         analytic_line_obj = self.env['account.analytic.line']
         # domain = [
@@ -79,6 +85,8 @@ class Acc(models.Model):
             account.debit = abs(data_debit.get(account.id, 0.0))
             account.credit = data_credit.get(account.id, 0.0)
             account.balance = account.credit - account.debit
+
+
 
 
 class analytic_report(models.AbstractModel):

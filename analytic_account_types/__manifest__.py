@@ -20,7 +20,7 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base','sale','purchase','account','account_accountant','analytic','account_reports'],
+    'depends': ['base','sale','purchase','account','account_accountant','analytic','account_reports','account_budget','account_asset'],
 
     # always loaded
     'data': [
@@ -32,6 +32,9 @@
         # 'views/account_report.xml',
         'views/analytic_item.xml',
         'views/assets.xml',
+        'views/budget.xml',
+        'views/account_analytic_account.xml',
+        'views/account_asset.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

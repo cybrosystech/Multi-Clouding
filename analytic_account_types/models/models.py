@@ -19,6 +19,12 @@ class WizardAnalyticAccountTypes(models.Model):
     po_line = fields.Many2one(comodel_name="purchase.order.line", string="po Line", required=False, )
     move_line = fields.Many2one(comodel_name="account.move.line", string="move Line", required=False, )
 
+    @api.onchange('project_site_id')
+    def get_location_and_types(self):
+        for rec in self:
+            rec.type_id = rec.project_site_id.analytic_type_filter_id.id
+            rec.location_id = rec.project_site_id.analytic_location_id.id
+
     def set_analytics_lines(self):
         if self.so_line:
             self.so_line.cost_center_id = self.cost_center_id.id
