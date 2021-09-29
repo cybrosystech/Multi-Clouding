@@ -1,0 +1,32 @@
+<odoo>
+    <data>
+        <!-- Inherit Form View to Modify it -->
+        <record id="view_inherit_view_move_form" model="ir.ui.view">
+            <field name="name">view_inherit_view_move_form</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml">
+
+                <!-- position: after|before|replace|attributes|inside -->
+                <xpath expr="//notebook/page/field/tree/field[@name='analytic_account_id']" position="after">
+                    <field name="project_site_id" optional="show"/>
+                    <field name="type_id" optional="show"/>
+                    <field name="location_id" optional="show"/>
+                    <button name="open_account_analytic_types" type="object" string="Set Cost Center" />
+                </xpath>
+
+                <!-- position: after|before|replace|attributes|inside -->
+                <xpath expr="//notebook/page[2]/field[@name='line_ids']/tree/field[@name='analytic_account_id']" position="after">
+                    <field name="project_site_id" optional="show"/>
+                    <field name="type_id" optional="show"/>
+                    <field name="location_id" optional="show"/>
+                    <button name="open_account_analytic_types" attrs="{'invisible': [('parent.move_type','!=','entry')]}" type="object" string="Set Cost Center" />
+                </xpath>
+
+
+                
+            </field>
+        </record>
+
+    </data>
+</odoo>
