@@ -7,12 +7,31 @@
             <field name="inherit_id" ref="account.view_move_form"/>
             <field name="arch" type="xml">
 
+                <xpath expr="//button[@name='action_post'][1]" position="attributes">
+                    <attribute name="attrs">{'invisible':['|',('show_confirm_button','=',False),('state','!=','draft')]}</attribute>
+                </xpath>
+                <xpath expr="//button[@name='action_post'][2]" position="attributes">
+                    <attribute name="attrs">{'invisible':['|',('show_post_button','=',False),('state','!=','draft')]}</attribute>
+                </xpath>
+                <xpath expr="//button[@name='action_post']" position="after">
+                    <field name="show_approve_button" invisible="1"/>
+                    <field name="show_request_approve_button" invisible="1"/>
+                    <field name="is_from_purchase" invisible="1"/>
+                    <field name="show_confirm_button" invisible="1"/>
+                    <field name="show_post_button" invisible="1"/>
+                    <button name="request_approval_button" string="Request Approval" type="object" class="btn-primary" attrs="{'invisible':['|',('show_request_approve_button','=',True),('is_from_purchase','=',True)]}"/>
+                    <button name="button_approve_purchase_cycle" string="Approve" type="object" class="btn-primary" attrs="{'invisible':[('show_approve_button','=',False)]}"/>
+                </xpath>
+
                 <!-- position: after|before|replace|attributes|inside -->
                 <xpath expr="//notebook/page/field/tree/field[@name='analytic_account_id']" position="after">
                     <field name="project_site_id" optional="show"/>
                     <field name="type_id" optional="show"/>
                     <field name="location_id" optional="show"/>
+
                     <button name="open_account_analytic_types" type="object" string="Set Cost Center" />
+                    <field name="budget_id" optional="show"/>
+                    <field name="remaining_amount" optional="show"/>
                 </xpath>
 
                 <!-- position: after|before|replace|attributes|inside -->
@@ -21,6 +40,33 @@
                     <field name="type_id" optional="show"/>
                     <field name="location_id" optional="show"/>
                     <button name="open_account_analytic_types" attrs="{'invisible': [('parent.move_type','!=','entry')]}" type="object" string="Set Cost Center" />
+                    <field name="budget_id" optional="show"/>
+                    <field name="remaining_amount" optional="show"/>
+                </xpath>
+                 <xpath expr="//notebook" position="inside">
+                    <page string="Out Budget Amounts" name="budget_amounts">
+                        <div>
+                            <field name="budget_collect_ids">
+                                <tree editable="bottom">
+                                    <field name="budget_id"/>
+                                    <field name="remaining_amount"/>
+                                    <field name="demand_amount"/>
+                                    <field name="difference_amount"/>
+                                </tree>
+                            </field>
+                        </div>
+                    </page>
+                     <page string="Approval Cycle" name="approval_cycle">
+                        <div>
+                            <field name="purchase_approval_cycle_ids">
+                                <tree editable="bottom">
+                                    <field name="approval_seq"/>
+                                    <field name="user_approve_id"/>
+                                    <field name="is_approved"/>
+                                </tree>
+                            </field>
+                        </div>
+                    </page>
                 </xpath>
 
 

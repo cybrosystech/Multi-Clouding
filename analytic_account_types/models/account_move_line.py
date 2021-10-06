@@ -10,6 +10,171 @@ from dateutil.relativedelta import relativedelta
 
 class AccountMove(models.Model):
     _inherit = 'account.move'
+    # /////////// Start of Approval Cycle According To In Budget or Out Budget in Po Configuration //////////////
+
+    budget_collect_ids = fields.One2many(comodel_name="budget.collect", inverse_name="move_id", string="",
+                                         required=False, )
+    purchase_approval_cycle_ids = fields.One2many(comodel_name="purchase.approval.cycle", inverse_name="move_id",
+                                                  string="", required=False, )
+    out_budget = fields.Boolean(string="Out Budget", compute="check_out_budget")
+    show_approve_button = fields.Boolean(string="", compute='check_show_approve_button')
+    show_request_approve_button = fields.Boolean(string="", )
+    is_from_purchase = fields.Boolean(string="",compute='check_if_from_purchase'  )
+    show_confirm_button = fields.Boolean(string="",compute='check_show_confirm_and_post_buttons' )
+    show_post_button = fields.Boolean(string="",compute='check_show_confirm_and_post_buttons' )
+
+    @api.depends()
+    def check_show_confirm_and_post_buttons(self):
+        self.show_post_button = False
+        self.show_confirm_button = False
+        if self.state != 'draft' or self.auto_post or self.move_type != 'entry':
+            if self.is_from_purchase:
+                self.show_post_button = True
+            else:
+                self.show_post_button = False
+        elif self.state != 'draft' or self.auto_post == True or self.move_type == 'entry':
+            if self.is_from_purchase:
+                self.show_confirm_button = True
+            else:
+                self.show_confirm_button = False
+
+    @api.depends()
+    def check_if_from_purchase(self):
+        self.is_from_purchase = False
+        purchased = self.invoice_line_ids.filtered(lambda x:x.purchase_line_id)
+        if purchased:
+            self.is_from_purchase = True
+
+
+    @api.depends()
+    def check_show_approve_button(self):
+        self.show_approve_button = False
+        if not self.is_from_purchase:
+            for rec in self.purchase_approval_cycle_ids:
+                if not rec.is_approved and self.env.user.id == rec.user_approve_id.id:
+                    self.show_approve_button = True
+                    break
+
+    @api.depends('budget_collect_ids')
+    def check_out_budget(self):
+        self.out_budget = False
+        if not self.is_from_purchase:
+            out_budget = self.budget_collect_ids.filtered(lambda x: x.difference_amount > 0)
+            if out_budget:
+                self.out_budget = True
+
+    @api.onchange('invoice_line_ids')
+    def get_budgets_in_out_budget_tab(self):
+        if not self.is_from_purchase:
+            budgets = self.invoice_line_ids.mapped('budget_id')
+            budget_lines = []
+            budgets = set(budgets)
+
+            for bud in budgets:
+                if bud not in self.budget_collect_ids.mapped('budget_id'):
+                    budget_lines.append((0, 0, {
+                        'budget_id': bud.id
+                    }))
+            self.write({'budget_collect_ids': budget_lines})
+            # self.budget_collect_ids = budget_lines
+
+    def send_user_notification(self, user):
+        reseiver = user.partner_id
+        if reseiver:
+            for move in self:
+
+                msg_id = self.env['mail.message'].sudo().create({
+                    'message_type': "comment",
+                    "subtype_id": self.env.ref("mail.mt_comment").id,
+                    'body': "Dear Sir<br></br> This Invoice :{} Need Your Confirmation <br></br> Best Regards".format(
+                        move.name),
+                    'subject': 'Purchase Approval Needed',
+                    'partner_ids': [(4, user.id)],
+                    'model': move._name,
+                    'res_id': move.id,
+                })
+                notify_id = self.env['mail.notification'].sudo().create({
+                    'mail_message_id': msg_id.id,
+                    'res_partner_id': user.partner_id.id,
+                    'notification_type': 'inbox',
+                    'notification_status': 'exception',
+                })
+                base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+                body = "Dear Sir<br></br> This Invoice :{} Need Your Confirmation <br></br> Best Regards".format(
+                    move.name) + ' click here to open: <a target=_BLANK href="{}/web?#id='.format(
+                    base_url) + str(
+                    move.id) + '&view_type=form&model=account.move&action=" style="font-weight: bold">' + str(
+                    move.name) + '</a>'
+                if user.email:
+                    mails_send = self.env['mail.mail'].sudo().create({
+                        'subject': 'Invoice Approval Needed',
+                        'body_html': str(body),
+                        'notification': True,
+                        'auto_delete': True,
+                        'email_to': user.email,
+                        'message_type': 'email',
+                    })
+
+                    mails_send.sudo().send()
+
+    def request_approval_button(self):
+        if self.out_budget and not self.purchase_approval_cycle_ids:
+            out_budget_list = []
+            out_budget = self.env['budget.in.out.check'].search([('type', '=', 'out_budget')], limit=1)
+            max_value = max(self.budget_collect_ids.mapped('difference_amount'))
+            for rec in out_budget.budget_line_ids:
+                if rec.to_amount >= max_value >= rec.from_amount:
+                    out_budget_list.append((0, 0, {
+                        'approval_seq': rec.approval_seq,
+                        'user_approve_id': rec.user_id.id,
+                    }))
+                elif rec.to_amount <= max_value >= rec.from_amount:
+                    out_budget_list.append((0, 0, {
+                        'approval_seq': rec.approval_seq,
+                        'user_approve_id': rec.user_id.id,
+                    }))
+            self.write({'purchase_approval_cycle_ids': out_budget_list})
+        if not self.out_budget and not self.purchase_approval_cycle_ids:
+            in_budget_list = []
+            in_budget = self.env['budget.in.out.check'].search([('type', '=', 'in_budget')], limit=1)
+            max_value = self.amount_total
+            for rec in in_budget.budget_line_ids:
+                if rec.to_amount >= max_value >= rec.from_amount:
+                    in_budget_list.append((0, 0, {
+                        'approval_seq': rec.approval_seq,
+                        'user_approve_id': rec.user_id.id,
+                    }))
+                elif rec.to_amount <= max_value >= rec.from_amount:
+                    in_budget_list.append((0, 0, {
+                        'approval_seq': rec.approval_seq,
+                        'user_approve_id': rec.user_id.id,
+                    }))
+            self.write({'purchase_approval_cycle_ids': in_budget_list})
+        self.show_request_approve_button = True
+        min_seq_approval = min(self.purchase_approval_cycle_ids.mapped('approval_seq'))
+        notification_to_user = self.purchase_approval_cycle_ids.filtered(
+            lambda x: x.approval_seq == int(min_seq_approval))
+        user = notification_to_user.user_approve_id
+        self.send_user_notification(user)
+
+    def button_approve_purchase_cycle(self):
+        max_seq_approval = max(self.purchase_approval_cycle_ids.mapped('approval_seq'))
+        last_approval = self.purchase_approval_cycle_ids.filtered(lambda x: x.approval_seq == int(max_seq_approval))
+        last_approval_user = last_approval.user_approve_id
+        for line in self.purchase_approval_cycle_ids:
+            if not line.is_approved:
+                line.is_approved = True
+                notification_to_user = self.purchase_approval_cycle_ids.filtered(
+                    lambda x: x.approval_seq == int(line.approval_seq + 1))
+                if notification_to_user:
+                    user = notification_to_user.user_approve_id
+                    self.send_user_notification(user)
+                if line.user_approve_id.id == last_approval_user.id:
+                    self.action_post()
+                break
+
+    # /////////// End of Approval Cycle According To In Budget or Out Budget in Po Configuration //////////////
+
 
     def _auto_create_asset(self):
         create_list = []
@@ -161,6 +326,18 @@ class AccountMoveLine(models.Model):
     type_id = fields.Many2one(comodel_name="account.analytic.account", string="Type",domain=[('analytic_account_type','=','type')], required=False, )
     location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location",domain=[('analytic_account_type','=','location')], required=False, )
     analytic_account_id = fields.Many2one(string='Cost Center')
+    budget_id = fields.Many2one(comodel_name="crossovered.budget", string="Budget", required=False, )
+    remaining_amount = fields.Float(string="Remaining Amount", required=False,compute='get_budget_remaining_amount' )
+
+    @api.depends('budget_id','purchase_line_id')
+    def get_budget_remaining_amount(self):
+        for rec in self:
+            rec.remaining_amount = 0.0
+            if rec.purchase_line_id:
+                rec.remaining_amount = rec.purchase_line_id.remaining_amount
+            else:
+                budget_lines = rec.budget_id.crossovered_budget_line.filtered(lambda x:rec.move_id.invoice_date >= x.date_from and rec.move_id.invoice_date <= x.date_to and x.analytic_account_id == rec.analytic_account_id and x.project_site_id == rec.project_site_id and x.type_id == rec.type_id and x.location_id == rec.location_id )
+                rec.remaining_amount = sum(budget_lines.mapped('remaining_amount'))
 
     @api.onchange('project_site_id')
     def get_location_and_types(self):
@@ -177,4 +354,6 @@ class AccountMoveLine(models.Model):
             'context': {'default_move_line': self.id},
             'target': 'new',
         }
+
+
 

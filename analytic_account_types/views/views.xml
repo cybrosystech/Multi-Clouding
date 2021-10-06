@@ -12,6 +12,7 @@
                            <field name="project_site_id"/>
                            <field name="type_id"/>
                            <field name="location_id"/>
+                           <field name="budget_id"/>
                          </group>
                          <group>
                            <field name="so_line" invisible="1" force_save="1"/>

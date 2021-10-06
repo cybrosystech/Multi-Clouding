@@ -1,2 +1,6 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_wizard_analytic_account_types,wizard_analytic_account_types,model_wizard_analytic_account_types,base.group_user,1,1,1,1
+access_budget_in_out_check,budget_in_out_check,model_budget_in_out_check,base.group_user,1,1,1,1
+access_budget_in_out_lines,budget_in_out_lines,model_budget_in_out_lines,base.group_user,1,1,1,1
+access_budget_collect,budget_collect,model_budget_collect,base.group_user,1,1,1,1
+access_purchase_approval_cycle,purchase_approval_cycle,model_purchase_approval_cycle,base.group_user,1,1,1,1

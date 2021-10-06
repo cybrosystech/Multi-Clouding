@@ -9,3 +9,4 @@ from . import account_analytic_report
 from . import analytic_item
 from . import budget
 from . import account_asset
+from . import in_out_budget
