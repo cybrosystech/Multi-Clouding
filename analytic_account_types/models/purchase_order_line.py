@@ -10,6 +10,17 @@ class PurchaseOrder(models.Model):
     out_budget = fields.Boolean(string="Out Budget",compute="check_out_budget"  )
     show_approve_button = fields.Boolean(string="",compute='check_show_approve_button'  )
     show_request_approve_button = fields.Boolean(string="",  )
+    show_button_confirm = fields.Boolean(string="",  )
+
+    def button_cancel(self):
+        res = super(PurchaseOrder, self).button_cancel()
+        self.purchase_approval_cycle_ids = False
+        return res
+
+    def button_draft(self):
+        res = super(PurchaseOrder, self).button_draft()
+        self.show_request_approve_button = False
+        return res
 
 
     @api.depends()
@@ -85,8 +96,10 @@ class PurchaseOrder(models.Model):
         if self.out_budget and not self.purchase_approval_cycle_ids:
             out_budget_list = []
             out_budget = self.env['budget.in.out.check'].search([('type','=','out_budget')],limit=1)
-            max_value = max(self.budget_collect_ids.mapped('difference_amount'))
-            print(max_value,'pppppppppppppp')
+            if self.budget_collect_ids.mapped('difference_amount'):
+                max_value = max(self.budget_collect_ids.mapped('difference_amount'))
+            else:
+                max_value = 0
             for rec in out_budget.budget_line_ids:
                 if rec.to_amount >= max_value >= rec.from_amount:
                     out_budget_list.append((0,0,{
@@ -103,7 +116,6 @@ class PurchaseOrder(models.Model):
             in_budget_list = []
             in_budget = self.env['budget.in.out.check'].search([('type','=','in_budget')],limit=1)
             max_value = self.amount_total
-            print(max_value,'pppppppppppppp')
             for rec in in_budget.budget_line_ids:
                 if rec.to_amount >= max_value >= rec.from_amount:
                     in_budget_list.append((0,0,{
@@ -117,10 +129,13 @@ class PurchaseOrder(models.Model):
                     }))
             self.write({'purchase_approval_cycle_ids':in_budget_list})
         self.show_request_approve_button = True
-        min_seq_approval = min(self.purchase_approval_cycle_ids.mapped('approval_seq'))
-        notification_to_user = self.purchase_approval_cycle_ids.filtered(lambda x:x.approval_seq == int(min_seq_approval))
-        user = notification_to_user.user_approve_id
-        self.send_user_notification(user)
+        if self.purchase_approval_cycle_ids:
+            min_seq_approval = min(self.purchase_approval_cycle_ids.mapped('approval_seq'))
+            notification_to_user = self.purchase_approval_cycle_ids.filtered(lambda x:x.approval_seq == int(min_seq_approval))
+            user = notification_to_user.user_approve_id
+            self.send_user_notification(user)
+        else:
+            self.show_button_confirm = True
 
     def button_approve_purchase_cycle(self):
         max_seq_approval = max(self.purchase_approval_cycle_ids.mapped('approval_seq'))

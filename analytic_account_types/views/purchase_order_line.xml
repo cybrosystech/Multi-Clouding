@@ -7,7 +7,7 @@
             <field name="inherit_id" ref="purchase.purchase_order_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//button[@name='button_confirm'][1]" position="attributes">
-                    <attribute name="invisible">1</attribute>
+                    <attribute name="attrs">{'invisible':['|',('state','!=','draft'),('show_button_confirm','=',False)]}</attribute>
                 </xpath>
                 <xpath expr="//button[@name='button_confirm'][2]" position="attributes">
                     <attribute name="invisible">1</attribute>
@@ -15,6 +15,7 @@
                 <xpath expr="//button[@name='button_confirm']" position="after">
                     <field name="show_approve_button" invisible="1"/>
                     <field name="show_request_approve_button" invisible="1"/>
+                    <field name="show_button_confirm" invisible="1"/>
                     <button name="request_approval_button" string="Request Approval" type="object" class="btn-primary" attrs="{'invisible':[('show_request_approve_button','=',True)]}"/>
                     <button name="button_approve_purchase_cycle" string="Approve" type="object" class="btn-primary" attrs="{'invisible':[('show_approve_button','=',False)]}"/>
                 </xpath>
