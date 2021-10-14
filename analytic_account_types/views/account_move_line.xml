@@ -17,9 +17,10 @@
                     <field name="show_approve_button" invisible="1"/>
                     <field name="show_request_approve_button" invisible="1"/>
                     <field name="is_from_purchase" invisible="1"/>
+                    <field name="is_from_sales" invisible="1"/>
                     <field name="show_confirm_button" invisible="1"/>
                     <field name="show_post_button" invisible="1"/>
-                    <button name="request_approval_button" string="Request Approval" type="object" class="btn-primary" attrs="{'invisible':['|',('show_request_approve_button','=',True),('is_from_purchase','=',True)]}"/>
+                    <button name="request_approval_button" string="Request Approval" type="object" class="btn-primary" attrs="{'invisible':['|','|',('show_request_approve_button','=',True),('is_from_purchase','=',True),('is_from_sales','=',True)]}"/>
                     <button name="button_approve_purchase_cycle" string="Approve" type="object" class="btn-primary" attrs="{'invisible':[('show_approve_button','=',False)]}"/>
                 </xpath>
 
@@ -61,7 +62,7 @@
                             <field name="purchase_approval_cycle_ids">
                                 <tree editable="bottom">
                                     <field name="approval_seq"/>
-                                    <field name="user_approve_id"/>
+                                    <field name="user_approve_ids" widget="many2many_tags"/>
                                     <field name="is_approved"/>
                                 </tree>
                             </field>

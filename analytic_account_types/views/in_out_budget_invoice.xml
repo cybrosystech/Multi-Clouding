@@ -1,8 +1,8 @@
 <odoo>
   <data>
-     <record id="view_in_out_budget_form" model="ir.ui.view">
-         <field name="name">view_in_out_budget_form</field>
-         <field name="model">budget.in.out.check</field>
+     <record id="view_in_out_budget_invoice_form" model="ir.ui.view">
+         <field name="name">view_in_out_budget_form_invoice</field>
+         <field name="model">budget.in.out.check.invoice</field>
          <field name="arch" type="xml">
              <form string="">
                  <sheet>
@@ -32,9 +32,9 @@
          </field>
      </record>
 
-    <record id="view_in_out_budget_tree" model="ir.ui.view">
-        <field name="name">view_in_out_budget_tree</field>
-        <field name="model">budget.in.out.check</field>
+    <record id="view_in_out_budget_tree_invoice" model="ir.ui.view">
+        <field name="name">view_in_out_budget_tree_invoice</field>
+        <field name="model">budget.in.out.check.invoice</field>
         <field name="arch" type="xml">
             <tree string="">
                 <field name="name"/>
@@ -43,10 +43,10 @@
         </field>
     </record>
 
-    <record id="action_in_out_budget_view" model="ir.actions.act_window">
-        <field name="name">Budget Check</field>
+    <record id="action_in_out_budget_view_invoice" model="ir.actions.act_window">
+        <field name="name">Budget Check Invoice</field>
         <field name="type">ir.actions.act_window</field>
-        <field name="res_model">budget.in.out.check</field>
+        <field name="res_model">budget.in.out.check.invoice</field>
         <field name="view_mode">tree,form</field>
         <field name="help" type="html">
           <p class="oe_view_nocontent_create">
@@ -57,6 +57,6 @@
         </field>
     </record>
 
-    <menuitem id="menu_in_out_budget_view" name="Budget Check" parent="purchase.menu_purchase_config" action="action_in_out_budget_view" sequence="100"/>
+    <menuitem id="menu_in_out_budget_view_invoice" name="Budget Check Invoice" parent="account.menu_finance_configuration" action="action_in_out_budget_view_invoice" sequence="100"/>
   </data>
 </odoo>

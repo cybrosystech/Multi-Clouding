@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+   <data>
+
+        <record id="email_template_send_mail_approval_sales" model="mail.template">
+            <field name="name">Multi Level Sales Approval Mail Template</field>
+            <field name="email_from">${object.company_id.email}</field>
+            <field name="subject">Sale Order Approve</field>
+            <field name="email_to"></field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="auto_delete" eval="True"/>
+            <field name="lang">${object.partner_id.lang}</field>
+            <field name="body_html"><![CDATA[
+
+<p>Dear ${ctx['name']},
+
+<p>Please approve Sale order  ${object.name}.
+
+           <div style="width: 375px; margin: 0px; padding: 0px; background-color: #8E0000; border-top-left-radius: 5px 5px; border-top-right-radius: 5px 5px; background-repeat: repeat no-repeat;">
+       <h3 style="margin: 0px; padding: 2px 14px; font-size: 12px; color: #DDD;">
+           <strong style="text-transform:uppercase;">${object.company_id.name}</strong></h3>
+   </div>
+   <div style="width: 347px; margin: 0px; padding: 5px 14px; line-height: 16px; background-color: #F2F2F2;">
+       <span style="color: #222; margin-bottom: 5px; display: block; ">
+           ${object.company_id.partner_id.sudo().with_context(show_address=True, html_format=True).name_get()[0][1] | safe}
+       </span>
+       % if object.company_id.phone:
+           <div style="margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px; padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px; ">
+               Phone:&nbsp; ${object.company_id.phone}
+           </div>
+       % endif
+       % if object.company_id.website:
+           <div>
+               Web :&nbsp;<a href="${object.company_id.website}">${object.company_id.website}</a>
+           </div>
+       %endif
+       <p></p>
+   </div>
+            ]]></field>
+        </record>
+
+
+
+        <record id="email_template_send_mail_approval_account" model="mail.template">
+            <field name="name">Multi Level Invoice Approval Mail Template</field>
+            <field name="email_from">${object.company_id.email}</field>
+            <field name="subject">Invoice Approval</field>
+            <field name="email_to"></field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="auto_delete" eval="True"/>
+            <field name="lang">${object.partner_id.lang}</field>
+            <field name="body_html"><![CDATA[
+
+<p>Dear ${ctx['name']},
+
+<p>Please approve Invoice  ${object.name}.
+
+           <div style="width: 375px; margin: 0px; padding: 0px; background-color: #8E0000; border-top-left-radius: 5px 5px; border-top-right-radius: 5px 5px; background-repeat: repeat no-repeat;">
+       <h3 style="margin: 0px; padding: 2px 14px; font-size: 12px; color: #DDD;">
+           <strong style="text-transform:uppercase;">${object.company_id.name}</strong></h3>
+   </div>
+   <div style="width: 347px; margin: 0px; padding: 5px 14px; line-height: 16px; background-color: #F2F2F2;">
+       <span style="color: #222; margin-bottom: 5px; display: block; ">
+           ${object.company_id.partner_id.sudo().with_context(show_address=True, html_format=True).name_get()[0][1] | safe}
+       </span>
+       % if object.company_id.phone:
+           <div style="margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px; padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px; ">
+               Phone:&nbsp; ${object.company_id.phone}
+           </div>
+       % endif
+       % if object.company_id.website:
+           <div>
+               Web :&nbsp;<a href="${object.company_id.website}">${object.company_id.website}</a>
+           </div>
+       %endif
+       <p></p>
+   </div>
+            ]]></field>
+        </record>
+
+       <record id="email_template_send_mail_approval_purchase" model="mail.template">
+            <field name="name">Multi Level Purchase Approval Mail Template</field>
+            <field name="email_from">${object.company_id.email}</field>
+            <field name="subject">Purchase Order Approval</field>
+            <field name="email_to"></field>
+            <field name="model_id" ref="purchase.model_purchase_order"/>
+            <field name="auto_delete" eval="True"/>
+            <field name="lang">${object.partner_id.lang}</field>
+            <field name="body_html"><![CDATA[
+
+<p>Dear ${ctx['name']},
+
+<p>Please approve Purchase Order  ${object.name}.
+
+           <div style="width: 375px; margin: 0px; padding: 0px; background-color: #8E0000; border-top-left-radius: 5px 5px; border-top-right-radius: 5px 5px; background-repeat: repeat no-repeat;">
+       <h3 style="margin: 0px; padding: 2px 14px; font-size: 12px; color: #DDD;">
+           <strong style="text-transform:uppercase;">${object.company_id.name}</strong></h3>
+   </div>
+   <div style="width: 347px; margin: 0px; padding: 5px 14px; line-height: 16px; background-color: #F2F2F2;">
+       <span style="color: #222; margin-bottom: 5px; display: block; ">
+           ${object.company_id.partner_id.sudo().with_context(show_address=True, html_format=True).name_get()[0][1] | safe}
+       </span>
+       % if object.company_id.phone:
+           <div style="margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px; padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px; ">
+               Phone:&nbsp; ${object.company_id.phone}
+           </div>
+       % endif
+       % if object.company_id.website:
+           <div>
+               Web :&nbsp;<a href="${object.company_id.website}">${object.company_id.website}</a>
+           </div>
+       %endif
+       <p></p>
+   </div>
+            ]]></field>
+        </record>
+
+
+    </data>
+</odoo>

@@ -20,6 +20,7 @@ class AccountMove(models.Model):
     show_approve_button = fields.Boolean(string="", compute='check_show_approve_button')
     show_request_approve_button = fields.Boolean(string="", )
     is_from_purchase = fields.Boolean(string="",compute='check_if_from_purchase'  )
+    is_from_sales = fields.Boolean(string="",compute='check_if_from_sales'  )
     show_confirm_button = fields.Boolean(string="",compute='check_show_confirm_and_post_buttons' )
     show_post_button = fields.Boolean(string="",compute='check_show_confirm_and_post_buttons' )
 
@@ -28,12 +29,12 @@ class AccountMove(models.Model):
         self.show_post_button = False
         self.show_confirm_button = False
         if self.state != 'draft' or self.auto_post or self.move_type != 'entry':
-            if self.is_from_purchase:
+            if self.is_from_purchase or self.is_from_sales:
                 self.show_post_button = True
             else:
                 self.show_post_button = False
         elif self.state != 'draft' or self.auto_post == True or self.move_type == 'entry':
-            if self.is_from_purchase:
+            if self.is_from_purchase or self.is_from_sales:
                 self.show_confirm_button = True
             else:
                 self.show_confirm_button = False
@@ -45,28 +46,36 @@ class AccountMove(models.Model):
         if purchased:
             self.is_from_purchase = True
 
+    @api.depends()
+    def check_if_from_sales(self):
+        self.is_from_sales = False
+        sales = self.invoice_line_ids.filtered(lambda x: x.sale_line_ids)
+        if sales:
+            self.is_from_sales = True
+
 
     @api.depends()
     def check_show_approve_button(self):
         self.show_approve_button = False
-        if not self.is_from_purchase:
+        if not self.is_from_purchase and not self.is_from_sales:
             for rec in self.purchase_approval_cycle_ids:
-                if not rec.is_approved and self.env.user.id == rec.user_approve_id.id:
+                if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids:
                     self.show_approve_button = True
                     break
 
     @api.depends('budget_collect_ids')
     def check_out_budget(self):
         self.out_budget = False
-        if not self.is_from_purchase:
+        if not self.is_from_purchase and not self.is_from_sales:
             out_budget = self.budget_collect_ids.filtered(lambda x: x.difference_amount > 0)
             if out_budget:
                 self.out_budget = True
 
     @api.onchange('invoice_line_ids')
     def get_budgets_in_out_budget_tab(self):
-        if not self.is_from_purchase:
+        if not self.is_from_purchase and not self.is_from_sales:
             budgets = self.invoice_line_ids.mapped('budget_id')
+            self.budget_collect_ids = False
             budget_lines = []
             budgets = set(budgets)
 
@@ -79,97 +88,103 @@ class AccountMove(models.Model):
             # self.budget_collect_ids = budget_lines
 
     def send_user_notification(self, user):
-        reseiver = user.partner_id
-        if reseiver:
-            for move in self:
+        for us in user:
+            reseiver = us.partner_id
+            if reseiver:
+                for move in self:
 
-                msg_id = self.env['mail.message'].sudo().create({
-                    'message_type': "comment",
-                    "subtype_id": self.env.ref("mail.mt_comment").id,
-                    'body': "Dear Sir<br></br> This Invoice :{} Need Your Confirmation <br></br> Best Regards".format(
-                        move.name),
-                    'subject': 'Purchase Approval Needed',
-                    'partner_ids': [(4, user.id)],
-                    'model': move._name,
-                    'res_id': move.id,
-                })
-                notify_id = self.env['mail.notification'].sudo().create({
-                    'mail_message_id': msg_id.id,
-                    'res_partner_id': user.partner_id.id,
-                    'notification_type': 'inbox',
-                    'notification_status': 'exception',
-                })
-                base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
-                body = "Dear Sir<br></br> This Invoice :{} Need Your Confirmation <br></br> Best Regards".format(
-                    move.name) + ' click here to open: <a target=_BLANK href="{}/web?#id='.format(
-                    base_url) + str(
-                    move.id) + '&view_type=form&model=account.move&action=" style="font-weight: bold">' + str(
-                    move.name) + '</a>'
-                if user.email:
-                    mails_send = self.env['mail.mail'].sudo().create({
-                        'subject': 'Invoice Approval Needed',
-                        'body_html': str(body),
-                        'notification': True,
-                        'auto_delete': True,
-                        'email_to': user.email,
-                        'message_type': 'email',
+                    msg_id = self.env['mail.message'].sudo().create({
+                        'message_type': "comment",
+                        "subtype_id": self.env.ref("mail.mt_comment").id,
+                        'body': "Dear Sir<br></br> This Invoice :{} Need Your Confirmation <br></br> Best Regards".format(
+                            move.name),
+                        'subject': 'Purchase Approval Needed',
+                        'partner_ids': [(4, us.partner_id.id)],
+                        'model': move._name,
+                        'res_id': move.id,
                     })
+                    notify_id = self.env['mail.notification'].sudo().create({
+                        'mail_message_id': msg_id.id,
+                        'res_partner_id': us.partner_id.id,
+                        'notification_type': 'inbox',
+                        'notification_status': 'exception',
+                    })
+                    base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+                    body = "Dear Sir<br></br> This Invoice :{} Need Your Confirmation <br></br> Best Regards".format(
+                        move.name) + ' click here to open: <a target=_BLANK href="{}/web?#id='.format(
+                        base_url) + str(
+                        move.id) + '&view_type=form&model=account.move&action=" style="font-weight: bold">' + str(
+                        move.name) + '</a>'
+                    if us.email:
+                        mails_send = self.env['mail.mail'].sudo().create({
+                            'subject': 'Invoice Approval Needed',
+                            'body_html': str(body),
+                            'notification': True,
+                            'auto_delete': True,
+                            'email_to': us.email,
+                            'message_type': 'email',
+                        })
 
-                    mails_send.sudo().send()
+                        mails_send.sudo().send()
+                    email_template_id = self.env.ref('analytic_account_types.email_template_send_mail_approval_account')
+                    ctx = self._context.copy()
+                    ctx.update({'name': us.name})
+                    if email_template_id:
+                        email_template_id.with_context(ctx).send_mail(self.id, email_values={'email_to': us.email, })
 
     def request_approval_button(self):
         if self.out_budget and not self.purchase_approval_cycle_ids:
             out_budget_list = []
-            out_budget = self.env['budget.in.out.check'].search([('type', '=', 'out_budget')], limit=1)
+            out_budget = self.env['budget.in.out.check.invoice'].search([('type', '=', 'out_budget')], limit=1)
             max_value = max(self.budget_collect_ids.mapped('difference_amount'))
             for rec in out_budget.budget_line_ids:
                 if rec.to_amount >= max_value >= rec.from_amount:
                     out_budget_list.append((0, 0, {
                         'approval_seq': rec.approval_seq,
-                        'user_approve_id': rec.user_id.id,
+                        'user_approve_ids': rec.user_ids.ids,
                     }))
                 elif rec.to_amount <= max_value >= rec.from_amount:
                     out_budget_list.append((0, 0, {
                         'approval_seq': rec.approval_seq,
-                        'user_approve_id': rec.user_id.id,
+                        'user_approve_ids': rec.user_ids.ids,
                     }))
             self.write({'purchase_approval_cycle_ids': out_budget_list})
         if not self.out_budget and not self.purchase_approval_cycle_ids:
             in_budget_list = []
-            in_budget = self.env['budget.in.out.check'].search([('type', '=', 'in_budget')], limit=1)
+            in_budget = self.env['budget.in.out.check.invoice'].search([('type', '=', 'in_budget')], limit=1)
             max_value = self.amount_total
             for rec in in_budget.budget_line_ids:
                 if rec.to_amount >= max_value >= rec.from_amount:
                     in_budget_list.append((0, 0, {
                         'approval_seq': rec.approval_seq,
-                        'user_approve_id': rec.user_id.id,
+                        'user_approve_ids': rec.user_ids.ids,
                     }))
                 elif rec.to_amount <= max_value >= rec.from_amount:
                     in_budget_list.append((0, 0, {
                         'approval_seq': rec.approval_seq,
-                        'user_approve_id': rec.user_id.id,
+                        'user_approve_ids': rec.user_ids.ids,
                     }))
             self.write({'purchase_approval_cycle_ids': in_budget_list})
         self.show_request_approve_button = True
         min_seq_approval = min(self.purchase_approval_cycle_ids.mapped('approval_seq'))
         notification_to_user = self.purchase_approval_cycle_ids.filtered(
             lambda x: x.approval_seq == int(min_seq_approval))
-        user = notification_to_user.user_approve_id
+        user = notification_to_user.user_approve_ids
         self.send_user_notification(user)
 
     def button_approve_purchase_cycle(self):
         max_seq_approval = max(self.purchase_approval_cycle_ids.mapped('approval_seq'))
         last_approval = self.purchase_approval_cycle_ids.filtered(lambda x: x.approval_seq == int(max_seq_approval))
-        last_approval_user = last_approval.user_approve_id
+        last_approval_user = last_approval.user_approve_ids
         for line in self.purchase_approval_cycle_ids:
             if not line.is_approved:
                 line.is_approved = True
                 notification_to_user = self.purchase_approval_cycle_ids.filtered(
                     lambda x: x.approval_seq == int(line.approval_seq + 1))
                 if notification_to_user:
-                    user = notification_to_user.user_approve_id
+                    user = notification_to_user.user_approve_ids
                     self.send_user_notification(user)
-                if line.user_approve_id.id == last_approval_user.id:
+                if line.user_approve_ids.ids == last_approval_user.ids:
                     self.action_post()
                 break
 
@@ -335,7 +350,20 @@ class AccountMoveLine(models.Model):
             rec.remaining_amount = 0.0
             if rec.purchase_line_id:
                 rec.remaining_amount = rec.purchase_line_id.remaining_amount
+            elif rec.sale_line_ids:
+                rec.remaining_amount = rec.sale_line_ids[0].remaining_amount
             else:
+                # order_lines_without_inv = sum(
+                #     self.env['account.move.line'].search([('move_id.state', '=', 'draft')]).filtred(
+                #         lambda x: not x.order_id.invoice_ids and x.budet_id == self.budget_id).mapped('price_subtotal'))
+                # purchases_with_inv = self.env['purchase.order'].search([('state', '=', 'purchase')]).filtred(
+                #     lambda x: x.invoice_ids)
+                # invoices_budget = 0.0
+                # for order in purchases_with_inv:
+                #     for inv in order.invoice_ids:
+                #         if inv.state == 'draft':
+                #             for line in inv.invoice_line_ids.filtred(lambda x: x.budget_id == self.budget_id):
+                #                 invoices_budget += line.price_subtotal
                 budget_lines = rec.budget_id.crossovered_budget_line.filtered(lambda x:rec.move_id.invoice_date >= x.date_from and rec.move_id.invoice_date <= x.date_to and x.analytic_account_id == rec.analytic_account_id and x.project_site_id == rec.project_site_id and x.type_id == rec.type_id and x.location_id == rec.location_id )
                 rec.remaining_amount = sum(budget_lines.mapped('remaining_amount'))
 

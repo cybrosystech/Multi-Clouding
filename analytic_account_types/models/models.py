@@ -24,18 +24,29 @@ class WizardAnalyticAccountTypes(models.Model):
     def _get_budgets(self):
         if self.po_line:
             budgets = []
-            budget_lines = self.env['crossovered.budget.lines'].search([]).filtered(lambda x: self.po_line.order_id.date_order.date() >= x.date_from and self.po_line.order_id.date_order.date() <= x.date_to and x.analytic_account_id == self.cost_center_id and x.project_site_id == self.project_site_id and x.type_id == self.type_id and x.location_id == self.location_id)
-            if budget_lines:
-                for bud_line in budget_lines:
-                    budgets.append(bud_line.crossovered_budget_id.id)
-            return {'domain':{'budget_id':[('id','in',budgets)]}}
+            if self.po_line.order_id.date_order:
+                budget_lines = self.env['crossovered.budget.lines'].search([]).filtered(lambda x: self.po_line.order_id.date_order.date() >= x.date_from and self.po_line.order_id.date_order.date() <= x.date_to and x.analytic_account_id == self.cost_center_id and x.project_site_id == self.project_site_id and x.type_id == self.type_id and x.location_id == self.location_id)
+                if budget_lines:
+                    for bud_line in budget_lines:
+                        budgets.append(bud_line.crossovered_budget_id.id)
+                return {'domain':{'budget_id':[('id','in',budgets)]}}
         elif self.move_line:
             budgets = []
-            budget_lines = self.env['crossovered.budget.lines'].search([]).filtered(lambda x: self.move_line.move_id.invoice_date >= x.date_from and self.move_line.move_id.invoice_date <= x.date_to and x.analytic_account_id == self.cost_center_id and x.project_site_id == self.project_site_id and x.type_id == self.type_id and x.location_id == self.location_id)
-            if budget_lines:
-                for bud_line in budget_lines:
-                    budgets.append(bud_line.crossovered_budget_id.id)
-            return {'domain': {'budget_id': [('id', 'in', budgets)]}}
+            if self.move_line.move_id.invoice_date:
+                budget_lines = self.env['crossovered.budget.lines'].search([]).filtered(lambda x: self.move_line.move_id.invoice_date >= x.date_from and self.move_line.move_id.invoice_date <= x.date_to and x.analytic_account_id == self.cost_center_id and x.project_site_id == self.project_site_id and x.type_id == self.type_id and x.location_id == self.location_id)
+                if budget_lines:
+                    for bud_line in budget_lines:
+                        budgets.append(bud_line.crossovered_budget_id.id)
+                return {'domain': {'budget_id': [('id', 'in', budgets)]}}
+        elif self.so_line:
+            budgets = []
+            if self.so_line.order_id.date_order:
+                budget_lines = self.env['crossovered.budget.lines'].search([]).filtered(lambda
+                                                                                            x: self.so_line.order_id.date_order.date() >= x.date_from and self.so_line.order_id.date_order.date() <= x.date_to and x.analytic_account_id == self.cost_center_id and x.project_site_id == self.project_site_id and x.type_id == self.type_id and x.location_id == self.location_id)
+                if budget_lines:
+                    for bud_line in budget_lines:
+                        budgets.append(bud_line.crossovered_budget_id.id)
+                return {'domain': {'budget_id': [('id', 'in', budgets)]}}
 
 
     @api.onchange('project_site_id')
@@ -50,6 +61,8 @@ class WizardAnalyticAccountTypes(models.Model):
             self.so_line.project_site_id = self.project_site_id.id
             self.so_line.type_id = self.type_id.id
             self.so_line.location_id = self.location_id.id
+            self.so_line.budget_id = self.budget_id.id
+            self.so_line.order_id.get_budgets_in_out_budget_tab()
         if self.po_line:
             self.po_line.account_analytic_id = self.cost_center_id.id
             self.po_line.project_site_id = self.project_site_id.id

@@ -29,13 +29,15 @@
         'views/sale_order_line.xml',
         'views/purchase_order_line.xml',
         'views/account_move_line.xml',
-        # 'views/account_report.xml',
         'views/analytic_item.xml',
         'views/assets.xml',
         'views/budget.xml',
         'views/account_analytic_account.xml',
         'views/account_asset.xml',
         'views/in_out_budget.xml',
+        'views/in_out_budget_sales.xml',
+        'views/in_out_budget_invoice.xml',
+        'views/approve_mail_template.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

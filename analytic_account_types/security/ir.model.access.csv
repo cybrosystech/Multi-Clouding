@@ -4,3 +4,7 @@ access_budget_in_out_check,budget_in_out_check,model_budget_in_out_check,base.gr
 access_budget_in_out_lines,budget_in_out_lines,model_budget_in_out_lines,base.group_user,1,1,1,1
 access_budget_collect,budget_collect,model_budget_collect,base.group_user,1,1,1,1
 access_purchase_approval_cycle,purchase_approval_cycle,model_purchase_approval_cycle,base.group_user,1,1,1,1
+access_budget_in_out_check_sales,budget_in_out_check_sales,model_budget_in_out_check_sales,base.group_user,1,1,1,1
+access_budget_in_out_check_invoice,budget_in_out_check_invoice,model_budget_in_out_check_invoice,base.group_user,1,1,1,1
+access_budget_in_out_lines_sales,budget_in_out_lines_sales,model_budget_in_out_lines_sales,base.group_user,1,1,1,1
+access_budget_in_out_lines_invoice,budget_in_out_lines_invoice,model_budget_in_out_lines_invoice,base.group_user,1,1,1,1
