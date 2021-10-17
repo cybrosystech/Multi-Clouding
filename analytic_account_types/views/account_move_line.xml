@@ -13,6 +13,9 @@
                 <xpath expr="//button[@name='action_post'][2]" position="attributes">
                     <attribute name="attrs">{'invisible':['|',('show_post_button','=',False),('state','!=','draft')]}</attribute>
                 </xpath>
+                <xpath expr="//button[@name='button_cancel']" position="attributes">
+                    <attribute name="attrs">{'invisible' : ['|', ('id', '=', False), ('state', 'not in', ['draft','to_approve'])]}</attribute>
+                </xpath>
                 <xpath expr="//button[@name='action_post']" position="after">
                     <field name="show_approve_button" invisible="1"/>
                     <field name="show_request_approve_button" invisible="1"/>

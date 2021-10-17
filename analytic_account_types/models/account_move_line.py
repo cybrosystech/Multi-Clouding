@@ -23,17 +23,20 @@ class AccountMove(models.Model):
     is_from_sales = fields.Boolean(string="",compute='check_if_from_sales'  )
     show_confirm_button = fields.Boolean(string="",compute='check_show_confirm_and_post_buttons' )
     show_post_button = fields.Boolean(string="",compute='check_show_confirm_and_post_buttons' )
+    mail_link = fields.Text(string="\\4111", required=False, )
+    state = fields.Selection(selection_add=[('to_approve', 'To Approve'),('posted',), ], ondelete={'to_approve': 'set default','draft': 'set default',})
+
 
     @api.depends()
     def check_show_confirm_and_post_buttons(self):
         self.show_post_button = False
         self.show_confirm_button = False
-        if self.state != 'draft' or self.auto_post or self.move_type != 'entry':
+        if self.state not in ['draft','to_approve'] or self.auto_post or self.move_type != 'entry':
             if self.is_from_purchase or self.is_from_sales:
                 self.show_post_button = True
             else:
                 self.show_post_button = False
-        elif self.state != 'draft' or self.auto_post == True or self.move_type == 'entry':
+        elif self.state not in ['draft','to_approve'] or self.auto_post == True or self.move_type == 'entry':
             if self.is_from_purchase or self.is_from_sales:
                 self.show_confirm_button = True
             else:
@@ -53,15 +56,24 @@ class AccountMove(models.Model):
         if sales:
             self.is_from_sales = True
 
-
     @api.depends()
     def check_show_approve_button(self):
         self.show_approve_button = False
-        if not self.is_from_purchase and not self.is_from_sales:
-            for rec in self.purchase_approval_cycle_ids:
+        current_approve = self.purchase_approval_cycle_ids.filtered(lambda x: x.is_approved).mapped('approval_seq')
+
+        last_approval = max(current_approve) if current_approve else 0
+        check_last_approval_is_approved = self.purchase_approval_cycle_ids.filtered(
+            lambda x: x.approval_seq == int(last_approval))
+        for rec in self.purchase_approval_cycle_ids:
+            if check_last_approval_is_approved:
+                if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids and check_last_approval_is_approved.is_approved:
+                    self.show_approve_button = True
+                    break
+            else:
                 if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids:
                     self.show_approve_button = True
                     break
+                break
 
     @api.depends('budget_collect_ids')
     def check_out_budget(self):
@@ -92,45 +104,21 @@ class AccountMove(models.Model):
             reseiver = us.partner_id
             if reseiver:
                 for move in self:
+                    thread_pool = self.sudo().env['mail.thread']
+                    thread_pool.message_notify(
+                        partner_ids=[reseiver.id],
+                        subject=str('Invoice Approval Needed'),
+                        body=str('This Sale Order ' + str(
+                            move.name) + ' Need Your Approval ') + ' click here to open: <a target=_BLANK href="/web?#id=' + str(
+                            move.id) + '&view_type=form&model=account.move&action=" style="font-weight: bold">' + str(
+                            move.name) + '</a>',
+                        email_from=self.env.user.company_id.catchall_formatted or self.env.user.company_id.email_formatted, )
 
-                    msg_id = self.env['mail.message'].sudo().create({
-                        'message_type': "comment",
-                        "subtype_id": self.env.ref("mail.mt_comment").id,
-                        'body': "Dear Sir<br></br> This Invoice :{} Need Your Confirmation <br></br> Best Regards".format(
-                            move.name),
-                        'subject': 'Purchase Approval Needed',
-                        'partner_ids': [(4, us.partner_id.id)],
-                        'model': move._name,
-                        'res_id': move.id,
-                    })
-                    notify_id = self.env['mail.notification'].sudo().create({
-                        'mail_message_id': msg_id.id,
-                        'res_partner_id': us.partner_id.id,
-                        'notification_type': 'inbox',
-                        'notification_status': 'exception',
-                    })
-                    base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
-                    body = "Dear Sir<br></br> This Invoice :{} Need Your Confirmation <br></br> Best Regards".format(
-                        move.name) + ' click here to open: <a target=_BLANK href="{}/web?#id='.format(
-                        base_url) + str(
-                        move.id) + '&view_type=form&model=account.move&action=" style="font-weight: bold">' + str(
-                        move.name) + '</a>'
-                    # if us.email:
-                    #     mails_send = self.env['mail.mail'].sudo().create({
-                    #         'subject': 'Invoice Approval Needed',
-                    #         'body_html': str(body),
-                    #         'notification': True,
-                    #         'auto_delete': True,
-                    #         'email_to': us.email,
-                    #         'message_type': 'email',
-                    #     })
-                    #
-                    #     mails_send.sudo().send()
                     email_template_id = self.env.ref('analytic_account_types.email_template_send_mail_approval_account')
                     ctx = self._context.copy()
                     ctx.update({'name': us.name})
                     if email_template_id:
-                        email_template_id.with_context(ctx).send_mail(self.id, email_values={'email_to': us.email, })
+                        email_template_id.with_context(ctx).send_mail(self.id, email_values={'email_to': us.email,})
 
     def request_approval_button(self):
         if self.out_budget and not self.purchase_approval_cycle_ids:
@@ -170,6 +158,7 @@ class AccountMove(models.Model):
         notification_to_user = self.purchase_approval_cycle_ids.filtered(
             lambda x: x.approval_seq == int(min_seq_approval))
         user = notification_to_user.user_approve_ids
+        self.state = 'to_approve'
         self.send_user_notification(user)
 
     def button_approve_purchase_cycle(self):

@@ -14,6 +14,9 @@ class SaleOrder(models.Model):
     show_approve_button = fields.Boolean(string="", compute='check_show_approve_button')
     show_request_approve_button = fields.Boolean(string="", )
     show_button_confirm = fields.Boolean(string="", )
+    mail_link = fields.Text(string="", required=False, )
+    state = fields.Selection(selection_add=[('to_approve', 'To Approve'),('sent',), ], ondelete={'to_approve': 'set default','draft': 'set default',})
+
 
     def action_cancel(self):
         res = super(SaleOrder, self).action_cancel()
@@ -28,9 +31,19 @@ class SaleOrder(models.Model):
     @api.depends()
     def check_show_approve_button(self):
         self.show_approve_button = False
+        current_approve = self.sale_approval_cycle_ids.filtered(lambda x:x.is_approved).mapped('approval_seq')
+
+        last_approval = max(current_approve) if current_approve else 0
+        check_last_approval_is_approved = self.sale_approval_cycle_ids.filtered(lambda x: x.approval_seq == int(last_approval))
         for rec in self.sale_approval_cycle_ids:
-            if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids:
-                self.show_approve_button = True
+            if check_last_approval_is_approved:
+                if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids and check_last_approval_is_approved.is_approved:
+                    self.show_approve_button = True
+                    break
+            else:
+                if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids:
+                    self.show_approve_button = True
+                    break
                 break
 
     @api.depends('budget_collect_ids')
@@ -59,40 +72,15 @@ class SaleOrder(models.Model):
             reseiver = use.partner_id
             if reseiver:
                 for purchase in self:
-
-                    msg_id = self.env['mail.message'].sudo().create({
-                        'message_type': "comment",
-                        "subtype_id": self.env.ref("mail.mt_comment").id,
-                        'body': "Dear Sir<br></br> This Purchase :{} Need Your Confirmation <br></br> Best Regards".format(
-                            purchase.name),
-                        'subject': 'Purchase Approval Needed',
-                        'partner_ids': [(4, use.partner_id.id)],
-                        'model': purchase._name,
-                        'res_id': purchase.id,
-                    })
-                    notify_id = self.env['mail.notification'].sudo().create({
-                        'mail_message_id': msg_id.id,
-                        'res_partner_id': use.partner_id.id,
-                        'notification_type': 'inbox',
-                        'notification_status': 'exception',
-                    })
-                    base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
-                    body = "Dear Sir<br></br> This Purchase :{} Need Your Confirmation <br></br> Best Regards".format(
-                        purchase.name) + ' click here to open: <a target=_BLANK href="{}/web?#id='.format(
-                        base_url) + str(
-                        purchase.id) + '&view_type=form&model=purchase.order&action=" style="font-weight: bold">' + str(
-                        purchase.name) + '</a>'
-                    # if use.email:
-                    #     mails_send = self.env['mail.mail'].sudo().create({
-                    #         'subject': 'Purchase Order Approval Needed',
-                    #         'body_html': str(body),
-                    #         'notification': True,
-                    #         'auto_delete': True,
-                    #         'email_to': use.email,
-                    #         'message_type': 'email',
-                    #     })
-                    #
-                    #     mails_send.sudo().send()
+                    thread_pool = self.sudo().env['mail.thread']
+                    thread_pool.message_notify(
+                        partner_ids=[reseiver.id],
+                        subject=str('Sales Approval Needed'),
+                        body=str('This Sale Order ' + str(
+                            purchase.name) + ' Need Your Approval ') + ' click here to open: <a target=_BLANK href="/web?#id=' + str(
+                            purchase.id) + '&view_type=form&model=sale.order&action=" style="font-weight: bold">' + str(
+                            purchase.name) + '</a>',
+                        email_from=self.env.user.company_id.catchall_formatted or self.env.user.company_id.email_formatted, )
                     email_template_id = self.env.ref('analytic_account_types.email_template_send_mail_approval_sales')
                     ctx = self._context.copy()
                     ctx.update({'name': use.name})
@@ -142,6 +130,7 @@ class SaleOrder(models.Model):
                 lambda x: x.approval_seq == int(min_seq_approval))
             user = notification_to_user.user_approve_ids
             self.send_user_notification(user)
+            self.state = 'to_approve'
         else:
             self.show_button_confirm = True
 
