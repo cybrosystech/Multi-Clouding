@@ -138,7 +138,7 @@ class SaleOrder(models.Model):
         max_seq_approval = max(self.sale_approval_cycle_ids.mapped('approval_seq'))
         approval_levels = len(self.sale_approval_cycle_ids.ids)
         last_approval = self.sale_approval_cycle_ids.filtered(lambda x: x.approval_seq == int(max_seq_approval))
-        last_approval_user = last_approval.user_approve_ids
+        last_approval_user = last_approval
         for line in self.sale_approval_cycle_ids:
             if not line.is_approved:
                 line.is_approved = True
@@ -147,7 +147,7 @@ class SaleOrder(models.Model):
                 if notification_to_user:
                     user = notification_to_user.user_approve_ids
                     self.send_user_notification(user)
-                if line.user_approve_ids.ids == last_approval_user.ids:
+                if line == last_approval_user:
                     self.action_confirm()
                 break
 
