@@ -115,17 +115,17 @@ class AccountMove(models.Model):
                         base_url) + str(
                         move.id) + '&view_type=form&model=account.move&action=" style="font-weight: bold">' + str(
                         move.name) + '</a>'
-                    if us.email:
-                        mails_send = self.env['mail.mail'].sudo().create({
-                            'subject': 'Invoice Approval Needed',
-                            'body_html': str(body),
-                            'notification': True,
-                            'auto_delete': True,
-                            'email_to': us.email,
-                            'message_type': 'email',
-                        })
-
-                        mails_send.sudo().send()
+                    # if us.email:
+                    #     mails_send = self.env['mail.mail'].sudo().create({
+                    #         'subject': 'Invoice Approval Needed',
+                    #         'body_html': str(body),
+                    #         'notification': True,
+                    #         'auto_delete': True,
+                    #         'email_to': us.email,
+                    #         'message_type': 'email',
+                    #     })
+                    #
+                    #     mails_send.sudo().send()
                     email_template_id = self.env.ref('analytic_account_types.email_template_send_mail_approval_account')
                     ctx = self._context.copy()
                     ctx.update({'name': us.name})

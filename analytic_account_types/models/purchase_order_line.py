@@ -80,17 +80,17 @@ class PurchaseOrder(models.Model):
                     body =  "Dear Sir<br></br> This Purchase :{} Need Your Confirmation <br></br> Best Regards".format(purchase.name) + ' click here to open: <a target=_BLANK href="{}/web?#id='.format(
                         base_url) + str(
                         purchase.id) + '&view_type=form&model=purchase.order&action=" style="font-weight: bold">' + str(purchase.name) + '</a>'
-                    if us.email:
-                        mails_send = self.env['mail.mail'].sudo().create({
-                            'subject': 'Purchase Order Approval Needed',
-                            'body_html': str(body),
-                            'notification': True,
-                            'auto_delete': True,
-                            'email_to': us.email,
-                            'message_type': 'email',
-                        })
-
-                        mails_send.sudo().send()
+                    # if us.email:
+                    #     mails_send = self.env['mail.mail'].sudo().create({
+                    #         'subject': 'Purchase Order Approval Needed',
+                    #         'body_html': str(body),
+                    #         'notification': True,
+                    #         'auto_delete': True,
+                    #         'email_to': us.email,
+                    #         'message_type': 'email',
+                    #     })
+                    #
+                    #     mails_send.sudo().send()
                     email_template_id = self.env.ref('analytic_account_types.email_template_send_mail_approval_purchase')
                     ctx = self._context.copy()
                     ctx.update({'name': us.name})
