@@ -138,17 +138,40 @@ class PurchaseOrder(models.Model):
         approval_levels = len(self.purchase_approval_cycle_ids.ids)
         last_approval = self.purchase_approval_cycle_ids.filtered(lambda x:x.approval_seq == int(max_seq_approval))
         last_approval_id = last_approval
+        print(last_approval_id,'llllllllll')
         for line in self.purchase_approval_cycle_ids:
             if not line.is_approved:
                 line.is_approved = True
                 notification_to_user = self.purchase_approval_cycle_ids.filtered(
                     lambda x: x.approval_seq == int(line.approval_seq + 1))
                 if notification_to_user:
+                    print(notification_to_user,'notification_to_user')
                     user = notification_to_user.user_approve_ids
                     self.send_user_notification(user)
+                print(line,'line',last_approval_id,'last_approval_id')
                 if line == last_approval_id:
+                    print('lllllllllllllllllll')
                     self.button_confirm()
                 break
+
+    def button_confirm(self):
+        for order in self:
+            if order.state not in ['draft', 'sent','to_approve']:
+                continue
+            order._add_supplier_to_product()
+            # Deal with double validation process
+            if order.company_id.po_double_validation == 'one_step'\
+                    or (order.company_id.po_double_validation == 'two_step'\
+                        and order.amount_total < self.env.company.currency_id._convert(
+                            order.company_id.po_double_validation_amount, order.currency_id, order.company_id, order.date_order or fields.Date.today()))\
+                    or order.user_has_groups('purchase.group_purchase_manager'):
+                order.button_approve()
+            else:
+                order.write({'state': 'to approve'})
+            if order.partner_id not in order.message_partner_ids:
+                order.message_subscribe([order.partner_id.id])
+        return True
+
 
 
 
