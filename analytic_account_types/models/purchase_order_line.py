@@ -27,7 +27,7 @@ class PurchaseOrder(models.Model):
     def check_show_approve_button(self):
         self.show_approve_button = False
         for rec in self.purchase_approval_cycle_ids:
-            if not rec.is_approved and self.env.user.id == rec.user_approve_id.id:
+            if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids:
                 self.show_approve_button = True
                 break
 
