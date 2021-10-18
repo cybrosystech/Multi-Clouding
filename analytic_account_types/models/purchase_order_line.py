@@ -71,15 +71,23 @@ class PurchaseOrder(models.Model):
             reseiver = us.partner_id
             if reseiver:
                 for purchase in self:
-                    thread_pool = self.sudo().env['mail.thread']
-                    thread_pool.message_notify(
-                        partner_ids=[reseiver.id],
-                        subject=str('Purchase Approval Needed'),
+                    self.message_post(
+                        subject='Purchase Approval Needed',
                         body=str('This Purchase Order ' + str(
                             purchase.name) + ' Need Your Approval ') + ' click here to open: <a target=_BLANK href="/web?#id=' + str(
                             purchase.id) + '&view_type=form&model=purchase.order&action=" style="font-weight: bold">' + str(
                             purchase.name) + '</a>',
-                        email_from=self.env.user.company_id.catchall_formatted or self.env.user.company_id.email_formatted, )
+                        partner_ids=[reseiver.id]
+                    )
+                    # thread_pool = self.sudo().env['mail.thread']
+                    # thread_pool.message_notify(
+                    #     partner_ids=[reseiver.id],
+                    #     subject=str('Purchase Approval Needed'),
+                    #     body=str('This Purchase Order ' + str(
+                    #         purchase.name) + ' Need Your Approval ') + ' click here to open: <a target=_BLANK href="/web?#id=' + str(
+                    #         purchase.id) + '&view_type=form&model=purchase.order&action=" style="font-weight: bold">' + str(
+                    #         purchase.name) + '</a>',
+                    #     email_from=self.env.user.company_id.catchall_formatted or self.env.user.company_id.email_formatted, )
 
                     email_template_id = self.env.ref('analytic_account_types.email_template_send_mail_approval_purchase')
                     ctx = self._context.copy()
@@ -138,7 +146,6 @@ class PurchaseOrder(models.Model):
         approval_levels = len(self.purchase_approval_cycle_ids.ids)
         last_approval = self.purchase_approval_cycle_ids.filtered(lambda x:x.approval_seq == int(max_seq_approval))
         last_approval_id = last_approval
-        print(last_approval_id,'llllllllll')
         for line in self.purchase_approval_cycle_ids:
             if not line.is_approved:
                 line.is_approved = True
@@ -150,7 +157,6 @@ class PurchaseOrder(models.Model):
                     self.send_user_notification(user)
                 print(line,'line',last_approval_id,'last_approval_id')
                 if line == last_approval_id:
-                    print('lllllllllllllllllll')
                     self.button_confirm()
                 break
 
@@ -235,6 +241,7 @@ class PurchaseOrderLine(models.Model):
     type_id = fields.Many2one(comodel_name="account.analytic.account", string="Type",domain=[('analytic_account_type','=','type')], required=False, )
     location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location",domain=[('analytic_account_type','=','location')], required=False, )
     budget_id = fields.Many2one(comodel_name="crossovered.budget", string="Budget", required=False, )
+    budget_line_id = fields.Many2one(comodel_name="crossovered.budget.lines", string="Budget Line", required=False, )
     remaining_amount = fields.Float(string="Remaining Amount", required=False, compute='get_budget_remaining_amount')
 
     @api.depends('budget_id')
@@ -250,9 +257,9 @@ class PurchaseOrderLine(models.Model):
                         for line in inv.invoice_line_ids.filtered(lambda x: x.budget_id == self.budget_id):
                             invoices_budget += line.price_subtotal
             rec.remaining_amount = 0.0
-            if rec.order_id.date_order:
-                budget_lines = rec.budget_id.crossovered_budget_line.filtered(lambda x: rec.order_id.date_order.date() >= x.date_from and rec.order_id.date_order.date() <= x.date_to and x.analytic_account_id == rec.account_analytic_id and x.project_site_id == rec.project_site_id and x.type_id == rec.type_id and x.location_id == rec.location_id)
-                rec.remaining_amount = sum(budget_lines.mapped('remaining_amount')) - order_lines_without_inv - invoices_budget
+            # if rec.order_id.date_order:
+            #     budget_lines = rec.budget_id.crossovered_budget_line.filtered(lambda x: rec.order_id.date_order.date() >= x.date_from and rec.order_id.date_order.date() <= x.date_to and x.analytic_account_id == rec.account_analytic_id and x.project_site_id == rec.project_site_id and x.type_id == rec.type_id and x.location_id == rec.location_id)
+            rec.remaining_amount = rec.budget_line_id.remaining_amount - order_lines_without_inv - invoices_budget
 
     @api.onchange('project_site_id')
     def get_location_and_types(self):

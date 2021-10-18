@@ -15,10 +15,13 @@ class WizardAnalyticAccountTypes(models.Model):
     type_id = fields.Many2one(comodel_name="account.analytic.account", string="Type",domain=[('analytic_account_type','=','type')], required=False, )
     location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location",domain=[('analytic_account_type','=','location')],  required=False, )
     budget_id = fields.Many2one(comodel_name="crossovered.budget", string="Budget", required=False, )
+    budget_line_id = fields.Many2one(comodel_name="crossovered.budget.lines", string="Budget Line", required=False, )
 
     so_line = fields.Many2one(comodel_name="sale.order.line", string="So Line", required=False, )
     po_line = fields.Many2one(comodel_name="purchase.order.line", string="po Line", required=False, )
     move_line = fields.Many2one(comodel_name="account.move.line", string="move Line", required=False, )
+
+
 
     # @api.onchange('cost_center_id','project_site_id','type_id','location_id','budget_id','po_line','move_line')
     # def _get_budgets(self):
@@ -62,6 +65,7 @@ class WizardAnalyticAccountTypes(models.Model):
             self.so_line.type_id = self.type_id.id
             self.so_line.location_id = self.location_id.id
             self.so_line.budget_id = self.budget_id.id
+            self.so_line.budget_line_id = self.budget_line_id.id
             self.so_line.order_id.get_budgets_in_out_budget_tab()
         if self.po_line:
             self.po_line.account_analytic_id = self.cost_center_id.id
@@ -69,6 +73,7 @@ class WizardAnalyticAccountTypes(models.Model):
             self.po_line.type_id = self.type_id.id
             self.po_line.location_id = self.location_id.id
             self.po_line.budget_id = self.budget_id.id
+            self.po_line.budget_line_id = self.budget_line_id.id
             self.po_line.order_id.get_budgets_in_out_budget_tab()
         if self.move_line:
             self.move_line.analytic_account_id = self.cost_center_id.id
@@ -76,6 +81,7 @@ class WizardAnalyticAccountTypes(models.Model):
             self.move_line.type_id = self.type_id.id
             self.move_line.location_id = self.location_id.id
             self.move_line.budget_id = self.budget_id.id
+            self.move_line.budget_line_id = self.budget_line_id.id
             self.move_line.move_id.get_budgets_in_out_budget_tab()
 
 

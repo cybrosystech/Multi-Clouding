@@ -104,15 +104,23 @@ class AccountMove(models.Model):
             reseiver = us.partner_id
             if reseiver:
                 for move in self:
-                    thread_pool = self.sudo().env['mail.thread']
-                    thread_pool.message_notify(
-                        partner_ids=[reseiver.id],
-                        subject=str('Invoice Approval Needed'),
-                        body=str('This Sale Order ' + str(
+                    self.message_post(
+                        subject='Invoice Approval Needed',
+                        body=str('This Invoice ' + str(
                             move.name) + ' Need Your Approval ') + ' click here to open: <a target=_BLANK href="/web?#id=' + str(
                             move.id) + '&view_type=form&model=account.move&action=" style="font-weight: bold">' + str(
                             move.name) + '</a>',
-                        email_from=self.env.user.company_id.catchall_formatted or self.env.user.company_id.email_formatted, )
+                        partner_ids=[reseiver.id]
+                    )
+                    # thread_pool = self.sudo().env['mail.thread']
+                    # thread_pool.message_notify(
+                    #     partner_ids=[reseiver.id],
+                    #     subject=str('Invoice Approval Needed'),
+                    #     body=str('This Sale Order ' + str(
+                    #         move.name) + ' Need Your Approval ') + ' click here to open: <a target=_BLANK href="/web?#id=' + str(
+                    #         move.id) + '&view_type=form&model=account.move&action=" style="font-weight: bold">' + str(
+                    #         move.name) + '</a>',
+                    #     email_from=self.env.user.company_id.catchall_formatted or self.env.user.company_id.email_formatted, )
 
                     email_template_id = self.env.ref('analytic_account_types.email_template_send_mail_approval_account')
                     ctx = self._context.copy()
@@ -331,6 +339,8 @@ class AccountMoveLine(models.Model):
     location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location",domain=[('analytic_account_type','=','location')], required=False, )
     analytic_account_id = fields.Many2one(string='Cost Center')
     budget_id = fields.Many2one(comodel_name="crossovered.budget", string="Budget", required=False, )
+    budget_line_id = fields.Many2one(comodel_name="crossovered.budget.lines", string="Budget Line", required=False, )
+
     remaining_amount = fields.Float(string="Remaining Amount", required=False,compute='get_budget_remaining_amount' )
 
     @api.depends('budget_id','purchase_line_id')
@@ -353,8 +363,9 @@ class AccountMoveLine(models.Model):
                 #         if inv.state == 'draft':
                 #             for line in inv.invoice_line_ids.filtred(lambda x: x.budget_id == self.budget_id):
                 #                 invoices_budget += line.price_subtotal
-                budget_lines = rec.budget_id.crossovered_budget_line.filtered(lambda x:rec.move_id.invoice_date >= x.date_from and rec.move_id.invoice_date <= x.date_to and x.analytic_account_id == rec.analytic_account_id and x.project_site_id == rec.project_site_id and x.type_id == rec.type_id and x.location_id == rec.location_id )
-                rec.remaining_amount = sum(budget_lines.mapped('remaining_amount'))
+                # budget_lines = rec.budget_id.crossovered_budget_line.filtered(lambda x:rec.move_id.invoice_date >= x.date_from and rec.move_id.invoice_date <= x.date_to and x.analytic_account_id == rec.analytic_account_id and x.project_site_id == rec.project_site_id and x.type_id == rec.type_id and x.location_id == rec.location_id )
+                rec.remaining_amount = rec.budget_line_id.remaining_amount
+
 
     @api.onchange('project_site_id')
     def get_location_and_types(self):

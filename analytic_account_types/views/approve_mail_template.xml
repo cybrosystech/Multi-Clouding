@@ -15,11 +15,12 @@
                 <p style="margin: 0px; padding: 0px; font-size: 13px;">
                     Dear ${ctx['name']},
                     <br /><br />
-                    This Sale Order Need Your Confirmation <strong>${object.name}</strong>
+                    This Sale Order Need Your Approval <strong>${object.name}</strong> ,
 
-                    <br />
 
-                    <a target="_BLANK" href="/web?#id=${object.id} &amp;view_type=form&amp;model=sale.order&amp;action="> View Order  </a>
+                    Click here to open ,
+
+                    <a target="_BLANK" href="/web?#id=${object.id} &amp;view_type=form&amp;model=sale.order&amp;action="> ${object.name} </a>
 
 
                 </p>
@@ -42,11 +43,12 @@
                 <p style="margin: 0px; padding: 0px; font-size: 13px;">
                     Dear ${ctx['name']},
                     <br /><br />
-                    This Invoice Need Your Confirmation <strong>${object.name}</strong>
+                    This Invoice Need Your Approval <strong>${object.name}</strong> ,
 
-                    <br />
 
-                    <a target="_BLANK" href="/web?#id=${object.id} &amp;view_type=form&amp;model=account.move&amp;action="> View Invoice  </a>
+                    Click here to open ,
+
+                    <a target="_BLANK" href="/web?#id=${object.id} &amp;view_type=form&amp;model=account.move&amp;action="> ${object.name} </a>
 
 
                 </p>
@@ -67,11 +69,12 @@
                 <p style="margin: 0px; padding: 0px; font-size: 13px;">
                     Dear ${ctx['name']},
                     <br /><br />
-                    This Purchase Order Need Your Confirmation <strong>${object.name}</strong>
+                    This Purchase Order Need Your Approval <strong>${object.name}</strong> ,
 
-                    <br />
 
-                    <a target="_BLANK" href="/web?#id=${object.id} &amp;view_type=form&amp;model=purchase.order&amp;action="> View Order  </a>
+                    Click here to open ,
+
+                    <a target="_BLANK" href="/web?#id=${object.id} &amp;view_type=form&amp;model=purchase.order&amp;action="> ${object.name} </a>
 
 
                 </p>

@@ -72,15 +72,23 @@ class SaleOrder(models.Model):
             reseiver = use.partner_id
             if reseiver:
                 for purchase in self:
-                    thread_pool = self.sudo().env['mail.thread']
-                    thread_pool.message_notify(
-                        partner_ids=[reseiver.id],
-                        subject=str('Sales Approval Needed'),
+                    self.message_post(
+                        subject='Sale Order Approval Needed',
                         body=str('This Sale Order ' + str(
                             purchase.name) + ' Need Your Approval ') + ' click here to open: <a target=_BLANK href="/web?#id=' + str(
                             purchase.id) + '&view_type=form&model=sale.order&action=" style="font-weight: bold">' + str(
                             purchase.name) + '</a>',
-                        email_from=self.env.user.company_id.catchall_formatted or self.env.user.company_id.email_formatted, )
+                        partner_ids=[reseiver.id]
+                    )
+                    # thread_pool = self.sudo().env['mail.thread']
+                    # thread_pool.message_notify(
+                    #     partner_ids=[reseiver.id],
+                    #     subject=str('Sales Approval Needed'),
+                    #     body=str('This Sale Order ' + str(
+                    #         purchase.name) + ' Need Your Approval ') + ' click here to open: <a target=_BLANK href="/web?#id=' + str(
+                    #         purchase.id) + '&view_type=form&model=sale.order&action=" style="font-weight: bold">' + str(
+                    #         purchase.name) + '</a>',
+                    #     email_from=self.env.user.company_id.catchall_formatted or self.env.user.company_id.email_formatted, )
                     email_template_id = self.env.ref('analytic_account_types.email_template_send_mail_approval_sales')
                     ctx = self._context.copy()
                     ctx.update({'name': use.name})
@@ -160,6 +168,8 @@ class SalesOrderLine(models.Model):
     type_id = fields.Many2one(comodel_name="account.analytic.account", string="Type",domain=[('analytic_account_type','=','type')], required=False, )
     location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location",domain=[('analytic_account_type','=','location')], required=False, )
     budget_id = fields.Many2one(comodel_name="crossovered.budget", string="Budget", required=False, )
+    budget_line_id = fields.Many2one(comodel_name="crossovered.budget.lines", string="Budget Line", required=False, )
+
     remaining_amount = fields.Float(string="Remaining Amount", required=False, compute='get_budget_remaining_amount')
 
     @api.depends('budget_id')
@@ -177,9 +187,9 @@ class SalesOrderLine(models.Model):
             print(invoices_budget,'invoices_budget')
 
             rec.remaining_amount = 0.0
-            if rec.order_id.date_order:
-                budget_lines = rec.budget_id.crossovered_budget_line.filtered(lambda x: rec.order_id.date_order.date() >= x.date_from and rec.order_id.date_order.date() <= x.date_to and x.analytic_account_id == rec.cost_center_id and x.project_site_id == rec.project_site_id and x.type_id == rec.type_id and x.location_id == rec.location_id)
-                rec.remaining_amount = sum(budget_lines.mapped('remaining_amount')) - order_lines_without_inv - invoices_budget
+            # if rec.order_id.date_order:
+            #     budget_lines = rec.budget_id.crossovered_budget_line.filtered(lambda x: rec.order_id.date_order.date() >= x.date_from and rec.order_id.date_order.date() <= x.date_to and x.analytic_account_id == rec.cost_center_id and x.project_site_id == rec.project_site_id and x.type_id == rec.type_id and x.location_id == rec.location_id)
+            rec.remaining_amount = rec.budget_line_id.remaining_amount - order_lines_without_inv - invoices_budget
 
     @api.onchange('project_site_id')
     def get_location_and_types(self):
