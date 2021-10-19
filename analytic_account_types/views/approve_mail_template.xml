@@ -43,12 +43,19 @@
                 <p style="margin: 0px; padding: 0px; font-size: 13px;">
                     Dear ${ctx['name']},
                     <br /><br />
-                    This Invoice Need Your Approval <strong>${object.name}</strong> ,
+                    % if object.name=='/':
+                       This Invoice Need Your Approval <strong>${object.new_sequence} </strong> ,
+                    Click here to open ,
 
+                    <a target="_BLANK" href="/web?#id=${object.id} &amp;view_type=form&amp;model=account.move&amp;action="> ${object.new_sequence} </a>
 
+                    % else:
+                       This Invoice Need Your Approval <strong>${object.name} </strong> ,
                     Click here to open ,
 
                     <a target="_BLANK" href="/web?#id=${object.id} &amp;view_type=form&amp;model=account.move&amp;action="> ${object.name} </a>
+
+                    %endif
 
 
                 </p>

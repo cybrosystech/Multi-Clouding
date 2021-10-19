@@ -25,6 +25,36 @@ class AccountMove(models.Model):
     show_post_button = fields.Boolean(string="",compute='check_show_confirm_and_post_buttons' )
     mail_link = fields.Text(string="\\4111", required=False, )
     state = fields.Selection(selection_add=[('to_approve', 'To Approve'),('posted',), ], ondelete={'to_approve': 'set default','draft': 'set default',})
+    new_sequence = fields.Char(string="New Seq", required=False, )
+
+    def button_cancel(self):
+        res = super(AccountMove, self).button_cancel()
+        self.purchase_approval_cycle_ids = False
+        return res
+
+    def button_draft(self):
+        res = super(AccountMove, self).button_draft()
+        self.purchase_approval_cycle_ids = False
+        self.show_request_approve_button = False
+        return res
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        res = super(AccountMove, self).create(vals_list)
+        if res.move_type == 'in_invoice':
+            res.new_sequence = self.env['ir.sequence'].next_by_code('vendor.bill.temporary.seq')
+        if res.move_type == 'in_refund':
+            res.new_sequence = self.env['ir.sequence'].next_by_code('debit.note.temporary.seq')
+        if res.move_type == 'out_invoice':
+            res.new_sequence = self.env['ir.sequence'].next_by_code('customer.invoice.temporary.seq')
+        if res.move_type == 'out_refund':
+            res.new_sequence = self.env['ir.sequence'].next_by_code('credit.note.temporary.seq')
+        if res.move_type == 'entry':
+            res.new_sequence = self.env['ir.sequence'].next_by_code('entry.temporary.seq')
+        return res
+
+
+
 
 
     @api.depends()
@@ -107,9 +137,9 @@ class AccountMove(models.Model):
                     self.message_post(
                         subject='Invoice Approval Needed',
                         body=str('This Invoice ' + str(
-                            move.name) + ' Need Your Approval ') + ' click here to open: <a target=_BLANK href="/web?#id=' + str(
+                            move.name if move.name != '/' else move.new_sequence) + ' Need Your Approval ') + ' click here to open: <a target=_BLANK href="/web?#id=' + str(
                             move.id) + '&view_type=form&model=account.move&action=" style="font-weight: bold">' + str(
-                            move.name) + '</a>',
+                            move.name if move.name != '/' else move.new_sequence) + '</a>',
                         partner_ids=[reseiver.id]
                     )
                     # thread_pool = self.sudo().env['mail.thread']
