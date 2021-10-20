@@ -41,16 +41,17 @@ class AccountMove(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         res = super(AccountMove, self).create(vals_list)
-        if res.move_type == 'in_invoice':
-            res.new_sequence = self.env['ir.sequence'].next_by_code('vendor.bill.temporary.seq')
-        if res.move_type == 'in_refund':
-            res.new_sequence = self.env['ir.sequence'].next_by_code('debit.note.temporary.seq')
-        if res.move_type == 'out_invoice':
-            res.new_sequence = self.env['ir.sequence'].next_by_code('customer.invoice.temporary.seq')
-        if res.move_type == 'out_refund':
-            res.new_sequence = self.env['ir.sequence'].next_by_code('credit.note.temporary.seq')
-        if res.move_type == 'entry':
-            res.new_sequence = self.env['ir.sequence'].next_by_code('entry.temporary.seq')
+        for rec in res:
+            if rec.move_type == 'in_invoice':
+                rec.new_sequence = self.env['ir.sequence'].next_by_code('vendor.bill.temporary.seq')
+            if rec.move_type == 'in_refund':
+                rec.new_sequence = self.env['ir.sequence'].next_by_code('debit.note.temporary.seq')
+            if rec.move_type == 'out_invoice':
+                rec.new_sequence = self.env['ir.sequence'].next_by_code('customer.invoice.temporary.seq')
+            if rec.move_type == 'out_refund':
+                rec.new_sequence = self.env['ir.sequence'].next_by_code('credit.note.temporary.seq')
+            if rec.move_type == 'entry':
+                rec.new_sequence = self.env['ir.sequence'].next_by_code('entry.temporary.seq')
         return res
 
 
