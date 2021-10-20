@@ -6,11 +6,11 @@ class PurchaseOrder(models.Model):
     _inherit = 'purchase.order'
 
     budget_collect_ids = fields.One2many(comodel_name="budget.collect", inverse_name="purchase_id", string="", required=False, )
-    purchase_approval_cycle_ids = fields.One2many(comodel_name="purchase.approval.cycle", inverse_name="purchase_id", string="", required=False, )
+    purchase_approval_cycle_ids = fields.One2many(comodel_name="purchase.approval.cycle", inverse_name="purchase_id", string="", required=False,copy=False )
     out_budget = fields.Boolean(string="Out Budget",compute="check_out_budget"  )
     show_approve_button = fields.Boolean(string="",compute='check_show_approve_button'  )
-    show_request_approve_button = fields.Boolean(string="",  )
-    show_button_confirm = fields.Boolean(string="",  )
+    show_request_approve_button = fields.Boolean(string="", copy=False )
+    show_button_confirm = fields.Boolean(string="", copy=False )
     mail_link = fields.Text(string="", required=False, )
     state = fields.Selection(selection_add=[('to_approve', 'To Approve'),('sent',), ], ondelete={'to_approve': 'set default','draft': 'set default',})
 

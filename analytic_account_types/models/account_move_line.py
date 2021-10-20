@@ -18,7 +18,7 @@ class AccountMove(models.Model):
                                                   string="", required=False, )
     out_budget = fields.Boolean(string="Out Budget", compute="check_out_budget")
     show_approve_button = fields.Boolean(string="", compute='check_show_approve_button')
-    show_request_approve_button = fields.Boolean(string="", )
+    show_request_approve_button = fields.Boolean(string="",copy=False )
     is_from_purchase = fields.Boolean(string="",compute='check_if_from_purchase'  )
     is_from_sales = fields.Boolean(string="",compute='check_if_from_sales'  )
     show_confirm_button = fields.Boolean(string="",compute='check_show_confirm_and_post_buttons' )
