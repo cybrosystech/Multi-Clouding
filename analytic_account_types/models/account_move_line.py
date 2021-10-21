@@ -193,12 +193,13 @@ class AccountMove(models.Model):
                     }))
             self.write({'purchase_approval_cycle_ids': in_budget_list})
         self.show_request_approve_button = True
-        min_seq_approval = min(self.purchase_approval_cycle_ids.mapped('approval_seq'))
-        notification_to_user = self.purchase_approval_cycle_ids.filtered(
-            lambda x: x.approval_seq == int(min_seq_approval))
-        user = notification_to_user.user_approve_ids
-        self.state = 'to_approve'
-        self.send_user_notification(user)
+        if self.purchase_approval_cycle_ids:
+            min_seq_approval = min(self.purchase_approval_cycle_ids.mapped('approval_seq'))
+            notification_to_user = self.purchase_approval_cycle_ids.filtered(
+                lambda x: x.approval_seq == int(min_seq_approval))
+            user = notification_to_user.user_approve_ids
+            self.state = 'to_approve'
+            self.send_user_notification(user)
 
     def button_approve_purchase_cycle(self):
         max_seq_approval = max(self.purchase_approval_cycle_ids.mapped('approval_seq'))
