@@ -179,7 +179,10 @@ class AccountMove(models.Model):
         if not self.out_budget and not self.purchase_approval_cycle_ids:
             in_budget_list = []
             in_budget = self.env['budget.in.out.check.invoice'].search([('type', '=', 'in_budget')], limit=1)
-            max_value = self.amount_total
+            if self.move_type == 'entry':
+                max_value = sum(self.line_ids.mapped('debit'))
+            else:
+                max_value = self.amount_total
             for rec in in_budget.budget_line_ids:
                 if rec.to_amount >= max_value >= rec.from_amount:
                     in_budget_list.append((0, 0, {
