@@ -7,12 +7,42 @@
             <field name="inherit_id" ref="account.view_move_form"/>
             <field name="arch" type="xml">
 
+                <xpath expr="//button[@name='action_post'][1]" position="attributes">
+                    <attribute name="attrs">{'invisible':['|',('show_confirm_button','=',False),('state','!=','draft')]}</attribute>
+                </xpath>
+                <xpath expr="//button[@name='action_post'][2]" position="attributes">
+                    <attribute name="attrs">{'invisible':['|',('show_post_button','=',False),('state','!=','draft')]}</attribute>
+                </xpath>
+                <xpath expr="//button[@name='button_cancel']" position="attributes">
+                    <attribute name="attrs">{'invisible' : ['|', ('id', '=', False), ('state', 'not in', ['draft','to_approve'])]}</attribute>
+                </xpath>
+                <xpath expr="//button[@name='action_post']" position="after">
+                    <field name="show_approve_button" invisible="1"/>
+                    <field name="show_request_approve_button" invisible="1"/>
+                    <field name="is_from_purchase" invisible="1"/>
+                    <field name="is_from_sales" invisible="1"/>
+                    <field name="show_confirm_button" invisible="1"/>
+                    <field name="show_post_button" invisible="1"/>
+                    <button name="request_approval_button" string="Request Approval" type="object" class="btn-primary" attrs="{'invisible':['|','|',('show_request_approve_button','=',True),('is_from_purchase','=',True),('is_from_sales','=',True)]}"/>
+                    <button name="button_approve_purchase_cycle" string="Approve" type="object" class="btn-primary" attrs="{'invisible':[('show_approve_button','=',False)]}"/>
+                </xpath>
+
+                <xpath expr="//sheet/div/h1[1]" position="after">
+                    <h1><field name="new_sequence" readonly="1" attrs="{'invisible':['|',('state', '=', 'posted'), ('name', '!=', '/')]}"/></h1>
+                </xpath>
+                <xpath expr="//sheet/div/h1[1]/span" position="replace">
+                    <span attrs="{'invisible': ['|', '|',('state', '!=', 'draft'), ('name', '!=', '/'),('new_sequence', '!=', False)]}">Draft</span>
+                </xpath>
+
                 <!-- position: after|before|replace|attributes|inside -->
                 <xpath expr="//notebook/page/field/tree/field[@name='analytic_account_id']" position="after">
                     <field name="project_site_id" optional="show"/>
                     <field name="type_id" optional="show"/>
                     <field name="location_id" optional="show"/>
+
                     <button name="open_account_analytic_types" type="object" string="Set Cost Center" />
+                    <field name="budget_id" optional="show"/>
+                    <field name="remaining_amount" optional="show"/>
                 </xpath>
 
                 <!-- position: after|before|replace|attributes|inside -->
@@ -21,12 +51,88 @@
                     <field name="type_id" optional="show"/>
                     <field name="location_id" optional="show"/>
                     <button name="open_account_analytic_types" attrs="{'invisible': [('parent.move_type','!=','entry')]}" type="object" string="Set Cost Center" />
+                    <field name="budget_id" optional="show"/>
+                    <field name="remaining_amount" optional="show"/>
+                </xpath>
+                 <xpath expr="//notebook" position="inside">
+                    <page string="Out Budget Amounts" name="budget_amounts">
+                        <div>
+                            <field name="budget_collect_ids">
+                                <tree editable="bottom">
+                                    <field name="budget_id"/>
+                                    <field name="remaining_amount"/>
+                                    <field name="demand_amount"/>
+                                    <field name="difference_amount"/>
+                                </tree>
+                            </field>
+                        </div>
+                    </page>
+                     <page string="Approval Cycle" name="approval_cycle">
+                        <div>
+                            <field name="purchase_approval_cycle_ids">
+                                <tree editable="bottom">
+                                    <field name="approval_seq"/>
+                                    <field name="user_approve_ids" widget="many2many_tags"/>
+                                    <field name="is_approved"/>
+                                </tree>
+                            </field>
+                        </div>
+                    </page>
                 </xpath>
 
 
                 
             </field>
         </record>
+
+         <record model="ir.sequence" id="vendor_bill_temporary_seq">
+            <field name="name">Vendor Bill Temporary Seq</field>
+            <field name="code">vendor.bill.temporary.seq</field>
+            <field name="padding">5</field>
+             <field eval="1" name="number_next"/>
+            <field name="number_increment">1</field>
+            <field name="prefix">BILL/%(range_year)s/</field>
+             <field eval="True" name="use_date_range"/>
+        </record>
+         <record model="ir.sequence" id="debit_note_temporary_seq">
+            <field name="name">Debit Note Temporary Seq</field>
+            <field name="code">debit.note.temporary.seq</field>
+            <field name="padding">5</field>
+             <field eval="1" name="number_next"/>
+            <field name="number_increment">1</field>
+            <field name="prefix">DEBIT-NOTE/%(range_year)s/</field>
+             <field eval="True" name="use_date_range"/>
+        </record>
+        <record model="ir.sequence" id="customer_invoice_temporary_seq">
+            <field name="name">Customer Invoice Temporary Seq</field>
+            <field name="code">customer.invoice.temporary.seq</field>
+            <field name="padding">5</field>
+            <field name="number_increment">1</field>
+            <field eval="1" name="number_next"/>
+            <field name="prefix">INV/%(range_year)s/</field>
+            <field eval="True" name="use_date_range"/>
+        </record>
+        <record model="ir.sequence" id="credit_note_temporary_seq">
+            <field name="name">Credit Note Temporary Seq</field>
+            <field name="code">credit.note.temporary.seq</field>
+            <field name="padding">5</field>
+            <field name="number_increment">1</field>
+            <field eval="1" name="number_next"/>
+            <field name="prefix">CREDIT-NOTE/%(range_year)s/</field>
+            <field eval="True" name="use_date_range"/>
+        </record>
+        <record model="ir.sequence" id="entry_temporary_seq">
+            <field name="name">Entry Temporary Seq</field>
+            <field name="code">entry.temporary.seq</field>
+            <field name="padding">5</field>
+            <field name="number_increment">1</field>
+             <field eval="1" name="number_next"/>
+            <field name="prefix">ENTRY/%(range_year)s/</field>
+            <field eval="True" name="use_date_range"/>
+        </record>
+
+
+
 
     </data>
 </odoo>
