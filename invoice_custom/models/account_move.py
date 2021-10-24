@@ -15,7 +15,7 @@ class AccountMove(models.Model):
 
     def create(self):
         todays_date = date.today()
-        res = super(AccountMove, self).create()
+        res = super(AccountMove, self).create(vals_list)
         # Invoice
         str = ''
         if self.move_type == 'out_invoice':
