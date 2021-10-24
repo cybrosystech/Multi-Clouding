@@ -13,7 +13,7 @@ import random
 class AccountMove(models.Model):
     _inherit = 'account.move'
 
-    def create(self):
+    def create(self, vals_list):
         todays_date = date.today()
         res = super(AccountMove, self).create(vals_list)
         # Invoice
