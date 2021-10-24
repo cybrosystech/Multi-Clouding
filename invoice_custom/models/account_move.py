@@ -19,10 +19,10 @@ class AccountMove(models.Model):
         # Invoice
         str = ''
         if res.move_type == 'out_invoice':
-            str = 'INV/'+todays_date.year+'/'+todays_date.month+'/'+todays_date.day+''+random.randint(1,10)
+            str = 'INV/'+str(todays_date.year)+'/'+str(todays_date.month)+'/'+str(todays_date.day)+''+str(random.randint(1,10))
         # Bill
         if res.move_type == 'in_invoice':
-            str = 'BILL/'+todays_date.year+'/'+todays_date.month+'/'+todays_date.day+''+random.randint(1,10)
+            str = 'BILL/'+str(todays_date.year)+'/'+str(todays_date.month)+'/'+str(todays_date.day)+''+str(random.randint(1,10))
 
         res.name = str
         return res
