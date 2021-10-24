@@ -17,12 +17,12 @@ class AccountMove(models.Model):
         todays_date = date.today()
         res = super(AccountMove, self).create(vals_list)
         # Invoice
-        str = ''
+        name = ''
         if res.move_type == 'out_invoice':
-            str = 'INV/'+str(todays_date.year)+'/'+str(todays_date.month)+'/'+str(todays_date.day)+''+str(random.randint(1,10))
+            name = 'INV/'+str(todays_date.year)+'/'+str(todays_date.month)+'/'+str(todays_date.day)+''+str(random.randint(1,10))
         # Bill
         if res.move_type == 'in_invoice':
-            str = 'BILL/'+str(todays_date.year)+'/'+str(todays_date.month)+'/'+str(todays_date.day)+''+str(random.randint(1,10))
+            name = 'BILL/'+str(todays_date.year)+'/'+str(todays_date.month)+'/'+str(todays_date.day)+''+str(random.randint(1,10))
 
-        res.name = str
+        res.name = name
         return res
