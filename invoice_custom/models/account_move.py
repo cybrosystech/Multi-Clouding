@@ -18,10 +18,10 @@ class AccountMove(models.Model):
         res = super(AccountMove, self).create(vals_list)
         # Invoice
         str = ''
-        if self.move_type == 'out_invoice':
+        if res.move_type == 'out_invoice':
             str = 'INV/'+todays_date.year+'/'+todays_date.month+'/'+todays_date.day+''+random.randint(1,10)
         # Bill
-        if self.move_type == 'in_invoice':
+        if res.move_type == 'in_invoice':
             str = 'BILL/'+todays_date.year+'/'+todays_date.month+'/'+todays_date.day+''+random.randint(1,10)
 
         res.name = str
