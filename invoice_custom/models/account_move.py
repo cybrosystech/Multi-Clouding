@@ -24,5 +24,5 @@ class AccountMove(models.Model):
         if self.move_type == 'in_invoice':
             str = 'BILL/'+todays_date.year+'/'+todays_date.month+'/'+todays_date.day+''+random.randint(1,10)
 
-        self.name = str
+        res.name = str
         return res
