@@ -6,6 +6,22 @@
             <field name="model">purchase.order</field>
             <field name="inherit_id" ref="purchase.purchase_order_form"/>
             <field name="arch" type="xml">
+                <xpath expr="//button[@name='button_confirm'][1]" position="attributes">
+                    <attribute name="attrs">{'invisible':['|',('state','!=','draft'),('show_button_confirm','=',False)]}</attribute>
+                </xpath>
+                <xpath expr="//button[@name='button_confirm'][2]" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
+                 <xpath expr="//button[@name='button_cancel']" position="attributes">
+                    <attribute name="states">draft,to_approve,to approve,sent,purchase</attribute>
+                </xpath>
+                <xpath expr="//button[@name='button_confirm']" position="after">
+                    <field name="show_approve_button" invisible="1"/>
+                    <field name="show_request_approve_button" invisible="1"/>
+                    <field name="show_button_confirm" invisible="1"/>
+                    <button name="request_approval_button" string="Request Approval" type="object" class="btn-primary" attrs="{'invisible':[('show_request_approve_button','=',True)]}"/>
+                    <button name="button_approve_purchase_cycle" string="Approve" type="object" class="btn-primary" attrs="{'invisible':[('show_approve_button','=',False)]}"/>
+                </xpath>
                 
                 <!-- position: after|before|replace|attributes|inside -->
                 <xpath expr="//notebook/page/field/tree/field[@name='name']" position="after">
@@ -14,6 +30,34 @@
                     <field name="type_id" optional="show"/>
                     <field name="location_id" optional="show"/>
                     <button name="open_account_analytic_types" type="object" string="Set Cost Center" />
+                    <field name="budget_id" optional="show"/>
+                    <field name="remaining_amount" optional="show"/>
+                </xpath>
+                <!-- position: after|before|replace|attributes|inside -->
+                <xpath expr="//notebook" position="inside">
+                    <page string="Out Budget Amounts" name="budget_amounts">
+                        <div>
+                            <field name="budget_collect_ids">
+                                <tree editable="bottom">
+                                    <field name="budget_id"/>
+                                    <field name="remaining_amount"/>
+                                    <field name="demand_amount"/>
+                                    <field name="difference_amount"/>
+                                </tree>
+                            </field>
+                        </div>
+                    </page>
+                     <page string="Approval Cycle" name="approval_cycle">
+                        <div>
+                            <field name="purchase_approval_cycle_ids">
+                                <tree editable="bottom">
+                                    <field name="approval_seq"/>
+                                    <field name="user_approve_ids" widget="many2many_tags"/>
+                                    <field name="is_approved"/>
+                                </tree>
+                            </field>
+                        </div>
+                    </page>
                 </xpath>
                 
             </field>

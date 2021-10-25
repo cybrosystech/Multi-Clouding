@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <template id="web_login_hide_password_login" inherit_id="web.login" name="Login">
+        <xpath expr="//div[@class='form-group field-login']" position="attributes">
+            <attribute name="t-if">not disable_password_login</attribute>
+        </xpath>
+        <xpath expr="//div[@class='form-group field-password']" position="attributes">
+            <attribute name="t-if">not disable_password_login</attribute>
+        </xpath>
+        <xpath expr="//button[@class='btn btn-primary btn-block']" position="attributes">
+            <attribute name="t-if">not disable_password_login</attribute>
+        </xpath>
+    </template>
+    <template id="web_login_change_providers" inherit_id="auth_oauth.providers" name="OAuth Providers">
+        <xpath expr="//em[1]" position="attributes">
+            <attribute name="t-if">not disable_password_login</attribute>
+        </xpath>
+    </template>
+</odoo>
