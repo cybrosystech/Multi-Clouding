@@ -385,7 +385,7 @@ class AccountMoveLine(models.Model):
             rec.local_subtotal = rec.move_id.currency_id._convert(rec.price_subtotal,
                                                                    rec.move_id.company_id.currency_id,
                                                                    rec.move_id.company_id,
-                                                                   rec.move_id.date_invoice or rec.move_id.create_date.date())
+                                                                   rec.move_id.invoice_date or rec.move_id.create_date.date())
 
     @api.depends('budget_id','purchase_line_id')
     def get_budget_remaining_amount(self):
