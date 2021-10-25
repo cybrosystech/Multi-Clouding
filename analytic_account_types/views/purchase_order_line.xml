@@ -32,6 +32,7 @@
                     <button name="open_account_analytic_types" type="object" string="Set Cost Center" />
                     <field name="budget_id" optional="show"/>
                     <field name="remaining_amount" optional="show"/>
+                    <field name="local_subtotal" optional="hide"/>
                 </xpath>
                 <!-- position: after|before|replace|attributes|inside -->
                 <xpath expr="//notebook" position="inside">

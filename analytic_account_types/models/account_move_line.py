@@ -377,6 +377,15 @@ class AccountMoveLine(models.Model):
     budget_line_id = fields.Many2one(comodel_name="crossovered.budget.lines", string="Budget Line", required=False, )
 
     remaining_amount = fields.Float(string="Remaining Amount", required=False,compute='get_budget_remaining_amount' )
+    local_subtotal = fields.Float(compute='compute_local_subtotal', store=True)
+
+    @api.depends('price_subtotal')
+    def compute_local_subtotal(self):
+        for rec in self:
+            rec.local_subtotal = rec.order_id.currency_id._convert(rec.price_subtotal,
+                                                                   rec.order_id.company_id.currency_id,
+                                                                   rec.order_id.company_id,
+                                                                   rec.order_id.date_order or rec.order_id.create_date.date())
 
     @api.depends('budget_id','purchase_line_id')
     def get_budget_remaining_amount(self):

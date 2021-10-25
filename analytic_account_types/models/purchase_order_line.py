@@ -214,21 +214,21 @@ class BudgetCollect(models.Model):
                 budget_lines = rec.purchase_id.order_line.filtered(lambda x:x.budget_id == rec.budget_id)
                 if budget_lines:
                     rec.remaining_amount = budget_lines[0].remaining_amount
-                    rec.demand_amount = sum(budget_lines.mapped('price_subtotal'))
+                    rec.demand_amount = sum(budget_lines.mapped('local_subtotal'))
                     if rec.demand_amount > rec.remaining_amount:
                         rec.difference_amount = rec.demand_amount - rec.remaining_amount
             if rec.move_id:
                 budget_lines = rec.move_id.invoice_line_ids.filtered(lambda x: x.budget_id == rec.budget_id)
                 if budget_lines:
                     rec.remaining_amount = budget_lines[0].remaining_amount
-                    rec.demand_amount = sum(budget_lines.mapped('price_subtotal'))
+                    rec.demand_amount = sum(budget_lines.mapped('local_subtotal'))
                     if rec.demand_amount > rec.remaining_amount:
                         rec.difference_amount = rec.demand_amount - rec.remaining_amount
             if rec.sale_id:
                 budget_lines = rec.sale_id.order_line.filtered(lambda x: x.budget_id == rec.budget_id)
                 if budget_lines:
                     rec.remaining_amount = budget_lines[0].remaining_amount
-                    rec.demand_amount = sum(budget_lines.mapped('price_subtotal'))
+                    rec.demand_amount = sum(budget_lines.mapped('local_subtotal'))
                     if rec.demand_amount > rec.remaining_amount:
                         rec.difference_amount = rec.demand_amount - rec.remaining_amount
 
@@ -243,12 +243,17 @@ class PurchaseOrderLine(models.Model):
     budget_id = fields.Many2one(comodel_name="crossovered.budget", string="Budget", required=False, )
     budget_line_id = fields.Many2one(comodel_name="crossovered.budget.lines", string="Budget Line", required=False, )
     remaining_amount = fields.Float(string="Remaining Amount", required=False, compute='get_budget_remaining_amount')
+    local_subtotal = fields.Float(compute='compute_local_subtotal',store=True)
+    @api.depends('price_subtotal')
+    def compute_local_subtotal(self):
+        for rec in self:
+            rec.local_subtotal = rec.order_id.currency_id._convert(rec.price_subtotal, rec.order_id.company_id.currency_id, rec.order_id.company_id,rec.order_id.date_order or rec.order_id.create_date.date())
 
     @api.depends('budget_id')
     def get_budget_remaining_amount(self):
         for rec in self:
             order_lines_without_inv = sum(self.env['purchase.order.line'].search([('order_id.state', '=', 'purchase')]).filtered(
-                lambda x: not x.order_id.invoice_ids and x.budget_id == self.budget_id).mapped('price_subtotal'))
+                lambda x: not x.order_id.invoice_ids and x.budget_id == self.budget_id).mapped('local_subtotal'))
             purchases_with_inv = self.env['purchase.order'].search([('state', '=', 'purchase')]).filtered(lambda x: x.invoice_ids)
             invoices_budget = 0.0
             for order in purchases_with_inv:
