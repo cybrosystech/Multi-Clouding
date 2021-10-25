@@ -16,13 +16,14 @@ class AccountMove(models.Model):
     def create(self, vals_list):
         todays_date = date.today()
         res = super(AccountMove, self).create(vals_list)
-        # Invoice
-        name = ''
-        if res.move_type == 'out_invoice':
-            name = 'INV/'+str(todays_date.year)+'/'+str(todays_date.month)+'/'+str(todays_date.day)+''+str(random.randint(1,10))
-        # Bill
-        if res.move_type == 'in_invoice':
-            name = 'BILL/'+str(todays_date.year)+'/'+str(todays_date.month)+'/'+str(todays_date.day)+''+str(random.randint(1,10))
+        for rec in self:
+            # Invoice
+            name = ''
+            if rec.move_type == 'out_invoice':
+                name = 'INV/'+str(todays_date.year)+'/'+str(todays_date.month)+'/'+str(todays_date.day)+''+str(random.randint(1,10))
+            # Bill
+            if rec.move_type == 'in_invoice':
+                name = 'BILL/'+str(todays_date.year)+'/'+str(todays_date.month)+'/'+str(todays_date.day)+''+str(random.randint(1,10))
 
-        res.name = name
+            rec.name = name
         return res
