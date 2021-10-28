@@ -278,7 +278,7 @@ class PurchaseOrderLine(models.Model):
             'type': 'ir.actions.act_window',
             'view_mode': 'form',
             'res_model': 'wizard.analytic.account.types',
-            'context': {'default_po_line': self.id},
+            'context': {'default_po_line': self.id,'default_account_analytic_id': self.account_analytic_id.id,'default_project_site_id': self.project_site_id.id,'default_type_id': self.type_id.id,'default_location_id': self.location_id.id},
             'target': 'new',
         }
 
