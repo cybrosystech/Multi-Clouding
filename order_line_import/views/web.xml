@@ -1,0 +1,12 @@
+<odoo>
+    <data>
+           <template id="order_line_import_assets_backend" name="order_line_import assets" inherit_id="web.assets_backend">
+		        <xpath expr="." position="inside">
+		     
+		            <script type="text/javascript" src="/order_line_import/static/src/js/order_line_import_action_v12.js"></script>		    
+	
+
+		        </xpath>
+   		</template>
+    </data>
+</odoo>

@@ -1,0 +1,20 @@
+<odoo>
+  <data>
+    <record model="ir.actions.client" id="action_invoice_order_line_import">
+            <field name="name">Import account invoice line</field>
+            <field name="tag">import</field>
+            <field name="params">{'model':'account.move.line','import_field':'invoice_line_ids','height':'700px'}</field>
+            <field name="target">new</field>
+    </record>
+	 <record id="account_invoice_line_import_formm" model="ir.ui.view">
+        <field name="name">account.invoice.line.import.form</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+			<xpath expr="//notebook" position="before">
+				<button class="btn btn-primary" name="%(action_invoice_order_line_import)d"  type="action" string="Order line import"></button>
+			</xpath>
+        </field>
+    </record>
+  </data>
+</odoo>

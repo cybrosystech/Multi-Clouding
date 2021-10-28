@@ -1,0 +1,21 @@
+<odoo>
+  <data>
+        <record model="ir.actions.client" id="action_stock_move_line_import">
+            <field name="name">Import stock move line</field>
+            <field name="tag">import</field>
+            <field name="params">{'model':'stock.move','import_field':'move_lines','height':'700px','show_required':True}</field>
+            <field name="target">new</field>
+        </record>
+	 <record id="stock_move_line_import_view_form" model="ir.ui.view">
+        <field name="name">stock.move.line.import.form</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+			<xpath expr="//notebook" position="before">
+				<button class="btn btn-primary" name="%(action_stock_move_line_import)d" type="action" string="Order line import"></button>
+			</xpath>
+        </field>
+    </record>
+
+  </data>
+</odoo>
