@@ -1,0 +1,242 @@
+
+<section class="oe_container lead" style="padding:20px 20px 0px 20px ;">
+    <div class="oe_row">
+        <div class=" text-center oe_span12">
+            <h2 class="oe_slogan text-center"><b>Import Order line</b></h2>
+        </div>
+		
+		<div class="oe_span12">
+            <p class="oe_mt16">
+                  Import order line from excel file, such as sale order line, purchase orderline, bom line.Add a button to open wizard, easily import any order lines using the function by system default .
+            </p>
+
+        </div>
+ </div>
+</section>
+
+<section class="oe_container oe_dark lead">
+    <div class="oe_row">    
+        <div class="oe_span12">
+            
+                <div class="panel-heading">
+                    <div class="text-center alert alert-info" style="height:46px;padding:8px;font-weight: 300; font-size: 20px;">
+					<i class="fa fa-arrow-circle-o-right"></i><b> Key features </b>
+					</div>
+					<div class="oe_span12">
+						<ul>
+															
+							<li>Support any business models</li>
+							<li>Using the system standard function to import business data .</li>
+							<li>Support odoo version 12 11 .</li>
+						</ul>
+					</div>
+                </div>
+            
+        </div>
+    </div>
+</section>
+
+<section class="oe_container">
+    <div class="oe_row">    
+        <div class="oe_span12">
+           
+                <div class="panel-heading">
+                    <div class="text-center alert alert-info" style="height:46px;padding:8px;font-weight: 300; font-size: 20px;">
+					<i class="fa fa-arrow-circle-o-right"></i><b> Module Detials </b>
+					</div>
+
+
+                    <!---通过截图的方式,描述模块操作的步骤,以及完成功能的效果-->
+
+    
+						<div class="tab-pane active" id="operations_steps"> 
+
+							<section class="oe_container  oe_dark">
+								<div class="oe_row">    
+									<div class="oe_span12">
+										<div class="panel panel-info">
+											<div class="panel-heading">
+												<h3 class="panel-title"><i class="fa fa-pencil-square-o "></i> <b>Demo in sale order form </b></h3>
+											</div>
+											<div class="panel-body">
+												<section class="oe_container  lead">  
+													<div class="panel-heading alert alert-success">
+													    <i class="fa fa-hand-o-down"></i> 
+														<b>Import sale order line </b>
+													</div>
+														<p><img style="max-width:100%" class="img-border img-responsive thumbnail" src="image01.png" alt="1"></p>
+														<p><img style="max-width:100%" class="img-border img-responsive thumbnail" src="image02.png" alt="2"></p>
+												</section>        
+												<section class="oe_container  lead">  
+													<div class="panel-heading alert alert-success">
+													    <i class="fa fa-hand-o-down"></i> 
+														<b>Import purchase order line  </b>
+													</div>
+														<p><img style="max-width:100%" class="img-border img-responsive thumbnail" src="image03.png" alt="3"></p>
+												</section>
+												<section class="oe_container  lead">  
+													<div class="panel-heading alert alert-success">
+													    <i class="fa fa-hand-o-down"></i> 
+														<b>Import bom line  </b>
+													</div>
+														<p><img style="max-width:100%" class="img-border img-responsive thumbnail" src="image04.png" alt="4"></p>
+												</section>
+												<section class="oe_container  lead">  
+													<div class="panel-heading alert alert-success">
+													    <i class="fa fa-hand-o-down"></i> 
+														<b>Import stock move line  </b>
+													</div>
+														<p><img style="max-width:100%" class="img-border img-responsive thumbnail" src="image05.png" alt="5"></p>
+												</section>	
+												<section class="oe_container  lead">  
+													<div class="panel-heading alert alert-success">
+													    <i class="fa fa-hand-o-down"></i> 
+														<b>Import account invoice line  </b>
+													</div>
+														<p><img style="max-width:100%" class="img-border img-responsive thumbnail" src="image06.png" alt="6"></p>
+												</section>													
+											 </div>
+										</div>
+								   </div>
+								</div>
+							</section>
+						</div>
+
+	            </div>
+
+        </div> 
+
+    </div>    
+</section>
+
+
+
+
+	<section class="oe_container oe_spaced lead">
+		<div class="oe_row">    
+			<div class="oe_span12">
+				
+					<div class="panel-heading">
+						<div class=" text-center alert alert-info" style="height:46px;padding:8px;font-weight: 300; font-size: 20px;">
+						<i class="fa fa-arrow-circle-o-right"></i><b> Configuration method </b>
+					</div>	
+						
+
+					
+						<div class="oe_span12">
+							
+								<ol>
+									<p>We enable the ability to import sales order lines by default. The purchase order line, production line, stock move line, and account invoice line are disabled, in order not to cause trouble for customers who do not use other functions. If you need to use the import function of other business order lines at the same time, you only need to do a simple configuration.			 
+						            </p>
+									<li><strong>Edit manifest file to add depends</strong>
+									
+										 <p>If you need extend other business object,the first step you need edit the manifest file of the moudle.<br>
+										 Just like : 'depends': ['purchase','mrp'], we have remark orther depends moudles except sale.
+										 
+										</p>
+									</li>
+									<li><strong>Edit manifest file to add views </strong>
+									    <p>Remove the remark tag on the view files:</p>
+								
+										<p>If you have your own business order line, you need to write a view and add it to the metafest.</p>
+
+									   <p>Create a new business object view in the format shown below</p>
+									</li>
+					 
+								</ol>
+						
+							<p><img style="max-width:100%" class="img-border img-responsive thumbnail" src="image07.png" alt="1"></p>
+						</div>
+					</div>
+				
+			</div>
+		</div>
+	</section>
+
+
+
+
+    <section class="oe_container lead " style="padding: 20px;background-color:#d9d7d7">
+            <div class="oe_row  ">
+			    <div class="oe_span12">
+					<h2 class="text-center"><strong>Free Support<strong></h2>
+					<br>
+					<p class="oe_mt16">
+						All our modules have been tested repeatedly on the corresponding version of odoo using Firefox and Google Chrome. You purchased modules will get 90 Days free support incase any bugs or issue (Except data recovery).
+					</p>
+                </div>
+            </div>
+
+	</section>
+
+    <section class="oe_container  " style="padding: 20px;background-color:#ffffff">
+
+            <div class="row " >
+                <h2 class="text-center mt24"><strong>Product & Services<strong></h2>
+              
+                <div class="col-md-2 col-sm-3 col-xs-6 mt16 mb16" style="width: 25%;" >
+                <a href="https://www.bonainfo.com/" target="_blank">
+                    <div style="width:160px;height:160px;margin: auto;">
+                            <img class="oe_picture oe_screenshot" src="integrated.png" style="width: 100%;">
+                    </div>
+                     <h3 class="oe_slogan" style="text-align: center;font-size: 14px;margin: 0;margin-top: 14px;color: #000 !important;margin-top: 5px;opacity: 1 !important;line-height: 17px;">
+                       Odoo  Integrated
+                     </h3>
+                 </a>
+                </div>
+                <div class="col-md-2 col-sm-3 col-xs-6 mt16 mb16" style="width: 25%;" >
+                                 <a href="https://www.bonainfo.com/" target="_blank">
+                    <div style="width:160px;height:160px;margin: auto;">
+                            <img class="oe_picture oe_screenshot" src="cutomization.png" style="width: 100%;">
+                    </div>
+                     <h3 class="oe_slogan" style="text-align: center;font-size: 14px;margin: 0;margin-top: 14px;color: #000 !important;margin-top: 5px;opacity: 1 !important;line-height: 17px;">
+                        Odoo  Cutomization
+                     </h3>
+                 </a>
+                </div>
+                <div class="col-md-2 col-sm-3 col-xs-6 mt16 mb16" style="width: 25%;" >
+                                 <a href="https://www.bonainfo.com/" target="_blank">
+                    <div style="width:160px;height:160px;margin: auto;">
+                            <img class="oe_picture oe_screenshot" src="implentation.png" style="width: 100%;">
+                    </div>
+
+                 </a>
+				    <h3 class="oe_slogan" style="text-align: center;font-size: 14px;margin: 0;margin-top: 14px;color: #000 !important;margin-top: 5px;opacity: 1 !important;line-height: 17px;">
+                        Odoo  Implentation
+                    </h3>
+                </div>
+                <div class="col-md-2 col-sm-3 col-xs-6 mt16 mb16" style="width: 25%;" >
+                                 <a href="https://www.bonainfo.com/" target="_blank">
+                    <div style="width:160px;height:160px;margin: auto;">
+                            <img class="oe_picture oe_screenshot" src="support service.png" style="width: 100%;">
+                    </div>
+                     <h3 class="oe_slogan" style="text-align: center;font-size: 14px;margin: 0;margin-top: 14px;color: #000 !important;margin-top: 5px;opacity: 1 !important;line-height: 17px;">
+                        Support Services
+                     </h3>
+                 </a>
+                </div>
+
+            </div>
+    </section>			
+	<section class="oe_container lead" style="background-color:#d9d7d7;padding:20px 20px 30px 20px;">
+		<div class="oe_row  text-center" >
+			<div class="oe_span12">
+				<h2 class="oe_slogan" >
+           <a href="http://www.bonainfo.com:8080" target="new">
+                <img src="Bonainfologo60.png">
+            </a>
+            <br>
+					<a href="http://www.bonainfo.com:8080/zh_CN/blog" style="color: #000000 !important;font-size:24px;">
+						Get Help &amp; Support</a>
+				</h2>
+			</div>
+			<br>
+			<div class="oe_slogan  text-center">
+				<a class="btn btn-success mt8" title="Website" style="background-color: #3399ff; color: #fff !important; position: relative; overflow: hidden;" href="http://www.bonainfo.com:8080"> Website </a> 
+				<a class="btn btn-success mt8" title="Blog" style="background-color: #ff3333; color: #fff !important; position: relative; overflow: hidden;" href="http://www.bonainfo.com:8080/zh_CN/blog"> Blog </a> 
+				<a class="btn btn-success mt8" title="Send Email" style="background-color: #ffcc00; color: #fff !important; position: relative; overflow: hidden;" href="mailto:3118469885@qq.com,bower_guo@msn.com"> Send Email </a> 
+				<a class="btn btn-success mt8" title="Contact us!" style="background-color: #009900; color: #fff !important; position: relative; overflow: hidden;" href="http://www.bonainfo.com:8080/zh_CN/contactus"> Contact us! </a>
+			</div>
+		</div>
+	</section>		
+        

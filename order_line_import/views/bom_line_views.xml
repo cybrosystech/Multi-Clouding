@@ -1,0 +1,21 @@
+<odoo>
+  <data>
+    <record model="ir.actions.client" id="action_bom_line_import">
+		<field name="name">Import bom line</field>
+		<field name="tag">import</field>
+		<field name="params">{'model':'mrp.bom.line','import_field':'bom_line_ids','height':'700px'}</field>
+		<field name="target">new</field>
+    </record>
+	 <record id="import_mrp_bom_line_form_view" model="ir.ui.view">
+        <field name="name">bom.line.impore.mrp.bom.form</field>
+        <field name="model">mrp.bom</field>
+        <field name="inherit_id" ref="mrp.mrp_bom_form_view"/>
+        <field name="arch" type="xml">
+			<xpath expr="//notebook" position="before">
+				<button class="btn btn-primary" name="%(action_bom_line_import)d" type="action" string="Order line import"></button>
+			</xpath>
+        </field>
+    </record>
+
+  </data>
+</odoo>
