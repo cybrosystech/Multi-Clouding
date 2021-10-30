@@ -112,5 +112,13 @@ class AccountAsset(models.Model):
 
         return move_ids
 
+    @api.constrains('original_move_line_ids')
+    def check_assets(self):
+        for asset in self:
+            for line in asset.original_move_line_ids:
+                    asset.account_analytic_id = line.analytic_account_id.id
+                    asset.project_site_id = line.project_site_id.id
+                    asset.location_id = line.location_id.id
+                    asset.type_id = line.type_id.id
 
 

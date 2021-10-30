@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="email_template_send_mail_approval_sales" model="mail.template">
+            <field name="name">Multi Level Sales Approval Mail Template</field>
+            <field name="email_from">${object.company_id.email}</field>
+            <field name="subject">Sale Order Approve</field>
+            <field name="email_to"></field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="auto_delete" eval="True"/>
+            <field name="lang">${object.partner_id.lang}</field>
+            <field name="body_html" type="html">
+            <div style="margin: 0px; padding: 0px;">
+                <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                    Dear ${ctx['name']},
+                    <br /><br />
+                    This Sale Order Need Your Approval <strong>${object.name}</strong> ,
+
+
+                    Click here to open ,
+
+                    <a target="_BLANK" href="/web?#id=${object.id} &amp;view_type=form&amp;model=sale.order&amp;action="> ${object.name} </a>
+
+
+                </p>
+            </div>
+            </field>
+
+        </record>
+
+
+        <record id="email_template_send_mail_approval_account" model="mail.template">
+            <field name="name">Multi Level Invoice Approval Mail Template</field>
+            <field name="email_from">${object.company_id.email}</field>
+            <field name="subject">Invoice Approval</field>
+            <field name="email_to"></field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="auto_delete" eval="True"/>
+            <field name="lang">${object.partner_id.lang}</field>
+            <field name="body_html" type="html">
+            <div style="margin: 0px; padding: 0px;">
+                <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                    Dear ${ctx['name']},
+                    <br /><br />
+                    % if object.name=='/':
+                       This Invoice Need Your Approval <strong>${object.new_sequence} </strong> ,
+                    Click here to open ,
+
+                    <a target="_BLANK" href="/web?#id=${object.id} &amp;view_type=form&amp;model=account.move&amp;action="> ${object.new_sequence} </a>
+
+                    % else:
+                       This Invoice Need Your Approval <strong>${object.name} </strong> ,
+                    Click here to open ,
+
+                    <a target="_BLANK" href="/web?#id=${object.id} &amp;view_type=form&amp;model=account.move&amp;action="> ${object.name} </a>
+
+                    %endif
+
+
+                </p>
+            </div>
+            </field>
+        </record>
+
+        <record id="email_template_send_mail_approval_purchase" model="mail.template">
+            <field name="name">Multi Level Purchase Approval Mail Template</field>
+            <field name="email_from">${object.company_id.email}</field>
+            <field name="subject">Purchase Order Approval</field>
+            <field name="email_to"></field>
+            <field name="model_id" ref="purchase.model_purchase_order"/>
+            <field name="auto_delete" eval="True"/>
+            <field name="lang">${object.partner_id.lang}</field>
+            <field name="body_html" type="html">
+            <div style="margin: 0px; padding: 0px;">
+                <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                    Dear ${ctx['name']},
+                    <br /><br />
+                    This Purchase Order Need Your Approval <strong>${object.name}</strong> ,
+
+
+                    Click here to open ,
+
+                    <a target="_BLANK" href="/web?#id=${object.id} &amp;view_type=form&amp;model=purchase.order&amp;action="> ${object.name} </a>
+
+
+                </p>
+            </div>
+            </field>
+        </record>
+
+
+    </data>
+</odoo>
