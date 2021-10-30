@@ -32,10 +32,15 @@ class AccountAsset(models.Model):
             self.method_progress_factor = model.method_progress_factor
             self.prorata = model.prorata
             self.prorata_date = fields.Date.today()
-            self.account_analytic_id = model.account_analytic_id.id
-            self.project_site_id = model.project_site_id.id
-            self.type_id = model.type_id.id
-            self.location_id = model.location_id.id
+            if model.account_analytic_id:
+                self.account_analytic_id = model.account_analytic_id.id
+            if model.project_site_id:
+                self.project_site_id = model.project_site_id.id
+            if model.type_id:
+
+                self.type_id = model.type_id.id
+            if model.location_id:
+                self.location_id = model.location_id.id
             self.analytic_tag_ids = [(6, 0, model.analytic_tag_ids.ids)]
             self.account_depreciation_id = model.account_depreciation_id
             self.account_depreciation_expense_id = model.account_depreciation_expense_id
