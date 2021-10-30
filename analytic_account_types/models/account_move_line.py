@@ -423,7 +423,14 @@ class AccountMoveLine(models.Model):
             'type': 'ir.actions.act_window',
             'view_mode': 'form',
             'res_model': 'wizard.analytic.account.types',
-            'context': {'default_move_line': self.id},
+            'context': {'default_move_line': self.id,
+                        'default_cost_center_id': self.analytic_account_id.id,
+                        'default_project_site_id': self.project_site_id.id,
+                        'default_type_id': self.type_id.id,
+                        'default_location_id': self.location_id.id,
+                        'default_budget_id': self.budget_id.id,
+                        'default_budget_lineid': self.budget_line_id.id,
+                        },
             'target': 'new',
         }
 

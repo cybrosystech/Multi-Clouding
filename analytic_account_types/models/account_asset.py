@@ -7,6 +7,8 @@ from math import copysign
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 from odoo.tools import float_compare, float_is_zero, float_round
+import logging
+_logger = logging.getLogger(__name__)
 
 class AccountAsset(models.Model):
     _inherit = 'account.asset'
@@ -22,6 +24,8 @@ class AccountAsset(models.Model):
     def _onchange_model_id(self):
         model = self.model_id
         if model:
+            _logger.info("mmmmmmmm")
+
             self.method = model.method
             self.method_number = model.method_number
             self.method_period = model.method_period
@@ -39,6 +43,8 @@ class AccountAsset(models.Model):
 
     def _get_disposal_moves(self, invoice_line_ids, disposal_date):
         def get_line(asset, amount, account):
+            _logger.info("llllllll")
+
             return (0, 0, {
                 'name': asset.name,
                 'account_id': account.id,
@@ -114,11 +120,13 @@ class AccountAsset(models.Model):
 
     @api.constrains('original_move_line_ids')
     def check_assets(self):
+        _logger.info("uuuuuuu")
         for asset in self:
             for line in asset.original_move_line_ids:
                     asset.account_analytic_id = line.analytic_account_id.id
                     asset.project_site_id = line.project_site_id.id
                     asset.location_id = line.location_id.id
                     asset.type_id = line.type_id.id
+                    _logger.info("KKKKKK{}-{}-{}".format(asset.account_analytic_id,asset.project_site_id,asset.location_id))
 
 
