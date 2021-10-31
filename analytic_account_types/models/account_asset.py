@@ -42,6 +42,7 @@ class AccountAsset(models.Model):
             if model.location_id:
                 self.location_id = model.location_id.id
             self.analytic_tag_ids = [(6, 0, model.analytic_tag_ids.ids)]
+            self.account_asset_id = model.account_asset_id.id
             self.account_depreciation_id = model.account_depreciation_id
             self.account_depreciation_expense_id = model.account_depreciation_expense_id
             self.journal_id = model.journal_id
