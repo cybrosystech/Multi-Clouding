@@ -49,7 +49,7 @@ class InOutBudgetsSales(models.Model):
                 if count != 0:
                     raise ValidationError(
                         _('Cannot add the same sequence more than once, asequence of  %s is repeated') % line.name)
-                count_map[approval_seq] = 1
+                count_map[line.approval_seq] = 1
     @api.model
     def create(self, vals):
         check = self.env['budget.in.out.check.sales'].sudo().search([('type', '=', vals['type'])])
