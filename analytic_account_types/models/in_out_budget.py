@@ -56,6 +56,15 @@ class BudgetInOutLinesSales(models.Model):
     approval_seq = fields.Integer(string="Approval Sequence", required=False, )
     user_ids = fields.Many2many(comodel_name="res.users", string="User", required=True, )
 
+    @api.model
+    def create(self, vals):
+        check_seq = self.env['budget.in.out.lines.sales'].sudo().search([('budget_id', '=', self.budget_id), ('approval_seq', '=', self.approval_seq)])
+        if check_seq:
+            raise ValidationError(_('Approval Sequence is already found'))
+        elif self.from_amount > self.to_amount:
+            raise ValidationError(_('From amount is lower than To amount'))
+        else:
+            return super(BudgetInOutLinesSales, self).create(vals)
 
 class InOutBudgetsInvoices(models.Model):
     _name = 'budget.in.out.check.invoice'
