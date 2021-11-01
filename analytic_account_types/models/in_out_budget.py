@@ -77,7 +77,7 @@ class BudgetInOutLinesSales(models.Model):
             raise ValidationError(_('Approval Sequence in Budget Lines is already found'))
         if self.from_amount > self.to_amount:
             raise ValidationError(_('From amount is lower than To amount in Budget Lines'))
-        return super(BudgetInOutLinesSales, self).write()
+        return super(BudgetInOutLinesSales, self).write(vals)
 
 
 class InOutBudgetsInvoices(models.Model):
