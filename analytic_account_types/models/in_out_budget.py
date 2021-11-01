@@ -60,19 +60,9 @@ class BudgetInOutLinesSales(models.Model):
     def create(self, vals):
         check_seq = self.env['budget.in.out.lines.sales'].sudo().search([('budget_id', '=', vals['budget_id']), ('approval_seq', '=', vals['approval_seq'])])
         if check_seq:
-            return {'warning': {
-                'title': _("Warning"),
-                'message': _(
-                    "Approval Sequence in Budget Lines is already found"
-                ),
-            }}
+            raise ValueError(_('Approval Sequence in Budget Lines is already found'))
         if vals['from_amount'] > vals['to_amount']:
-            return {'warning': {
-                'title': _("Warning"),
-                'message': _(
-                    "From amount is lower than To amount in Budget Lines"
-                ),
-            }}
+            raise ValueError(_('From amount is lower than To amount in Budget Lines'))
         return super(BudgetInOutLinesSales, self).create(vals)
 
 class InOutBudgetsInvoices(models.Model):
