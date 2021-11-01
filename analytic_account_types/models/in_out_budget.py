@@ -71,20 +71,11 @@ class BudgetInOutLinesSales(models.Model):
     user_ids = fields.Many2many(comodel_name="res.users", string="User", required=True, )
 
 
-    # @api.onchange('approval_seq')
-    # def get_approval_seq(self):
-    #     for rec in self:
-    #         if rec.approval_seq > 0 and rec.approval_seq in rec.budget_id.budget_line_ids.mapped('approval_seq'):
-    #             rec.approval_seq = 0
-    #             raise ValidationError(_('Approval Sequence in Budget Lines is already found'))
-    #
-    # @api.onchange('from_amount', 'to_amount')
-    # def get_from_to_amount(self):
-    #     for rec in self:
-    #         if rec.from_amount > rec.to_amount:
-    #             rec.from_amount = 0
-    #             rec.to_amount = 0
-    #             raise ValidationError(_('From amount is lower than To amount in Budget Lines'))
+    @api.constrains('from_amount', 'to_amount')
+    def get_from_to_amount(self):
+        for rec in self:
+            if rec.from_amount > rec.to_amount:
+                raise ValidationError(_('From amount is lower than To amount in Budget Lines'))
 
 
 
