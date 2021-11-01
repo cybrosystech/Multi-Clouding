@@ -64,6 +64,7 @@ class BudgetInOutLinesSales(models.Model):
     def get_approval_seq(self):
         for rec in self:
             if rec.approval_seq > 0 and rec.approval_seq in rec.budget_id.budget_line_ids.mapped('approval_seq'):
+                rec.approval_seq = 0
                 raise ValidationError(_('Approval Sequence in Budget Lines is already found'))
 
     @api.onchange('from_amount', 'to_amount')
