@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api, _
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError
 
 
 class InOutBudgets(models.Model):
@@ -60,9 +60,9 @@ class BudgetInOutLinesSales(models.Model):
     def create(self, vals):
         check_seq = self.env['budget.in.out.lines.sales'].sudo().search([('budget_id', '=', vals['budget_id']), ('approval_seq', '=', vals['approval_seq'])])
         if check_seq:
-            raise ValidationError(_('Approval Sequence is already found'))
+            raise UserError(_('Approval Sequence in Budget Lines is already found'))
         if vals['from_amount'] > vals['to_amount']:
-            raise ValidationError(_('From amount is lower than To amount'))
+            raise UserError(_('From amount is lower than To amount in Budget Lines'))
         return super(BudgetInOutLinesSales, self).create(vals)
 
 class InOutBudgetsInvoices(models.Model):
