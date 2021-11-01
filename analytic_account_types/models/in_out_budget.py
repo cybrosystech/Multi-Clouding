@@ -45,7 +45,7 @@ class InOutBudgetsSales(models.Model):
         for rec in self:
             count_map = {}
             for line in rec.budget_line_ids:
-                count = count_map.get(approval_seq, 0)
+                count = count_map.get(line.approval_seq, 0)
                 if count != 0:
                     raise ValidationError(
                         _('Cannot add the same sequence more than once, asequence of  %s is repeated') % line.name)
