@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from odoo import models, fields, api
+from odoo import models, fields, api, _
+from odoo.exceptions import ValidationError
 
 
 class InOutBudgets(models.Model):
@@ -35,6 +36,13 @@ class InOutBudgetsSales(models.Model):
     type = fields.Selection(string="Type", selection=[('in_budget', 'In Budget'), ('out_budget', 'Out Budget'), ], required=True, )
     budget_line_ids = fields.One2many(comodel_name="budget.in.out.lines.sales", inverse_name="budget_id", string="", required=False, )
 
+    @api.create
+    def create(self, vals):
+        check = self.env['budget.in.out.check.sales'].sudo().search([('type', '=', self.type)])
+        if check:
+            raise ValidationError(_('This Type is already created'))
+        else:
+            return super(InOutBudgetsSales, self).create(vals)
 
 class BudgetInOutLinesSales(models.Model):
     _name = 'budget.in.out.lines.sales'
