@@ -61,7 +61,7 @@ class BudgetInOutLinesSales(models.Model):
         check_seq = self.env['budget.in.out.lines.sales'].sudo().search([('budget_id', '=', vals['budget_id']), ('approval_seq', '=', vals['approval_seq'])])
         if check_seq:
             raise ValidationError(_('Approval Sequence is already found'))
-        if self.from_amount > self.to_amount:
+        if vals['from_amount'] > vals['to_amount']:
             raise ValidationError(_('From amount is lower than To amount'))
         return super(BudgetInOutLinesSales, self).create(vals)
 
