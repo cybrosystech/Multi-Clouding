@@ -7,10 +7,10 @@
             <field name="inherit_id" ref="account_budget.view_account_analytic_account_form_inherit_budget"/>
             <field name="arch" type="xml">
 
-                <xpath expr="//field[@name='parent_id']" position="after">
-                    <field name="analytic_type_filter_id" attrs="{'invisible':[('analytic_account_type','!=','project_site')]}"/>
-                    <field name="analytic_location_id" attrs="{'invisible':[('analytic_account_type','!=','project_site')]}"/>
-                </xpath>
+<!--                <xpath expr="//field[@name='parent_id']" position="after">-->
+<!--                    <field name="analytic_type_filter_id" attrs="{'invisible':[('analytic_account_type','!=','project_site')]}"/>-->
+<!--                    <field name="analytic_location_id" attrs="{'invisible':[('analytic_account_type','!=','project_site')]}"/>-->
+<!--                </xpath>-->
 
                 <xpath expr="//notebook/page[@name='budget_items']" position="attributes">
                     <attribute name="attrs">{'invisible':[('analytic_account_type','!=','cost_center')]}</attribute>
