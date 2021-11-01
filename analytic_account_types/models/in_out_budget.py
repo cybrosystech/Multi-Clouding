@@ -40,7 +40,7 @@ class InOutBudgetsSales(models.Model):
     budget_line_ids = fields.One2many(comodel_name="budget.in.out.lines.sales", inverse_name="budget_id", string="",
                                       required=False, )
 
-    @api.constrains('type')
+    @api.constrains('budget_line_ids')
     def check_lines(self):
         for rec in self:
             count_map = {}
