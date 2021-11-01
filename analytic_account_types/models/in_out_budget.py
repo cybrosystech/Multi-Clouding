@@ -40,6 +40,16 @@ class InOutBudgetsSales(models.Model):
     budget_line_ids = fields.One2many(comodel_name="budget.in.out.lines.sales", inverse_name="budget_id", string="",
                                       required=False, )
 
+    @api.constrains('type')
+    def check_lines(self):
+        for rec in self:
+            count_map = {}
+            for line in rec.budget_line_ids:
+                count = count_map.get(approval_seq, 0)
+                if count != 0:
+                    raise ValidationError(
+                        _('Cannot add the same sequence more than once, asequence of  %s is repeated') % line.name)
+                count_map[approval_seq] = 1
     @api.model
     def create(self, vals):
         check = self.env['budget.in.out.check.sales'].sudo().search([('type', '=', vals['type'])])
@@ -59,6 +69,7 @@ class BudgetInOutLinesSales(models.Model):
     to_amount = fields.Float(string="To", required=False, )
     approval_seq = fields.Integer(string="Approval Sequence", required=False, )
     user_ids = fields.Many2many(comodel_name="res.users", string="User", required=True, )
+
 
     @api.onchange('approval_seq')
     def get_approval_seq(self):
