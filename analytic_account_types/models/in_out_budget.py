@@ -38,7 +38,7 @@ class InOutBudgetsSales(models.Model):
 
     @api.model
     def create(self, vals):
-        check = self.env['budget.in.out.check.sales'].sudo().search([('type', '=', self.type)])
+        check = self.env['budget.in.out.check.sales'].sudo().search([('type', '=', vals['type'])])
         if check:
             raise ValidationError(_('This Type is already created'))
         else:
