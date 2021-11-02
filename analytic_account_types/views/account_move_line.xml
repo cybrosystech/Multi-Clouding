@@ -39,7 +39,7 @@
                     <field name="project_site_id" optional="show"/>
                     <field name="type_id" optional="show"/>
                     <field name="location_id" optional="show"/>
-                    <button name="open_account_analytic_types" type="object" string="Set Cost Center" />
+                    <button name="open_account_analytic_types" type="object" string="Set Cost Center" class="oe_edit_only" />
                     <field name="budget_id" optional="show"/>
                     <field name="remaining_amount" optional="show"/>
                     <field name="local_subtotal" optional="hide"/>

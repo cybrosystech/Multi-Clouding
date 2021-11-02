@@ -30,7 +30,7 @@
                     <field name="type_id" optional="show"/>
                     <field name="location_id" optional="show"/>
                     <button name="open_account_analytic_types" type="object" string="Set Cost Center"
-                            attrs="{'invisible': [('state', '!=', 'draft')]}" />
+                            attrs="{'invisible': [('state', '!=', 'draft')]}"  class="oe_edit_only" />
                     <field name="budget_id" optional="show"/>
                     <field name="budget_line_id" optional="show"/>
                     <field name="remaining_amount" optional="show"/>
