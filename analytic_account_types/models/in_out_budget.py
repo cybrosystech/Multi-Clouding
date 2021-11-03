@@ -20,12 +20,17 @@ class InOutBudgets(models.Model):
     def check_lines(self):
         for rec in self:
             count_map = {}
+            latest_to = 0
             for line in rec.budget_line_ids:
                 count = count_map.get(line.approval_seq, 0)
+                if line.from_amount < latest_to:
+                    raise ValidationError(
+                        _('From amount is lower than the latest to amount - line %s') % line.name)
                 if count != 0:
                     raise ValidationError(
                         _('Cannot add the same sequence more than once, asequence of  %s is repeated') % line.name)
                 count_map[line.approval_seq] = 1
+                latest_to = line.to_amount
     @api.model
     def create(self, vals):
         check = self.env['budget.in.out.check'].sudo().search([('type', '=', vals['type'])])
