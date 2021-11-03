@@ -23,7 +23,7 @@ class InOutBudgets(models.Model):
             latest_to = 0
             for line in rec.budget_line_ids:
                 count = count_map.get(line.approval_seq, 0)
-                if line.from_amount < latest_to:
+                if latest_to != 0 and line.from_amount < latest_to:
                     raise ValidationError(
                         _('From amount is lower than the latest to amount - line %s') % line.name)
                 if count != 0:
@@ -76,7 +76,7 @@ class InOutBudgetsSales(models.Model):
             latest_to = 0
             for line in rec.budget_line_ids:
                 count = count_map.get(line.approval_seq, 0)
-                if line.from_amount < latest_to:
+                if latest_to != 0 and line.from_amount < latest_to:
                     raise ValidationError(
                         _('From amount is lower than the latest to amount - line %s') % line.name)
                 if count != 0:
@@ -132,7 +132,7 @@ class InOutBudgetsInvoices(models.Model):
             latest_to = 0
             for line in rec.budget_line_ids:
                 count = count_map.get(line.approval_seq, 0)
-                if line.from_amount < latest_to:
+                if latest_to != 0 and line.from_amount < latest_to:
                     raise ValidationError(
                         _('From amount is lower than the latest to amount - line %s') % line.name)
                 if count != 0:
