@@ -7,35 +7,46 @@
             <field name="inherit_id" ref="sale.view_order_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//button[@name='action_confirm'][1]" position="attributes">
-                    <attribute name="attrs">{'invisible':['|',('state','!=','draft'),('show_button_confirm','=',False)]}</attribute>
+                    <attribute name="attrs">
+                        {'invisible':['|',('state','!=','draft'),('show_button_confirm','=',False)]}
+                    </attribute>
                 </xpath>
                 <xpath expr="//button[@name='action_confirm'][2]" position="attributes">
                     <attribute name="invisible">1</attribute>
                 </xpath>
-                 <xpath expr="//button[@name='action_cancel']" position="attributes">
-                    <attribute name="attrs">{'invisible': ['|', ('state', 'not in', ['draft','to_approve', 'sent','sale']), ('id', '=', False)]}</attribute>
+                <xpath expr="//button[@name='action_cancel']" position="attributes">
+                    <attribute name="attrs">{'invisible': ['|', ('state', 'not in', ['draft','to_approve',
+                        'sent','sale']), ('id', '=', False)]}
+                    </attribute>
                 </xpath>
                 <xpath expr="//button[@name='action_confirm']" position="after">
                     <field name="show_approve_button" invisible="1"/>
                     <field name="show_request_approve_button" invisible="1"/>
                     <field name="show_button_confirm" invisible="1"/>
-                    <button name="request_approval_button" string="Request Approval" type="object" class="btn-primary" attrs="{'invisible':[('show_request_approve_button','=',True)]}"/>
-                    <button name="button_approve_sales_cycle" string="Approve" type="object" class="btn-primary" attrs="{'invisible':[('show_approve_button','=',False)]}"/>
+                    <button name="request_approval_button" string="Request Approval" type="object" class="btn-primary"
+                            attrs="{'invisible':[('show_request_approve_button','=',True)]}"/>
+                    <button name="button_approve_sales_cycle" string="Approve" type="object" class="btn-primary"
+                            attrs="{'invisible':[('show_approve_button','=',False)]}"/>
                 </xpath>
 
-                
+
                 <!-- position: after|before|replace|attributes|inside -->
                 <xpath expr="//notebook/page/field/tree/field[@name='name']" position="after">
-                    <field name="cost_center_id" optional="show"/>
-                    <field name="project_site_id" optional="show"/>
-                    <field name="type_id" optional="show"/>
-                    <field name="location_id" optional="show"/>
+                    <field name="cost_center_id" optional="show"
+                           attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                    <field name="project_site_id" optional="show"
+                           attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                    <field name="type_id" optional="show" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                    <field name="location_id" optional="show" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                     <button name="open_account_analytic_types" type="object" string="Set Cost Center"
-                            attrs="{'invisible': [('state', '!=', 'draft')]}"  class="oe_edit_only" />
-                    <field name="budget_id" optional="show"/>
-                    <field name="budget_line_id" optional="show"/>
-                    <field name="remaining_amount" optional="show"/>
-                                        <field name="local_subtotal" optional="hide"/>
+                            attrs="{'invisible': [('state', 'not in', ['draft'])]}" class="oe_edit_only"/>
+                    <field name="budget_id" optional="show" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                    <field name="budget_line_id" optional="show"
+                           attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                    <field name="remaining_amount" optional="show"
+                           attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                    <field name="local_subtotal" attrs="{'readonly': [('state', 'not in', ['draft'])]}"
+                           optional="hide"/>
 
                 </xpath>
 
@@ -53,7 +64,7 @@
                             </field>
                         </div>
                     </page>
-                     <page string="Approval Cycle" name="approval_cycle">
+                    <page string="Approval Cycle" name="approval_cycle">
                         <div>
                             <field name="sale_approval_cycle_ids">
                                 <tree editable="bottom">
@@ -65,7 +76,7 @@
                         </div>
                     </page>
                 </xpath>
-                
+
             </field>
         </record>
     </data>
