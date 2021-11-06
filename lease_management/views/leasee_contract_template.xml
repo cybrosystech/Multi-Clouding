@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_leasee_contract_template_form" model="ir.ui.view">
+            <field name="name">leasee.contract.template.form</field>
+            <field name="model">leasee.contract.template</field>
+            <field name="arch" type="xml">
+                <form string="MODEL" create="true" duplicate="true" edit="true" delete="true">
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" required="True"/>
+                            </h1>
+                        </div>
+                        <group string="Contract Details">
+                            <group>
+                                <field name="lease_contract_period" />
+                                <field name="terminate_month_number" />
+                                <field name="terminate_month_number" />
+                                <field name="terminate_fine" />
+                                <field name="type_terminate" />
+                                <field name="extendable" />
+                            </group>
+                            <group>
+                                <field name="interest_rate" />
+                                <field name="payment_frequency_type" />
+                                <field name="payment_frequency" />
+                                <field name="increasement_frequency_type" />
+                                <field name="increasement_frequency" />
+                                <field name="discount" />
+                                <field name="asset_model_id" />
+                            </group>
+                        </group>
+                        <group string="Contract Accounts">
+                            <group>
+                                <field name="lease_liability_account_id" />
+                                <field name="provision_dismantling_account_id" />
+                                <field name="terminate_account_id" />
+                                <field name="interest_expense_account_id" />
+                            </group>
+                            <group>
+                                <field name="terminate_product_id" />
+                                <field name="installment_product_id" />
+                                <field name="extension_product_id" />
+                                <field name="asset_model_id" />
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_leasee_contract_template_tree" model="ir.ui.view">
+            <field name="name">leasee.contract.template.tree</field>
+            <field name="model">leasee.contract.template</field>
+            <field name="arch" type="xml">
+                <tree create="true" duplicate="true" edit="true" delete="true">
+                    <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_leasee_contract_template_action" model="ir.actions.act_window">
+            <field name="name">Lease Contract Template</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">leasee.contract.template</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem id="menuitem_lease_contract_template" name="Leasee Contract Template" parent="lease_management.menuitem_lease_contract_categ" action="view_leasee_contract_template_action" sequence="10"/>
+
+    </data>
+</odoo>
