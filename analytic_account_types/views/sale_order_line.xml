@@ -66,7 +66,7 @@
                     </page>
                     <page string="Approval Cycle" name="approval_cycle">
                         <div>
-                            <field name="sale_approval_cycle_ids">
+                            <field name="sale_approval_cycle_ids" readonly="True">
                                 <tree editable="bottom">
                                     <field name="approval_seq"/>
                                     <field name="user_approve_ids" widget="many2many_tags"/>
