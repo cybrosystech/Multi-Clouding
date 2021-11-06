@@ -382,7 +382,7 @@ class AccountMoveLine(models.Model):
     @api.depends('price_subtotal')
     def compute_local_subtotal(self):
         for rec in self:
-            if rec.move_id:
+            if rec.move_id and rec.price_subtotal and rec.move_id.invoice_date:
                 rec.local_subtotal = rec.move_id.currency_id._convert(rec.price_subtotal,
                                                                        rec.move_id.company_id.currency_id,
                                                                        rec.move_id.company_id,
