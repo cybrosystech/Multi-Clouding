@@ -52,7 +52,7 @@
                     </page>
                      <page string="Approval Cycle" name="approval_cycle">
                         <div>
-                            <field name="purchase_approval_cycle_ids" readonly="True">>
+                            <field name="purchase_approval_cycle_ids" readonly="True">
                                 <tree>
                                     <field name="approval_seq"/>
                                     <field name="user_approve_ids" widget="many2many_tags"/>

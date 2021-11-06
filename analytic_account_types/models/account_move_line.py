@@ -153,11 +153,11 @@ class AccountMove(models.Model):
                     #         move.name) + '</a>',
                     #     email_from=self.env.user.company_id.catchall_formatted or self.env.user.company_id.email_formatted, )
 
-                    email_template_id = self.env.ref('analytic_account_types.email_template_send_mail_approval_account')
-                    ctx = self._context.copy()
-                    ctx.update({'name': us.name})
-                    if email_template_id:
-                        email_template_id.with_context(ctx).send_mail(self.id, email_values={'email_to': us.email,})
+                    # email_template_id = self.env.ref('analytic_account_types.email_template_send_mail_approval_account')
+                    # ctx = self._context.copy()
+                    # ctx.update({'name': us.name})
+                    # if email_template_id:
+                    #     email_template_id.with_context(ctx).send_mail(self.id, email_values={'email_to': us.email,})
 
     def request_approval_button(self):
         if self.out_budget and not self.purchase_approval_cycle_ids:
@@ -382,10 +382,13 @@ class AccountMoveLine(models.Model):
     @api.depends('price_subtotal')
     def compute_local_subtotal(self):
         for rec in self:
-            rec.local_subtotal = rec.move_id.currency_id._convert(rec.price_subtotal,
-                                                                   rec.move_id.company_id.currency_id,
-                                                                   rec.move_id.company_id,
-                                                                   rec.move_id.invoice_date or rec.move_id.create_date.date())
+            if rec.move_id and rec.price_subtotal and rec.move_id.invoice_date:
+                rec.local_subtotal = rec.move_id.currency_id._convert(rec.price_subtotal,
+                                                                       rec.move_id.company_id.currency_id,
+                                                                       rec.move_id.company_id,
+                                                                       rec.move_id.invoice_date if rec.move_id.invoice_date else rec.move_id.create_date.date())
+            else:
+                rec.local_subtotal = 0
 
     @api.depends('budget_id','purchase_line_id')
     def get_budget_remaining_amount(self):
