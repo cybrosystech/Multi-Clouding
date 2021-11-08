@@ -6,6 +6,8 @@ from odoo.exceptions import UserError
 from odoo.tools import float_compare, float_round
 from odoo.tools.misc import formatLang
 from dateutil.relativedelta import relativedelta
+from datetime import date
+import random
 
 
 class AccountMove(models.Model):
@@ -203,7 +205,7 @@ class AccountMove(models.Model):
             user = notification_to_user.user_approve_ids
             self.state = 'to_approve'
             self.send_user_notification(user)
-        self.name = 'Draft '
+        self.name = 'Bill/'+str(datetime.today().strftime('%Y'))+'/'+str(datetime.today().strftime('%m'))+'/'+str(random.randint(0,999))+str(datetime.today().strftime('%d'))
 
     def button_approve_purchase_cycle(self):
         max_seq_approval = max(self.purchase_approval_cycle_ids.mapped('approval_seq'))
