@@ -99,8 +99,8 @@ class PurchaseOrder(models.Model):
         if self.out_budget and not self.purchase_approval_cycle_ids:
             out_budget_list = []
             out_budget = self.env['budget.in.out.check'].search([('type','=','out_budget')],limit=1)
-            if self.budget_collect_ids.mapped('difference_amount'):
-                max_value = max(self.budget_collect_ids.mapped('difference_amount'))
+            if self.budget_collect_ids.mapped('demand_amount'):
+                max_value = max(self.budget_collect_ids.mapped('demand_amount'))
             else:
                 max_value = 0
             for rec in out_budget.budget_line_ids:
