@@ -203,6 +203,7 @@ class AccountMove(models.Model):
             user = notification_to_user.user_approve_ids
             self.state = 'to_approve'
             self.send_user_notification(user)
+        self.name = self.env['ir.sequence'].next_by_code('vendor.bill.temporary.seq')
 
     def button_approve_purchase_cycle(self):
         max_seq_approval = max(self.purchase_approval_cycle_ids.mapped('approval_seq'))
