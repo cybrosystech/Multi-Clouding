@@ -89,11 +89,11 @@ class PurchaseOrder(models.Model):
                     #         purchase.name) + '</a>',
                     #     email_from=self.env.user.company_id.catchall_formatted or self.env.user.company_id.email_formatted, )
 
-                    email_template_id = self.env.ref('analytic_account_types.email_template_send_mail_approval_purchase')
-                    ctx = self._context.copy()
-                    ctx.update({'name': us.name})
-                    if email_template_id:
-                        email_template_id.with_context(ctx).send_mail(self.id, email_values={'email_to': us.email,})
+                    # email_template_id = self.env.ref('analytic_account_types.email_template_send_mail_approval_purchase')
+                    # ctx = self._context.copy()
+                    # ctx.update({'name': us.name})
+                    # if email_template_id:
+                    #     email_template_id.with_context(ctx).send_mail(self.id, email_values={'email_to': us.email,})
 
     def request_approval_button(self):
         if self.out_budget and not self.purchase_approval_cycle_ids:
@@ -284,7 +284,7 @@ class PurchaseOrderLine(models.Model):
                         'default_type_id': self.type_id.id,
                         'default_location_id': self.location_id.id,
                         'default_budget_id': self.budget_id.id,
-                        'default_budget_lineid': self.budget_line_id.id,
+                        'default_budget_line_id': self.budget_line_id.id,
                         },
             'target': 'new',
         }

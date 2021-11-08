@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <record id="view_account_asset_sell_form_inherit" model="ir.ui.view">
+            <field name="name">account.asset.sell.form.inherit</field>
+            <field name="model">account.asset.sell</field>
+            <field name="inherit_id" ref="account_asset.asset_sell_form"/>
+            <field name="arch" type="xml">
+                
+                <xpath expr="//field[@name='action']" position="before">
+                    <field name="from_leasee_contract" invisible="1"/>
+                </xpath>
+                <xpath expr="//field[@name='action']" position="attributes">
+                    <attribute name="attrs">{'readonly':[('from_leasee_contract','=',True)]}</attribute>
+                </xpath>
+                
+            </field>
+        </record>
+    
+    </data>
+</odoo>

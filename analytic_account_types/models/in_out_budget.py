@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from odoo import models, fields, api
+from odoo import models, fields, api, _
+from odoo.exceptions import ValidationError, UserError
 
 
 class InOutBudgets(models.Model):
@@ -9,9 +10,33 @@ class InOutBudgets(models.Model):
     _description = ''
 
     name = fields.Char(string="Name", required=False, )
-    type = fields.Selection(string="Type", selection=[('in_budget', 'In Budget'), ('out_budget', 'Out Budget'), ], required=True, )
-    budget_line_ids = fields.One2many(comodel_name="budget.in.out.lines", inverse_name="budget_id", string="", required=False, )
+    type = fields.Selection(string="Type", selection=[('in_budget', 'In Budget'), ('out_budget', 'Out Budget'), ],
+                            required=True, )
+    budget_line_ids = fields.One2many(comodel_name="budget.in.out.lines", inverse_name="budget_id", string="",
+                                      required=False, )
 
+
+    @api.constrains('budget_line_ids')
+    def check_lines(self):
+        for rec in self:
+            count_map = {}
+            latest_to = 0
+            for line in rec.budget_line_ids:
+                count = count_map.get(line.approval_seq, 0)
+                if latest_to != 0 and line.from_amount < latest_to:
+                    raise ValidationError(
+                        _('From amount is lower than the latest to amount - line %s') % line.name)
+                if count != 0:
+                    raise ValidationError(
+                        _('Cannot add the same sequence more than once, asequence of  %s is repeated') % line.name)
+                count_map[line.approval_seq] = 1
+                latest_to = line.to_amount
+    @api.model
+    def create(self, vals):
+        check = self.env['budget.in.out.check'].sudo().search([('type', '=', vals['type'])])
+        if check:
+            raise ValidationError(_('This Type is already created'))
+        return super(InOutBudgets, self).create(vals)
 
 class BudgetInOutLines(models.Model):
     _name = 'budget.in.out.lines'
@@ -26,14 +51,46 @@ class BudgetInOutLines(models.Model):
     user_ids = fields.Many2many(comodel_name="res.users", string="User", required=True, )
 
 
+    @api.constrains('from_amount', 'to_amount')
+    def get_from_to_amount(self):
+        for rec in self:
+            if rec.from_amount > rec.to_amount:
+                raise ValidationError(_('From amount is lower than To amount in Budget Lines'))
+
+
 class InOutBudgetsSales(models.Model):
     _name = 'budget.in.out.check.sales'
     _rec_name = 'name'
     _description = ''
 
     name = fields.Char(string="Name", required=False, )
-    type = fields.Selection(string="Type", selection=[('in_budget', 'In Budget'), ('out_budget', 'Out Budget'), ], required=True, )
-    budget_line_ids = fields.One2many(comodel_name="budget.in.out.lines.sales", inverse_name="budget_id", string="", required=False, )
+    type = fields.Selection(string="Type", selection=[('in_budget', 'In Budget'), ('out_budget', 'Out Budget'), ],
+                            required=True, )
+    budget_line_ids = fields.One2many(comodel_name="budget.in.out.lines.sales", inverse_name="budget_id", string="",
+                                      required=False, )
+
+    @api.constrains('budget_line_ids')
+    def check_lines(self):
+        for rec in self:
+            count_map = {}
+            latest_to = 0
+            for line in rec.budget_line_ids:
+                count = count_map.get(line.approval_seq, 0)
+                if latest_to != 0 and line.from_amount < latest_to:
+                    raise ValidationError(
+                        _('From amount is lower than the latest to amount - line %s') % line.name)
+                if count != 0:
+                    raise ValidationError(
+                        _('Cannot add the same sequence more than once, asequence of  %s is repeated') % line.name)
+                count_map[line.approval_seq] = 1
+                latest_to = line.to_amount
+
+    @api.model
+    def create(self, vals):
+        check = self.env['budget.in.out.check.sales'].sudo().search([('type', '=', vals['type'])])
+        if check:
+            raise ValidationError(_('This Type is already created'))
+        return super(InOutBudgetsSales, self).create(vals)
 
 
 class BudgetInOutLinesSales(models.Model):
@@ -48,6 +105,13 @@ class BudgetInOutLinesSales(models.Model):
     approval_seq = fields.Integer(string="Approval Sequence", required=False, )
     user_ids = fields.Many2many(comodel_name="res.users", string="User", required=True, )
 
+    @api.constrains('from_amount', 'to_amount')
+    def get_from_to_amount(self):
+        for rec in self:
+            if rec.from_amount > rec.to_amount:
+                raise ValidationError(_('From amount is lower than To amount in Budget Lines'))
+
+
 
 class InOutBudgetsInvoices(models.Model):
     _name = 'budget.in.out.check.invoice'
@@ -55,8 +119,34 @@ class InOutBudgetsInvoices(models.Model):
     _description = ''
 
     name = fields.Char(string="Name", required=False, )
-    type = fields.Selection(string="Type", selection=[('in_budget', 'In Budget'), ('out_budget', 'Out Budget'), ], required=True, )
-    budget_line_ids = fields.One2many(comodel_name="budget.in.out.lines.invoice", inverse_name="budget_id", string="", required=False, )
+    type = fields.Selection(string="Type", selection=[('in_budget', 'In Budget'), ('out_budget', 'Out Budget'), ],
+                            required=True, )
+    budget_line_ids = fields.One2many(comodel_name="budget.in.out.lines.invoice", inverse_name="budget_id", string="",
+                                      required=False, )
+
+
+    @api.constrains('budget_line_ids')
+    def check_lines(self):
+        for rec in self:
+            count_map = {}
+            latest_to = 0
+            for line in rec.budget_line_ids:
+                count = count_map.get(line.approval_seq, 0)
+                if latest_to != 0 and line.from_amount < latest_to:
+                    raise ValidationError(
+                        _('From amount is lower than the latest to amount - line %s') % line.name)
+                if count != 0:
+                    raise ValidationError(
+                        _('Cannot add the same sequence more than once, asequence of  %s is repeated') % line.name)
+                count_map[line.approval_seq] = 1
+                latest_to = line.to_amount
+
+    @api.model
+    def create(self, vals):
+        check = self.env['budget.in.out.check.invoice'].sudo().search([('type', '=', vals['type'])])
+        if check:
+            raise ValidationError(_('This Type is already created'))
+        return super(InOutBudgets, self).create(vals)
 
 
 class BudgetInOutLinesInvoices(models.Model):
@@ -72,5 +162,8 @@ class BudgetInOutLinesInvoices(models.Model):
     user_ids = fields.Many2many(comodel_name="res.users", string="User", required=True, )
 
 
-
-
+    @api.constrains('from_amount', 'to_amount')
+    def get_from_to_amount(self):
+        for rec in self:
+            if rec.from_amount > rec.to_amount:
+                raise ValidationError(_('From amount is lower than To amount in Budget Lines'))
