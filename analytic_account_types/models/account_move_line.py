@@ -6,7 +6,7 @@ from odoo.exceptions import UserError
 from odoo.tools import float_compare, float_round
 from odoo.tools.misc import formatLang
 from dateutil.relativedelta import relativedelta
-from datetime import date
+from datetime import datetime
 import random
 
 
