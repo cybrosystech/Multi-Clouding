@@ -212,6 +212,9 @@ class LeaseeContract(models.Model):
             'price_unit': amount,
             'quantity': 1,
             'analytic_account_id': self.analytic_account_id.id,
+            'project_site_id': self.project_site_id.id,
+            'type_id': self.type_id.id,
+            'location_id': self.location_id.id,
         })]
         invoice = self.env['account.move'].create({
             'partner_id': self.vendor_id.id,
@@ -472,6 +475,9 @@ class LeaseeContract(models.Model):
             'price_unit': amount,
             'quantity': 1,
             'analytic_account_id': self.analytic_account_id.id,
+            'project_site_id': self.project_site_id.id,
+            'type_id': self.type_id.id,
+            'location_id': self.location_id.id,
         })]
         invoice = self.env['account.move'].create({
             'partner_id': self.vendor_id.id,
@@ -520,6 +526,10 @@ class LeaseeContract(models.Model):
                 'account_id': contract.installment_product_id.product_tmpl_id.get_product_accounts()['expense'].id,
                 'price_unit': install.amount,
                 'quantity': 1,
+                'analytic_account_id': self.analytic_account_id.id,
+                'project_site_id': self.project_site_id.id,
+                'type_id': self.type_id.id,
+                'location_id': self.location_id.id,
             })]
             invoice = self.env['account.move'].create({
                 'partner_id': contract.vendor_id.id,

@@ -164,6 +164,10 @@ class LeasorContract(models.Model):
                 'account_id': self.installment_product_id.product_tmpl_id.get_product_accounts()['expense'].id,
                 'price_unit': amount,
                 'quantity': 1,
+                'account_analytic_id': self.account_analytic_id.id,
+                'project_site_id': self.project_site_id.id,
+                'type_id': self.type_id.id,
+                'location_id': self.location_id.id,
             })]
             invoice = self.env['account.move'].create({
                 'partner_id': self.customer_id.id,
