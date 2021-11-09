@@ -27,7 +27,7 @@ class LeasorContract(models.Model):
     # leasee_template_id = fields.Many2one(comodel_name="leasor.contract.template", string="Leasor Contract Template", required=False, )
 
     external_reference_number = fields.Char()
-    state = fields.Selection(string="Agreement Status",default="draft", selection=[('draft', 'Draft'), ('active', 'Active'), ('extended', 'Extended'), ('expired', 'Expired'), ('terminated', 'Terminated'), ], required=False, )
+    state = fields.Selection(string="Agreement Status",default="draft", selection=[('draft', 'Draft'), ('active', 'Active'), ('expired', 'Expired'), ('terminated', 'Terminated'), ], required=False, )
 
     customer_id = fields.Many2one(comodel_name="res.partner", string="Leasee Name", required=True, )
     inception_date = fields.Date(default=lambda self: fields.Datetime.now(), required=False, )
@@ -45,7 +45,7 @@ class LeasorContract(models.Model):
     payment_frequency_type = fields.Selection(string="Payment Type",default="years", selection=[('years', 'Years'), ('months', 'Months'), ], required=True, )
     payment_frequency = fields.Integer(default=1, required=False, )
 
-    leasee_contract_id = fields.Many2one(comodel_name="leasee.contract", copy=False, string="Leased Asset",required=True)
+    leasee_contract_id = fields.Many2one(comodel_name="leasee.contract",domain=[('state', 'in', ['active', 'extended'])], copy=False, string="Leased Asset",required=True)
 
     lease_currency_id = fields.Many2one(comodel_name="res.currency", string="", required=True, )
 
@@ -53,10 +53,11 @@ class LeasorContract(models.Model):
     annual_payment = fields.Float(string="", default=0.0, required=False, )
     installment_product_id = fields.Many2one(comodel_name="product.product", string="", required=True, domain=[('type', '=', 'service')] )
     installment_journal_id = fields.Many2one(comodel_name="account.journal", domain=[('type', '=', 'sale')], required=True )
+    prorate = fields.Boolean(string="Prorate Calculation", default=False  )
 
     @api.constrains('estimated_ending_date', 'leasee_contract_id')
     def check_end_dates(self):
-        if self.leasee_contract_id and self.leasee_contract_id.estimated_ending_date > self.estimated_ending_date:
+        if self.leasee_contract_id and self.leasee_contract_id.estimated_ending_date < self.estimated_ending_date:
             raise ValidationError(_('Leased Contact End Date Can not be after This contract End Date'))
 
     @api.depends('commencement_date', 'lease_contract_period')

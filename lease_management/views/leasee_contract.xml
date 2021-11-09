@@ -69,7 +69,7 @@
                                     <group>
                                         <field name="lease_contract_period" />
                                         <field name="terminate_month_number" />
-                                        <field name="terminate_month_number" />
+<!--                                        <field name="terminate_month_number" />-->
                                         <field name="terminate_fine" />
                                         <field name="type_terminate" />
                                         <field name="extendable" />
@@ -144,7 +144,8 @@
             <field name="view_mode">tree,form,pivot</field>
         </record>
 
-        <menuitem id="menuitem_lease_contract_categ" name="Leasee Contract" parent="account.menu_finance" sequence="10"/>
+<!--        <menuitem id="menuitem_lease_contract_categ" name="Leasee Contract" parent="account.menu_finance" sequence="10"/>-->
+        <menuitem id="menuitem_lease_contract_categ" name="Lease" parent="account_accountant.menu_accounting" sequence="10"/>
         <menuitem id="menuitem_name_module" name="Leasee Contract" parent="lease_management.menuitem_lease_contract_categ" action="view_leasee_contract_action" sequence="1"/>
 
     </data>

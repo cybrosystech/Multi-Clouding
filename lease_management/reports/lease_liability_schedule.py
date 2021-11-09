@@ -24,9 +24,9 @@ except ImportError:
     import xlsxwriter
 
 
-class RouAssetSchedule(models.TransientModel):
-    _name = 'rou.asset.schedule.wizard'
-    _description = 'rou.asset.schedule.wizard'
+class LeaseLiabilitySchedule(models.TransientModel):
+    _name = 'lease.liability.schedule.wizard'
+    _description = 'Lease Liability Schedule'
 
     def _get_date_from_now(self):
             today=datetime.now().today()
@@ -42,58 +42,56 @@ class RouAssetSchedule(models.TransientModel):
 
     date_from = fields.Date(string="Date From",default=_get_date_from_now , required=False, )
     date_to = fields.Date(string="Date To",default=_get_date_to , required=False, )
-    vendor_ids = fields.Many2many(comodel_name="res.partner",)
-    contract_ids = fields.Many2many(comodel_name="leasee.contract",)
+    contract_ids = fields.Many2many(comodel_name="leasee.contract")
+    analytic_account_ids = fields.Many2many(comodel_name="account.analytic.account")
+    partner_ids = fields.Many2many(comodel_name="res.partner",)
     excel_sheet = fields.Binary('Download Report')
     excel_sheet_name = fields.Char(string='Name', size=64)
 
     def get_report_data(self):
         data = []
+        domain = [('date','>=', self.date_from),('date', '<=', self.date_to)]
         if self.contract_ids:
-            contracts = self.contract_ids
-        elif self.vendor_ids:
-            contracts = self.env['leasee.contract'].search([('vendor_id', 'in', self.vendor_ids.ids)])
-        else:
-            contracts = self.env['leasee.contract'].search([('state', '!=', 'draft')])
-
-        asset_ids = contracts.mapped('asset_id').ids
-        asset_domain = [('date', '>=', self.date_from), ('date', '<=', self.date_to), ('asset_id', 'in', asset_ids)]
-        installments = self.env['account.move'].search(asset_domain,order='asset_id,date')
-        for ins in installments:
-            period_no = self.get_period_no(ins)
-            leasor_contract = self.env['leasor.contract'].search([('leasee_contract_id', 'in', ins.asset_id.leasee_contract_ids.ids)])
-            other_ins = ins.asset_id.children_ids.depreciation_move_ids.filtered(lambda a: a.date == ins.date)
-            rou_increase_decrease = sum(other_ins.mapped('amount_total'))
+            domain.append(('leasee_contract_id', 'in', self.contract_ids.ids))
+        elif self.analytic_account_ids:
+            domain.append(('leasee_contract_id.analytic_account_id', 'in', self.analytic_account_ids.ids))
+        elif self.partner_ids:
+            domain.append(('leasee_contract_id.vendor_id', 'in', self.partner_ids.ids))
+        installments = self.env['leasee.installment'].search(domain, order='leasee_contract_id,date')
+        for installment in installments:
+            period_no = installment.get_period_order()
+            opening_balance = installment.remaining_lease_liability
+            closing_balance = opening_balance + installment.subsequent_amount - installment.amount
+            if installment.leasee_contract_id.lease_contract_period_type == 'months':
+                delta = relativedelta(months=installment.leasee_contract_id.lease_contract_period,days=-1)
+            else:
+                delta = relativedelta(years=installment.leasee_contract_id.lease_contract_period,days=-1)
             data.append({
                 'period_no': period_no,
-                'period_start_date': ins.date.strftime(DF),
-                'depreciation_term': ins.asset_id.method_number - period_no,
-                'opening_balance': ins.asset_id.original_value - ins.asset_depreciated_value,
-                'initial_measurement': ins.asset_id.original_value,
-                'impairment': ins.asset_id.book_value,
-                'direct_cost_added': 0,
-                'depreciation': ins.amount_total,
-                'adjustment_lease_liability': ins.asset_id.gross_increase_value,
-                'rou_sub_leased': leasor_contract.annual_payment,
-                'rou_increase_decrease': rou_increase_decrease,
-                'loss_leases': 1,
-                'loss_sub_lease': 1,
-                'closing_balance': ins.asset_remaining_value,
-                'period_end_date': 1,
-                'comment': 1,
-                'posted_gl': True if ins.state == 'posted' else False,
-                'posting_date': ins.posting_date.strftime(DF),
-                'posting_doc_no': ins.name,
+                'lease_no': installment.leasee_contract_id.name,
+                'period_start_date': installment.date.strftime(DF),
+                'opening_balance': opening_balance if period_no != 1 else 0,
+                'opening_balance_lcy': self.env.company.currency_id._convert(opening_balance,
+                                                                             installment.leasee_contract_id.leasee_currency_id,
+                                                                             self.env.company,
+                                                                             installment.date) if period_no != 1 else 0,
+                'initial_measurement': opening_balance if period_no == 1 else 0,
+                'interest': installment.subsequent_amount,
+                'interest_lcy': self.env.company.currency_id._convert(installment.subsequent_amount,
+                                                                      installment.leasee_contract_id.leasee_currency_id,
+                                                                      self.env.company,
+                                                                      installment.date),
+                'payment': installment.amount,
+                'remeasuring_lcy': 0,
+                'closing_balance': closing_balance,
+                'closing_balance_lcy': self.env.company.currency_id._convert(closing_balance,
+                                                                             installment.leasee_contract_id.leasee_currency_id,
+                                                                             self.env.company,
+                                                                             installment.date),
+                'period_end_date': (installment.date + delta).strftime(DF),
+                'posted_to_gl': True if installment.installment_invoice_id.state == 'posted' else False,
             })
         return data
-
-    def get_period_no(self, move):
-        asset_moves = move.asset_id.depreciation_move_ids
-        i = 0
-        for m in asset_moves.sorted(key=lambda m : m.date):
-            i += 1
-            if m == move:
-                return i
 
     def print_report_xlsx(self):
 
@@ -167,21 +165,21 @@ class RouAssetSchedule(models.TransientModel):
         if report_data:
             self.add_xlsx_sheet(report_data, workbook, STYLE_LINE_Data, header_format)
 
-        self.excel_sheet_name = 'RoU Asset Schedule'
+        self.excel_sheet_name = 'Lease Liability Schedule'
         workbook.close()
         output.seek(0)
         self.excel_sheet = base64.b64encode(output.read())
         self.excel_sheet_name = str(self.excel_sheet_name) + '.xlsx'
         return {
             'type': 'ir.actions.act_url',
-            'name': 'RoU Asset Schedule',
-            'url': '/web/content/%s/%s/excel_sheet/RoU Asset Schedule.xlsx?download=true' % (self._name, self.id),
+            'name': 'Lease Liability Schedule',
+            'url': '/web/content/%s/%s/excel_sheet/Lease Liability Schedule.xlsx?download=true' % (self._name, self.id),
             'target': 'self'
         }
 
     def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data, header_format):
         self.ensure_one()
-        worksheet = workbook.add_worksheet(_('RoU Asset Schedule'))
+        worksheet = workbook.add_worksheet(_('Lease Liability Schedule'))
         lang = self.env.user.lang
         if lang.startswith('ar_'):
             worksheet.right_to_left()
@@ -190,82 +188,63 @@ class RouAssetSchedule(models.TransientModel):
         col = 0
         worksheet.write(row, col, _('Period No.'), header_format)
         col += 1
+        worksheet.write(row, col, _('Lease No.'), header_format)
+        col += 1
         worksheet.write(row, col, _('Period Start Date'), header_format)
         col += 1
-        worksheet.write(row, col, _('Depreciation Term (mths)'), header_format)
+        worksheet.write(row, col, _('Opening Balance (lease liability)'), header_format)
         col += 1
-        worksheet.write(row, col, _('Opening Balance'), header_format)
+        worksheet.write(row, col, _('Opening Balance (LCY)'), header_format)
         col += 1
         worksheet.write(row, col, _('Initial Measurement'), header_format)
         col += 1
-        worksheet.write(row, col, _('Impairment (-)'), header_format)
+        worksheet.write(row, col, _('Interest (+)'), header_format)
         col += 1
-        worksheet.write(row, col, _('Direct Cost Added (+)'), header_format)
+        worksheet.write(row, col, _('Interest (LCY) (+)'), header_format)
         col += 1
-        worksheet.write(row, col, _('Depreciation (-)'), header_format)
+        worksheet.write(row, col, _('Payment (-)'), header_format)
         col += 1
-        worksheet.write(row, col, _('Adjustment of Lease Liability (+)'), header_format)
-        col += 1
-        worksheet.write(row, col, _('ROU Sub-Leased'), header_format)
-        col += 1
-        worksheet.write(row, col, _('ROU increase/decrease'), header_format)
-        # col += 1
-        # worksheet.write(row, col, _('Losses on onerous leases (+)'), header_format)
-        # col += 1
-        # worksheet.write(row, col, _('Loss on Sub-lease Activation (-)'), header_format)
+        worksheet.write(row, col, _('Remeasuring / Reassessment (LCY) (+)'), header_format)
         col += 1
         worksheet.write(row, col, _('Closing Balance'), header_format)
-        # col += 1
-        # worksheet.write(row, col, _('Period End Date'), header_format)
-        # col += 1
-        # worksheet.write(row, col, _('Comment'), header_format)
+        col += 1
+        worksheet.write(row, col, _('Closing Balance (LCY)'), header_format)
+        col += 1
+        worksheet.write(row, col, _('Period End Date'), header_format)
         col += 1
         worksheet.write(row, col, _('Posted to G/L'), header_format)
-        col += 1
-        worksheet.write(row, col, _('Posting Date'), header_format)
-        col += 1
-        worksheet.write(row, col, _('Posting Document No.'), header_format)
 
         for line in report_data:
             col = 0
             row += 1
             worksheet.write(row, col, line['period_no'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['period_start_date'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['lease_no'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['depreciation_term'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['period_start_date'], STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['opening_balance'], STYLE_LINE_Data)
             col += 1
+            worksheet.write(row, col, line['opening_balance_lcy'], STYLE_LINE_Data)
+            col += 1
             worksheet.write(row, col, line['initial_measurement'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['impairment'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['interest'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['direct_cost_added'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['interest_lcy'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['depreciation'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['payment'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['adjustment_lease_liability'], STYLE_LINE_Data)
-            col += 1
-            worksheet.write(row, col, line['rou_sub_leased'], STYLE_LINE_Data)
-            col += 1
-            worksheet.write(row, col, line['rou_increase_decrease'], STYLE_LINE_Data)
-            # col += 1
-            # worksheet.write(row, col, line['loss_leases'], STYLE_LINE_Data)
-            # col += 1
-            # worksheet.write(row, col, line['loss_sub_lease'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['remeasuring_lcy'], STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['closing_balance'], STYLE_LINE_Data)
-            # col += 1
-            # worksheet.write(row, col, line['period_end_date'], STYLE_LINE_Data)
-            # col += 1
-            # worksheet.write(row, col, line['comment'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['posted_gl'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['closing_balance_lcy'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['posting_date'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['period_end_date'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['posting_doc_no'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['posted_to_gl'], STYLE_LINE_Data)
+
 
 
 

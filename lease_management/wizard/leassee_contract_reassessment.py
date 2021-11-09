@@ -12,7 +12,7 @@ class Reassessment(models.TransientModel):
     _description = 'Leasee Contract Reassessment'
 
     reassessment_start_Date = fields.Date(default=lambda self: fields.Date.today(), required=True, )
-    leasee_contract_id = fields.Many2one(comodel_name="leasee.contract", string="", required=False, )
+    leasee_contract_id = fields.Many2one(comodel_name="leasee.contract", string="", required=False,ondelete='cascade' )
     new_installment_amount = fields.Float(string="", default=0.0, required=True, )
 
     @api.model
@@ -60,10 +60,14 @@ class Reassessment(models.TransientModel):
             if not prev_installment_amount:
                 installment.subsequent_amount = installment.subsequent_amount - (diff - new_rou * contract.interest_rate) / 100
                 remaining_liability = installment.subsequent_amount / (contract.interest_rate / 100 )
+                installment.remaining_lease_liability = remaining_liability
             else:
                 # installment.subsequent_amount = remaining_liability * contract.interest_rate / 100
                 remaining_liability = remaining_liability * (1 + contract.interest_rate / 100 ) - prev_installment_amount
                 installment.subsequent_amount = remaining_liability * contract.interest_rate / 100
+                installment.remaining_lease_liability = remaining_liability
+            if not contract.interest_rate:
+                installment.remaining_lease_liability += diff
             prev_installment_amount = installment.amount
 
         self.update_asset_value(contract.rou_value)

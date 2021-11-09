@@ -14,7 +14,7 @@ class LeaseePeriodExtend(models.TransientModel):
     _description = 'Leasee Period Extend'
 
     # reassessment_start_Date = fields.Date(default=lambda self: fields.Date.today(), required=True, )
-    leasee_contract_id = fields.Many2one(comodel_name="leasee.contract", string="", required=False, )
+    leasee_contract_id = fields.Many2one(comodel_name="leasee.contract", string="", required=False,ondelete='cascade' )
     new_contract_period = fields.Integer(string="", default=1, required=True, )
 
     @api.model
@@ -61,8 +61,14 @@ class LeaseePeriodExtend(models.TransientModel):
             remaining_liability = first_subsequent_amount / (contract.interest_rate / 100) + diff_liability - last_installment.amount
 
             for installment in installments:
-                installment.subsequent_amount = remaining_liability * contract.interest_rate / 100
-                remaining_liability = remaining_liability * ( 1 + contract.interest_rate / 100 ) - installment.amount
+                if contract.interest_rate:
+                    installment.subsequent_amount = remaining_liability * contract.interest_rate / 100
+                    remaining_liability = remaining_liability * ( 1 + contract.interest_rate / 100 ) - installment.amount
+                    installment.remaining_lease_liability = remaining_liability
+                else:
+                    installment.subsequent_amount = 0
+                    installment.remaining_lease_liability = remaining_liability
+                    remaining_liability -= installment.amount
 
             contract.state = 'extended'
             contract.expired_notified = False

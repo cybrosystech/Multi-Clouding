@@ -136,10 +136,13 @@ class LeaseeContract(models.Model):
             net_present_value = sum([rec.get_present_value(installment, rec.interest_rate, i+start) for i, installment in enumerate(increased_installments)])
             rec.lease_liability = net_present_value
 
-    @api.depends('lease_liability', 'initial_payment_value', 'initial_direct_cost', 'estimated_cost_dismantling', 'incentives_received')
+    @api.depends('state','lease_liability', 'initial_payment_value', 'initial_direct_cost', 'estimated_cost_dismantling', 'incentives_received')
     def compute_rou_value(self):
         for rec in self:
-            rec.rou_value = rec.lease_liability + rec.initial_payment_value + rec.initial_direct_cost + rec.estimated_cost_dismantling - rec.incentives_received
+            if rec.state == 'terminated':
+                rec.rou_value = 0
+            else:
+                rec.rou_value = rec.lease_liability + rec.initial_payment_value + rec.initial_direct_cost + rec.estimated_cost_dismantling - rec.incentives_received
 
     @api.model
     def get_present_value(self, future_value, interest, period):
@@ -318,12 +321,16 @@ class LeaseeContract(models.Model):
             #     'leasee_contract_id': self.id,
             # })
             interest_recognition = remaining_lease_liability * self.interest_rate / 100
+            if self.payment_method == 'beginning':
+                if i == 0:
+                    interest_recognition = 0
             self.env['leasee.installment'].create({
                 'name': self.name + ' installment - ' + new_start.strftime(DF),
                 'amount': amount,
                 'date': new_start,
                 'leasee_contract_id': self.id,
                 'subsequent_amount': interest_recognition,
+                'remaining_lease_liability': remaining_lease_liability,
             })
             remaining_lease_liability -= (amount - interest_recognition)
 
@@ -542,10 +549,10 @@ class LeaseeContract(models.Model):
                         for move in installment.interest_move_ids:
                             for s_date in supposed_dates:
                                 if s_date.year == move.date.year and s_date.month == move.date.month:
-                                    new_dates.append(s_date)
+                                    del s_date
                                     break
 
-                        for n_date in new_dates:
+                        for n_date in supposed_dates:
                             interest_amount = installment.subsequent_amount / 12
                             contract.create_interset_move(installment, n_date, interest_amount)
 
