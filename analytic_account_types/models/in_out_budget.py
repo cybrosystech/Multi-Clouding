@@ -50,6 +50,11 @@ class BudgetInOutLines(models.Model):
     approval_seq = fields.Integer(string="Approval Sequence", required=False, )
     user_ids = fields.Many2many(comodel_name="res.users", string="User", required=True, )
 
+    @api.constrains('approval_seq')
+    def approval_seq_check(self):
+        for rec in self:
+            if rec.approval_seq < 0:
+                rec.approval_seq = 0
 
     @api.constrains('from_amount', 'to_amount')
     def get_from_to_amount(self):
@@ -104,6 +109,12 @@ class BudgetInOutLinesSales(models.Model):
     to_amount = fields.Float(string="To", required=False, )
     approval_seq = fields.Integer(string="Approval Sequence", required=False, )
     user_ids = fields.Many2many(comodel_name="res.users", string="User", required=True, )
+
+    @api.constrains('approval_seq')
+    def approval_seq_check(self):
+        for rec in self:
+            if rec.approval_seq < 0:
+                rec.approval_seq = 0
 
     @api.constrains('from_amount', 'to_amount')
     def get_from_to_amount(self):
@@ -161,6 +172,12 @@ class BudgetInOutLinesInvoices(models.Model):
     approval_seq = fields.Integer(string="Approval Sequence", required=False, )
     user_ids = fields.Many2many(comodel_name="res.users", string="User", required=True, )
 
+
+    @api.constrains('approval_seq')
+    def approval_seq_check(self):
+        for rec in self:
+            if rec.approval_seq < 0:
+                rec.approval_seq = 0
 
     @api.constrains('from_amount', 'to_amount')
     def get_from_to_amount(self):
