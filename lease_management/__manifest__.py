@@ -18,6 +18,9 @@
         'views/account_payment.xml',
         'views/leasor_contract.xml',
         'reports/general_ledger_posting.xml',
+        'reports/ap_recon.xml',
+        'reports/lease_liability_schedule.xml',
+        'reports/rou_asset_schedule_wizard.xml',
 
     ],
     "license": 'AGPL-3',

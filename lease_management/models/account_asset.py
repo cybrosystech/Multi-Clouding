@@ -88,10 +88,12 @@ class AccountAsset(models.Model):
                 # difference = -initial_amount - depreciated_amount - invoice_amount
                 # difference_account = asset.company_id.gain_account_id if difference > 0 else asset.company_id.loss_account_id
                 if self.leasee_contract_ids:
+                    initial_amount = asset.book_value
                     remaining_leasee_amount = -1 * self.leasee_contract_ids.remaining_lease_liability
                     difference = -initial_amount - remaining_leasee_amount - invoice_amount
                     difference_account = asset.company_id.gain_account_id if difference > 0 else asset.company_id.loss_account_id
                     leasee_account = self.leasee_contract_ids.lease_liability_account_id
+
                     line_datas = [(initial_amount, initial_account), (remaining_leasee_amount, leasee_account),
                                   (invoice_amount, invoice_account), (difference, difference_account)]
                     if not invoice_line_id:

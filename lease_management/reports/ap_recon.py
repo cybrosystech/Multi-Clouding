@@ -24,9 +24,9 @@ except ImportError:
     import xlsxwriter
 
 
-class CostVarianceWizard(models.TransientModel):
-    _name = 'cost.variance.wizard'
-    _description = 'Cost Variance Wizard'
+class APRecon(models.TransientModel):
+    _name = 'ap.recon.wizard'
+    _description = 'ap.recon.wizard'
 
     def _get_date_from_now(self):
             today=datetime.now().today()
@@ -40,24 +40,33 @@ class CostVarianceWizard(models.TransientModel):
         last_day_this_month = date(day=last_day[1], month=today.month, year=today.year)
         return last_day_this_month
 
-    date_from = fields.Date(string="Date From",default=_get_date_from_now , required=False, )
-    date_to = fields.Date(string="Date To",default=_get_date_to , required=False, )
+    date_from = fields.Date(string="Date From",default=_get_date_from_now , required=True, )
+    date_to = fields.Date(string="Date To",default=_get_date_to , required=True, )
+    vendor_ids = fields.Many2many(comodel_name="res.partner", string="Leasor", required=False,)
+    analytic_account_ids = fields.Many2many(comodel_name="account.analytic.account",)
+
     excel_sheet = fields.Binary('Download Report')
     excel_sheet_name = fields.Char(string='Name', size=64)
 
     def get_report_data(self):
         data = []
-        data.append({
-            'description': 1,
-            'month': 1,
-            'due_date': 1,
-            'leasor_name': 1,
-            'lease_no': 1,
-            'lease_payment_amount': 1,
-            'interest_paid': 1,
-            'principal_paid': 1,
-            'operating_exp_paid': 1,
-        })
+        domain = [('move_type', '=', 'in_invoice'),('leasee_contract_id', '!=', False)]
+
+        vendor_bills = self.env['account.move'].search(domain).filtered(lambda bill: bill.invoice_date <= self.date_to and bill.invoice_date >= self.date_from)
+        for bill in vendor_bills:
+            leasee_installment_id = self.env['leasee.installment'].search([('installment_invoice_id', '=', bill.id)],limit=1)
+            if leasee_installment_id:
+                data.append({
+                    'description': bill.display_name,
+                    'month': bill.invoice_date.strftime(DF),
+                    'due_date': bill.invoice_date_due.strftime(DF),
+                    'leasor_name': bill.partner_id.name,
+                    'lease_no': bill.leasee_contract_id.name,
+                    'lease_payment_amount': bill.amount_untaxed,
+                    'interest_paid': leasee_installment_id.subsequent_amount,
+                    'principal_paid': bill.amount_untaxed - leasee_installment_id.subsequent_amount,
+                    'operating_exp_paid': bill.payment_state,
+                })
         return data
 
     def print_report_xlsx(self):
@@ -129,111 +138,76 @@ class CostVarianceWizard(models.TransientModel):
         STYLE_LINE_Data = STYLE_LINE
         STYLE_LINE_Data.num_format_str = '#,##0.00_);(#,##0.00)'
 
-        for cf_values in report_data:
-            self.add_xlsx_sheet(cf_values,workbook, STYLE_LINE_Data, header_format)
-
         if report_data:
-            self.add_xlsx_total_sheet(report_data, workbook, STYLE_LINE_Data, header_format)
+            self.add_xlsx_sheet(report_data, workbook, STYLE_LINE_Data, header_format)
 
-        self.excel_sheet_name = 'Cost Variance Report '
+        self.excel_sheet_name = 'AP Reconcile'
         workbook.close()
         output.seek(0)
         self.excel_sheet = base64.b64encode(output.read())
         self.excel_sheet_name = str(self.excel_sheet_name) + '.xlsx'
         return {
             'type': 'ir.actions.act_url',
-            'name': 'Cost Variance Report',
-            'url': '/web/content/%s/%s/excel_sheet/Cost Variance Report.xlsx?download=true' % (self._name, self.id),
+            'name': 'AP Reconcile',
+            'url': '/web/content/%s/%s/excel_sheet/%s?download=true' % (self._name, self.id, self.excel_sheet_name),
             'target': 'self'
         }
 
-    def add_xlsx_total_sheet(self, report_data, workbook, STYLE_LINE_Data, header_format):
+    def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data, header_format):
         self.ensure_one()
-        worksheet = workbook.add_worksheet(_('RoU Asset Schedule'))
+        worksheet = workbook.add_worksheet(_('Report'))
         lang = self.env.user.lang
         if lang.startswith('ar_'):
             worksheet.right_to_left()
 
         row = 0
         col = 0
-        worksheet.write(row, col, _('Period No.'), header_format)
+        worksheet.merge_range(row , row, col, col + 8, _('A/P Reconcile'), STYLE_LINE_Data)
+
+        row += 1
+        col = 0
+        worksheet.write(row, col, _('Description'), header_format)
         col += 1
-        worksheet.write(row, col, _('Period Start Date'), header_format)
+        worksheet.write(row, col, _('Month'), header_format)
         col += 1
-        worksheet.write(row, col, _('Depreciation Term (mths)'), header_format)
+        worksheet.write(row, col, _('Due Date'), header_format)
         col += 1
-        worksheet.write(row, col, _('Opening Balance'), header_format)
+        worksheet.write(row, col, _('Lessor Name'), header_format)
         col += 1
-        worksheet.write(row, col, _('Initial Measurement'), header_format)
+        worksheet.write(row, col, _('Lease No.'), header_format)
         col += 1
-        worksheet.write(row, col, _('Impairment (-)'), header_format)
+        worksheet.write(row, col, _('Lease Payment Amt (LCY, exVAT)'), header_format)
         col += 1
-        worksheet.write(row, col, _('Direct Cost Added (+)'), header_format)
+        worksheet.write(row, col, _('CF Interest Paid (LCY)'), header_format)
         col += 1
-        worksheet.write(row, col, _('Depreciation (-)'), header_format)
+        worksheet.write(row, col, _('CF Principal Paid (LCY)'), header_format)
         col += 1
-        worksheet.write(row, col, _('Adjustment of Lease Liability (+)'), header_format)
-        col += 1
-        worksheet.write(row, col, _('ROU Sub-Leased'), header_format)
-        col += 1
-        worksheet.write(row, col, _('ROU increase/decrease'), header_format)
-        col += 1
-        worksheet.write(row, col, _('Losses on onerous leases (+)'), header_format)
-        col += 1
-        worksheet.write(row, col, _('Loss on Sub-lease Activation (-)'), header_format)
-        col += 1
-        worksheet.write(row, col, _('Closing Balance'), header_format)
-        col += 1
-        worksheet.write(row, col, _('Period End Date'), header_format)
-        col += 1
-        worksheet.write(row, col, _('Comment'), header_format)
-        col += 1
-        worksheet.write(row, col, _('Posted to G/L'), header_format)
-        col += 1
-        worksheet.write(row, col, _('Posting Date'), header_format)
-        col += 1
-        worksheet.write(row, col, _('Posting Document No.'), header_format)
+        worksheet.write(row, col, _('CF Operating Exp. Paid (LCY)'), header_format)
 
         for line in report_data:
             col = 0
             row += 1
-            worksheet.write(row, col, line['period_no'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['description'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['period_start_date'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['month'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['depreciation_term'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['due_date'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['opening_balance'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['leasor_name'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['initial_measurement'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['lease_no'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['impairment'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['lease_payment_amount'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['direct_cost_added'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['interest_paid'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['depreciation'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['principal_paid'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['adjustment_lease_liability'], STYLE_LINE_Data)
-            col += 1
-            worksheet.write(row, col, line['rou_sub_leased'], STYLE_LINE_Data)
-            col += 1
-            worksheet.write(row, col, line['rou_increase_decrease'], STYLE_LINE_Data)
-            col += 1
-            worksheet.write(row, col, line['loss_leases'], STYLE_LINE_Data)
-            col += 1
-            worksheet.write(row, col, line['loss_sub_lease'], STYLE_LINE_Data)
-            col += 1
-            worksheet.write(row, col, line['closing_balance'], STYLE_LINE_Data)
-            col += 1
-            worksheet.write(row, col, line['period_end_date'], STYLE_LINE_Data)
-            col += 1
-            worksheet.write(row, col, line['comment'], STYLE_LINE_Data)
-            col += 1
-            worksheet.write(row, col, line['posted_gl'], STYLE_LINE_Data)
-            col += 1
-            worksheet.write(row, col, line['posting_date'], STYLE_LINE_Data)
-            col += 1
-            worksheet.write(row, col, line['posting_doc_no'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['operating_exp_paid'], STYLE_LINE_Data)
+
+
+
+
 
 
 

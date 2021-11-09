@@ -21,7 +21,7 @@ class LeaseeExtendLog(models.Model):
     _name = 'leasee.extend.log'
     _description = 'Leasee Extend Log'
 
-    leasee_contract_id = fields.Many2one(comodel_name="leasee.contract", string="", required=False, )
+    leasee_contract_id = fields.Many2one(comodel_name="leasee.contract", string="", required=False,ondelete='cascade' )
     date = fields.Date(string="", default=lambda self: fields.Datetime.now(), required=False, )
     old_period = fields.Integer()
     new_period = fields.Integer()
