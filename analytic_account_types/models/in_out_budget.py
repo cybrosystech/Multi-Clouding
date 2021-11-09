@@ -53,13 +53,15 @@ class BudgetInOutLines(models.Model):
     @api.onchange('approval_seq')
     def approval_seq_check(self):
         for rec in self:
-            if rec.approval_seq <= 0:
+            if rec.name and rec.approval_seq <= 0:
                 rec.approval_seq = False
                 raise ValidationError(_('Approval Sequence cannot be lower than 1'))
 
     @api.constrains('from_amount', 'to_amount')
     def get_from_to_amount(self):
         for rec in self:
+            if rec.from_amount < 0:
+                raise ValidationError(_('From amount is lower than 0'))
             if rec.from_amount > rec.to_amount:
                 raise ValidationError(_('From amount is lower than To amount in Budget Lines'))
 
@@ -114,13 +116,15 @@ class BudgetInOutLinesSales(models.Model):
     @api.onchange('approval_seq')
     def approval_seq_check(self):
         for rec in self:
-            if rec.approval_seq <= 0:
+            if rec.name and rec.approval_seq <= 0:
                 rec.approval_seq = False
                 raise ValidationError(_('Approval Sequence cannot be lower than 1'))
 
     @api.constrains('from_amount', 'to_amount')
     def get_from_to_amount(self):
         for rec in self:
+            if rec.from_amount < 0:
+                raise ValidationError(_('From amount is lower than 0'))
             if rec.from_amount > rec.to_amount:
                 raise ValidationError(_('From amount is lower than To amount in Budget Lines'))
 
@@ -179,12 +183,14 @@ class BudgetInOutLinesInvoices(models.Model):
     @api.onchange('approval_seq')
     def approval_seq_check(self):
         for rec in self:
-            if rec.approval_seq <= 0:
+            if rec.name and rec.approval_seq <= 0:
                 rec.approval_seq = False
                 raise ValidationError(_('Approval Sequence cannot be lower than 1'))
 
     @api.constrains('from_amount', 'to_amount')
     def get_from_to_amount(self):
         for rec in self:
+            if rec.from_amount < 0:
+                raise ValidationError(_('From amount is lower than 0'))
             if rec.from_amount > rec.to_amount:
                 raise ValidationError(_('From amount is lower than To amount in Budget Lines'))
