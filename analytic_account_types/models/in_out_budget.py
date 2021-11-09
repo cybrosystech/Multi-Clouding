@@ -50,7 +50,7 @@ class BudgetInOutLines(models.Model):
     approval_seq = fields.Integer(string="Approval Sequence", required=False, )
     user_ids = fields.Many2many(comodel_name="res.users", string="User", required=True, )
 
-    @api.constrains('approval_seq')
+    @api.onchange('approval_seq')
     def approval_seq_check(self):
         for rec in self:
             if rec.approval_seq < 0:
@@ -110,7 +110,7 @@ class BudgetInOutLinesSales(models.Model):
     approval_seq = fields.Integer(string="Approval Sequence", required=False, )
     user_ids = fields.Many2many(comodel_name="res.users", string="User", required=True, )
 
-    @api.constrains('approval_seq')
+    @api.onchange('approval_seq')
     def approval_seq_check(self):
         for rec in self:
             if rec.approval_seq < 0:
@@ -154,10 +154,11 @@ class InOutBudgetsInvoices(models.Model):
 
     @api.model
     def create(self, vals):
-        check = self.env['budget.in.out.check.invoice'].sudo().search([('type', '=', vals['type'])])
-        if check:
-            raise ValidationError(_('This Type is already created'))
-        return super(InOutBudgets, self).create(vals)
+        if vals.get('type'):
+            check = self.env['budget.in.out.check.invoice'].sudo().search([('type', '=', vals['type'])])
+            if check:
+                raise ValidationError(_('This Type is already created'))
+        return super(InOutBudgetsInvoices, self).create(vals)
 
 
 class BudgetInOutLinesInvoices(models.Model):
@@ -173,7 +174,7 @@ class BudgetInOutLinesInvoices(models.Model):
     user_ids = fields.Many2many(comodel_name="res.users", string="User", required=True, )
 
 
-    @api.constrains('approval_seq')
+    @api.onchange('approval_seq')
     def approval_seq_check(self):
         for rec in self:
             if rec.approval_seq < 0:
