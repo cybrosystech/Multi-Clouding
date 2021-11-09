@@ -148,7 +148,7 @@
         </record>
 
         <record id="view_leasee_contract_action" model="ir.actions.act_window">
-            <field name="name">Lease Contract</field>
+            <field name="name">Leasee Contract</field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">leasee.contract</field>
             <field name="view_mode">tree,form,pivot</field>
