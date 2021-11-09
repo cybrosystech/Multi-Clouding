@@ -54,6 +54,13 @@ class LeasorContract(models.Model):
     installment_product_id = fields.Many2one(comodel_name="product.product", string="", required=True, domain=[('type', '=', 'service')] )
     installment_journal_id = fields.Many2one(comodel_name="account.journal", domain=[('type', '=', 'sale')], required=True )
     prorate = fields.Boolean(string="Prorate Calculation", default=False  )
+    account_analytic_id = fields.Many2one(comodel_name="account.analytic.account", string="", required=False, )
+    project_site_id = fields.Many2one(comodel_name="account.analytic.account", string="Project/Site",
+                                      domain=[('analytic_account_type', '=', 'project_site')], required=False, )
+    type_id = fields.Many2one(comodel_name="account.analytic.account", string="Type",
+                              domain=[('analytic_account_type', '=', 'type')], required=False, )
+    location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location",
+                                  domain=[('analytic_account_type', '=', 'location')], required=False, )
 
     @api.constrains('estimated_ending_date', 'leasee_contract_id')
     def check_end_dates(self):
