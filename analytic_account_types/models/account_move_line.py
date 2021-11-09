@@ -6,6 +6,8 @@ from odoo.exceptions import UserError
 from odoo.tools import float_compare, float_round
 from odoo.tools.misc import formatLang
 from dateutil.relativedelta import relativedelta
+from datetime import datetime
+import random
 
 
 class AccountMove(models.Model):
@@ -135,14 +137,14 @@ class AccountMove(models.Model):
             reseiver = us.partner_id
             if reseiver:
                 for move in self:
-                    self.message_post(
-                        subject='Invoice Approval Needed',
-                        body=str('This Invoice ' + str(
-                            move.name if move.name != '/' else move.new_sequence) + ' Need Your Approval ') + ' click here to open: <a target=_BLANK href="/web?#id=' + str(
-                            move.id) + '&view_type=form&model=account.move&action=" style="font-weight: bold">' + str(
-                            move.name if move.name != '/' else move.new_sequence) + '</a>',
-                        partner_ids=[reseiver.id]
-                    )
+                    # self.message_post(
+                    #     subject='Invoice Approval Needed',
+                    #     body=str('This Invoice ' + str(
+                    #         move.name if move.name != '/' else move.new_sequence) + ' Need Your Approval ') + ' click here to open: <a target=_BLANK href="/web?#id=' + str(
+                    #         move.id) + '&view_type=form&model=account.move&action=" style="font-weight: bold">' + str(
+                    #         move.name if move.name != '/' else move.new_sequence) + '</a>',
+                    #     partner_ids=[reseiver.id]
+                    # )
                     # thread_pool = self.sudo().env['mail.thread']
                     # thread_pool.message_notify(
                     #     partner_ids=[reseiver.id],
@@ -153,13 +155,14 @@ class AccountMove(models.Model):
                     #         move.name) + '</a>',
                     #     email_from=self.env.user.company_id.catchall_formatted or self.env.user.company_id.email_formatted, )
 
-                    # email_template_id = self.env.ref('analytic_account_types.email_template_send_mail_approval_account')
-                    # ctx = self._context.copy()
-                    # ctx.update({'name': us.name})
-                    # if email_template_id:
-                    #     email_template_id.with_context(ctx).send_mail(self.id, email_values={'email_to': us.email,})
+                    email_template_id = self.env.ref('analytic_account_types.email_template_send_mail_approval_account')
+                    ctx = self._context.copy()
+                    ctx.update({'name': us.name})
+                    if email_template_id:
+                        email_template_id.with_context(ctx).send_mail(self.id, email_values={'email_to': us.email,})
 
     def request_approval_button(self):
+        self.name = 'Bill/'+str(datetime.today().strftime('%Y'))+'/'+str(datetime.today().strftime('%m'))+'/'+str(random.randint(0,999))+str(datetime.today().strftime('%d'))
         if self.out_budget and not self.purchase_approval_cycle_ids:
             out_budget_list = []
             out_budget = self.env['budget.in.out.check.invoice'].search([('type', '=', 'out_budget')], limit=1)

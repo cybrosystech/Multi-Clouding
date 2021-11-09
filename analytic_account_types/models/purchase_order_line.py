@@ -71,14 +71,14 @@ class PurchaseOrder(models.Model):
             reseiver = us.partner_id
             if reseiver:
                 for purchase in self:
-                    self.message_post(
-                        subject='Purchase Approval Needed',
-                        body=str('This Purchase Order ' + str(
-                            purchase.name) + ' Need Your Approval ') + ' click here to open: <a target=_BLANK href="/web?#id=' + str(
-                            purchase.id) + '&view_type=form&model=purchase.order&action=" style="font-weight: bold">' + str(
-                            purchase.name) + '</a>',
-                        partner_ids=[reseiver.id]
-                    )
+                    # self.message_post(
+                    #     subject='Purchase Approval Needed',
+                    #     body=str('This Purchase Order ' + str(
+                    #         purchase.name) + ' Need Your Approval ') + ' click here to open: <a target=_BLANK href="/web?#id=' + str(
+                    #         purchase.id) + '&view_type=form&model=purchase.order&action=" style="font-weight: bold">' + str(
+                    #         purchase.name) + '</a>',
+                    #     partner_ids=[reseiver.id]
+                    # )
                     # thread_pool = self.sudo().env['mail.thread']
                     # thread_pool.message_notify(
                     #     partner_ids=[reseiver.id],
@@ -89,18 +89,18 @@ class PurchaseOrder(models.Model):
                     #         purchase.name) + '</a>',
                     #     email_from=self.env.user.company_id.catchall_formatted or self.env.user.company_id.email_formatted, )
 
-                    # email_template_id = self.env.ref('analytic_account_types.email_template_send_mail_approval_purchase')
-                    # ctx = self._context.copy()
-                    # ctx.update({'name': us.name})
-                    # if email_template_id:
-                    #     email_template_id.with_context(ctx).send_mail(self.id, email_values={'email_to': us.email,})
+                    email_template_id = self.env.ref('analytic_account_types.email_template_send_mail_approval_purchase')
+                    ctx = self._context.copy()
+                    ctx.update({'name': us.name})
+                    if email_template_id:
+                        email_template_id.with_context(ctx).send_mail(self.id, email_values={'email_to': us.email,})
 
     def request_approval_button(self):
         if self.out_budget and not self.purchase_approval_cycle_ids:
             out_budget_list = []
             out_budget = self.env['budget.in.out.check'].search([('type','=','out_budget')],limit=1)
-            if self.budget_collect_ids.mapped('difference_amount'):
-                max_value = max(self.budget_collect_ids.mapped('difference_amount'))
+            if self.budget_collect_ids.mapped('demand_amount'):
+                max_value = max(self.budget_collect_ids.mapped('demand_amount'))
             else:
                 max_value = 0
             for rec in out_budget.budget_line_ids:

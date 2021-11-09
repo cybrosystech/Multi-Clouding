@@ -72,14 +72,14 @@ class SaleOrder(models.Model):
             reseiver = use.partner_id
             if reseiver:
                 for purchase in self:
-                    self.message_post(
-                        subject='Sale Order Approval Needed',
-                        body=str('This Sale Order ' + str(
-                            purchase.name) + ' Need Your Approval ') + ' click here to open: <a target=_BLANK href="/web?#id=' + str(
-                            purchase.id) + '&view_type=form&model=sale.order&action=" style="font-weight: bold">' + str(
-                            purchase.name) + '</a>',
-                        partner_ids=[reseiver.id]
-                    )
+                    # self.message_post(
+                    #     subject='Sale Order Approval Needed',
+                    #     body=str('This Sale Order ' + str(
+                    #         purchase.name) + ' Need Your Approval ') + ' click here to open: <a target=_BLANK href="/web?#id=' + str(
+                    #         purchase.id) + '&view_type=form&model=sale.order&action=" style="font-weight: bold">' + str(
+                    #         purchase.name) + '</a>',
+                    #     partner_ids=[reseiver.id]
+                    # )
                     # thread_pool = self.sudo().env['mail.thread']
                     # thread_pool.message_notify(
                     #     partner_ids=[reseiver.id],
@@ -89,11 +89,11 @@ class SaleOrder(models.Model):
                     #         purchase.id) + '&view_type=form&model=sale.order&action=" style="font-weight: bold">' + str(
                     #         purchase.name) + '</a>',
                     #     email_from=self.env.user.company_id.catchall_formatted or self.env.user.company_id.email_formatted, )
-                    # email_template_id = self.env.ref('analytic_account_types.email_template_send_mail_approval_sales')
-                    # ctx = self._context.copy()
-                    # ctx.update({'name': use.name})
-                    # if email_template_id:
-                    #     email_template_id.with_context(ctx).send_mail(self.id, email_values={'email_to': use.email, })
+                    email_template_id = self.env.ref('analytic_account_types.email_template_send_mail_approval_sales')
+                    ctx = self._context.copy()
+                    ctx.update({'name': use.name})
+                    if email_template_id:
+                        email_template_id.with_context(ctx).send_mail(self.id, email_values={'email_to': use.email, })
 
     def request_approval_button(self):
         if self.out_budget and not self.sale_approval_cycle_ids:
