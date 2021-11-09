@@ -92,6 +92,13 @@ class LeaseeContract(models.Model):
     installment_ids = fields.One2many(comodel_name="leasee.installment", inverse_name="leasee_contract_id", string="", required=False, )
     expired_notified = fields.Boolean(default=False  )
 
+    project_site_id = fields.Many2one(comodel_name="account.analytic.account", string="Project/Site",
+                                      domain=[('analytic_account_type', '=', 'project_site')], required=False, )
+    type_id = fields.Many2one(comodel_name="account.analytic.account", string="Type",
+                              domain=[('analytic_account_type', '=', 'type')], required=False, )
+    location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location",
+                                  domain=[('analytic_account_type', '=', 'location')], required=False, )
+
     @api.depends('commencement_date', 'lease_contract_period')
     def compute_estimated_ending_date(self):
         for rec in self:
@@ -167,6 +174,9 @@ class LeaseeContract(models.Model):
                 'acquisition_date': self.commencement_date,
                 'method_number': self.lease_contract_period,
                 'account_analytic_id': self.analytic_account_id.id,
+                'project_site_id': self.project_site_id.id,
+                'type_id': self.type_id.id,
+                'location_id': self.location_id.id,
                 # 'method_period': self.lease_contract_period_type,
             }
             # changed_vals = self.env['account.asset'].onchange_category_id_values(self.asset_model_id.category_id.id)
@@ -202,6 +212,9 @@ class LeaseeContract(models.Model):
             'price_unit': amount,
             'quantity': 1,
             'analytic_account_id': self.analytic_account_id.id,
+            'project_site_id': self.project_site_id.id,
+            'type_id': self.type_id.id,
+            'location_id': self.location_id.id,
         })]
         invoice = self.env['account.move'].create({
             'partner_id': self.vendor_id.id,
@@ -462,6 +475,9 @@ class LeaseeContract(models.Model):
             'price_unit': amount,
             'quantity': 1,
             'analytic_account_id': self.analytic_account_id.id,
+            'project_site_id': self.project_site_id.id,
+            'type_id': self.type_id.id,
+            'location_id': self.location_id.id,
         })]
         invoice = self.env['account.move'].create({
             'partner_id': self.vendor_id.id,
@@ -510,6 +526,10 @@ class LeaseeContract(models.Model):
                 'account_id': contract.installment_product_id.product_tmpl_id.get_product_accounts()['expense'].id,
                 'price_unit': install.amount,
                 'quantity': 1,
+                'analytic_account_id': self.analytic_account_id.id,
+                'project_site_id': self.project_site_id.id,
+                'type_id': self.type_id.id,
+                'location_id': self.location_id.id,
             })]
             invoice = self.env['account.move'].create({
                 'partner_id': contract.vendor_id.id,

@@ -31,6 +31,10 @@
                                 <field name="external_reference_number" />
                                 <field name="commencement_date" />
                                 <field name="estimated_ending_date" />
+                                <field name="account_analytic_id" />
+                                <field name="project_site_id" />
+                                <field name="type_id" />
+                                <field name="location_id" />
 <!--                                <field name="prorate" />-->
                             </group>
                             <group>

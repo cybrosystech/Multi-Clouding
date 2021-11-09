@@ -54,6 +54,13 @@ class LeasorContract(models.Model):
     installment_product_id = fields.Many2one(comodel_name="product.product", string="", required=True, domain=[('type', '=', 'service')] )
     installment_journal_id = fields.Many2one(comodel_name="account.journal", domain=[('type', '=', 'sale')], required=True )
     prorate = fields.Boolean(string="Prorate Calculation", default=False  )
+    account_analytic_id = fields.Many2one(comodel_name="account.analytic.account", string="", required=False, )
+    project_site_id = fields.Many2one(comodel_name="account.analytic.account", string="Project/Site",
+                                      domain=[('analytic_account_type', '=', 'project_site')], required=False, )
+    type_id = fields.Many2one(comodel_name="account.analytic.account", string="Type",
+                              domain=[('analytic_account_type', '=', 'type')], required=False, )
+    location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location",
+                                  domain=[('analytic_account_type', '=', 'location')], required=False, )
 
     @api.constrains('estimated_ending_date', 'leasee_contract_id')
     def check_end_dates(self):
@@ -109,7 +116,7 @@ class LeasorContract(models.Model):
     def action_open_invoices(self):
         domain = [('id', 'in', self.account_move_ids.ids), ('move_type', 'in', ['out_invoice', 'out_refund'])]
         view_tree = {
-            'name': _(' Vendor Bills '),
+            'name': _(' Customer Invoice '),
             'view_type': 'form',
             'view_mode': 'tree,form',
             'res_model': 'account.move',
@@ -157,6 +164,10 @@ class LeasorContract(models.Model):
                 'account_id': self.installment_product_id.product_tmpl_id.get_product_accounts()['expense'].id,
                 'price_unit': amount,
                 'quantity': 1,
+                'analytic_account_id': self.account_analytic_id.id,
+                'project_site_id': self.project_site_id.id,
+                'type_id': self.type_id.id,
+                'location_id': self.location_id.id,
             })]
             invoice = self.env['account.move'].create({
                 'partner_id': self.customer_id.id,

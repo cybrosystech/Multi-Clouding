@@ -8,120 +8,130 @@
             <field name="arch" type="xml">
                 <form>
                     <header>
-                        <button name="action_activate" string="Activate" class="oe_highlight" states="draft" type="object"/>
-                        <button name="action_create_payment" string="Create Payment" class="oe_highlight" type="object"/>
-                        <button name="action_terminate" string="Terminate" class="oe_highlight" states="active,extended" type="object"/>
-                        <button name="%(lease_management.view_leasee_contract_reassessment_action)d" string="Reassessment" class="oe_highlight" states="active,extended" type="action"/>
-                        <button name="%(lease_management.view_leasee_period_extend_action)d" string="Extend Period" class="oe_highlight" attrs="{'invisible': ['|',('extendable', '!=', True),('state', 'not in', ['active', 'extended'])]}" type="action"/>
-                        <field name="state" widget="statusbar" statusbar_visible=""  />
+                        <button name="action_activate" string="Activate" class="oe_highlight" states="draft"
+                                type="object"/>
+                        <button name="action_create_payment" string="Create Payment" class="oe_highlight"
+                                type="object"/>
+                        <button name="action_terminate" string="Terminate" class="oe_highlight" states="active,extended"
+                                type="object"/>
+                        <button name="%(lease_management.view_leasee_contract_reassessment_action)d"
+                                string="Reassessment" class="oe_highlight" states="active,extended" type="action"/>
+                        <button name="%(lease_management.view_leasee_period_extend_action)d" string="Extend Period"
+                                class="oe_highlight"
+                                attrs="{'invisible': ['|',('extendable', '!=', True),('state', 'not in', ['active', 'extended'])]}"
+                                type="action"/>
+                        <field name="state" widget="statusbar" statusbar_visible=""/>
                     </header>
                     <sheet>
                         <div class="oe_button_box" name="button_box">
 
                             <button class="oe_stat_button" string="Bills"
-                                 name="action_open_bills" type="object" icon="fa-pencil-square-o" >
+                                    name="action_open_bills" type="object" icon="fa-pencil-square-o">
                             </button>
                             <button class="oe_stat_button" string="Payments"
-                                 name="action_open_payments" type="object" icon="fa-usd" >
+                                    name="action_open_payments" type="object" icon="fa-usd">
                             </button>
                             <button class="oe_stat_button" string="Journal Entries"
-                                 name="action_open_journal_entries" type="object" icon="fa-book" >
+                                    name="action_open_journal_entries" type="object" icon="fa-book">
                             </button>
                             <button class="oe_stat_button" string="Asset"
-                                 name="action_view_asset" type="object" icon="fa-archive" >
+                                    name="action_view_asset" type="object" icon="fa-archive">
                             </button>
 
                         </div>
                         <div class="oe_title">
                             <label for="name" class="oe_edit_only"/>
                             <h1>
-                                <field name="name" />
+                                <field name="name"/>
                             </h1>
                         </div>
                         <group>
                             <group>
-                                <field name="leasee_template_id" />
-                                <field name="external_reference_number" />
-                                <field name="vendor_id" />
-                                <field name="inception_date" />
-                                <field name="commencement_date" />
-                                <field name="initial_payment_value" />
-                                <field name="estimated_ending_date" />
-                                <field name="rou_value" />
-<!--                                <field name="registered_paymen" />-->
-                                <field name="estimated_cost_dismantling" />
+                                <field name="leasee_template_id"/>
+                                <field name="external_reference_number"/>
+                                <field name="vendor_id"/>
+                                <field name="inception_date"/>
+                                <field name="commencement_date"/>
+                                <field name="initial_payment_value"/>
+                                <field name="estimated_ending_date"/>
+                                <field name="rou_value"/>
+                                <!--                                <field name="registered_paymen" />-->
+                                <field name="estimated_cost_dismantling"/>
                             </group>
                             <group>
-                                <field name="leasee_currency_id" />
-                                <field name="asset_name" />
-                                <field name="asset_description" />
-                                <field name="initial_direct_cost" />
-                                <field name="incentives_received" />
-                                <field name="useful_life" />
-                                <field name="installment_amount" />
-                                <field name="lease_liability" />
-                                <field name="remaining_lease_liability" />
+                                <field name="leasee_currency_id"/>
+                                <field name="asset_name"/>
+                                <field name="asset_description"/>
+                                <field name="initial_direct_cost"/>
+                                <field name="incentives_received"/>
+                                <field name="useful_life"/>
+                                <field name="installment_amount"/>
+                                <field name="lease_liability"/>
+                                <field name="remaining_lease_liability"/>
                             </group>
                         </group>
                         <notebook>
                             <page string="Contract Details">
                                 <group>
                                     <group>
-                                        <field name="lease_contract_period" />
-                                        <field name="terminate_month_number" />
-<!--                                        <field name="terminate_month_number" />-->
-                                        <field name="terminate_fine" />
-                                        <field name="type_terminate" />
-                                        <field name="extendable" />
-<!--                                        <field name="asset_model_id" />-->
+                                        <field name="lease_contract_period"/>
+                                        <field name="terminate_month_number"/>
+                                        <!--                                        <field name="terminate_month_number" />-->
+                                        <field name="terminate_fine"/>
+                                        <field name="type_terminate"/>
+                                        <field name="extendable"/>
+                                        <!--                                        <field name="asset_model_id" />-->
                                     </group>
                                     <group>
-                                        <field name="payment_method" />
-                                        <field name="interest_rate" />
-                                        <field name="payment_frequency_type" />
-                                        <field name="payment_frequency" />
-                                        <field name="increasement_frequency_type" />
-                                        <field name="increasement_frequency" />
-                                        <field name="increasement_rate" />
-                                        <field name="discount" />
+                                        <field name="payment_method"/>
+                                        <field name="interest_rate"/>
+                                        <field name="payment_frequency_type"/>
+                                        <field name="payment_frequency"/>
+                                        <field name="increasement_frequency_type"/>
+                                        <field name="increasement_frequency"/>
+                                        <field name="increasement_rate"/>
+                                        <field name="discount"/>
                                     </group>
                                 </group>
                             </page>
                             <page string="Contract Accounts">
                                 <group>
                                     <group>
-                                        <field name="lease_liability_account_id" />
-                                        <field name="provision_dismantling_account_id" />
-                                        <field name="terminate_account_id" />
-                                        <field name="interest_expense_account_id" />
-                                        <field name="initial_journal_id" />
-                                        <field name="installment_journal_id" />
-                                        <field name="analytic_account_id" />
+                                        <field name="lease_liability_account_id"/>
+                                        <field name="provision_dismantling_account_id"/>
+                                        <field name="terminate_account_id"/>
+                                        <field name="interest_expense_account_id"/>
+                                        <field name="initial_journal_id"/>
+                                        <field name="installment_journal_id"/>
+                                        <field name="analytic_account_id"/>
+                                        <field name="project_site_id"/>
+                                        <field name="type_id"/>
+                                        <field name="location_id"/>
                                     </group>
                                     <group>
-                                        <field name="terminate_product_id" />
-                                        <field name="installment_product_id" />
-                                        <field name="extension_product_id" />
-                                        <field name="initial_product_id" />
-                                        <field name="asset_model_id" />
+                                        <field name="terminate_product_id"/>
+                                        <field name="installment_product_id"/>
+                                        <field name="extension_product_id"/>
+                                        <field name="initial_product_id"/>
+                                        <field name="asset_model_id"/>
                                     </group>
                                 </group>
                             </page>
                             <page string="Installments">
-                                <field name="installment_ids" >
+                                <field name="installment_ids">
                                     <tree edit="0" create="0">
-                                        <field name="date" />
-                                        <field name="amount" string="Installment Amount" />
-                                        <field name="subsequent_amount" string="Interest Recognition" />
+                                        <field name="date"/>
+                                        <field name="amount" string="Installment Amount"/>
+                                        <field name="subsequent_amount" string="Interest Recognition"/>
                                     </tree>
                                 </field>
                             </page>
                         </notebook>
                     </sheet>
                     <div class="oe_chatter">
-                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_user" />
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
                         <field name="activity_ids" widget="mail_activity"/>
-                        <field name="message_ids" widget="mail_thread" />
+                        <field name="message_ids" widget="mail_thread"/>
                     </div>
                 </form>
             </field>
@@ -138,15 +148,18 @@
         </record>
 
         <record id="view_leasee_contract_action" model="ir.actions.act_window">
-            <field name="name">Lease Contract</field>
+            <field name="name">Leasee Contract</field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">leasee.contract</field>
             <field name="view_mode">tree,form,pivot</field>
         </record>
 
-<!--        <menuitem id="menuitem_lease_contract_categ" name="Leasee Contract" parent="account.menu_finance" sequence="10"/>-->
-        <menuitem id="menuitem_lease_contract_categ" name="Lease" parent="account_accountant.menu_accounting" sequence="10"/>
-        <menuitem id="menuitem_name_module" name="Leasee Contract" parent="lease_management.menuitem_lease_contract_categ" action="view_leasee_contract_action" sequence="1"/>
+        <!--        <menuitem id="menuitem_lease_contract_categ" name="Leasee Contract" parent="account.menu_finance" sequence="10"/>-->
+        <menuitem id="menuitem_lease_contract_categ" name="Lease" parent="account_accountant.menu_accounting"
+                  sequence="10"/>
+        <menuitem id="menuitem_name_module" name="Leasee Contract"
+                  parent="lease_management.menuitem_lease_contract_categ" action="view_leasee_contract_action"
+                  sequence="1"/>
 
     </data>
 </odoo>
