@@ -95,7 +95,7 @@ class LeaseePeriodExtend(models.TransientModel):
             'currency_id': contract.leasee_currency_id.id,
             'ref': contract.name,
             'date': update_date,
-            'journal_id': contract.installment_journal_id.id,
+            'journal_id': contract.asset_model_id.journal_id.id,
             'leasee_contract_id': contract.id,
             'line_ids': lines,
         })

@@ -116,7 +116,7 @@ class LeasorContract(models.Model):
     def action_open_invoices(self):
         domain = [('id', 'in', self.account_move_ids.ids), ('move_type', 'in', ['out_invoice', 'out_refund'])]
         view_tree = {
-            'name': _(' Vendor Bills '),
+            'name': _(' Customer Invoice '),
             'view_type': 'form',
             'view_mode': 'tree,form',
             'res_model': 'account.move',
