@@ -5,7 +5,9 @@
     "maintainers": ["ifujis"],
     "website": "https://github.com/tasctowers",
     "summary": "Modifies Odoo branding",
-    "depends": ["web"],
+    "depends": ["web",
+                "auth_oauth"
+    ],
     "data": ["views/favicon.xml",
             'views/custom_views.xml',
             'views/web_login.xml'
