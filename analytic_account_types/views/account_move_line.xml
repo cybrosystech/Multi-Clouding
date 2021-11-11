@@ -95,7 +95,7 @@
                                     <field name="approval_seq"/>
                                     <field name="user_approve_ids" widget="many2many_tags"/>
                                     <field name="is_approved"/>
-                                </tree editable="bottom">
+                                </tree>
                             </field>
                         </div>
                     </page>
