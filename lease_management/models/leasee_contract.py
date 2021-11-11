@@ -109,6 +109,7 @@ class LeaseeContract(models.Model):
 
     def action_activate(self):
         self.create_commencement_move()
+        self.create_initial_bill()
         # self.create_installments()
         self.create_rov_asset()
         self.create_installments()
