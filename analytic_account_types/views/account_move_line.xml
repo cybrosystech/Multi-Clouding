@@ -6,7 +6,9 @@
             <field name="model">account.move</field>
             <field name="inherit_id" ref="account.view_move_form"/>
             <field name="arch" type="xml">
-
+                <xpath expr="//field[@name='invoice_date']" position="attributes">
+                    <attribute name="required">1</attribute>
+                </xpath>
                 <xpath expr="//button[@name='action_post'][1]" position="attributes">
                     <attribute name="attrs">
                         {'invisible':['|',('show_confirm_button','=',False),('state','!=','draft')]}
@@ -55,7 +57,8 @@
                     <button name="open_account_analytic_types" type="object" string="Set Cost Center"
                             class="oe_edit_only" attrs="{'invisible': [('parent_state', '=', 'posted')]}"/>
                     <field name="budget_id" optional="show" attrs="{'readonly': [('parent_state', '=', 'posted')]}"/>
-                    <field name="remaining_amount" optional="show" attrs="{'readonly': [('parent_state', '=', 'posted')]}"/>
+                    <field name="budget_line_id" optional="show" attrs="{'readonly': [('parent_state', '=', 'posted')]}"/>
+                    <field name="remaining_amount" optional="show" readonly="1"/>
                     <field name="local_subtotal" optional="hide" attrs="{'readonly': [('parent_state', '=', 'posted')]}"/>
                 </xpath>
 
@@ -69,15 +72,16 @@
                             attrs="{'invisible': [('parent.move_type','!=','entry')]}" type="object"
                             string="Set Cost Center" class="oe_edit_only"/>
                     <field name="budget_id" optional="show"/>
-                    <field name="remaining_amount" optional="show"/>
+                    <field name="budget_line_id" optional="show"/>
+                    <field name="remaining_amount" optional="show" readonly="1"/>
                 </xpath>
                 <xpath expr="//notebook" position="inside">
                     <page string="Out Budget Amounts" name="budget_amounts">
                         <div>
-                            <field name="budget_collect_ids">
+                            <field name="budget_collect_ids" readonly="True">
                                 <tree editable="bottom">
                                     <field name="budget_id"/>
-                                    <field name="remaining_amount"/>
+                                    <field name="remaining_amount" readonly="1"/>
                                     <field name="demand_amount"/>
                                     <field name="difference_amount"/>
                                 </tree>
@@ -91,7 +95,7 @@
                                     <field name="approval_seq"/>
                                     <field name="user_approve_ids" widget="many2many_tags"/>
                                     <field name="is_approved"/>
-                                </tree>
+                                </tree editable="bottom">
                             </field>
                         </div>
                     </page>
