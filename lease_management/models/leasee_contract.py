@@ -128,7 +128,6 @@ class LeaseeContract(models.Model):
             'type': 'ir.actions.act_window',
             'res_id': self.asset_id.id,
             'view_id': view_id.id,
-
         }
 
         return view_form
@@ -210,6 +209,8 @@ class LeaseeContract(models.Model):
                 asset = self.env['account.asset'].create(vals)
             # if self.asset_model_id.category_id.open_asset:
             #     asset.validate()
+            if self.prorata:
+                asset.prorata_date = self.commencement_date
             self.asset_id = asset.id
 
     # def action_create_bill(self):
