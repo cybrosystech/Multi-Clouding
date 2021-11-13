@@ -119,6 +119,7 @@ class LeaseeContract(models.Model):
         self.state = 'active'
 
     def action_view_asset(self):
+        view_id = self.env.ref('account_asset.view_account_asset_form')
         view_form = {
             'name': _('Asset'),
             'view_type': 'form',
@@ -126,6 +127,8 @@ class LeaseeContract(models.Model):
             'res_model': 'account.asset',
             'type': 'ir.actions.act_window',
             'res_id': self.asset_id.id,
+            'view_id': view_id.id,
+
         }
 
         return view_form
