@@ -339,7 +339,7 @@ class LeaseeContract(models.Model):
                 'date': new_start,
                 'leasee_contract_id': self.id,
                 'subsequent_amount': interest_recognition,
-                'remaining_lease_liability': remaining_lease_liability,
+                'remaining_lease_liability': round(remaining_lease_liability,2),
             })
 
     def create_subsequent_measurement_move(self, date):
@@ -540,37 +540,38 @@ class LeaseeContract(models.Model):
 
     @api.model
     def leasee_action_generate_interest_entries(self):
-        delta = self.payment_frequency * (1 if self.payment_frequency_type == 'months' else 12)
-        date_comparison = date.today() + relativedelta(months=delta)
-        instalments = self.env['leasee.installment'].search([
-            ('leasee_contract_id', '!=', False),
-        ]).filtered(lambda rec: rec.date <= date_comparison)
-        for installment in instalments:
-            contract = installment.leasee_contract_id
-            if installment.subsequent_amount:
-                # if contract.payment_frequency_type == 'months':
-                #     if not installment.interest_move_ids:
-                #         if contract.payment_method == 'beginning':
-                #             move_date = installment.date
-                #         else:
-                #             move_date = installment.date + relativedelta(days=-1)
-                #         contract.create_interset_move(installment, move_date, installment.subsequent_amount)
-                # else:
-                if installment.subsequent_amount and len(installment.interest_move_ids) < delta:
-                    if contract.payment_method == 'beginning':
-                        supposed_dates = [installment.date - relativedelta(months=i) for i in range(delta) if (installment.date - relativedelta(months=i)) <= date.today()]
-                    else:
-                        supposed_dates = [installment.date - relativedelta(months=i) for i in range(delta) if (installment.date - relativedelta(months=i)) <= date.today()]
+        contracts = self.search([]).filtered(lambda c: c.commencement_date <= date.today() )
+        for contract in contracts:
+            delta = contract.payment_frequency * (1 if contract.payment_frequency_type == 'months' else 12)
+            date_comparison = date.today() + relativedelta(months=delta)
+            instalments = self.env['leasee.installment'].search([
+                ('leasee_contract_id', '=', contract.id),
+            ]).filtered(lambda rec: rec.date <= date_comparison)
+            for installment in instalments:
+                if installment.subsequent_amount:
+                    # if contract.payment_frequency_type == 'months':
+                    #     if not installment.interest_move_ids:
+                    #         if contract.payment_method == 'beginning':
+                    #             move_date = installment.date
+                    #         else:
+                    #             move_date = installment.date + relativedelta(days=-1)
+                    #         contract.create_interset_move(installment, move_date, installment.subsequent_amount)
+                    # else:
+                    if installment.subsequent_amount and len(installment.interest_move_ids) < delta:
+                        if contract.payment_method == 'beginning':
+                            supposed_dates = [installment.date - relativedelta(months=i) for i in range(delta) if (installment.date - relativedelta(months=i)) <= date.today()]
+                        else:
+                            supposed_dates = [installment.date - relativedelta(months=i) for i in range(delta) if (installment.date - relativedelta(months=i)) <= date.today()]
 
-                    for move in installment.interest_move_ids:
-                        for s_date in supposed_dates:
-                            if s_date.year == move.date.year and s_date.month == move.date.month:
-                                del s_date
-                                break
+                        for move in installment.interest_move_ids:
+                            for s_date in supposed_dates:
+                                if s_date.year == move.date.year and s_date.month == move.date.month:
+                                    del s_date
+                                    break
 
-                    for n_date in supposed_dates:
-                        interest_amount = installment.subsequent_amount / delta
-                        contract.create_interset_move(installment, n_date, interest_amount)
+                        for n_date in supposed_dates:
+                            interest_amount = installment.subsequent_amount / delta
+                            contract.create_interset_move(installment, n_date, interest_amount)
 
     def create_interset_move(self, installment, move_date, interest_amount):
         lines = [(0, 0, {
