@@ -196,7 +196,10 @@ class LeaseeContract(models.Model):
             # vals.update({
             #     '':,
             # })
-            asset = self.env['account.asset'].create(vals)
+            if self.asset_model_id:
+                asset = self.asset_model_id.copy(vals)
+            else:
+                asset = self.env['account.asset'].create(vals)
             # if self.asset_model_id.category_id.open_asset:
             #     asset.validate()
             self.asset_id = asset.id
