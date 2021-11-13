@@ -81,6 +81,7 @@
                                         <field name="terminate_fine"/>
                                         <field name="type_terminate"/>
                                         <field name="extendable"/>
+                                        <field name="prorata"/>
                                         <!--                                        <field name="asset_model_id" />-->
                                     </group>
                                     <group>
