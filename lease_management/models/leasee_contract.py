@@ -194,6 +194,7 @@ class LeaseeContract(models.Model):
                 'location_id': self.location_id.id,
                 'prorata': self.prorata,
                 'state': 'draft',
+                'first_depreciation_date': self.commencement_date,
                 # 'method_period': self.lease_contract_period_type,
             }
             # changed_vals = self.env['account.asset'].onchange_category_id_values(self.asset_model_id.category_id.id)
@@ -286,7 +287,8 @@ class LeaseeContract(models.Model):
             'currency_id': self.leasee_currency_id.id,
             'ref': self.name,
             'date': self.commencement_date,
-            'journal_id': self.asset_model_id.journal_id.id,
+            # 'journal_id': self.asset_model_id.journal_id.id,
+            'journal_id': self.initial_journal_id.id,
             'leasee_contract_id': self.id,
             'line_ids': lines,
         })
