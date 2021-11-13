@@ -309,7 +309,8 @@ class LeaseeContract(models.Model):
 
     def create_installments(self):
         start = self.commencement_date
-        remaining_lease_liability = self.lease_liability - self.incentives_received
+        # remaining_lease_liability = self.lease_liability - self.incentives_received
+        remaining_lease_liability = self.lease_liability
         num_installment = self.compute_installments_num()
         period_range = range(num_installment)
         payment_months = self.payment_frequency * (1 if self.payment_frequency_type == 'months' else 12)
