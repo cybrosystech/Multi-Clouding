@@ -202,11 +202,18 @@ class LeaseeContract(models.Model):
             #     '':,
             # })
             if self.asset_model_id:
-                asset = self.asset_model_id.copy(vals)
-                asset.name = self.name
-                asset.state = 'draft'
-            else:
-                asset = self.env['account.asset'].create(vals)
+                # asset = self.asset_model_id.copy(vals)
+                vals.update({
+                    'account_asset_id': self.asset_model_id.account_asset_id.id,
+                    'account_depreciation_id': self.asset_model_id.account_depreciation_id.id,
+                    'journal_id': self.asset_model_id.journal_id.id,
+                    'account_analytic_id': self.asset_model_id.account_analytic_id.id,
+                    'method': self.asset_model_id.method,
+                })
+            # else:
+            asset = self.env['account.asset'].create(vals)
+            asset.name = self.name
+            asset.state = 'draft'
             # if self.asset_model_id.category_id.open_asset:
             #     asset.validate()
             if self.prorata:
