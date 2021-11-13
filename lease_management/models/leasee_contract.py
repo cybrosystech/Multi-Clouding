@@ -206,6 +206,7 @@ class LeaseeContract(models.Model):
                 vals.update({
                     'account_asset_id': self.asset_model_id.account_asset_id.id,
                     'account_depreciation_id': self.asset_model_id.account_depreciation_id.id,
+                    'account_depreciation_expense_id': self.asset_model_id.account_depreciation_expense_id.id,
                     'journal_id': self.asset_model_id.journal_id.id,
                     'account_analytic_id': self.asset_model_id.account_analytic_id.id,
                     'method': self.asset_model_id.method,
