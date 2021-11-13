@@ -100,6 +100,7 @@ class LeaseeContract(models.Model):
                               domain=[('analytic_account_type', '=', 'type')], required=False, )
     location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location",
                                   domain=[('analytic_account_type', '=', 'location')], required=False, )
+    prorata = fields.Boolean(default=False )
 
     @api.depends('commencement_date', 'lease_contract_period')
     def compute_estimated_ending_date(self):
@@ -189,6 +190,7 @@ class LeaseeContract(models.Model):
                 'project_site_id': self.project_site_id.id,
                 'type_id': self.type_id.id,
                 'location_id': self.location_id.id,
+                'prorata': self.prorata,
                 # 'method_period': self.lease_contract_period_type,
             }
             # changed_vals = self.env['account.asset'].onchange_category_id_values(self.asset_model_id.category_id.id)
@@ -198,6 +200,7 @@ class LeaseeContract(models.Model):
             # })
             if self.asset_model_id:
                 asset = self.asset_model_id.copy(vals)
+                asset.name = self.name
             else:
                 asset = self.env['account.asset'].create(vals)
             # if self.asset_model_id.category_id.open_asset:
