@@ -75,6 +75,7 @@
                                 <group>
                                     <group>
                                         <field name="lease_contract_period"/>
+                                        <field name="lease_contract_period_type"/>
                                         <field name="terminate_month_number"/>
                                         <!--                                        <field name="terminate_month_number" />-->
                                         <field name="terminate_fine"/>
@@ -90,7 +91,7 @@
                                         <field name="increasement_frequency_type"/>
                                         <field name="increasement_frequency"/>
                                         <field name="increasement_rate"/>
-                                        <field name="discount"/>
+<!--                                        <field name="discount"/>-->
                                     </group>
                                 </group>
                             </page>
@@ -123,6 +124,7 @@
                                         <field name="date"/>
                                         <field name="amount" string="Installment Amount"/>
                                         <field name="subsequent_amount" string="Interest Recognition"/>
+                                        <field name="remaining_lease_liability" />
                                     </tree>
                                 </field>
                             </page>

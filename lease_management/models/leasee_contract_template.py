@@ -27,7 +27,7 @@ class LeaseContractTemplate(models.Model):
 
     increasement_frequency_type = fields.Selection(string="Increasement Type",default="years", selection=[('years', 'Years'), ('months', 'Months'), ], required=True, )
     increasement_frequency = fields.Integer(default=1, required=False, )
-    discount = fields.Float(string="Discount %", default=0.0, required=False, )
+    # discount = fields.Float(string="Discount %", default=0.0, required=False, )
     asset_model_id = fields.Many2one(comodel_name="account.asset", string="Asset Model", required=False, domain=[('asset_type', '=', 'purchase'), ('state', '=', 'model')] )
 
     lease_liability_account_id = fields.Many2one(comodel_name="account.account", string="", required=True, )

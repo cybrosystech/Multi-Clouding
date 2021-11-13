@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """ init object """
+import math
+
 from odoo import fields, models, api, _ ,tools, SUPERUSER_ID
 from odoo.exceptions import ValidationError,UserError
 from datetime import datetime , date ,timedelta
@@ -50,7 +52,7 @@ class LeaseeContract(models.Model):
     increasement_frequency_type = fields.Selection(string="Increasement Type",default="years", selection=[('years', 'Years'), ('months', 'Months'), ], required=True, )
     increasement_frequency = fields.Integer(default=1, required=False, )
     increasement_rate = fields.Float(default=1, required=False, )
-    discount = fields.Float(string="Discount %", default=0.0, required=False, )
+    # discount = fields.Float(string="Discount %", default=0.0, required=False, )
     asset_model_id = fields.Many2one(comodel_name="account.asset", string="Asset Model", required=False, domain=[('asset_type', '=', 'purchase'), ('state', '=', 'model')] )
     asset_id = fields.Many2one(comodel_name="account.asset", copy=False)
 
@@ -127,10 +129,19 @@ class LeaseeContract(models.Model):
 
         return view_form
 
+    def compute_installments_num(self):
+        for rec in self:
+            if rec.lease_contract_period and rec.payment_frequency:
+                total_contract_months = rec.lease_contract_period * (1 if rec.lease_contract_period_type == 'months' else 12)
+                payment_freq_months = rec.payment_frequency * ( 1 if rec.payment_frequency_type == 'months' else 12)
+                return math.floor(total_contract_months/payment_freq_months)
+            else:
+                return 0
+
     @api.depends('installment_amount', 'lease_contract_period', 'increasement_rate', 'installment_ids', 'installment_ids.amount')
     def compute_lease_liability(self):
         for rec in self:
-            period_range = range(rec.lease_contract_period)
+            period_range = range(rec.compute_installments_num())
             if rec.payment_method == 'beginning':
             #     period_range = range(rec.lease_contract_period)
                 start = 0
@@ -296,7 +307,9 @@ class LeaseeContract(models.Model):
     def create_installments(self):
         start = self.commencement_date
         remaining_lease_liability = self.lease_liability - self.incentives_received
-        period_range = range(self.lease_contract_period)
+        num_installment = self.compute_installments_num()
+        period_range = range(num_installment)
+        payment_months = self.payment_frequency * (1 if self.payment_frequency_type == 'months' else 12)
         if self.payment_method == 'beginning':
             #     period_range = range(rec.lease_contract_period)
             start_p = 0
@@ -306,38 +319,16 @@ class LeaseeContract(models.Model):
 
         for i in period_range:
             amount = self.get_future_value(self.installment_amount, self.increasement_rate, i )
-            if self.lease_contract_period_type == 'months':
-                if start_p:
-                    new_start = start + relativedelta(months=i+start_p, days=-1)
-                else:
-                    new_start = start + relativedelta(months=i)
+            if start_p:
+                new_start = start + relativedelta(months=(i+start_p)*payment_months, days=-1)
             else:
-                if start_p:
-                    new_start = start + relativedelta(years=i+start_p, days=-1)
-                else:
-                    new_start = start + relativedelta(years=i)
-            # invoice_lines = [(0, 0, {
-            #     'product_id': self.installment_product_id.id,
-            #     'name': self.installment_product_id.name,
-            #     'product_uom_id': self.installment_product_id.uom_id.id,
-            #     'account_id': self.installment_product_id.product_tmpl_id.get_product_accounts()['expense'].id,
-            #     'price_unit': amount,
-            #     'quantity': 1,
-            # })]
-            # invoice = self.env['account.move'].create({
-            #     'partner_id': self.vendor_id.id,
-            #     'move_type': 'in_invoice',
-            #     'currency_id': self.leasee_currency_id.id,
-            #     'ref': self.name,
-            #     'invoice_date': new_start,
-            #     'invoice_line_ids': invoice_lines,
-            #     'journal_id': self.installment_journal_id.id,
-            #     'leasee_contract_id': self.id,
-            # })
+                new_start = start + relativedelta(months=i*payment_months)
+
             interest_recognition = remaining_lease_liability * self.interest_rate / 100
             if self.payment_method == 'beginning':
                 if i == 0:
                     interest_recognition = 0
+            remaining_lease_liability -= (amount - interest_recognition)
             self.env['leasee.installment'].create({
                 'name': self.name + ' installment - ' + new_start.strftime(DF),
                 'amount': amount,
@@ -346,7 +337,6 @@ class LeaseeContract(models.Model):
                 'subsequent_amount': interest_recognition,
                 'remaining_lease_liability': remaining_lease_liability,
             })
-            remaining_lease_liability -= (amount - interest_recognition)
 
     def create_subsequent_measurement_move(self, date):
         amount = self.remaining_lease_liability * self.interest_rate / (100 * 12)
@@ -546,36 +536,37 @@ class LeaseeContract(models.Model):
 
     @api.model
     def leasee_action_generate_interest_entries(self):
+        delta = self.payment_frequency * (1 if self.payment_frequency_type == 'months' else 12)
+        date_comparison = date.today() + relativedelta(months=delta)
         instalments = self.env['leasee.installment'].search([
             ('leasee_contract_id', '!=', False),
-        ]).filtered(lambda rec: rec.date <= date.today())
+        ]).filtered(lambda rec: rec.date <= date_comparison)
         for installment in instalments:
             contract = installment.leasee_contract_id
             if installment.subsequent_amount:
-                if contract.lease_contract_period_type == 'months':
-                    if not installment.interest_move_ids:
-                        if contract.payment_method == 'beginning':
-                            move_date = installment.date
-                        else:
-                            move_date = installment.date + relativedelta(days=-1)
-                        contract.create_interset_move(installment, move_date, installment.subsequent_amount)
-                else:
-                    new_dates = []
-                    if installment.subsequent_amount and len(installment.interest_move_ids) < 12:
-                        if contract.payment_method == 'beginning':
-                            supposed_dates = [installment.date + relativedelta(months=i) for i in range(12)]
-                        else:
-                            supposed_dates = [installment.date - relativedelta(months=i) for i in range(12)]
+                # if contract.payment_frequency_type == 'months':
+                #     if not installment.interest_move_ids:
+                #         if contract.payment_method == 'beginning':
+                #             move_date = installment.date
+                #         else:
+                #             move_date = installment.date + relativedelta(days=-1)
+                #         contract.create_interset_move(installment, move_date, installment.subsequent_amount)
+                # else:
+                if installment.subsequent_amount and len(installment.interest_move_ids) < delta:
+                    if contract.payment_method == 'beginning':
+                        supposed_dates = [installment.date - relativedelta(months=i) for i in range(delta) if (installment.date - relativedelta(months=i)) <= date.today()]
+                    else:
+                        supposed_dates = [installment.date - relativedelta(months=i) for i in range(delta) if (installment.date - relativedelta(months=i)) <= date.today()]
 
-                        for move in installment.interest_move_ids:
-                            for s_date in supposed_dates:
-                                if s_date.year == move.date.year and s_date.month == move.date.month:
-                                    del s_date
-                                    break
+                    for move in installment.interest_move_ids:
+                        for s_date in supposed_dates:
+                            if s_date.year == move.date.year and s_date.month == move.date.month:
+                                del s_date
+                                break
 
-                        for n_date in supposed_dates:
-                            interest_amount = installment.subsequent_amount / 12
-                            contract.create_interset_move(installment, n_date, interest_amount)
+                    for n_date in supposed_dates:
+                        interest_amount = installment.subsequent_amount / delta
+                        contract.create_interset_move(installment, n_date, interest_amount)
 
     def create_interset_move(self, installment, move_date, interest_amount):
         lines = [(0, 0, {

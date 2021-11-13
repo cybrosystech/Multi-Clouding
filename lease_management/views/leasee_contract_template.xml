@@ -29,7 +29,7 @@
                                 <field name="payment_frequency" />
                                 <field name="increasement_frequency_type" />
                                 <field name="increasement_frequency" />
-                                <field name="discount" />
+<!--                                <field name="discount" />-->
                                 <field name="asset_model_id" />
                             </group>
                         </group>
