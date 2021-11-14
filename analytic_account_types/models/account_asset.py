@@ -20,6 +20,14 @@ class AccountAsset(models.Model):
     location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location",
                                   domain=[('analytic_account_type', '=', 'location')], required=False, )
 
+
+    @api.onchange('project_site_id')
+    def _onchange_project_site_id(self):
+        for rec in self:
+            rec.type_id = rec.project_site_id.analytic_type_filter_id.id
+            rec.location_id = rec.project_site_id.analytic_location_id.id
+
+
     @api.onchange('model_id')
     def _onchange_model_id(self):
         model = self.model_id
