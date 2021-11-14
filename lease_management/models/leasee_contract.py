@@ -239,28 +239,29 @@ class LeaseeContract(models.Model):
 
     def create_initial_bill(self):
         amount = self.initial_direct_cost + self.initial_payment_value
-        invoice_lines = [(0, 0, {
-            'product_id': self.initial_product_id.id,
-            'name': self.initial_product_id.name,
-            'product_uom_id': self.initial_product_id.uom_id.id,
-            'account_id': self.initial_product_id.product_tmpl_id.get_product_accounts()['expense'].id,
-            'price_unit': amount,
-            'quantity': 1,
-            'analytic_account_id': self.analytic_account_id.id,
-            'project_site_id': self.project_site_id.id,
-            'type_id': self.type_id.id,
-            'location_id': self.location_id.id,
-        })]
-        invoice = self.env['account.move'].create({
-            'partner_id': self.vendor_id.id,
-            'move_type': 'in_invoice',
-            'currency_id': self.leasee_currency_id.id,
-            'ref': self.name,
-            'invoice_date': datetime.now(),
-            'invoice_line_ids': invoice_lines,
-            'journal_id': self.installment_journal_id.id,
-            'leasee_contract_id': self.id,
-        })
+        if amount:
+            invoice_lines = [(0, 0, {
+                'product_id': self.initial_product_id.id,
+                'name': self.initial_product_id.name,
+                'product_uom_id': self.initial_product_id.uom_id.id,
+                'account_id': self.initial_product_id.product_tmpl_id.get_product_accounts()['expense'].id,
+                'price_unit': amount,
+                'quantity': 1,
+                'analytic_account_id': self.analytic_account_id.id,
+                'project_site_id': self.project_site_id.id,
+                'type_id': self.type_id.id,
+                'location_id': self.location_id.id,
+            })]
+            invoice = self.env['account.move'].create({
+                'partner_id': self.vendor_id.id,
+                'move_type': 'in_invoice',
+                'currency_id': self.leasee_currency_id.id,
+                'ref': self.name,
+                'invoice_date': datetime.now(),
+                'invoice_line_ids': invoice_lines,
+                'journal_id': self.installment_journal_id.id,
+                'leasee_contract_id': self.id,
+            })
 
     def create_commencement_move(self):
         rou_account = self.asset_model_id.account_asset_id
@@ -283,6 +284,8 @@ class LeaseeContract(models.Model):
             'credit': self.estimated_cost_dismantling,
             'analytic_account_id': self.analytic_account_id.id,
         })]
+        if not self.estimated_cost_dismantling:
+            del lines[2]
         move = self.env['account.move'].create({
             'partner_id': self.vendor_id.id,
             'move_type': 'entry',
