@@ -15,7 +15,7 @@ class LeaseePeriodExtend(models.TransientModel):
 
     # reassessment_start_Date = fields.Date(default=lambda self: fields.Date.today(), required=True, )
     leasee_contract_id = fields.Many2one(comodel_name="leasee.contract", string="", required=False,ondelete='cascade' )
-    new_contract_period = fields.Integer(string="", default=1, required=True, )
+    new_contract_period = fields.Integer(string="Extended Contract Period", default=1, required=True, )
 
     @api.model
     def default_get(self, fields):
@@ -27,52 +27,72 @@ class LeaseePeriodExtend(models.TransientModel):
 
     def action_apply(self):
         contract = self.leasee_contract_id
-        prev_liability = contract.lease_liability
-        prev_period = contract.lease_contract_period
+        # prev_liability = contract.lease_liability
+        # prev_period = contract.lease_contract_period
         self.action_create_extend_log()
         last_installment = self.env['leasee.installment'].search([
             ('leasee_contract_id', '=', self.leasee_contract_id.id),
         ], order='date desc', limit=1)
+        installment_amount = last_installment.amount * (1 + contract.increasement_rate / 100)
+        new_contract = contract.copy({
+            'name': contract.name + ' Extension',
+            'inception_date': contract.estimated_ending_date,
+            'commencement_date': contract.estimated_ending_date,
+            'installment_amount': installment_amount,
+            'lease_contract_period': self.new_contract_period,
+            'parent_id': contract.id,
+        })
+        contract.state = 'extended'
+        new_contract.action_activate()
 
-        len_new_installments = self.new_contract_period - prev_period
-        last_amount = last_installment.amount
-        installment_date = last_installment.date
-        installments = self.env['leasee.installment']
-        if len_new_installments > 0:
-            for i in range(len_new_installments):
-                amount = last_amount * ( 1 + contract.increasement_rate / 100)
-                installment_date = installment_date + (relativedelta(months=1) if contract.lease_contract_period_type == 'months' else relativedelta(years=1))
-                if i == 0:
-                    start_date = installment_date
-                installments |= self.env['leasee.installment'].create({
-                    'name': contract.name + ' installment - ' + installment_date.strftime(DF),
-                    'amount': amount,
-                    'date': installment_date,
-                    'leasee_contract_id': contract.id,
-                })
-                last_amount = amount
-
-            new_liability = contract.lease_liability
-            diff_liability = new_liability - prev_liability
-            self.create_extend_move(contract, diff_liability, start_date)
-            self.update_asset_value(diff_liability)
-            # first_installment = installments[0]
-            first_subsequent_amount = last_installment.subsequent_amount
-            remaining_liability = first_subsequent_amount / (contract.interest_rate / 100) + diff_liability - last_installment.amount
-
-            for installment in installments:
-                if contract.interest_rate:
-                    installment.subsequent_amount = remaining_liability * contract.interest_rate / 100
-                    remaining_liability = remaining_liability * ( 1 + contract.interest_rate / 100 ) - installment.amount
-                    installment.remaining_lease_liability = remaining_liability
-                else:
-                    installment.subsequent_amount = 0
-                    installment.remaining_lease_liability = remaining_liability
-                    remaining_liability -= installment.amount
-
-            contract.state = 'extended'
-            contract.expired_notified = False
-            contract.lease_contract_period = self.new_contract_period
+    # def action_apply(self):
+    #     contract = self.leasee_contract_id
+    #     prev_liability = contract.lease_liability
+    #     prev_period = contract.lease_contract_period
+    #     self.action_create_extend_log()
+    #     last_installment = self.env['leasee.installment'].search([
+    #         ('leasee_contract_id', '=', self.leasee_contract_id.id),
+    #     ], order='date desc', limit=1)
+    #
+    #     len_new_installments = self.new_contract_period - prev_period
+    #     last_amount = last_installment.amount
+    #     installment_date = last_installment.date
+    #     installments = self.env['leasee.installment']
+    #     if len_new_installments > 0:
+    #         for i in range(len_new_installments):
+    #             amount = last_amount * ( 1 + contract.increasement_rate / 100)
+    #             installment_date = installment_date + (relativedelta(months=1) if contract.lease_contract_period_type == 'months' else relativedelta(years=1))
+    #             if i == 0:
+    #                 start_date = installment_date
+    #             installments |= self.env['leasee.installment'].create({
+    #                 'name': contract.name + ' installment - ' + installment_date.strftime(DF),
+    #                 'amount': amount,
+    #                 'date': installment_date,
+    #                 'leasee_contract_id': contract.id,
+    #             })
+    #             last_amount = amount
+    #
+    #         new_liability = contract.lease_liability
+    #         diff_liability = new_liability - prev_liability
+    #         self.create_extend_move(contract, diff_liability, start_date)
+    #         self.update_asset_value(diff_liability)
+    #         # first_installment = installments[0]
+    #         first_subsequent_amount = last_installment.subsequent_amount
+    #         remaining_liability = first_subsequent_amount / (contract.interest_rate / 100) + diff_liability - last_installment.amount
+    #
+    #         for installment in installments:
+    #             if contract.interest_rate:
+    #                 installment.subsequent_amount = remaining_liability * contract.interest_rate / 100
+    #                 remaining_liability = remaining_liability * ( 1 + contract.interest_rate / 100 ) - installment.amount
+    #                 installment.remaining_lease_liability = remaining_liability
+    #             else:
+    #                 installment.subsequent_amount = 0
+    #                 installment.remaining_lease_liability = remaining_liability
+    #                 remaining_liability -= installment.amount
+    #
+    #         contract.state = 'extended'
+    #         contract.expired_notified = False
+    #         contract.lease_contract_period = self.new_contract_period
 
     def create_extend_move(self, contract, amount, update_date):
         rou_account = contract.asset_model_id.account_asset_id

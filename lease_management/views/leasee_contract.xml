@@ -8,6 +8,7 @@
             <field name="arch" type="xml">
                 <form>
                     <header>
+                        <field name="child_ids" invisible="1" />
                         <button name="action_activate" string="Activate" class="oe_highlight" states="draft"
                                 type="object"/>
                         <button name="action_create_payment" string="Create Payment" class="oe_highlight"
@@ -18,7 +19,7 @@
                                 string="Reassessment" class="oe_highlight" states="active,extended" type="action"/>
                         <button name="%(lease_management.view_leasee_period_extend_action)d" string="Extend Period"
                                 class="oe_highlight"
-                                attrs="{'invisible': ['|',('extendable', '!=', True),('state', 'not in', ['active', 'extended'])]}"
+                                attrs="{'invisible': ['|',('extendable', '!=', True),('state', 'not in', ['active'])]}"
                                 type="action"/>
                         <field name="state" widget="statusbar" statusbar_visible=""/>
                     </header>
@@ -33,6 +34,10 @@
                             </button>
                             <button class="oe_stat_button" string="Journal Entries"
                                     name="action_open_journal_entries" type="object" icon="fa-book">
+                            </button>
+                            <button class="oe_stat_button" string="Contract Extensions"
+                                    attrs="{'invisible': [('child_ids', '=', [] )]}"
+                                    name="action_open_extended_contract" type="object" icon="fa-paperclip">
                             </button>
                             <button class="oe_stat_button" string="Asset"
                                     name="action_view_asset" type="object" icon="fa-archive">

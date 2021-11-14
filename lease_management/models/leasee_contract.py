@@ -59,12 +59,12 @@ class LeaseeContract(models.Model):
     leasee_currency_id = fields.Many2one(comodel_name="res.currency", string="", required=False, )
     asset_name = fields.Char(string="", default="", required=False, )
     asset_description = fields.Text(string="", default="", required=False, )
-    initial_direct_cost = fields.Float()
-    incentives_received = fields.Float()
+    initial_direct_cost = fields.Float(copy=False)
+    incentives_received = fields.Float(copy=False)
     rou_value = fields.Float(string="ROU Asset Value",compute='compute_rou_value')
     # registered_paymen = fields.Float(string="Registered Payment Prior Commencement Date")
 
-    estimated_cost_dismantling = fields.Float(string="Estimated Cost For Dismantling", default=0.0, required=False, )
+    estimated_cost_dismantling = fields.Float(string="Estimated Cost For Dismantling", default=0.0, required=False,copy=False )
     useful_life = fields.Integer(string="Useful Life Of The Right Of The Use Asset", default=0, required=False, )
     lease_liability = fields.Float(compute='compute_lease_liability')
     installment_amount = fields.Float(string="", default=0.0, required=False, )
@@ -101,6 +101,8 @@ class LeaseeContract(models.Model):
     location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location",
                                   domain=[('analytic_account_type', '=', 'location')], required=False, )
     prorata = fields.Boolean(default=False )
+    parent_id = fields.Many2one(comodel_name="leasee.contract", string="", required=False, copy=False)
+    child_ids = fields.One2many(comodel_name="leasee.contract", inverse_name="parent_id", string="", required=False, copy=False)
 
     @api.depends('commencement_date', 'lease_contract_period')
     def compute_estimated_ending_date(self):
@@ -617,6 +619,34 @@ class LeaseeContract(models.Model):
             'line_ids': lines,
             'leasee_installment_id': installment.id,
         })
+
+    def action_open_extended_contract(self):
+        contracts = self.search([('id', 'in', self.child_ids.ids)])
+        if len(contracts) > 1:
+            domain = [('id', 'in', contracts.ids)]
+            view_tree = {
+                'name': _('Extended Leasee Contracts'),
+                'view_type': 'form',
+                'view_mode': 'tree,form',
+                'res_model': self._name,
+                'type': 'ir.actions.act_window',
+                'domain': domain,
+            }
+
+            return view_tree
+        else:
+            view_form = {
+                'name': _('Extended Leasee Contract'),
+                'view_type': 'form',
+                'view_mode': 'form',
+                'res_model': self._name,
+                'type': 'ir.actions.act_window',
+                'res_id': contracts[0].id,
+            }
+
+            return view_form
+
+
 
 
 
