@@ -130,7 +130,7 @@ class LeaseePeriodExtend(models.TransientModel):
             'date': asset.acquisition_date,
             'method_number': self.new_contract_period + self.leasee_contract_id.lease_contract_period,
             'asset_id': asset.id,
-            'value_residual': new_value + asset.original_vlaue,
+            'value_residual': new_value + asset.original_value,
             'salvage_value': asset.salvage_value,
             "account_asset_counterpart_id": self.leasee_contract_id.lease_liability_account_id.id,
         }).modify()
