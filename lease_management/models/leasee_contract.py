@@ -59,12 +59,12 @@ class LeaseeContract(models.Model):
     leasee_currency_id = fields.Many2one(comodel_name="res.currency", string="", required=False, )
     asset_name = fields.Char(string="", default="", required=False, )
     asset_description = fields.Text(string="", default="", required=False, )
-    initial_direct_cost = fields.Float()
-    incentives_received = fields.Float()
+    initial_direct_cost = fields.Float(copy=False)
+    incentives_received = fields.Float(copy=False)
     rou_value = fields.Float(string="ROU Asset Value",compute='compute_rou_value')
     # registered_paymen = fields.Float(string="Registered Payment Prior Commencement Date")
 
-    estimated_cost_dismantling = fields.Float(string="Estimated Cost For Dismantling", default=0.0, required=False, )
+    estimated_cost_dismantling = fields.Float(string="Estimated Cost For Dismantling", default=0.0, required=False,copy=False )
     useful_life = fields.Integer(string="Useful Life Of The Right Of The Use Asset", default=0, required=False, )
     lease_liability = fields.Float(compute='compute_lease_liability')
     installment_amount = fields.Float(string="", default=0.0, required=False, )
@@ -101,6 +101,8 @@ class LeaseeContract(models.Model):
     location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location",
                                   domain=[('analytic_account_type', '=', 'location')], required=False, )
     prorata = fields.Boolean(default=False )
+    parent_id = fields.Many2one(comodel_name="leasee.contract", string="", required=False, copy=False)
+    child_ids = fields.One2many(comodel_name="leasee.contract", inverse_name="parent_id", string="", required=False, copy=False)
 
     @api.depends('commencement_date', 'lease_contract_period')
     def compute_estimated_ending_date(self):
@@ -237,28 +239,29 @@ class LeaseeContract(models.Model):
 
     def create_initial_bill(self):
         amount = self.initial_direct_cost + self.initial_payment_value
-        invoice_lines = [(0, 0, {
-            'product_id': self.initial_product_id.id,
-            'name': self.initial_product_id.name,
-            'product_uom_id': self.initial_product_id.uom_id.id,
-            'account_id': self.initial_product_id.product_tmpl_id.get_product_accounts()['expense'].id,
-            'price_unit': amount,
-            'quantity': 1,
-            'analytic_account_id': self.analytic_account_id.id,
-            'project_site_id': self.project_site_id.id,
-            'type_id': self.type_id.id,
-            'location_id': self.location_id.id,
-        })]
-        invoice = self.env['account.move'].create({
-            'partner_id': self.vendor_id.id,
-            'move_type': 'in_invoice',
-            'currency_id': self.leasee_currency_id.id,
-            'ref': self.name,
-            'invoice_date': datetime.now(),
-            'invoice_line_ids': invoice_lines,
-            'journal_id': self.installment_journal_id.id,
-            'leasee_contract_id': self.id,
-        })
+        if amount:
+            invoice_lines = [(0, 0, {
+                'product_id': self.initial_product_id.id,
+                'name': self.initial_product_id.name,
+                'product_uom_id': self.initial_product_id.uom_id.id,
+                'account_id': self.initial_product_id.product_tmpl_id.get_product_accounts()['expense'].id,
+                'price_unit': amount,
+                'quantity': 1,
+                'analytic_account_id': self.analytic_account_id.id,
+                'project_site_id': self.project_site_id.id,
+                'type_id': self.type_id.id,
+                'location_id': self.location_id.id,
+            })]
+            invoice = self.env['account.move'].create({
+                'partner_id': self.vendor_id.id,
+                'move_type': 'in_invoice',
+                'currency_id': self.leasee_currency_id.id,
+                'ref': self.name,
+                'invoice_date': datetime.now(),
+                'invoice_line_ids': invoice_lines,
+                'journal_id': self.installment_journal_id.id,
+                'leasee_contract_id': self.id,
+            })
 
     def create_commencement_move(self):
         rou_account = self.asset_model_id.account_asset_id
@@ -281,6 +284,8 @@ class LeaseeContract(models.Model):
             'credit': self.estimated_cost_dismantling,
             'analytic_account_id': self.analytic_account_id.id,
         })]
+        if not self.estimated_cost_dismantling:
+            del lines[2]
         move = self.env['account.move'].create({
             'partner_id': self.vendor_id.id,
             'move_type': 'entry',
@@ -617,6 +622,34 @@ class LeaseeContract(models.Model):
             'line_ids': lines,
             'leasee_installment_id': installment.id,
         })
+
+    def action_open_extended_contract(self):
+        contracts = self.search([('id', 'in', self.child_ids.ids)])
+        if len(contracts) > 1:
+            domain = [('id', 'in', contracts.ids)]
+            view_tree = {
+                'name': _('Extended Leasee Contracts'),
+                'view_type': 'form',
+                'view_mode': 'tree,form',
+                'res_model': self._name,
+                'type': 'ir.actions.act_window',
+                'domain': domain,
+            }
+
+            return view_tree
+        else:
+            view_form = {
+                'name': _('Extended Leasee Contract'),
+                'view_type': 'form',
+                'view_mode': 'form',
+                'res_model': self._name,
+                'type': 'ir.actions.act_window',
+                'res_id': contracts[0].id,
+            }
+
+            return view_form
+
+
 
 
 
