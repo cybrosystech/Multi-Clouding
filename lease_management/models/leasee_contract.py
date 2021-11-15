@@ -296,7 +296,7 @@ class LeaseeContract(models.Model):
             'name': 'create contract number %s' % self.name,
             'account_id': rou_account.id,
             'credit': 0,
-            'debit': self.rou_value - (self.initial_direct_cost + self.initial_payment_value + self.incentives_received),
+            'debit': self.rou_value - (self.initial_direct_cost + self.initial_payment_value),
             'analytic_account_id': self.analytic_account_id.id,
         }),(0, 0, {
             'name': 'create contract number %s' % self.name,
