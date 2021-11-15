@@ -185,7 +185,8 @@ class AccountMove(models.Model):
             if self.move_type == 'entry':
                 max_value = sum(self.line_ids.mapped('debit'))
             else:
-                max_value = self.amount_total
+                # max_value = self.amount_total
+                max_value = sum(self.invoice_line_ids.mapped('local_subtotal'))
             for rec in in_budget.budget_line_ids:
                 if rec.to_amount >= max_value >= rec.from_amount:
                     in_budget_list.append((0, 0, {
