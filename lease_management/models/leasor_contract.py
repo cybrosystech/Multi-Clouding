@@ -154,7 +154,7 @@ class LeasorContract(models.Model):
         first_invoice_date = self.commencement_date.replace(day=1)
         number_of_installments = self.lease_contract_period * ( 1 if self.lease_contract_period_type == 'months' else 12)
         for i in range(number_of_installments):
-            delta = relativedelta(months=1)
+            delta = relativedelta(months=i)
             amount = self.installment_amount
             if i == 0 and self.prorate:
                 amount *= (30 - (self.commencement_date - first_invoice_date).days )/30
