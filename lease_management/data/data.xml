@@ -58,5 +58,23 @@
             <field name="delay_count">0</field>
         </record>
 
+    <!--    sequences-->
+
+        <record id="seq_leasee_contract" model="ir.sequence">
+            <field name="name">Leasee Contract Sequence/</field>
+            <field name="code">leasee.contract</field>
+            <field name="prefix">Leasee/</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="seq_leasor_contract" model="ir.sequence">
+            <field name="name">Leasor Contract Sequence/</field>
+            <field name="code">leasor.contract</field>
+            <field name="prefix">Leasor/</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
     </data>
 </odoo>

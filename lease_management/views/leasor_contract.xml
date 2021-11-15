@@ -35,7 +35,7 @@
                                 <field name="project_site_id" />
                                 <field name="type_id" />
                                 <field name="location_id" />
-<!--                                <field name="prorate" />-->
+                                <field name="prorate" />
                             </group>
                             <group>
                                 <field name="installment_amount" />

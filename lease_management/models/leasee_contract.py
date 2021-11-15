@@ -25,7 +25,7 @@ class LeaseeContract(models.Model):
     _description = 'Leasee Contract'
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
-    name = fields.Char(string="Name", required=True, )
+    name = fields.Char(string="Name", required=True,copy=False )
     leasee_template_id = fields.Many2one(comodel_name="leasee.contract.template", string="Leasee Contract Template", required=False, )
 
     external_reference_number = fields.Char()
@@ -106,6 +106,13 @@ class LeaseeContract(models.Model):
 
     incentives_account_id = fields.Many2one(comodel_name="account.account", string="", required=True, )
     incentives_product_id = fields.Many2one(comodel_name="product.product", string="", required=True, domain=[('type', '=', 'service')] )
+
+    @api.model
+    def create(self, vals):
+        name = self.env['ir.sequence'].next_by_code('leasee.contract')
+        vals['name'] = name
+        vals['external_reference_number'] = name
+        return super(LeaseeContract, self).create(vals)
 
     @api.depends('commencement_date', 'lease_contract_period')
     def compute_estimated_ending_date(self):
