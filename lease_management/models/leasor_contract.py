@@ -50,7 +50,7 @@ class LeasorContract(models.Model):
     lease_currency_id = fields.Many2one(comodel_name="res.currency", string="", required=True, )
 
     account_move_ids = fields.One2many(comodel_name="account.move", inverse_name="leasor_contract_id", string="", required=False, )
-    annual_payment = fields.Float(string="", default=0.0, required=False, )
+    installment_amount = fields.Float(string="", default=0.0, required=False, )
     installment_product_id = fields.Many2one(comodel_name="product.product", string="", required=True, domain=[('type', '=', 'service')] )
     installment_journal_id = fields.Many2one(comodel_name="account.journal", domain=[('type', '=', 'sale')], required=True )
     prorate = fields.Boolean(string="Prorate Calculation", default=False  )
@@ -78,7 +78,6 @@ class LeasorContract(models.Model):
     def action_activate(self):
         self.action_generate_installments_entries()
         self.state = 'active'
-
 
     def action_create_payment(self):
         context = {
@@ -140,50 +139,117 @@ class LeasorContract(models.Model):
         return view_tree
 
     def action_generate_installments_entries(self):
-        if self.payment_frequency_type == 'months':
-            pay_delta = relativedelta(months=self.payment_frequency)
-        else:
-            pay_delta = relativedelta(years=self.payment_frequency)
-
-        invoice_date_due = (self.commencement_date + pay_delta).replace(day=1)
-        for i in range(self.lease_contract_period):
-            if self.lease_contract_period_type == 'months':
-                delta = relativedelta(months=i)
-                amount = self.annual_payment / 12
+        if self.prorate:
+            if self.payment_frequency_type == 'months':
+                pay_delta = relativedelta(months=self.payment_frequency)
+                invoice_date_due = (self.commencement_date + pay_delta).replace(day=1)
             else:
-                delta = relativedelta(years=i)
-                amount = self.annual_payment
-            installment_date = self.commencement_date + delta
-            if installment_date > invoice_date_due:
-                invoice_date_due += pay_delta
+                pay_delta = relativedelta(years=self.payment_frequency)
+                invoice_date_due = (self.commencement_date + pay_delta).replace(year=1, day=1)
 
-            invoice_lines = [(0, 0, {
-                'product_id': self.installment_product_id.id,
-                'name': self.installment_product_id.name,
-                'product_uom_id': self.installment_product_id.uom_id.id,
-                'account_id': self.installment_product_id.product_tmpl_id.get_product_accounts()['expense'].id,
-                'price_unit': amount,
-                'quantity': 1,
-                'analytic_account_id': self.account_analytic_id.id,
-                'project_site_id': self.project_site_id.id,
-                'type_id': self.type_id.id,
-                'location_id': self.location_id.id,
-            })]
-            invoice = self.env['account.move'].create({
-                'partner_id': self.customer_id.id,
-                'move_type': 'out_invoice',
-                'currency_id': self.lease_currency_id.id,
-                'ref': self.name,
-                'invoice_date_due': invoice_date_due,
-                'invoice_date': installment_date,
-                'invoice_line_ids': invoice_lines,
-                'journal_id': self.installment_journal_id.id,
-                'leasor_contract_id': self.id,
-            })
+            first_installment_date = invoice_date_due - pay_delta
+            self.create_prorate_invoice(first_installment_date, invoice_date_due)
+            for i in range(1, self.lease_contract_period):
+                if self.lease_contract_period_type == 'months':
+                    delta = relativedelta(months=i)
+                else:
+                    delta = relativedelta(years=i)
+                amount = self.installment_amount
+                installment_date = first_installment_date + delta
+                if installment_date > invoice_date_due:
+                    invoice_date_due += pay_delta
 
+                invoice_lines = [(0, 0, {
+                    'product_id': self.installment_product_id.id,
+                    'name': self.installment_product_id.name,
+                    'product_uom_id': self.installment_product_id.uom_id.id,
+                    'account_id': self.installment_product_id.product_tmpl_id.get_product_accounts()['expense'].id,
+                    'price_unit': amount,
+                    'quantity': 1,
+                    'analytic_account_id': self.account_analytic_id.id,
+                    'project_site_id': self.project_site_id.id,
+                    'type_id': self.type_id.id,
+                    'location_id': self.location_id.id,
+                })]
+                invoice = self.env['account.move'].create({
+                    'partner_id': self.customer_id.id,
+                    'move_type': 'out_invoice',
+                    'currency_id': self.lease_currency_id.id,
+                    'ref': self.name,
+                    'invoice_date_due': invoice_date_due,
+                    'invoice_date': installment_date,
+                    'invoice_line_ids': invoice_lines,
+                    'journal_id': self.installment_journal_id.id,
+                    'leasor_contract_id': self.id,
+                })
+        else:
+            if self.payment_frequency_type == 'months':
+                pay_delta = relativedelta(months=self.payment_frequency)
+            else:
+                pay_delta = relativedelta(years=self.payment_frequency)
 
+            invoice_date_due = (self.commencement_date + pay_delta).replace(day=1)
+            for i in range(self.lease_contract_period):
+                if self.lease_contract_period_type == 'months':
+                    delta = relativedelta(months=i)
+                else:
+                    delta = relativedelta(years=i)
+                amount = self.installment_amount
+                installment_date = self.commencement_date + delta
+                if installment_date > invoice_date_due:
+                    invoice_date_due += pay_delta
 
+                invoice_lines = [(0, 0, {
+                    'product_id': self.installment_product_id.id,
+                    'name': self.installment_product_id.name,
+                    'product_uom_id': self.installment_product_id.uom_id.id,
+                    'account_id': self.installment_product_id.product_tmpl_id.get_product_accounts()['expense'].id,
+                    'price_unit': amount,
+                    'quantity': 1,
+                    'analytic_account_id': self.account_analytic_id.id,
+                    'project_site_id': self.project_site_id.id,
+                    'type_id': self.type_id.id,
+                    'location_id': self.location_id.id,
+                })]
+                invoice = self.env['account.move'].create({
+                    'partner_id': self.customer_id.id,
+                    'move_type': 'out_invoice',
+                    'currency_id': self.lease_currency_id.id,
+                    'ref': self.name,
+                    'invoice_date_due': invoice_date_due,
+                    'invoice_date': installment_date,
+                    'invoice_line_ids': invoice_lines,
+                    'journal_id': self.installment_journal_id.id,
+                    'leasor_contract_id': self.id,
+                })
 
+    def create_prorate_invoice(self, first_installment_date, invoice_date_due):
+        payment_period = self.payment_frequency* (30 if self.payment_frequency_type == 'months' else 365)
+        prorate_ratio = (invoice_date_due - first_installment_date).days / payment_period
+        amount = self.installment_amount * prorate_ratio
+        invoice_lines = [(0, 0, {
+            'product_id': self.installment_product_id.id,
+            'name': self.installment_product_id.name,
+            'product_uom_id': self.installment_product_id.uom_id.id,
+            'account_id': self.installment_product_id.product_tmpl_id.get_product_accounts()['expense'].id,
+            'price_unit': amount,
+            'quantity': 1,
+            'analytic_account_id': self.account_analytic_id.id,
+            'project_site_id': self.project_site_id.id,
+            'type_id': self.type_id.id,
+            'location_id': self.location_id.id,
+        })]
+        invoice = self.env['account.move'].create({
+            'partner_id': self.customer_id.id,
+            'move_type': 'out_invoice',
+            'currency_id': self.lease_currency_id.id,
+            'ref': self.name,
+            'invoice_date_due': invoice_date_due,
+            'invoice_date': first_installment_date,
+            'invoice_line_ids': invoice_lines,
+            'journal_id': self.installment_journal_id.id,
+            'leasor_contract_id': self.id,
+        })
 
 
 

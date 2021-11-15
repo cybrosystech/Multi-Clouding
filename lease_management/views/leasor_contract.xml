@@ -38,7 +38,7 @@
 <!--                                <field name="prorate" />-->
                             </group>
                             <group>
-                                <field name="annual_payment" />
+                                <field name="installment_amount" />
                                 <field name="lease_currency_id" />
                                 <field name="lease_contract_period" />
                                 <field name="lease_contract_period_type" />
