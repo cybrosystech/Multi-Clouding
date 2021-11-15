@@ -318,7 +318,7 @@ class LeaseeContract(models.Model):
             'analytic_account_id': self.analytic_account_id.id,
         })]
         if not self.estimated_cost_dismantling:
-            del lines[2]
+            del lines[3]
         move = self.env['account.move'].create({
             'partner_id': self.vendor_id.id,
             'move_type': 'entry',
