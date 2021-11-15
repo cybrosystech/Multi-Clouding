@@ -140,6 +140,7 @@ class InOutBudgetsInvoices(models.Model):
                             required=True, )
     budget_line_ids = fields.One2many(comodel_name="budget.in.out.lines.invoice", inverse_name="budget_id", string="",
                                       required=False, )
+    company_id = fields.Many2one('res.company', 'Company', default=lambda self: self.env.company)
 
 
     @api.constrains('budget_line_ids')
@@ -179,6 +180,7 @@ class BudgetInOutLinesInvoices(models.Model):
     approval_seq = fields.Integer(string="Approval Sequence", required=False, )
     user_ids = fields.Many2many(comodel_name="res.users", string="User", required=True, )
 
+    company_id = fields.Many2one('res.company', 'Company', related='budget_id.company_id',store=True)
 
     @api.onchange('approval_seq')
     def approval_seq_check(self):
