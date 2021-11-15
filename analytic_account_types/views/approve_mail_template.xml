@@ -44,7 +44,7 @@
                     Dear ${ctx['name']},
                     <br /><br />
                     % if object.name=='/':
-                       This Invoice Need Your Approval <strong>${object.new_sequence} </strong> ,
+                       This Invoice Need Your Approval <strong>Draft Invoice/ ${object.id} </strong> ,
                     Click here to open ,
 
                     <a target="_BLANK" href="/web?#id=${object.id} &amp;view_type=form&amp;model=account.move&amp;action="> ${object.new_sequence} </a>
