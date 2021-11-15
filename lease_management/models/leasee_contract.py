@@ -304,21 +304,26 @@ class LeaseeContract(models.Model):
             'debit': 0,
             'credit': self.lease_liability,
             'analytic_account_id': self.analytic_account_id.id,
-        }),(0, 0, {
-            'name': 'create contract number %s' % self.name,
-            'account_id': self.incentives_account_id.id,
-            'debit': self.incentives_received,
-            'credit': 0,
-            'analytic_account_id': self.analytic_account_id.id,
-        }),(0, 0, {
-            'name': 'create contract number %s' % self.name,
-            'account_id': self.provision_dismantling_account_id.id,
-            'debit': 0,
-            'credit': self.estimated_cost_dismantling,
-            'analytic_account_id': self.analytic_account_id.id,
         })]
-        if not self.estimated_cost_dismantling:
-            del lines[3]
+
+        if self.incentives_received:
+            lines.append( (0, 0, {
+                'name': 'create contract number %s' % self.name,
+                'account_id': self.incentives_account_id.id,
+                'debit': self.incentives_received,
+                'credit': 0,
+                'analytic_account_id': self.analytic_account_id.id,
+            }) )
+
+        if self.estimated_cost_dismantling:
+            lines.append( (0, 0, {
+                'name': 'create contract number %s' % self.name,
+                'account_id': self.provision_dismantling_account_id.id,
+                'debit': 0,
+                'credit': self.estimated_cost_dismantling,
+                'analytic_account_id': self.analytic_account_id.id,
+            }) )
+
         move = self.env['account.move'].create({
             'partner_id': self.vendor_id.id,
             'move_type': 'entry',
