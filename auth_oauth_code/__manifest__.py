@@ -1,6 +1,7 @@
 {
     "name": "OAuth Authorization Code Flow",
     "version": "14.0.0.0.2",
+    "license": "AGPL-3",
     "author": ("TTH"),
     "maintainers": ["ifujis"],
     "website": "https://github.com/tasctowers",

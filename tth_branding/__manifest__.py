@@ -1,6 +1,7 @@
 {
     "name": "TASC Towers Holding branding",
     "version": "14.0.0.0.1",
+    "license": "AGPL-3",
     "author": ("TTH"),
     "maintainers": ["ifujis"],
     "website": "https://github.com/tasctowers",
