@@ -50,7 +50,7 @@ class LeasorContract(models.Model):
     lease_currency_id = fields.Many2one(comodel_name="res.currency", string="", required=True, )
 
     account_move_ids = fields.One2many(comodel_name="account.move", inverse_name="leasor_contract_id", string="", required=False, )
-    annual_payment = fields.Float(string="", default=0.0, required=False, )
+    installment_amount = fields.Float(string="", default=0.0, required=False, )
     installment_product_id = fields.Many2one(comodel_name="product.product", string="", required=True, domain=[('type', '=', 'service')] )
     installment_journal_id = fields.Many2one(comodel_name="account.journal", domain=[('type', '=', 'sale')], required=True )
     prorate = fields.Boolean(string="Prorate Calculation", default=False  )
@@ -61,6 +61,12 @@ class LeasorContract(models.Model):
                               domain=[('analytic_account_type', '=', 'type')], required=False, )
     location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location",
                                   domain=[('analytic_account_type', '=', 'location')], required=False, )
+
+    @api.model
+    def create(self, vals):
+        name = self.env['ir.sequence'].next_by_code('leasor.contract')
+        vals['name'] = name
+        return super(LeasorContract, self).create(vals)
 
     @api.constrains('estimated_ending_date', 'leasee_contract_id')
     def check_end_dates(self):
@@ -78,7 +84,6 @@ class LeasorContract(models.Model):
     def action_activate(self):
         self.action_generate_installments_entries()
         self.state = 'active'
-
 
     def action_create_payment(self):
         context = {
@@ -146,14 +151,14 @@ class LeasorContract(models.Model):
             pay_delta = relativedelta(years=self.payment_frequency)
 
         invoice_date_due = (self.commencement_date + pay_delta).replace(day=1)
-        for i in range(self.lease_contract_period):
-            if self.lease_contract_period_type == 'months':
-                delta = relativedelta(months=i)
-                amount = self.annual_payment / 12
-            else:
-                delta = relativedelta(years=i)
-                amount = self.annual_payment
-            installment_date = self.commencement_date + delta
+        first_invoice_date = self.commencement_date.replace(day=1)
+        number_of_installments = self.lease_contract_period * ( 1 if self.lease_contract_period_type == 'months' else 12)
+        for i in range(number_of_installments):
+            delta = relativedelta(months=i)
+            amount = self.installment_amount
+            if i == 0 and self.prorate:
+                amount *= (30 - (self.commencement_date - first_invoice_date).days )/30
+            installment_date = first_invoice_date + delta
             if installment_date > invoice_date_due:
                 invoice_date_due += pay_delta
 
@@ -181,9 +186,33 @@ class LeasorContract(models.Model):
                 'leasor_contract_id': self.id,
             })
 
-
-
-
+    # def create_prorate_invoice(self, first_installment_date, invoice_date_due):
+    #     payment_period = self.payment_frequency* (30 if self.payment_frequency_type == 'months' else 365)
+    #     prorate_ratio = (invoice_date_due - first_installment_date).days / payment_period
+    #     amount = self.installment_amount * prorate_ratio
+    #     invoice_lines = [(0, 0, {
+    #         'product_id': self.installment_product_id.id,
+    #         'name': self.installment_product_id.name,
+    #         'product_uom_id': self.installment_product_id.uom_id.id,
+    #         'account_id': self.installment_product_id.product_tmpl_id.get_product_accounts()['expense'].id,
+    #         'price_unit': amount,
+    #         'quantity': 1,
+    #         'analytic_account_id': self.account_analytic_id.id,
+    #         'project_site_id': self.project_site_id.id,
+    #         'type_id': self.type_id.id,
+    #         'location_id': self.location_id.id,
+    #     })]
+    #     invoice = self.env['account.move'].create({
+    #         'partner_id': self.customer_id.id,
+    #         'move_type': 'out_invoice',
+    #         'currency_id': self.lease_currency_id.id,
+    #         'ref': self.name,
+    #         'invoice_date_due': invoice_date_due,
+    #         'invoice_date': first_installment_date,
+    #         'invoice_line_ids': invoice_lines,
+    #         'journal_id': self.installment_journal_id.id,
+    #         'leasor_contract_id': self.id,
+    #     })
 
 
 

@@ -42,6 +42,7 @@ class Reassessment(models.TransientModel):
             ('leasee_contract_id', '=', self.leasee_contract_id.id),
             ('date', '>=', self.reassessment_start_Date),
         ])
+        old_installments = contract.installment_ids - installments_to_modify
 
         diff_installments = []
         installment_amount = self.new_installment_amount
@@ -54,24 +55,31 @@ class Reassessment(models.TransientModel):
         new_rou = contract.rou_value - old_rou_value
         self.create_reassessment_move(contract, new_rou)
 
-        prev_installment_amount = 0
-        remaining_liability = 0
-        for diff, installment in zip(diff_installments, installments_to_modify):
-            if not prev_installment_amount:
-                installment.subsequent_amount = installment.subsequent_amount - (diff - new_rou * contract.interest_rate) / 100
-                remaining_liability = installment.subsequent_amount / (contract.interest_rate / 100 )
-                installment.remaining_lease_liability = remaining_liability
+        # prev_installment_amount = contract.lease_liability
+        remaining_liability = contract.lease_liability
+        for i, ins in enumerate(old_installments):
+            if i ==0 and contract.payment_method == 'beginning':
+                interest_factor = 1
             else:
+                interest_factor = (1 + contract.interest_rate/ 100)
+            remaining_liability = interest_factor * remaining_liability - ins.amount
+            # prev_installment_amount =
+
+        for installment in installments_to_modify:
+            # if not prev_installment_amount:
+            #     installment.subsequent_amount = installment.subsequent_amount - (diff - new_rou * contract.interest_rate) / 100
+            #     # remaining_liability = installment.subsequent_amount / (contract.interest_rate / 100 )
+            #     installment.remaining_lease_liability = remaining_liability
+            # else:
                 # installment.subsequent_amount = remaining_liability * contract.interest_rate / 100
-                remaining_liability = remaining_liability * (1 + contract.interest_rate / 100 ) - prev_installment_amount
-                installment.subsequent_amount = remaining_liability * contract.interest_rate / 100
-                installment.remaining_lease_liability = remaining_liability
-            if not contract.interest_rate:
-                installment.remaining_lease_liability += diff
-            prev_installment_amount = installment.amount
+            installment.subsequent_amount = remaining_liability * contract.interest_rate / 100
+            remaining_liability = remaining_liability * (1 + contract.interest_rate / 100 ) - installment.amount
+            installment.remaining_lease_liability = round(remaining_liability, 2)
+            # if not contract.interest_rate:
+            #     installment.remaining_lease_liability += diff
+            # prev_installment_amount = installment.amount
 
         self.update_asset_value(contract.rou_value)
-
 
     def create_reassessment_move(self, contract, amount):
         rou_account = contract.asset_model_id.account_asset_id

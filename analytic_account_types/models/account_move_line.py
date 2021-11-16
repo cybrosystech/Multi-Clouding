@@ -162,7 +162,7 @@ class AccountMove(models.Model):
                         email_template_id.with_context(ctx).send_mail(self.id, email_values={'email_to': us.email,})
 
     def request_approval_button(self):
-        self.name = 'Bill/'+str(datetime.today().strftime('%Y'))+'/'+str(datetime.today().strftime('%m'))+'/'+str(random.randint(0,999))+str(datetime.today().strftime('%d'))
+        # self.name = 'Bill/'+str(datetime.today().strftime('%Y'))+'/'+str(datetime.today().strftime('%m'))+'/'+str(random.randint(0,999))+str(datetime.today().strftime('%d'))
         if self.out_budget and not self.purchase_approval_cycle_ids:
             out_budget_list = []
             out_budget = self.env['budget.in.out.check.invoice'].search([('type', '=', 'out_budget')], limit=1)
@@ -185,7 +185,8 @@ class AccountMove(models.Model):
             if self.move_type == 'entry':
                 max_value = sum(self.line_ids.mapped('debit'))
             else:
-                max_value = self.amount_total
+                # max_value = self.amount_total
+                max_value = sum(self.invoice_line_ids.mapped('local_subtotal'))
             for rec in in_budget.budget_line_ids:
                 if rec.to_amount >= max_value >= rec.from_amount:
                     in_budget_list.append((0, 0, {

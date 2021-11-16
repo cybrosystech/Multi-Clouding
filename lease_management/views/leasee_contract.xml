@@ -120,6 +120,8 @@
                                         <field name="installment_product_id"/>
                                         <field name="extension_product_id"/>
                                         <field name="initial_product_id"/>
+                                        <field name="incentives_account_id"/>
+                                        <field name="incentives_product_id"/>
                                         <field name="asset_model_id"/>
                                     </group>
                                 </group>
@@ -160,6 +162,7 @@
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">leasee.contract</field>
             <field name="view_mode">tree,form,pivot</field>
+            <field name="domain">[('parent_id', '=', False)]</field>
         </record>
 
         <!--        <menuitem id="menuitem_lease_contract_categ" name="Leasee Contract" parent="account.menu_finance" sequence="10"/>-->

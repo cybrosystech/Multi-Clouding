@@ -25,7 +25,7 @@ class LeaseeContract(models.Model):
     _description = 'Leasee Contract'
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
-    name = fields.Char(string="Name", required=True, )
+    name = fields.Char(string="Name", required=True,copy=False )
     leasee_template_id = fields.Many2one(comodel_name="leasee.contract.template", string="Leasee Contract Template", required=False, )
 
     external_reference_number = fields.Char()
@@ -103,6 +103,16 @@ class LeaseeContract(models.Model):
     prorata = fields.Boolean(default=False )
     parent_id = fields.Many2one(comodel_name="leasee.contract", string="", required=False, copy=False)
     child_ids = fields.One2many(comodel_name="leasee.contract", inverse_name="parent_id", string="", required=False, copy=False)
+
+    incentives_account_id = fields.Many2one(comodel_name="account.account", string="", required=True, )
+    incentives_product_id = fields.Many2one(comodel_name="product.product", string="", required=True, domain=[('type', '=', 'service')] )
+
+    @api.model
+    def create(self, vals):
+        name = self.env['ir.sequence'].next_by_code('leasee.contract')
+        vals['name'] = name
+        vals['external_reference_number'] = name
+        return super(LeaseeContract, self).create(vals)
 
     @api.depends('commencement_date', 'lease_contract_period')
     def compute_estimated_ending_date(self):
@@ -263,6 +273,30 @@ class LeaseeContract(models.Model):
                 'leasee_contract_id': self.id,
             })
 
+        if self.incentives_received:
+            invoice_lines = [(0, 0, {
+                'product_id': self.incentives_product_id.id,
+                'name': self.incentives_product_id.name,
+                'product_uom_id': self.incentives_product_id.uom_id.id,
+                'account_id': self.incentives_product_id.product_tmpl_id.get_product_accounts()['expense'].id,
+                'price_unit': self.incentives_received,
+                'quantity': 1,
+                'analytic_account_id': self.analytic_account_id.id,
+                'project_site_id': self.project_site_id.id,
+                'type_id': self.type_id.id,
+                'location_id': self.location_id.id,
+            })]
+            invoice = self.env['account.move'].create({
+                'partner_id': self.vendor_id.id,
+                'move_type': 'in_refund',
+                'currency_id': self.leasee_currency_id.id,
+                'ref': self.name,
+                'invoice_date': datetime.now(),
+                'invoice_line_ids': invoice_lines,
+                'journal_id': self.installment_journal_id.id,
+                'leasee_contract_id': self.id,
+            })
+
     def create_commencement_move(self):
         rou_account = self.asset_model_id.account_asset_id
         lines = [(0, 0, {
@@ -275,17 +309,28 @@ class LeaseeContract(models.Model):
             'name': 'create contract number %s' % self.name,
             'account_id': self.lease_liability_account_id.id,
             'debit': 0,
-            'credit': self.lease_liability - self.incentives_received,
-            'analytic_account_id': self.analytic_account_id.id,
-        }),(0, 0, {
-            'name': 'create contract number %s' % self.name,
-            'account_id': self.provision_dismantling_account_id.id,
-            'debit': 0,
-            'credit': self.estimated_cost_dismantling,
+            'credit': self.lease_liability,
             'analytic_account_id': self.analytic_account_id.id,
         })]
-        if not self.estimated_cost_dismantling:
-            del lines[2]
+
+        if self.incentives_received:
+            lines.append( (0, 0, {
+                'name': 'create contract number %s' % self.name,
+                'account_id': self.incentives_account_id.id,
+                'debit': self.incentives_received,
+                'credit': 0,
+                'analytic_account_id': self.analytic_account_id.id,
+            }) )
+
+        if self.estimated_cost_dismantling:
+            lines.append( (0, 0, {
+                'name': 'create contract number %s' % self.name,
+                'account_id': self.provision_dismantling_account_id.id,
+                'debit': 0,
+                'credit': self.estimated_cost_dismantling,
+                'analytic_account_id': self.analytic_account_id.id,
+            }) )
+
         move = self.env['account.move'].create({
             'partner_id': self.vendor_id.id,
             'move_type': 'entry',
