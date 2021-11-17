@@ -13,11 +13,4 @@ import random
 class AccoutGroup(models.Model):
     _inherit = 'account.group'
 
-    group_sequence = fields.Char(string="Sequence", required=False, )
-
-    # @api.model_create_multi
-    # def create(self, vals_list):
-    #     res = super(AccoutGroup, self).create(vals_list)
-    #     for rec in res:
-    #         rec.group_sequence = self.env['ir.sequence'].next_by_code('account.group.temporary.seq')
-    #     return res
+    group_sequence = fields.Integer(string="Sequence", required=False, )

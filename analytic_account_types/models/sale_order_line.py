@@ -9,14 +9,14 @@ class SaleOrder(models.Model):
     budget_collect_ids = fields.One2many(comodel_name="budget.collect", inverse_name="sale_id", string="",
                                          required=False, )
     sale_approval_cycle_ids = fields.One2many(comodel_name="purchase.approval.cycle", inverse_name="sale_id",
-                                                  string="", required=False,copy=False )
+                                              string="", required=False, copy=False)
     out_budget = fields.Boolean(string="Out Budget", compute="check_out_budget")
     show_approve_button = fields.Boolean(string="", compute='check_show_approve_button')
-    show_request_approve_button = fields.Boolean(string="",copy=False )
-    show_button_confirm = fields.Boolean(string="",copy=False )
+    show_request_approve_button = fields.Boolean(string="", copy=False)
+    show_button_confirm = fields.Boolean(string="", copy=False)
     mail_link = fields.Text(string="", required=False, )
-    state = fields.Selection(selection_add=[('to_approve', 'To Approve'),('sent',), ], ondelete={'to_approve': 'set default','draft': 'set default',})
-
+    state = fields.Selection(selection_add=[('to_approve', 'To Approve'), ('sent',), ],
+                             ondelete={'to_approve': 'set default', 'draft': 'set default', })
 
     def action_cancel(self):
         res = super(SaleOrder, self).action_cancel()
@@ -31,10 +31,11 @@ class SaleOrder(models.Model):
     @api.depends()
     def check_show_approve_button(self):
         self.show_approve_button = False
-        current_approve = self.sale_approval_cycle_ids.filtered(lambda x:x.is_approved).mapped('approval_seq')
+        current_approve = self.sale_approval_cycle_ids.filtered(lambda x: x.is_approved).mapped('approval_seq')
 
         last_approval = max(current_approve) if current_approve else 0
-        check_last_approval_is_approved = self.sale_approval_cycle_ids.filtered(lambda x: x.approval_seq == int(last_approval))
+        check_last_approval_is_approved = self.sale_approval_cycle_ids.filtered(
+            lambda x: x.approval_seq == int(last_approval))
         for rec in self.sale_approval_cycle_ids:
             if check_last_approval_is_approved:
                 if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids and check_last_approval_is_approved.is_approved:
@@ -163,10 +164,14 @@ class SaleOrder(models.Model):
 class SalesOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
-    cost_center_id = fields.Many2one(comodel_name="account.analytic.account", string="Cost Center",domain=[('analytic_account_type','=','cost_center')], required=False, )
-    project_site_id = fields.Many2one(comodel_name="account.analytic.account", string="Project/Site",domain=[('analytic_account_type','=','project_site')], required=False, )
-    type_id = fields.Many2one(comodel_name="account.analytic.account", string="Type",domain=[('analytic_account_type','=','type')], required=False, )
-    location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location",domain=[('analytic_account_type','=','location')], required=False, )
+    cost_center_id = fields.Many2one(comodel_name="account.analytic.account", string="Cost Center",
+                                     domain=[('analytic_account_type', '=', 'cost_center')], required=False, )
+    project_site_id = fields.Many2one(comodel_name="account.analytic.account", string="Project/Site",
+                                      domain=[('analytic_account_type', '=', 'project_site')], required=False, )
+    type_id = fields.Many2one(comodel_name="account.analytic.account", string="Type",
+                              domain=[('analytic_account_type', '=', 'type')], required=False, )
+    location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location",
+                                  domain=[('analytic_account_type', '=', 'location')], required=False, )
     budget_id = fields.Many2one(comodel_name="crossovered.budget", string="Budget", required=False, )
     budget_line_id = fields.Many2one(comodel_name="crossovered.budget.lines", string="Budget Line", required=False, )
 
@@ -176,24 +181,29 @@ class SalesOrderLine(models.Model):
     @api.depends('price_subtotal')
     def compute_local_subtotal(self):
         for rec in self:
-            rec.local_subtotal = rec.order_id.currency_id._convert(rec.price_subtotal,
-                                                                   rec.order_id.company_id.currency_id,
-                                                                   rec.order_id.company_id,
-                                                                   rec.order_id.date_order or rec.order_id.create_date.date())
+            if not rec.order_id.date_order:
+                raise UserError(_('Order date is required'))
+            else:
+                rec.local_subtotal = rec.order_id.currency_id._convert(rec.price_subtotal,
+                                                                       rec.order_id.company_id.currency_id,
+                                                                       rec.order_id.company_id,
+                                                                       rec.order_id.date_order or rec.order_id.create_date.date())
 
     @api.depends('budget_id')
     def get_budget_remaining_amount(self):
         for rec in self:
-            order_lines_without_inv = sum(self.env['sale.order.line'].search([('order_id.state','=','sale')]).filtered(lambda x:not x.order_id.invoice_ids and x.budget_id == self.budget_id).mapped('price_subtotal'))
-            print('order_lines_without_inv',order_lines_without_inv)
-            sales_with_inv = self.env['sale.order'].search([('state','=','sale')]).filtered(lambda x:x.invoice_ids)
+            order_lines_without_inv = sum(
+                self.env['sale.order.line'].search([('order_id.state', '=', 'sale')]).filtered(
+                    lambda x: not x.order_id.invoice_ids and x.budget_id == self.budget_id).mapped('price_subtotal'))
+            print('order_lines_without_inv', order_lines_without_inv)
+            sales_with_inv = self.env['sale.order'].search([('state', '=', 'sale')]).filtered(lambda x: x.invoice_ids)
             invoices_budget = 0.0
             for order in sales_with_inv:
                 for inv in order.invoice_ids:
                     if inv.state == 'draft':
-                        for line in inv.invoice_line_ids.filtered(lambda x:x.budget_id == self.budget_id):
+                        for line in inv.invoice_line_ids.filtered(lambda x: x.budget_id == self.budget_id):
                             invoices_budget += line.price_subtotal
-            print(invoices_budget,'invoices_budget')
+            print(invoices_budget, 'invoices_budget')
 
             rec.remaining_amount = 0.0
             # if rec.order_id.date_order:
@@ -225,7 +235,8 @@ class SalesOrderLine(models.Model):
 
     def _prepare_invoice_line(self, **optional_values):
         res = super(SalesOrderLine, self)._prepare_invoice_line(**optional_values)
-        res.update({'analytic_account_id':self.cost_center_id.id if self.cost_center_id else self.order_id.analytic_account_id.id
-                    , 'project_site_id':self.project_site_id.id,'type_id':self.type_id.id,'location_id':self.location_id.id,'budget_id':self.budget_id.id,})
+        res.update({
+                       'analytic_account_id': self.cost_center_id.id if self.cost_center_id else self.order_id.analytic_account_id.id
+                       , 'project_site_id': self.project_site_id.id, 'type_id': self.type_id.id,
+                       'location_id': self.location_id.id, 'budget_id': self.budget_id.id, })
         return res
-

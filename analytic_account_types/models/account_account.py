@@ -13,4 +13,4 @@ import random
 class AccoutGroup(models.Model):
     _inherit = 'account.account'
 
-    group_sequence = fields.Char(related='group_id.group_sequence', store=1)
+    group_sequence = fields.Integer(related='group_id.group_sequence', store=1)
