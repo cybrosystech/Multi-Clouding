@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api,_
+from odoo.exceptions import ValidationError,UserError
 
 class PurchaseOrder(models.Model):
     _inherit = 'purchase.order'
@@ -247,7 +248,10 @@ class PurchaseOrderLine(models.Model):
     @api.depends('price_subtotal')
     def compute_local_subtotal(self):
         for rec in self:
-            rec.local_subtotal = rec.order_id.currency_id._convert(rec.price_subtotal, rec.order_id.company_id.currency_id, rec.order_id.company_id,rec.order_id.date_order or rec.order_id.create_date.date())
+            if not rec.order_id.date_order:
+                raise UserError(_('Order date is required'))
+            else:
+                rec.local_subtotal = rec.order_id.currency_id._convert(rec.price_subtotal, rec.order_id.company_id.currency_id, rec.order_id.company_id,rec.order_id.date_order or rec.order_id.create_date.date())
 
     @api.depends('budget_id')
     def get_budget_remaining_amount(self):
