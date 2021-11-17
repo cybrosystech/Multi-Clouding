@@ -14,7 +14,7 @@ def void(self):
 WebSuite._check_only_call = void
 
 # Rewrite native method to include <link/> and <title/> to web.layout template.
-@tagged('WebSuite fix')
+@tagged('post_install', '-at_install')
 class WebSuiteInherited(WebSuite):
     def _check_only_call(self, suite):
         # As we currently aren't in a request context, we can't render `web.layout`.
