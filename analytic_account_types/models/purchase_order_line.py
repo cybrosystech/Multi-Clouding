@@ -245,6 +245,7 @@ class PurchaseOrderLine(models.Model):
     budget_line_id = fields.Many2one(comodel_name="crossovered.budget.lines", string="Budget Line", required=False, )
     remaining_amount = fields.Float(string="Remaining Amount", required=False, compute='get_budget_remaining_amount')
     local_subtotal = fields.Float(compute='compute_local_subtotal',store=True)
+
     @api.depends('price_subtotal')
     def compute_local_subtotal(self):
         for rec in self:
