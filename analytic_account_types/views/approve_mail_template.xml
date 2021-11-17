@@ -43,18 +43,14 @@
                 <p style="margin: 0px; padding: 0px; font-size: 13px;">
                     Dear ${ctx['name']},
                     <br /><br />
-                    % if object.move_type == 'entry':
-                        % invoice_type = 'Journal Entry'
-                    % else:
-                        % invoice_type = 'Invoice'
                     % if object.name=='/':
-                       This ${invoice_type} Need Your Approval <strong>Draft ${invoice_type}/ ${object.id} </strong> ,
+                       This ${'Journal' if object.move_type == 'entry' else 'Invoice'} Need Your Approval <strong>Draft ${'Journal' if object.move_type == 'entry' else 'Invoice'}/ ${object.id} </strong> ,
                     Click here to open ,
 
                     <a target="_BLANK" href="/web?#id=${object.id} &amp;view_type=form&amp;model=account.move&amp;action="> Draft Invoice/ ${object.id}</a>
 
                     % else:
-                       This ${invoice_type} Need Your Approval <strong>${object.name} </strong> ,
+                       This ${'Journal' if object.move_type == 'entry' else 'Invoice'} Need Your Approval <strong>${object.name} </strong> ,
                     Click here to open ,
 
                     <a target="_BLANK" href="/web?#id=${object.id} &amp;view_type=form&amp;model=account.move&amp;action="> ${object.name} </a>
