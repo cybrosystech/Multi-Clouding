@@ -162,7 +162,7 @@ class InOutBudgetsInvoices(models.Model):
     @api.model
     def create(self, vals):
         if vals.get('type'):
-            check = self.env['budget.in.out.check.invoice'].sudo().search([('type', '=', vals['type'])])
+            check = self.env['budget.in.out.check.invoice'].sudo().search([('type', '=', vals['type']),('company_id', '=', vals['company_id'])])
             if check:
                 raise ValidationError(_('This Type is already created'))
         return super(InOutBudgetsInvoices, self).create(vals)
