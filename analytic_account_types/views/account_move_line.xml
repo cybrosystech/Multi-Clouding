@@ -7,7 +7,10 @@
             <field name="inherit_id" ref="account.view_move_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='invoice_date']" position="attributes">
-                    <attribute name="attrs">{'required': [('move_type', 'in', ['out_invoice'])]}</attribute>
+                    <attribute name="attrs">{
+                        'required': [('move_type', 'in', ('out_invoice', 'out_refund', 'in_invoice', 'in_refund', 'out_receipt', 'in_receipt'))],
+                        'invisible': [('move_type', 'not in', ('out_invoice', 'out_refund', 'in_invoice', 'in_refund', 'out_receipt', 'in_receipt'))]
+                    }</attribute>
                     <attribute name="nolabel">1</attribute>
                 </xpath>
                 <xpath expr="//button[@name='action_post'][1]" position="attributes">
