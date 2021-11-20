@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api,_
+from odoo.exceptions import ValidationError,UserError
 
 class PurchaseOrder(models.Model):
     _inherit = 'purchase.order'
@@ -93,7 +94,7 @@ class PurchaseOrder(models.Model):
                     ctx = self._context.copy()
                     ctx.update({'name': us.name})
                     if email_template_id:
-                        email_template_id.with_context(ctx).send_mail(self.id, email_values={'email_to': us.email,})
+                        email_template_id.with_context(ctx).send_mail(self.id, force_send=True, email_values={'email_to': us.email,})
 
     def request_approval_button(self):
         if self.out_budget and not self.purchase_approval_cycle_ids:
@@ -246,10 +247,14 @@ class PurchaseOrderLine(models.Model):
     budget_line_id = fields.Many2one(comodel_name="crossovered.budget.lines", string="Budget Line", required=False, )
     remaining_amount = fields.Float(string="Remaining Amount", required=False, compute='get_budget_remaining_amount')
     local_subtotal = fields.Float(compute='compute_local_subtotal',store=True)
+
     @api.depends('price_subtotal')
     def compute_local_subtotal(self):
         for rec in self:
-            rec.local_subtotal = rec.order_id.currency_id._convert(rec.price_subtotal, rec.order_id.company_id.currency_id, rec.order_id.company_id,rec.order_id.date_order or rec.order_id.create_date.date())
+            if not rec.order_id.date_order:
+                raise UserError(_('Order date is required'))
+            else:
+                rec.local_subtotal = rec.order_id.currency_id._convert(rec.price_subtotal, rec.order_id.company_id.currency_id, rec.order_id.company_id,rec.order_id.date_order or rec.order_id.create_date.date())
 
     @api.depends('budget_id')
     def get_budget_remaining_amount(self):
