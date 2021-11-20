@@ -104,32 +104,34 @@ class SaleOrder(models.Model):
             else:
                 max_value = 0
             for rec in out_budget.budget_line_ids:
-                if rec.to_amount >= max_value >= rec.from_amount:
+                # if rec.to_amount >= max_value >= rec.from_amount:
+                if max_value >= rec.from_amount:
                     out_budget_list.append((0, 0, {
                         'approval_seq': rec.approval_seq,
                         'user_approve_ids': rec.user_ids.ids,
                     }))
-                elif rec.to_amount <= max_value >= rec.from_amount:
-                    out_budget_list.append((0, 0, {
-                        'approval_seq': rec.approval_seq,
-                        'user_approve_ids': rec.user_ids.ids,
-                    }))
+                # elif rec.to_amount <= max_value >= rec.from_amount:
+                #     out_budget_list.append((0, 0, {
+                #         'approval_seq': rec.approval_seq,
+                #         'user_approve_ids': rec.user_ids.ids,
+                #     }))
             self.write({'sale_approval_cycle_ids': out_budget_list})
         if not self.out_budget and not self.sale_approval_cycle_ids:
             in_budget_list = []
             in_budget = self.env['budget.in.out.check.sales'].search([('type', '=', 'in_budget')], limit=1)
             max_value = self.amount_total
             for rec in in_budget.budget_line_ids:
-                if rec.to_amount >= max_value >= rec.from_amount:
+                # if rec.to_amount >= max_value >= rec.from_amount:
+                if max_value >= rec.from_amount:
                     in_budget_list.append((0, 0, {
                         'approval_seq': rec.approval_seq,
                         'user_approve_ids': rec.user_ids.ids,
                     }))
-                elif rec.to_amount <= max_value >= rec.from_amount:
-                    in_budget_list.append((0, 0, {
-                        'approval_seq': rec.approval_seq,
-                        'user_approve_ids': rec.user_ids.ids,
-                    }))
+                # elif rec.to_amount <= max_value >= rec.from_amount:
+                #     in_budget_list.append((0, 0, {
+                #         'approval_seq': rec.approval_seq,
+                #         'user_approve_ids': rec.user_ids.ids,
+                #     }))
             self.write({'sale_approval_cycle_ids': in_budget_list})
         self.show_request_approve_button = True
         if self.sale_approval_cycle_ids:
