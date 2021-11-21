@@ -62,8 +62,8 @@ class BudgetInOutLines(models.Model):
         for rec in self:
             if rec.from_amount < 0:
                 raise ValidationError(_('From amount is lower than 0'))
-            if rec.from_amount > rec.to_amount:
-                raise ValidationError(_('From amount is lower than To amount in Budget Lines'))
+            # if rec.from_amount > rec.to_amount:
+            #     raise ValidationError(_('From amount is lower than To amount in Budget Lines'))
 
 
 class InOutBudgetsSales(models.Model):
