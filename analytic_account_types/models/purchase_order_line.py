@@ -248,6 +248,11 @@ class PurchaseOrderLine(models.Model):
     remaining_amount = fields.Float(string="Remaining Amount", required=False, compute='get_budget_remaining_amount')
     local_subtotal = fields.Float(compute='compute_local_subtotal',store=True)
 
+
+    @api.onchange('budget_id')
+    def onchange_budget_id(self):
+        return {'domain': {'budget_line_id': [('crossovered_budget_id', '=', self.budget_id.id)]}}
+
     @api.depends('price_subtotal')
     def compute_local_subtotal(self):
         for rec in self:
