@@ -23,9 +23,9 @@ class InOutBudgets(models.Model):
             latest_to = 0
             for line in rec.budget_line_ids:
                 count = count_map.get(line.approval_seq, 0)
-                if latest_to != 0 and line.from_amount < latest_to:
-                    raise ValidationError(
-                        _('From amount is lower than the latest to amount - line %s') % line.name)
+                # if latest_to != 0 and line.from_amount < latest_to:
+                #     raise ValidationError(
+                #         _('From amount is lower than the latest to amount - line %s') % line.name)
                 if count != 0:
                     raise ValidationError(
                         _('Cannot add the same sequence more than once, asequence of  %s is repeated') % line.name)
@@ -84,9 +84,9 @@ class InOutBudgetsSales(models.Model):
             latest_to = 0
             for line in rec.budget_line_ids:
                 count = count_map.get(line.approval_seq, 0)
-                if latest_to != 0 and line.from_amount < latest_to:
-                    raise ValidationError(
-                        _('From amount is lower than the latest to amount - line %s') % line.name)
+                # if latest_to != 0 and line.from_amount < latest_to:
+                #     raise ValidationError(
+                #         _('From amount is lower than the latest to amount - line %s') % line.name)
                 if count != 0:
                     raise ValidationError(
                         _('Cannot add the same sequence more than once, asequence of  %s is repeated') % line.name)
@@ -125,8 +125,8 @@ class BudgetInOutLinesSales(models.Model):
         for rec in self:
             if rec.from_amount < 0:
                 raise ValidationError(_('From amount is lower than 0'))
-            if rec.from_amount > rec.to_amount:
-                raise ValidationError(_('From amount is lower than To amount in Budget Lines'))
+            # if rec.from_amount > rec.to_amount:
+            #     raise ValidationError(_('From amount is lower than To amount in Budget Lines'))
 
 
 
@@ -150,9 +150,9 @@ class InOutBudgetsInvoices(models.Model):
             latest_to = 0
             for line in rec.budget_line_ids:
                 count = count_map.get(line.approval_seq, 0)
-                if latest_to != 0 and line.from_amount < latest_to:
-                    raise ValidationError(
-                        _('From amount is lower than the latest to amount - line %s') % line.name)
+                # if latest_to != 0 and line.from_amount < latest_to:
+                #     raise ValidationError(
+                #         _('From amount is lower than the latest to amount - line %s') % line.name)
                 if count != 0:
                     raise ValidationError(
                         _('Cannot add the same sequence more than once, asequence of  %s is repeated') % line.name)
@@ -194,5 +194,5 @@ class BudgetInOutLinesInvoices(models.Model):
         for rec in self:
             if rec.from_amount < 0:
                 raise ValidationError(_('From amount is lower than 0'))
-            if rec.from_amount > rec.to_amount:
-                raise ValidationError(_('From amount is lower than To amount in Budget Lines'))
+            # if rec.from_amount > rec.to_amount:
+            #     raise ValidationError(_('From amount is lower than To amount in Budget Lines'))
