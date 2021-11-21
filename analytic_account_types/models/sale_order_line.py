@@ -190,6 +190,10 @@ class SalesOrderLine(models.Model):
                                                                        rec.order_id.company_id,
                                                                        rec.order_id.date_order or rec.order_id.create_date.date())
 
+    @api.onchange('budget_id')
+    def onchange_budget_id(self):
+        return {'domain': {'budget_line_id': [('crossovered_budget_id', '=', self.budget_id.id)]}}
+
     @api.depends('budget_id')
     def get_budget_remaining_amount(self):
         for rec in self:
