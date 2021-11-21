@@ -159,25 +159,26 @@ class AccountMove(models.Model):
                     ctx = self._context.copy()
                     ctx.update({'name': us.name})
                     if email_template_id:
-                        email_template_id.with_context(ctx).send_mail(self.id, email_values={'email_to': us.email,})
+                        email_template_id.with_context(ctx).send_mail(self.id, force_send=True, email_values={'email_to': us.email,})
 
     def request_approval_button(self):
-        self.name = 'Bill/'+str(datetime.today().strftime('%Y'))+'/'+str(datetime.today().strftime('%m'))+'/'+str(random.randint(0,999))+str(datetime.today().strftime('%d'))
+        # self.name = 'Bill/'+str(datetime.today().strftime('%Y'))+'/'+str(datetime.today().strftime('%m'))+'/'+str(random.randint(0,999))+str(datetime.today().strftime('%d'))
         if self.out_budget and not self.purchase_approval_cycle_ids:
             out_budget_list = []
             out_budget = self.env['budget.in.out.check.invoice'].search([('type', '=', 'out_budget')], limit=1)
             max_value = max(self.budget_collect_ids.mapped('demand_amount'))
             for rec in out_budget.budget_line_ids:
-                if rec.to_amount >= max_value >= rec.from_amount:
+                # if rec.to_amount >= max_value >= rec.from_amount:
+                if max_value >= rec.from_amount:
                     out_budget_list.append((0, 0, {
                         'approval_seq': rec.approval_seq,
                         'user_approve_ids': rec.user_ids.ids,
                     }))
-                elif rec.to_amount <= max_value >= rec.from_amount:
-                    out_budget_list.append((0, 0, {
-                        'approval_seq': rec.approval_seq,
-                        'user_approve_ids': rec.user_ids.ids,
-                    }))
+                # elif rec.to_amount <= max_value >= rec.from_amount:
+                #     out_budget_list.append((0, 0, {
+                #         'approval_seq': rec.approval_seq,
+                #         'user_approve_ids': rec.user_ids.ids,
+                #     }))
             self.write({'purchase_approval_cycle_ids': out_budget_list})
         if not self.out_budget and not self.purchase_approval_cycle_ids:
             in_budget_list = []
@@ -185,18 +186,20 @@ class AccountMove(models.Model):
             if self.move_type == 'entry':
                 max_value = sum(self.line_ids.mapped('debit'))
             else:
-                max_value = self.amount_total
+                # max_value = self.amount_total
+                max_value = sum(self.invoice_line_ids.mapped('local_subtotal'))
             for rec in in_budget.budget_line_ids:
-                if rec.to_amount >= max_value >= rec.from_amount:
+                # if rec.to_amount >= max_value >= rec.from_amount:
+                if max_value >= rec.from_amount:
                     in_budget_list.append((0, 0, {
                         'approval_seq': rec.approval_seq,
                         'user_approve_ids': rec.user_ids.ids,
                     }))
-                elif rec.to_amount <= max_value >= rec.from_amount:
-                    in_budget_list.append((0, 0, {
-                        'approval_seq': rec.approval_seq,
-                        'user_approve_ids': rec.user_ids.ids,
-                    }))
+                # elif rec.to_amount <= max_value >= rec.from_amount:
+                #     in_budget_list.append((0, 0, {
+                #         'approval_seq': rec.approval_seq,
+                #         'user_approve_ids': rec.user_ids.ids,
+                #     }))
             self.write({'purchase_approval_cycle_ids': in_budget_list})
         self.show_request_approve_button = True
         if self.purchase_approval_cycle_ids:
@@ -381,6 +384,10 @@ class AccountMoveLine(models.Model):
 
     remaining_amount = fields.Float(string="Remaining Amount", required=False,compute='get_budget_remaining_amount' )
     local_subtotal = fields.Float(compute='compute_local_subtotal', store=True)
+
+    @api.onchange('budget_id')
+    def onchange_budget_id(self):
+        return {'domain': {'budget_line_id': [('crossovered_budget_id', '=', self.budget_id.id)]}}
 
     @api.depends('price_subtotal')
     def compute_local_subtotal(self):

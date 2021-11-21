@@ -32,9 +32,9 @@
 
                 <!-- position: after|before|replace|attributes|inside -->
                 <xpath expr="//notebook/page/field/tree/field[@name='name']" position="after">
-                    <field name="cost_center_id" optional="show"
+                    <field name="cost_center_id" optional="show" required="1"
                            attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
-                    <field name="project_site_id" optional="show"
+                    <field name="project_site_id" optional="show" required="1"
                            attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                     <field name="type_id" optional="show" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                     <field name="location_id" optional="show" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
@@ -43,8 +43,7 @@
                     <field name="budget_id" optional="show" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                     <field name="budget_line_id" optional="show"
                            attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
-                    <field name="remaining_amount" optional="show"
-                           attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                    <field name="remaining_amount" optional="show" readonly="1" />
                     <field name="local_subtotal" attrs="{'readonly': [('state', 'not in', ['draft'])]}"
                            optional="hide"/>
 

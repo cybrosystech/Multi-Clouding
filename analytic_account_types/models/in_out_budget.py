@@ -62,8 +62,8 @@ class BudgetInOutLines(models.Model):
         for rec in self:
             if rec.from_amount < 0:
                 raise ValidationError(_('From amount is lower than 0'))
-            if rec.from_amount > rec.to_amount:
-                raise ValidationError(_('From amount is lower than To amount in Budget Lines'))
+            # if rec.from_amount > rec.to_amount:
+            #     raise ValidationError(_('From amount is lower than To amount in Budget Lines'))
 
 
 class InOutBudgetsSales(models.Model):
@@ -140,6 +140,7 @@ class InOutBudgetsInvoices(models.Model):
                             required=True, )
     budget_line_ids = fields.One2many(comodel_name="budget.in.out.lines.invoice", inverse_name="budget_id", string="",
                                       required=False, )
+    company_id = fields.Many2one('res.company', 'Company', default=lambda self: self.env.company)
 
 
     @api.constrains('budget_line_ids')
@@ -161,7 +162,7 @@ class InOutBudgetsInvoices(models.Model):
     @api.model
     def create(self, vals):
         if vals.get('type'):
-            check = self.env['budget.in.out.check.invoice'].sudo().search([('type', '=', vals['type'])])
+            check = self.env['budget.in.out.check.invoice'].sudo().search([('type', '=', vals['type']),('company_id', '=', vals['company_id'])])
             if check:
                 raise ValidationError(_('This Type is already created'))
         return super(InOutBudgetsInvoices, self).create(vals)
@@ -179,6 +180,7 @@ class BudgetInOutLinesInvoices(models.Model):
     approval_seq = fields.Integer(string="Approval Sequence", required=False, )
     user_ids = fields.Many2many(comodel_name="res.users", string="User", required=True, )
 
+    company_id = fields.Many2one('res.company', 'Company', related='budget_id.company_id',store=True)
 
     @api.onchange('approval_seq')
     def approval_seq_check(self):

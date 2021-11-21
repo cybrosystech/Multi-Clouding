@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api,_
+from odoo.exceptions import ValidationError,UserError
 
 class PurchaseOrder(models.Model):
     _inherit = 'purchase.order'
@@ -93,7 +94,7 @@ class PurchaseOrder(models.Model):
                     ctx = self._context.copy()
                     ctx.update({'name': us.name})
                     if email_template_id:
-                        email_template_id.with_context(ctx).send_mail(self.id, email_values={'email_to': us.email,})
+                        email_template_id.with_context(ctx).send_mail(self.id, force_send=True, email_values={'email_to': us.email,})
 
     def request_approval_button(self):
         if self.out_budget and not self.purchase_approval_cycle_ids:
@@ -104,32 +105,34 @@ class PurchaseOrder(models.Model):
             else:
                 max_value = 0
             for rec in out_budget.budget_line_ids:
-                if rec.to_amount >= max_value >= rec.from_amount:
+                # if rec.to_amount >= max_value >= rec.from_amount:
+                if max_value >= rec.from_amount:
                     out_budget_list.append((0,0,{
                         'approval_seq':rec.approval_seq,
                         'user_approve_ids':rec.user_ids.ids,
                     }))
-                elif rec.to_amount <= max_value >= rec.from_amount:
-                    out_budget_list.append((0, 0, {
-                        'approval_seq': rec.approval_seq,
-                        'user_approve_ids': rec.user_ids.ids,
-                    }))
+                # elif rec.to_amount <= max_value >= rec.from_amount:
+                #     out_budget_list.append((0, 0, {
+                #         'approval_seq': rec.approval_seq,
+                #         'user_approve_ids': rec.user_ids.ids,
+                #     }))
             self.write({'purchase_approval_cycle_ids':out_budget_list})
         if not self.out_budget and not self.purchase_approval_cycle_ids:
             in_budget_list = []
             in_budget = self.env['budget.in.out.check'].search([('type','=','in_budget')],limit=1)
             max_value = self.amount_total
             for rec in in_budget.budget_line_ids:
-                if rec.to_amount >= max_value >= rec.from_amount:
+                # if rec.to_amount >= max_value >= rec.from_amount:
+                if max_value >= rec.from_amount:
                     in_budget_list.append((0,0,{
                         'approval_seq':rec.approval_seq,
                         'user_approve_ids':rec.user_ids.ids,
                     }))
-                elif rec.to_amount <= max_value >= rec.from_amount:
-                    in_budget_list.append((0, 0, {
-                        'approval_seq': rec.approval_seq,
-                        'user_approve_ids': rec.user_ids.ids,
-                    }))
+                # elif rec.to_amount <= max_value >= rec.from_amount:
+                #     in_budget_list.append((0, 0, {
+                #         'approval_seq': rec.approval_seq,
+                #         'user_approve_ids': rec.user_ids.ids,
+                #     }))
             self.write({'purchase_approval_cycle_ids':in_budget_list})
         self.show_request_approve_button = True
         if self.purchase_approval_cycle_ids:
@@ -244,10 +247,19 @@ class PurchaseOrderLine(models.Model):
     budget_line_id = fields.Many2one(comodel_name="crossovered.budget.lines", string="Budget Line", required=False, )
     remaining_amount = fields.Float(string="Remaining Amount", required=False, compute='get_budget_remaining_amount')
     local_subtotal = fields.Float(compute='compute_local_subtotal',store=True)
+
+
+    @api.onchange('budget_id')
+    def onchange_budget_id(self):
+        return {'domain': {'budget_line_id': [('crossovered_budget_id', '=', self.budget_id.id)]}}
+
     @api.depends('price_subtotal')
     def compute_local_subtotal(self):
         for rec in self:
-            rec.local_subtotal = rec.order_id.currency_id._convert(rec.price_subtotal, rec.order_id.company_id.currency_id, rec.order_id.company_id,rec.order_id.date_order or rec.order_id.create_date.date())
+            if not rec.order_id.date_order:
+                raise UserError(_('Order date is required'))
+            else:
+                rec.local_subtotal = rec.order_id.currency_id._convert(rec.price_subtotal, rec.order_id.company_id.currency_id, rec.order_id.company_id,rec.order_id.date_order or rec.order_id.create_date.date())
 
     @api.depends('budget_id')
     def get_budget_remaining_amount(self):
