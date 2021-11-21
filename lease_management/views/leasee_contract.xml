@@ -153,6 +153,14 @@
             <field name="arch" type="xml">
                 <tree create="true" duplicate="true" edit="true" delete="true">
                     <field name="name"/>
+                    <field name="create_date"/>
+                    <field name="commencement_date"/>
+                    <field name="vendor_id"/>
+                    <field name="lease_contract_period"/>
+                    <field name="lease_contract_period_type"/>
+                    <field name="external_reference_number"/>
+                    <field name="project_site_id"/>
+                    <field name="state"/>
                 </tree>
             </field>
         </record>
