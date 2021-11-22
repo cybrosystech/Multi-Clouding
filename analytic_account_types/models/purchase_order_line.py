@@ -59,7 +59,6 @@ class PurchaseOrder(models.Model):
         budgets = self.order_line.mapped('budget_id')
         budget_lines = []
         budgets = set(budgets)
-
         for bud in budgets:
             if bud not in self.budget_collect_ids.mapped('budget_id'):
                 budget_lines.append((0,0,{
