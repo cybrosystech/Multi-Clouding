@@ -34,7 +34,7 @@ class InOutBudgets(models.Model):
                 latest_to = line.to_amount
     @api.model
     def create(self, vals):
-        check = self.env['budget.in.out.check'].sudo().search([('type', '=', vals['type'])])
+        check = self.env['budget.in.out.check'].sudo().search([('type', '=', vals['type']),('company_id', '=', vals['company_id'])])
         if check:
             raise ValidationError(_('This Type is already created'))
         return super(InOutBudgets, self).create(vals)
@@ -97,7 +97,7 @@ class InOutBudgetsSales(models.Model):
 
     @api.model
     def create(self, vals):
-        check = self.env['budget.in.out.check.sales'].sudo().search([('type', '=', vals['type'])])
+        check = self.env['budget.in.out.check.sales'].sudo().search([('type', '=', vals['type']),('company_id', '=', vals['company_id'])])
         if check:
             raise ValidationError(_('This Type is already created'))
         return super(InOutBudgetsSales, self).create(vals)
