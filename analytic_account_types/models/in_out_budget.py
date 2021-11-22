@@ -14,6 +14,7 @@ class InOutBudgets(models.Model):
                             required=True, )
     budget_line_ids = fields.One2many(comodel_name="budget.in.out.lines", inverse_name="budget_id", string="",
                                       required=False, )
+    company_id = fields.Many2one('res.company', 'Company', default=lambda self: self.env.company)
 
 
     @api.constrains('budget_line_ids')
@@ -33,7 +34,7 @@ class InOutBudgets(models.Model):
                 latest_to = line.to_amount
     @api.model
     def create(self, vals):
-        check = self.env['budget.in.out.check'].sudo().search([('type', '=', vals['type'])])
+        check = self.env['budget.in.out.check'].sudo().search([('type', '=', vals['type']),('company_id', '=', vals['company_id'])])
         if check:
             raise ValidationError(_('This Type is already created'))
         return super(InOutBudgets, self).create(vals)
@@ -76,6 +77,7 @@ class InOutBudgetsSales(models.Model):
                             required=True, )
     budget_line_ids = fields.One2many(comodel_name="budget.in.out.lines.sales", inverse_name="budget_id", string="",
                                       required=False, )
+    company_id = fields.Many2one('res.company', 'Company', default=lambda self: self.env.company)
 
     @api.constrains('budget_line_ids')
     def check_lines(self):
@@ -95,7 +97,7 @@ class InOutBudgetsSales(models.Model):
 
     @api.model
     def create(self, vals):
-        check = self.env['budget.in.out.check.sales'].sudo().search([('type', '=', vals['type'])])
+        check = self.env['budget.in.out.check.sales'].sudo().search([('type', '=', vals['type']),('company_id', '=', vals['company_id'])])
         if check:
             raise ValidationError(_('This Type is already created'))
         return super(InOutBudgetsSales, self).create(vals)

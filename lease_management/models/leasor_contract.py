@@ -37,12 +37,12 @@ class LeasorContract(models.Model):
 
     # lease_contract_period = fields.Float()
     lease_contract_period = fields.Integer()
-    lease_contract_period_type = fields.Selection(string="Period Type", default="years",
+    lease_contract_period_type = fields.Selection(string="Period Type", default="months",
                                               selection=[('years', 'Years'), ('months', 'Months'), ], required=True, )
     type_terminate = fields.Selection(string="Percentage or Amount",default="amount", selection=[('percentage', 'Percentage'), ('amount', 'Amount'), ], required=True, )
     extendable = fields.Boolean(string="Extendable ?", default=False )
     interest_rate = fields.Float(string="Interest Rate %", default=0.0, required=False, )
-    payment_frequency_type = fields.Selection(string="Payment Type",default="years", selection=[('years', 'Years'), ('months', 'Months'), ], required=True, )
+    payment_frequency_type = fields.Selection(string="Payment Type",default="months", selection=[('years', 'Years'), ('months', 'Months'), ], required=True, )
     payment_frequency = fields.Integer(default=1, required=False, )
 
     leasee_contract_id = fields.Many2one(comodel_name="leasee.contract",domain=[('state', 'in', ['active', 'extended'])], copy=False, string="Leased Asset",required=True)

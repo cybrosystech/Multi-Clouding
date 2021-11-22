@@ -39,17 +39,17 @@ class LeaseeContract(models.Model):
 
     # lease_contract_period = fields.Float()
     lease_contract_period = fields.Integer()
-    lease_contract_period_type = fields.Selection(string="Period Type", default="years",
+    lease_contract_period_type = fields.Selection(string="Period Type", default="months",
                                               selection=[('years', 'Years'), ('months', 'Months'), ], required=True, )
     terminate_month_number = fields.Integer(string="Terminate At Month Number", default=0, required=False, )
     terminate_fine = fields.Float(string="", default=0.0, required=False, )
     type_terminate = fields.Selection(string="Percentage or Amount",default="amount", selection=[('percentage', 'Percentage'), ('amount', 'Amount'), ], required=True, )
     extendable = fields.Boolean(string="Extendable ?", default=False )
     interest_rate = fields.Float(string="Interest Rate %", default=0.0, required=False, )
-    payment_frequency_type = fields.Selection(string="Payment Type",default="years", selection=[('years', 'Years'), ('months', 'Months'), ], required=True, )
+    payment_frequency_type = fields.Selection(string="Payment Type",default="months", selection=[('years', 'Years'), ('months', 'Months'), ], required=True, )
     payment_frequency = fields.Integer(default=1, required=False, )
 
-    increasement_frequency_type = fields.Selection(string="Increasement Type",default="years", selection=[('years', 'Years'), ('months', 'Months'), ], required=True, )
+    increasement_frequency_type = fields.Selection(string="Increasement Type",default="months", selection=[('years', 'Years'), ('months', 'Months'), ], required=True, )
     increasement_frequency = fields.Integer(default=1, required=False, )
     increasement_rate = fields.Float(default=1, required=False, )
     # discount = fields.Float(string="Discount %", default=0.0, required=False, )
@@ -59,12 +59,12 @@ class LeaseeContract(models.Model):
     leasee_currency_id = fields.Many2one(comodel_name="res.currency", string="", required=False, )
     asset_name = fields.Char(string="", default="", required=False, )
     asset_description = fields.Text(string="", default="", required=False, )
-    initial_direct_cost = fields.Float(copy=False)
-    incentives_received = fields.Float(copy=False)
+    initial_direct_cost = fields.Float(copy=True)
+    incentives_received = fields.Float(copy=True)
     rou_value = fields.Float(string="ROU Asset Value",compute='compute_rou_value')
     # registered_paymen = fields.Float(string="Registered Payment Prior Commencement Date")
 
-    estimated_cost_dismantling = fields.Float(string="Estimated Cost For Dismantling", default=0.0, required=False,copy=False )
+    estimated_cost_dismantling = fields.Float(string="Estimated Cost For Dismantling", default=0.0, required=False,copy=True )
     useful_life = fields.Integer(string="Useful Life Of The Right Of The Use Asset", default=0, required=False, )
     lease_liability = fields.Float(compute='compute_lease_liability')
     installment_amount = fields.Float(string="", default=0.0, required=False, )
@@ -121,6 +121,40 @@ class LeaseeContract(models.Model):
                 rec.estimated_ending_date = rec.commencement_date + relativedelta(years=rec.lease_contract_period)
             else:
                 rec.estimated_ending_date = rec.commencement_date + relativedelta(months=rec.lease_contract_period)
+
+    @api.onchange('leasee_template_id')
+    def onchange_leasee_template_id(self):
+        self.update({
+            'lease_contract_period': self.leasee_template_id.lease_contract_period,
+            'lease_contract_period_type': self.leasee_template_id.lease_contract_period_type,
+            'terminate_month_number': self.leasee_template_id.terminate_month_number,
+            'terminate_fine': self.leasee_template_id.terminate_fine,
+            'type_terminate': self.leasee_template_id.type_terminate,
+            'extendable': self.leasee_template_id.extendable,
+            'interest_rate': self.leasee_template_id.interest_rate,
+            'payment_frequency_type': self.leasee_template_id.payment_frequency_type,
+            'payment_frequency': self.leasee_template_id.payment_frequency,
+            'increasement_rate': self.leasee_template_id.increasement_rate,
+            'increasement_frequency_type': self.leasee_template_id.increasement_frequency_type,
+            'increasement_frequency': self.leasee_template_id.increasement_frequency,
+            'prorata': self.leasee_template_id.prorata,
+            'asset_model_id': self.leasee_template_id.asset_model_id.id,
+            'lease_liability_account_id': self.leasee_template_id.lease_liability_account_id.id,
+            'provision_dismantling_account_id': self.leasee_template_id.provision_dismantling_account_id.id,
+            'terminate_account_id': self.leasee_template_id.terminate_account_id.id,
+            'interest_expense_account_id': self.leasee_template_id.interest_expense_account_id.id,
+            'terminate_product_id': self.leasee_template_id.terminate_product_id.id,
+            'installment_product_id': self.leasee_template_id.installment_product_id.id,
+            'extension_product_id': self.leasee_template_id.extension_product_id.id,
+            'installment_journal_id': self.leasee_template_id.installment_journal_id.id,
+            'initial_journal_id': self.leasee_template_id.initial_journal_id.id,
+            'analytic_account_id': self.leasee_template_id.analytic_account_id.id,
+            'project_site_id': self.leasee_template_id.project_site_id.id,
+            'type_id': self.leasee_template_id.type_id.id,
+            'location_id': self.leasee_template_id.location_id.id,
+            'incentives_account_id': self.leasee_template_id.incentives_account_id.id,
+            'incentives_product_id': self.leasee_template_id.incentives_product_id.id,
+        })
 
     def action_activate(self):
         self.create_commencement_move()
@@ -190,6 +224,7 @@ class LeaseeContract(models.Model):
 
     def create_rov_asset(self):
         if not self.asset_id:
+            method_number = self.lease_contract_period * ( 1 if self.lease_contract_period_type == 'months' else 12)
             vals = {
                 'name': self.name,
                 'model_id': self.asset_model_id.id,
@@ -199,7 +234,8 @@ class LeaseeContract(models.Model):
                 # 'company_id': record.move_id.company_id.id,
                 # 'currency_id': self.env.user.company_id.currency_id.id,
                 'acquisition_date': self.commencement_date,
-                'method_number': self.lease_contract_period,
+                # 'method_number': self.lease_contract_period,
+                'method_number': method_number,
                 'account_analytic_id': self.analytic_account_id.id,
                 'project_site_id': self.project_site_id.id,
                 'type_id': self.type_id.id,
@@ -208,6 +244,7 @@ class LeaseeContract(models.Model):
                 'state': 'draft',
                 'first_depreciation_date': self.commencement_date,
                 # 'method_period': self.lease_contract_period_type,
+                'method_period': '1',
             }
             # changed_vals = self.env['account.asset'].onchange_category_id_values(self.asset_model_id.category_id.id)
             # vals.update(changed_vals['value'])
@@ -329,6 +366,9 @@ class LeaseeContract(models.Model):
                 'debit': 0,
                 'credit': self.estimated_cost_dismantling,
                 'analytic_account_id': self.analytic_account_id.id,
+                'project_site_id': self.project_site_id.id,
+                'type_id': self.type_id.id,
+                'location_id': self.location_id.id,
             }) )
 
         move = self.env['account.move'].create({
@@ -425,6 +465,9 @@ class LeaseeContract(models.Model):
             'debit': amount,
             'credit': 0,
             'analytic_account_id': self.analytic_account_id.id,
+            'project_site_id': self.project_site_id.id,
+            'type_id': self.type_id.id,
+            'location_id': self.location_id.id,
         })]
         move = self.env['account.move'].create({
             'partner_id': self.vendor_id.id,
@@ -655,6 +698,9 @@ class LeaseeContract(models.Model):
             'debit': interest_amount,
             'credit': 0,
             'analytic_account_id': self.analytic_account_id.id,
+            'project_site_id': self.project_site_id.id,
+            'type_id': self.type_id.id,
+            'location_id': self.location_id.id,
         })]
         move = self.env['account.move'].create({
             'partner_id': self.vendor_id.id,

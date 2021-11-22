@@ -111,6 +111,9 @@ class LeaseePeriodExtend(models.TransientModel):
             'debit': 0,
             'credit': amount,
             'analytic_account_id': contract.analytic_account_id.id,
+            'project_site_id': contract.project_site_id.id,
+            'type_id': contract.type_id.id,
+            'location_id': contract.location_id.id,
         })]
         move = self.env['account.move'].create({
             'partner_id': contract.vendor_id.id,

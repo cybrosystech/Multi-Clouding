@@ -74,7 +74,7 @@ class RouAssetSchedule(models.TransientModel):
                 'direct_cost_added': 0,
                 'depreciation': ins.amount_total,
                 'adjustment_lease_liability': ins.asset_id.gross_increase_value,
-                'rou_sub_leased': leasor_contract.annual_payment,
+                'rou_sub_leased': leasor_contract.installment_amount,
                 'rou_increase_decrease': rou_increase_decrease,
                 'loss_leases': 1,
                 'loss_sub_lease': 1,

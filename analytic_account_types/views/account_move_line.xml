@@ -55,7 +55,7 @@
                 <!-- position: after|before|replace|attributes|inside -->
                 <xpath expr="//notebook/page/field/tree/field[@name='analytic_account_id']" position="after">
                     <field name="parent_state" invisible="1" />
-                    <field name="project_site_id" optional="show" attrs="{'readonly': [('parent_state', '=', 'posted')]}"/>
+                    <field name="project_site_id" optional="show" required="1" attrs="{'readonly': [('parent_state', '=', 'posted')]}"/>
                     <field name="type_id" optional="show" attrs="{'readonly': [('parent_state', '=', 'posted')]}"/>
                     <field name="location_id" optional="show" attrs="{'readonly': [('parent_state', '=', 'posted')]}"/>
                     <button name="open_account_analytic_types" type="object" string="Set Cost Center"
@@ -67,6 +67,9 @@
                 </xpath>
 
                 <!-- position: after|before|replace|attributes|inside -->
+                <xpath expr="//notebook/page[2]/field[@name='line_ids']/tree/field[@name='analytic_account_id']" position="attributes">
+                    <attribute name="required">1</attribute>
+                </xpath>
                 <xpath expr="//notebook/page[2]/field[@name='line_ids']/tree/field[@name='analytic_account_id']"
                        position="after">
                     <field name="project_site_id" optional="show" required="1"/>
