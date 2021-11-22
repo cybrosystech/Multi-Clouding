@@ -87,8 +87,13 @@ class AccountMove(models.Model):
         self.show_post_button = False
         self.show_confirm_button = False
         if self.state not in ['draft','to_approve'] or self.auto_post or self.move_type != 'entry':
-            if self.is_from_purchase or self.is_from_sales:
+            if self.is_from_purchase or self.is_from_sales :
                 self.show_post_button = True
+            elif not self.is_from_purchase and not self.is_from_sales:
+                if not self.purchase_approval_cycle_ids:
+                    self.show_post_button = True
+                else:
+                    self.show_post_button = False
             else:
                 self.show_post_button = False
         elif self.state not in ['draft','to_approve'] or self.auto_post == True or self.move_type == 'entry':
