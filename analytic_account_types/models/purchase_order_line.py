@@ -55,9 +55,7 @@ class PurchaseOrder(models.Model):
 
     @api.onchange('order_line')
     def get_budgets_in_out_budget_tab(self):
-        # self.budget_collect_ids.sudo().unlink()
-        for collect_line in self.budget_collect_ids:
-            collect_line.sudo().unlink()
+        self.budget_collect_ids = [(5,0,0)]
         budgets = self.order_line.mapped('budget_id')
         budget_lines = []
         budgets = set(budgets)
