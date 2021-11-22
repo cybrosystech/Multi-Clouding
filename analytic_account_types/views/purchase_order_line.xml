@@ -39,7 +39,7 @@
                     <field name="budget_id" optional="show" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                     <field name="budget_line_id" optional="show" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                     <field name="remaining_amount" optional="show" readonly="1"/>
-                    <field name="local_subtotal" optional="hide" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                    <field name="local_subtotal" optional="hide" readonly="1" /> <!-- attrs="{'readonly': [('state', 'not in', ['draft'])]}" -->
                 </xpath>
                 <!-- position: after|before|replace|attributes|inside -->
                 <xpath expr="//notebook" position="inside">
