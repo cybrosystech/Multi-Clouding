@@ -101,7 +101,7 @@ class SaleOrder(models.Model):
         if self.out_budget and not self.sale_approval_cycle_ids:
             out_budget_list = []
             out_budget = self.env['budget.in.out.check.sales'].search([('type', '=', 'out_budget'), ('company_id','=', self.env.company.id)], limit=1)
-            if self.budget_collect_ids.mapped('difference_amount'):
+            if self.budget_collect_ids.mapped('demand_amount'):
                 max_value = max(self.budget_collect_ids.mapped('demand_amount'))
             else:
                 max_value = 0

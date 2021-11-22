@@ -15,11 +15,11 @@
                 </xpath>
                 <xpath expr="//button[@name='action_post'][1]" position="attributes">
                     <attribute name="attrs">
-                        {'invisible':['|',('show_confirm_button','=',False),('state','!=','draft')]}
+                        {'invisible':['|','|',('show_request_approve_button','=',False),('show_confirm_button','=',False),('state','!=','draft')]}
                     </attribute>
                 </xpath>
                 <xpath expr="//button[@name='action_post'][2]" position="attributes">
-                    <attribute name="attrs">{'invisible':['|',('show_post_button','=',False),('state','!=','draft')]}
+                    <attribute name="attrs">{'invisible':['|','|',('show_request_approve_button','=',False),('show_post_button','=',False),('state','!=','draft')]}
                     </attribute>
                 </xpath>
                 <xpath expr="//button[@name='button_cancel']" position="attributes">

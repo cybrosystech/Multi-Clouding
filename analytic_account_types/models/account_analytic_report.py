@@ -7,8 +7,6 @@ from collections import defaultdict
 from odoo import api, fields, models, _
 from odoo.osv import expression
 from odoo.exceptions import ValidationError
-
-
 class Acc(models.Model):
     _inherit = 'account.analytic.account'
 
@@ -17,7 +15,6 @@ class Acc(models.Model):
     crossovered_budget_loc_line = fields.One2many('crossovered.budget.lines', 'location_id', 'Budget Lines')
     analytic_location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location", required=False,domain=[('analytic_account_type','=','location')], )
     analytic_type_filter_id = fields.Many2one(comodel_name="account.analytic.account", string="Type", required=False,domain=[('analytic_account_type','=','type')], )
-
 
     @api.depends('line_ids.amount')
     def _compute_debit_credit_balance(self):
@@ -45,8 +42,8 @@ class Acc(models.Model):
             domain=domain + [('amount', '>=', 0.0)],
             fields=['account_id', 'project_site_id', 'type_id', 'location_id', 'currency_id', 'amount'],
             groupby=['account_id', 'project_site_id', 'type_id', 'location_id', 'currency_id'],
-            lazy=False,
-        )
+            lazy=False,)
+        
         data_credit = defaultdict(float)
         for l in credit_groups:
             data_credit[l['account_id'][0]] += Curr.browse(l['currency_id'][0])._convert(
