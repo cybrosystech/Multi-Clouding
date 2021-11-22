@@ -55,12 +55,12 @@ class PurchaseOrder(models.Model):
 
     @api.onchange('order_line')
     def get_budgets_in_out_budget_tab(self):
+        self.budget_collect_ids.sudo().unlink()
         budgets = self.order_line.mapped('budget_id')
         budget_lines = []
         budgets = set(budgets)
 
         for bud in budgets:
-            self.budget_collect_ids.unlink()
             if bud not in self.budget_collect_ids.mapped('budget_id'):
                 budget_lines.append((0,0,{
                     'budget_id':bud.id
