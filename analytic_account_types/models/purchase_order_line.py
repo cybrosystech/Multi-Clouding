@@ -60,6 +60,7 @@ class PurchaseOrder(models.Model):
         budgets = set(budgets)
 
         for bud in budgets:
+            self.budget_collect_ids.budget_collect.unlink()
             if bud not in self.budget_collect_ids.mapped('budget_id'):
                 budget_lines.append((0,0,{
                     'budget_id':bud.id
