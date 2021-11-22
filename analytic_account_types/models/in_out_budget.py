@@ -14,6 +14,7 @@ class InOutBudgets(models.Model):
                             required=True, )
     budget_line_ids = fields.One2many(comodel_name="budget.in.out.lines", inverse_name="budget_id", string="",
                                       required=False, )
+    company_id = fields.Many2one('res.company', 'Company', default=lambda self: self.env.company)
 
 
     @api.constrains('budget_line_ids')
@@ -76,6 +77,7 @@ class InOutBudgetsSales(models.Model):
                             required=True, )
     budget_line_ids = fields.One2many(comodel_name="budget.in.out.lines.sales", inverse_name="budget_id", string="",
                                       required=False, )
+    company_id = fields.Many2one('res.company', 'Company', default=lambda self: self.env.company)
 
     @api.constrains('budget_line_ids')
     def check_lines(self):

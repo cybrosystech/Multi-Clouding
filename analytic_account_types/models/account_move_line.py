@@ -187,7 +187,7 @@ class AccountMove(models.Model):
         # self.name = 'Bill/'+str(datetime.today().strftime('%Y'))+'/'+str(datetime.today().strftime('%m'))+'/'+str(random.randint(0,999))+str(datetime.today().strftime('%d'))
         if self.out_budget and not self.purchase_approval_cycle_ids:
             out_budget_list = []
-            out_budget = self.env['budget.in.out.check.invoice'].search([('type', '=', 'out_budget')], limit=1)
+            out_budget = self.env['budget.in.out.check.invoice'].search([('type', '=', 'out_budget'), ('company_id','=', self.env.company.id)], limit=1)
             max_value = max(self.budget_collect_ids.mapped('demand_amount'))
             for rec in out_budget.budget_line_ids:
                 # if rec.to_amount >= max_value >= rec.from_amount:
@@ -204,7 +204,7 @@ class AccountMove(models.Model):
             self.write({'purchase_approval_cycle_ids': out_budget_list})
         if not self.out_budget and not self.purchase_approval_cycle_ids:
             in_budget_list = []
-            in_budget = self.env['budget.in.out.check.invoice'].search([('type', '=', 'in_budget')], limit=1)
+            in_budget = self.env['budget.in.out.check.invoice'].search([('type', '=', 'in_budget'), ('company_id','=', self.env.company.id)], limit=1)
             if self.move_type == 'entry':
                 max_value = sum(self.line_ids.mapped('debit'))
             else:

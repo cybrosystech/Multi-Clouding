@@ -100,7 +100,7 @@ class SaleOrder(models.Model):
     def request_approval_button(self):
         if self.out_budget and not self.sale_approval_cycle_ids:
             out_budget_list = []
-            out_budget = self.env['budget.in.out.check.sales'].search([('type', '=', 'out_budget')], limit=1)
+            out_budget = self.env['budget.in.out.check.sales'].search([('type', '=', 'out_budget'), ('company_id','=', self.env.company.id)], limit=1)
             if self.budget_collect_ids.mapped('difference_amount'):
                 max_value = max(self.budget_collect_ids.mapped('demand_amount'))
             else:
@@ -120,7 +120,7 @@ class SaleOrder(models.Model):
             self.write({'sale_approval_cycle_ids': out_budget_list})
         if not self.out_budget and not self.sale_approval_cycle_ids:
             in_budget_list = []
-            in_budget = self.env['budget.in.out.check.sales'].search([('type', '=', 'in_budget')], limit=1)
+            in_budget = self.env['budget.in.out.check.sales'].search([('type', '=', 'in_budget'), ('company_id','=', self.env.company.id)], limit=1)
             max_value = self.amount_total
             for rec in in_budget.budget_line_ids:
                 # if rec.to_amount >= max_value >= rec.from_amount:
