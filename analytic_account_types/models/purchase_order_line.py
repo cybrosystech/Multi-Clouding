@@ -101,7 +101,7 @@ class PurchaseOrder(models.Model):
             out_budget_list = []
             out_budget = self.env['budget.in.out.check'].search([('type','=','out_budget'), ('company_id','=', self.env.company.id)],limit=1)
             if self.budget_collect_ids.mapped('demand_amount'):
-                max_value = max(self.budget_collect_ids.mapped('demand_amount'))
+                max_value = max(self.budget_collect_ids.mapped('local_subtotal')) # Old field is demand_amount
             else:
                 max_value = 0
             for rec in out_budget.budget_line_ids:
