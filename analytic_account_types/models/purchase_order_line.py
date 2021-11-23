@@ -53,11 +53,6 @@ class PurchaseOrder(models.Model):
         if out_budget:
             self.out_budget = True
 
-    def write(self, vals):
-        res = super(PurchaseOrder, self).write(vals)
-        self.get_budgets_in_out_budget_tab()
-        return res
-
     @api.onchange('order_line')
     def get_budgets_in_out_budget_tab(self):
         self.budget_collect_ids = [(5,0,0)]
@@ -102,6 +97,7 @@ class PurchaseOrder(models.Model):
                         email_template_id.with_context(ctx).send_mail(self.id, force_send=True, email_values={'email_to': us.email, 'model': None, 'res_id': None})
 
     def request_approval_button(self):
+        self.get_budgets_in_out_budget_tab()
         if self.out_budget and not self.purchase_approval_cycle_ids:
             out_budget_list = []
             out_budget = self.env['budget.in.out.check'].search([('type','=','out_budget'), ('company_id','=', self.env.company.id)],limit=1)
