@@ -11,24 +11,32 @@
             <field name="auto_delete" eval="True"/>
             <field name="lang">${object.partner_id.lang}</field>
             <field name="body_html" type="html">
-            <div style="margin: 0px; padding: 0px;">
-                <p style="margin: 0px; padding: 0px; font-size: 13px;">
-                    Dear ${ctx['name']},
-                    <br /><br />
-                    This Sale Order Need Your Approval <strong>${object.name}</strong> ,
-
-
-                    Click here to open ,
-
-                    <a target="_BLANK" href="/web?#id=${object.id} &amp;view_type=form&amp;model=sale.order&amp;action="> ${object.name} </a>
-
-
-                </p>
-            </div>
+                <meta itemprop="name" content="Notification Email"/>
+                <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td class="content-block">
+                            <h3 style="margin: 0;">Pending approval</h3>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="content-block">
+                            Hello ${ctx['name']}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="content-block">
+                            ${object.display_name} requires your approval. 
+                            Please follow the link below to open the item.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="content-block" itemprop="handler" itemtype="http://schema.org/HttpActionHandler">
+                            <a href="/web?#id=${object.id}&amp;view_type=form&amp;model=account.move&amp;action=" class="btn-primary" itemprop="url">Open</a>
+                        </td>
+                    </tr>
+                </table>
             </field>
-
         </record>
-
 
         <record id="email_template_send_mail_approval_account" model="mail.template">
             <field name="name">Multi Level Invoice Approval Mail Template</field>
@@ -39,27 +47,30 @@
             <field name="auto_delete" eval="True"/>
             <field name="lang">${object.partner_id.lang}</field>
             <field name="body_html" type="html">
-            <div style="margin: 0px; padding: 0px;">
-                <p style="margin: 0px; padding: 0px; font-size: 13px;">
-                    Dear ${ctx['name']},
-                    <br /><br />
-                    % if object.name=='/':
-                       This ${'Journal' if object.move_type == 'entry' else 'Invoice'} Need Your Approval <strong>Draft ${'Journal' if object.move_type == 'entry' else 'Invoice'}/ ${object.id} </strong> ,
-                    Click here to open ,
-
-                    <a target="_BLANK" href="/web?#id=${object.id} &amp;view_type=form&amp;model=account.move&amp;action="> Draft Invoice/ ${object.id}</a>
-
-                    % else:
-                       This ${'Journal' if object.move_type == 'entry' else 'Invoice'} Need Your Approval <strong>${object.name} </strong> ,
-                    Click here to open ,
-
-                    <a target="_BLANK" href="/web?#id=${object.id} &amp;view_type=form&amp;model=account.move&amp;action="> ${object.name} </a>
-
-                    %endif
-
-
-                </p>
-            </div>
+                <meta itemprop="name" content="Notification Email"/>
+                <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td class="content-block">
+                            <h3 style="margin: 0;">Pending approval</h3>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="content-block">
+                            Hello ${ctx['name']}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="content-block">
+                            ${object.display_name} requires your approval. 
+                            Please follow the link below to open the item.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="content-block" itemprop="handler" itemtype="http://schema.org/HttpActionHandler">
+                            <a href="/web?#id=${object.id}&amp;view_type=form&amp;model=account.move&amp;action=" class="btn-primary" itemprop="url">Open</a>
+                        </td>
+                    </tr>
+                </table>
             </field>
         </record>
 
@@ -72,23 +83,31 @@
             <field name="auto_delete" eval="True"/>
             <field name="lang">${object.partner_id.lang}</field>
             <field name="body_html" type="html">
-            <div style="margin: 0px; padding: 0px;">
-                <p style="margin: 0px; padding: 0px; font-size: 13px;">
-                    Dear ${ctx['name']},
-                    <br /><br />
-                    This Purchase Order Need Your Approval <strong>${object.name}</strong> ,
-
-
-                    Click here to open ,
-
-                    <a target="_BLANK" href="/web?#id=${object.id} &amp;view_type=form&amp;model=purchase.order&amp;action="> ${object.name} </a>
-
-
-                </p>
-            </div>
+                <meta itemprop="name" content="Notification Email"/>
+                <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td class="content-block">
+                            <h3 style="margin: 0;">Pending approval</h3>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="content-block">
+                            Hello ${ctx['name']}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="content-block">
+                            ${object.display_name} requires your approval. 
+                            Please follow the link below to open the item.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="content-block" itemprop="handler" itemtype="http://schema.org/HttpActionHandler">
+                            <a href="/web?#id=${object.id}&amp;view_type=form&amp;model=account.move&amp;action=" class="btn-primary" itemprop="url">Open</a>
+                        </td>
+                    </tr>
+                </table>
             </field>
         </record>
-
-
     </data>
 </odoo>

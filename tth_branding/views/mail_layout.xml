@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="tth_branding_mail_style">
+        <style>
+            /* -------------------------------------
+                GLOBAL
+                A very basic CSS reset
+            ------------------------------------- */
+            * {
+            margin: 0;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            box-sizing: border-box;
+            font-size: 14px;
+            }
+
+            img {
+            max-width: 100%;
+            }
+
+            body {
+            -webkit-font-smoothing: antialiased;
+            -webkit-text-size-adjust: none;
+            width: 100% !important;
+            height: 100%;
+            line-height: 1.6em;
+            /* 1.6em * 14px = 22.4px, use px to get airier line-height also in Thunderbird, and Yahoo!, Outlook.com, AOL webmail clients */
+            /*line-height: 22px;*/
+            }
+
+            /* Let's make sure all tables have defaults */
+            table td {
+            vertical-align: top;
+            }
+
+            /* -------------------------------------
+                BODY AND CONTAINER
+            ------------------------------------- */
+
+            .body-wrap {
+            /* background-color: #f6f6f6; */
+            width: 100%;
+            }
+
+            .container {
+            display: block !important;
+            max-width: 600px !important;
+            margin: 0 auto !important;
+            /* makes it centered */
+            clear: both !important;
+            }
+
+            .content {
+            max-width: 600px;
+            margin: 0 auto;
+            display: block;
+            padding: 20px;
+            }
+
+            /* -------------------------------------
+                HEADER, FOOTER, MAIN
+            ------------------------------------- */
+            .main {
+            /* background-color: #fff; */
+            /* border: 1px solid #e9e9e9; */
+            border-radius: 3px;
+            }
+
+            .content-wrap {
+            padding: 10px;
+            }
+
+            .content-block {
+            padding: 0 0 20px;
+            }
+
+            .header {
+            width: 100%;
+            margin-bottom: 10px;
+            }
+
+            .footer {
+            width: 100%;
+            clear: both;
+            color: #999;
+            padding: 20px;
+            }
+            .footer p, .footer a, .footer td {
+            color: #999;
+            font-size: 12px;
+            }
+
+            /* -------------------------------------
+                TYPOGRAPHY
+            ------------------------------------- */
+            h1, h2, h3 {
+            font-family: "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+            /* color: #000; */
+            margin: 40px 0 0;
+            line-height: 1.2em;
+            font-weight: 400;
+            }
+
+            h1 {
+            font-size: 32px;
+            font-weight: 500;
+            /* 1.2em * 32px = 38.4px, use px to get airier line-height also in Thunderbird, and Yahoo!, Outlook.com, AOL webmail clients */
+            /*line-height: 38px;*/
+            }
+
+            h2 {
+            font-size: 24px;
+            /* 1.2em * 24px = 28.8px, use px to get airier line-height also in Thunderbird, and Yahoo!, Outlook.com, AOL webmail clients */
+            /*line-height: 29px;*/
+            }
+
+            h3 {
+            font-size: 18px;
+            /* 1.2em * 18px = 21.6px, use px to get airier line-height also in Thunderbird, and Yahoo!, Outlook.com, AOL webmail clients */
+            /*line-height: 22px;*/
+            }
+
+            h4 {
+            font-size: 14px;
+            font-weight: 600;
+            }
+
+            p, ul, ol {
+            margin-bottom: 10px;
+            font-weight: normal;
+            }
+            p li, ul li, ol li {
+            margin-left: 5px;
+            list-style-position: inside;
+            }
+
+            /* -------------------------------------
+                LINKS AND BUTTONS
+            ------------------------------------- */
+            a {
+            color: #348eda;
+            text-decoration: underline;
+            }
+
+            .btn-primary {
+            text-decoration: none;
+            color: #FFF;
+            background-color: #56503b !important;
+            border: solid #56503b !important;
+            border-width: 5px 10px !important;
+            line-height: 2em;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            display: inline-block;
+            border-radius: 5px;
+            text-transform: capitalize;
+            width: 100%;
+            }
+
+            /* -------------------------------------
+                OTHER STYLES THAT MIGHT BE USEFUL
+            ------------------------------------- */
+            .last {
+            margin-bottom: 0;
+            }
+
+            .first {
+            margin-top: 0;
+            }
+
+            .aligncenter {
+            text-align: center;
+            }
+
+            .alignright {
+            text-align: right;
+            }
+
+            .alignleft {
+            text-align: left;
+            }
+
+            .clear {
+            clear: both;
+            }
+
+            /* -------------------------------------
+                ALERTS
+                Change the class depending on warning email, good email or bad email
+            ------------------------------------- */
+            .alert {
+            font-size: 16px;
+            color: #fff;
+            font-weight: 500;
+            padding: 20px;
+            text-align: center;
+            border-radius: 3px 3px 0 0;
+            }
+            .alert a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 16px;
+            }
+            .alert.alert-warning {
+            background-color: #FF9F00;
+            }
+            .alert.alert-bad {
+            background-color: #D0021B;
+            }
+            .alert.alert-good {
+            background-color: #68B90F;
+            }
+
+            /* -------------------------------------
+                INVOICE
+                Styles for the billing table
+            ------------------------------------- */
+            .invoice {
+            margin: 40px auto;
+            text-align: left;
+            width: 80%;
+            }
+            .invoice td {
+            padding: 5px 0;
+            }
+            .invoice .invoice-items {
+            width: 100%;
+            }
+            .invoice .invoice-items td {
+            border-top: #eee 1px solid;
+            }
+            .invoice .invoice-items .total td {
+            border-top: 2px solid #333;
+            border-bottom: 2px solid #333;
+            font-weight: 700;
+            }
+
+            /* -------------------------------------
+                RESPONSIVE AND MOBILE FRIENDLY STYLES
+            ------------------------------------- */
+            @media only screen and (max-width: 640px) {
+            body {
+                padding: 0 !important;
+            }
+
+            h1, h2, h3, h4 {
+                font-weight: 800 !important;
+                margin: 20px 0 5px !important;
+            }
+
+            h1 {
+                font-size: 22px !important;
+            }
+
+            h2 {
+                font-size: 18px !important;
+            }
+
+            h3 {
+                font-size: 16px !important;
+            }
+
+            .container {
+                padding: 0 !important;
+                width: 100% !important;
+            }
+
+            .content {
+                padding: 0 !important;
+            }
+
+            .content-wrap {
+                padding: 10px !important;
+            }
+
+            .invoice {
+                width: 100% !important;
+            }
+            }
+        </style>
+    </template>
+
+    <template id="tth_branding_mail_layout">
+        &lt;!DOCTYPE html&gt;
+        <html xmlns="http://www.w3.org/1999/xhtml">
+            <head>
+                <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+                <meta name="format-detection" content="telephone=no"/>
+                <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=no;"/>
+                <meta http-equiv="X-UA-Compatible" content="IE=9; IE=8; IE=7; IE=EDGE" />
+
+                <t t-call="tth_branding.tth_branding_mail_style"/>
+            </head>
+            <body>
+                <table class="body-wrap">
+                    <tr>
+                        <td></td>
+                        <td class="container" width="600">
+                            
+                            <div class="content">
+                                <div class="header">
+                                    <table width="100%">
+                                        <tr>
+                                            <td class="content-wrap">
+                                                <a href="/web" target="_blank">
+                                                    <img width="150" height="auto" style="display: block; height: auto;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;" alt="TASC Towers" border="0"
+                                                    src="data:image/png;base64,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"/>
+                                                </a>
+                                                
+                                            </td>
+                                            <td class="content-wrap" style="vertical-align: middle">
+                                                <p style="font-size: 14px; text-align: right; margin: 0px;">
+                                                    <span style="font-size: 20px; color: #757575; font-family: Rubik, sans-serif;">
+                                                        ERP
+                                                    </span>
+                                                </p>
+                                            </td>
+                                        </tr>
+                    
+                                    </table>
+                                </div>
+                                <table class="main" width="100%" cellpadding="0" cellspacing="0" itemprop="action" itemtype="http://schema.org/InformAction">
+                                    <tr>
+                                        <td class="content-wrap">
+                                            <t t-raw="message.body"/>                                           
+                                        </td>
+                                    </tr>
+                                </table>
+                                <div class="footer">
+                                    <table height="0px" align="center" border="0" style="width: 100%; border-collapse: collapse;table-layout: fixed;border-spacing: 0;mso-table-lspace: 0pt;mso-table-rspace: 0pt;vertical-align: top;border-top: 1px solid #BBBBBB;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%">
+                                        <tr style="vertical-align: top">
+                                            <td style="word-break: break-word;border-collapse: collapse !important;vertical-align: top;font-size: 0px;line-height: 0px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%">
+                                                <span></span>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <table width="100%">
+                                        <tr>
+                                            <td class="aligncenter content-block">
+                                                <span style="font-size: 10px; line-height: 14px; font-family: Rubik, sans-serif; color: #7e8c8d;">
+                                                    This message was automatically generated by ERP app.
+                                                    <a href="https://tasctowers.com" target="_blank" style="font-size: 10px;">Learn more. </a>
+                                                    Do not reply.<br/>TASC Towers Holding Limited 2021.
+                                                </span>
+                                                
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div></div>
+                        </td>
+                        <td></td>
+                    </tr>
+                </table>
+            </body>
+        </html>
+    </template>
+
+    <template id="tth_branding_mail_notification_layout">
+        &lt;!DOCTYPE html&gt;
+        <html xmlns="http://www.w3.org/1999/xhtml">
+            <head>
+                <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+                <meta name="format-detection" content="telephone=no"/>
+                <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=no;"/>
+                <meta http-equiv="X-UA-Compatible" content="IE=9; IE=8; IE=7; IE=EDGE" />
+
+                <t t-call="tth_branding.tth_branding_mail_style"/>
+            </head>
+            <body>
+                <table class="body-wrap">
+                    <tr>
+                        <td></td>
+                        <td class="container" width="600">
+                            
+                            <div class="content">
+                                <div class="header">
+                                    <table width="100%">
+                                        <tr>
+                                            <td class="content-wrap">
+                                                <a href="/web" target="_blank">
+                                                    <img width="150" height="auto" style="display: block; height: auto;outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;" alt="TASC Towers" border="0"
+                                                    src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPoAAAAvCAYAAADKH9ehAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV/TSqVUpNhBRDBDdbIgKuIoVSyChdJWaNXB5NIvaNKQtLg4Cq4FBz8Wqw4uzro6uAqC4AeIm5uToouU+L+k0CLGg+N+vLv3uHsHCM0KU03fBKBqNSMVj4nZ3Krof0UAI/AhhJDETD2RXszAdXzdw8PXuyjPcj/35+hT8iYDPCLxHNONGvEG8cxmTee8TxxmJUkhPiceN+iCxI9clx1+41y0WeCZYSOTmicOE4vFLpa7mJUMlXiaOKKoGuULWYcVzluc1Uqdte/JXxjMaytprtMcRhxLSCAJETLqKKOCGqK0aqSYSNF+zMU/ZPuT5JLJVQYjxwKqUCHZfvA/+N2tWZiadJKCMaDnxbI+RgH/LtBqWNb3sWW1TgDvM3CldfzVJjD7SXqjo0WOgP5t4OK6o8l7wOUOMPikS4ZkS16aQqEAvJ/RN+WAgVsgsOb01t7H6QOQoa6Wb4CDQ2CsSNnrLu/u7e7t3zPt/n4AUoZymtQ5WF0AAAAGYktHRAD/AP8A/6C9p5MAAAAJcEhZcwAAFxEAABcRAcom8z8AAAmXSURBVHja7V07cuNGEH1iMSd9AtInEDZ2IG7YkRBt1UbClg9g+gTCnsDwAbYWirZKyZJRhwsGjk2dwOQJTJ3ADtBjDMf4DD7kEuB0FUuihJoeDPD6Pz1AT+md/5MHAM9fPnlw5MhRKY16CvIAQCRfo+cvnwL3KB05GhDQBeSfjT9/dmB35GggQC8AuQO7I0cVNB4IyHWw4937n+NLmz8RJScaesnMWwv+UwAr7U8HZvYb3osPYAGgTXwkAbCqmjsRzQEoflPhObHksQewFV4xMx8c0PsP8ksH+92Jxp3aCgRzDkQUMHNcA+BTAc1tR+vxSERrAEEeCIkoAvBLCx4z+dwDCOV+Vw7o/Qf5JYP9o+V1j/LzCcDO4vqdBUDn2rgbAHMBQAigzhqtNJDv5XsTLemJhp4ICFfyvQjkryJgtvKx5amsjnvh9ZWI3thYQEOjmx6DfPO8+mPx/OVTUqItP1yiGV8Byn/k17fMnHQ0ZgzgQb7+KABQ6/qRmUNLYfGXEkLMHLSc01SEzL15vwavDQC/jdlNRJ4IigmAdVOXpc806inI62j2AFdM8pI/aADdibm+USa9gK6K5trvYdt5CXADQ/vqbobS5H5b31o0eJzDxwF9ACB3YE8pKgCo+n2iAavKDFbA2XUxMQHwpsC0B4CkwwBaIry2DujDA/lVg52IFppb81EHqJjJCmSPYi6X0dYw49ER2BfMfGO4D57JswM+K+HlNPpAQX7NYI80EzjK+X9QwxzfdWm6V9Akh6ejFjS+EpDrYEffAnQNtXmALEIe5ZnAzLwjoifx4R+IKCqKSDPzlog2YiE8SC5d5ajLhEMeWLeWJrkD+pCAfiaQXxvYldbdV0TVQ6QFKRPR+mWmrY80FXYn19+hYX0AEamUWdRVdsHRBZvuZwb5VZjxRLREmievNLPFb1dm/Z349UXXHsTHfQPgVwC/i59f9HmpMM/vAXyT9J+joWr07wTyQWt2SZXp2tzm/iKkkXel1b0K4aAKV5rOURXMKIH0QESx0+wD1OjfGeRD1uwKsMBxsK0MuAdNONyKf38yYuYtMyuB8loy17mDaI81+oWAfHCaXdJeek78GxE19e9Pvh7MfJDNPvcFoHZA76tGvzCQD02zh7Df2VVGMyIKDSGyIKJ/5LPocM67nL+p/H5n3YOIKFDzd0C/TpAPAuyizVWp6xrA24afvXIBjNLY3Yk0bZ7QUP7/wrI8tw6fV2e6Xy/Ih2DGx9qLvGxapir++TdkpbGhmNk7ItojDZ5FRLRtuwvMyPUn2r9WSHeuTYTXsuWmFl8TgokD+nWDvLdgN0pdoza16MycaIUxS4mGq/GWAL4KAP8kohcBTl0QTkXD3uYIKnMOqphH1akfWvKJHNAdyPsK9lDT5lFH4ymtHkIi4sy8IqIPwmMiAGrbhKLIAvGFj9LEjYtzDD5XqdFvegxym/3obens+9m1llO2LaI8DdxxnY4xFePq+fSjraLiNwfI2js1oR2ydlKHitjDQubSJDincv6ra24lddNTkJ8L6N8F7I4cdU2jnoL83GZ84F4VRw7owwW5A7ujQdDYgbwW2BsH6MwClA4pzouyi+/uIct5LyrGSXSftmDMpfjkBylhbbUONr3qCsYI1H0xcyh+fND1eko2Y9HBmFtYdsvpgOdBeG1PAvSBg7wLsD+eaE4JtGIWAUGIbPeaLZmtoPdIA4J6e+T/+s8RUVI3jy4v8aP2fVc3eCiBQPWeqQq6eYfrq6/nosvnRkS/M/OyZG3iBs+tiNcGWkB37EB+NrBvagLuBXY5Yz0antcHfaNplaLx1MEIOv8Z0vbIv2raO0SW7lo20KJBzve4xRh5VoXtulWup0avaL5bTz9w4hcimpoddMUiWWnX7dG86cad9jMhIo+Zdzc9Bvm5ou5FdJJofNN2z0aL5Be0yBlLJVmILEf+gzI7Jf13Jy//3DZlJZr4b034qGf2Y50CHyLaiRDaM/Nc04bfmqybhZvxCGDTpteczE8H8tE9G+24W81f1nmpWSJrZvZHPQX5pWj24ILmo8/Fb/OyiLnuV2jRSU2NfjQ/aDX1NQWQVUONSyJ5Frr1YQoNFUd5aiukpDlIiPQAEED65o8cyAcDdvXybLpoxyxjvJgvpgiB2iDVrn0SKyAuMOdthMUrjs+R6wPFOcDWzXug2x55R9bmyIF8MGCfa8GkrijRfHjkaPWZzZZVuWZmvIDq58Sm0YW4JupUlz4emHgoiQMcCta5DW2R7UisD3QH8osF++yEL6eXoy1ea2h1dc1emaZiMawbjAH0c2NKZIBQJ6XJ/a625YoJn6j1HjuQdwr2S9gIk5xgzIn5EhHRCmkA6Z6I5kXugqGJoxyBcY+0fZVXlK7TauuBNLhUZuJ6DbvqAGl9QN4c5i3rIHxkgc2XHD88RhqcnAHYSXDuYPksDzZpzrED+SDBfg4KkUWKAxQHx4Iiv1F2w6k97mXpOl8TNlXa/LcW97RBfrHKDN3k0/d54zNzLO7Ng9ynSpFa8TQE2wuyTTyrWj66A3kvffaTkmjVjYXprdbiqcCvji3M1v+Z/j2lWZGgktz6G6THa1e1yi6jWxEYX4loq9Z07EDuNHtLv/MOElAzq9yMdFjRWsSiuSaiuc0xFprZa2M+vz2BMGicR5dSZB9Zd97C1tZN22gbAdGF5ircyjMKRg7kg9Ps3rkYGam2oESbF2piIygXlozRx5Saam0dojyP3pZHon1CZva0NX0gounIgXxwYJ+eYMxNhVYH0lNePE3LzFEchCsy34/SdWJ2qjhA3PPGEecWUrrQ9EYO5IMBu77Boyuy0Twx8lNtyxwg17UM+p5SM83yItM7IqJE9iqchN/IgXwwYFcP1u9iMNGmqh49KXmhDpq20gNq6n6fLDVxrJuaxhjrLqr9LpjmstadmfRmIdPIgXwwYFdgm3R0aGFUw+xUZuIEQCCVbhMbbV6g9QMjkDf0zq1KkHZ5HJZuDW3HDuRnB/tJovFmi2SR6AnSqiubNslqq+ocx3nrdVVBhvR8/69FNLJKL+t0mIyxFr9eH+OlZhS9TcEMYH92e5cUIztl57OAPUGz4qeFWEJKSG6Y+TB2IB8O2HF8fvkMWSCrKa1hv+kk0vg21cSxAL3NGL+1vOe3OPMhD1JpqASzfu582yKdvXp+43f+T5582fQMMFvjZ58oeP7yKXn3/udd1y8M0mOMVO7WE01tu19/g6z0clXHLzaq3FDTbC8a47Wr9tWXTsy81Vpi+WjeY0E1yVhBy1T8C17r78fPvodVAAAAAElFTkSuQmCC"/>
+                                                </a>
+                                                
+                                            </td>
+                                            <td class="content-wrap" style="vertical-align: middle">
+                                                <p style="font-size: 14px; text-align: right; margin: 0px;">
+                                                    <span style="font-size: 20px; color: #757575; font-family: Rubik, sans-serif;">
+                                                        ERP
+                                                    </span>
+                                                </p>
+                                            </td>
+                                        </tr>
+                    
+                                    </table>
+                                </div>
+                                <table class="main" width="100%" cellpadding="0" cellspacing="0" itemprop="action" itemtype="http://schema.org/InformAction">
+                                    <tr>
+                                        <td class="content-wrap">
+                                            <t t-raw="0"/>                                           
+                                        </td>
+                                    </tr>
+                                </table>
+                                <div class="footer">
+                                    <table height="0px" align="center" border="0" style="width: 100%; border-collapse: collapse;table-layout: fixed;border-spacing: 0;mso-table-lspace: 0pt;mso-table-rspace: 0pt;vertical-align: top;border-top: 1px solid #BBBBBB;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%">
+                                        <tr style="vertical-align: top">
+                                            <td style="word-break: break-word;border-collapse: collapse !important;vertical-align: top;font-size: 0px;line-height: 0px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%">
+                                                <span></span>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <table width="100%">
+                                        <tr>
+                                            <td class="aligncenter content-block">
+                                                <span style="font-size: 10px; line-height: 14px; font-family: Rubik, sans-serif; color: #7e8c8d;">
+                                                    This message was automatically generated by ERP app.
+                                                    <a href="https://tasctowers.com" target="_blank" style="font-size: 10px;">Learn more. </a>
+                                                    Do not reply.<br/>TASC Towers Holding Limited 2021.
+                                                </span>
+                                                
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div></div>
+                        </td>
+                        <td></td>
+                    </tr>
+                </table>
+            </body>
+        </html>
+    </template>
+</odoo>
