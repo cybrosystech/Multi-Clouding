@@ -53,7 +53,12 @@ class PurchaseOrder(models.Model):
         if out_budget:
             self.out_budget = True
 
-    @api.constrains('order_line')
+    def write(self, vals):
+        res = super(PurchaseOrder, self).write(vals)
+        self.get_budgets_in_out_budget_tab()
+        return res
+
+    @api.onchange('order_line')
     def get_budgets_in_out_budget_tab(self):
         self.budget_collect_ids = [(5,0,0)]
         budgets = self.order_line.mapped('budget_id')
