@@ -141,7 +141,7 @@
             text-decoration: underline;
             }
 
-            .btn-primary {
+            .btn-basic {
             text-decoration: none;
             color: #FFF;
             background-color: #56503b !important;

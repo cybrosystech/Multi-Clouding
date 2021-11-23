@@ -39,7 +39,7 @@
                                     <td valign="center">
                                         <a t-if="has_button_access"
                                                 t-att-href="button_access['url']"
-                                                class="btn-primary"
+                                                class="btn-basic"
                                                 itemprop="url">
                                             <t t-esc="button_access['title']"/>
                                         </a>
