@@ -98,6 +98,7 @@ class SaleOrder(models.Model):
                         email_template_id.with_context(ctx).send_mail(self.id, force_send=True, email_values={'email_to': use.email, 'model': None, 'res_id': None})
 
     def request_approval_button(self):
+        self.get_budgets_in_out_budget_tab()
         if self.out_budget and not self.sale_approval_cycle_ids:
             out_budget_list = []
             out_budget = self.env['budget.in.out.check.sales'].search([('type', '=', 'out_budget'), ('company_id','=', self.env.company.id)], limit=1)
@@ -122,7 +123,7 @@ class SaleOrder(models.Model):
         if not self.out_budget and not self.sale_approval_cycle_ids:
             in_budget_list = []
             in_budget = self.env['budget.in.out.check.sales'].search([('type', '=', 'in_budget'), ('company_id','=', self.env.company.id)], limit=1)
-            max_value = self.amount_total
+            max_value = max(self.order_line.mapped('local_subtotal'))  # Old Field is amount_total
             for rec in in_budget.budget_line_ids:
                 # if rec.to_amount >= max_value >= rec.from_amount:
                 if max_value >= rec.from_amount:

@@ -189,6 +189,7 @@ class AccountMove(models.Model):
                         email_template_id.with_context(ctx).send_mail(self.id, force_send=True, email_values={'email_to': us.email, 'model': None, 'res_id': None})
 
     def request_approval_button(self):
+        self.get_budgets_in_out_budget_tab()
         # self.name = 'Bill/'+str(datetime.today().strftime('%Y'))+'/'+str(datetime.today().strftime('%m'))+'/'+str(random.randint(0,999))+str(datetime.today().strftime('%d'))
         if self.out_budget and not self.purchase_approval_cycle_ids:
             out_budget_list = []
@@ -211,7 +212,8 @@ class AccountMove(models.Model):
             in_budget_list = []
             in_budget = self.env['budget.in.out.check.invoice'].search([('type', '=', 'in_budget'), ('company_id','=', self.env.company.id)], limit=1)
             if self.move_type == 'entry':
-                max_value = sum(self.line_ids.mapped('debit'))
+                # max_value = sum(self.line_ids.mapped('debit'))
+                max_value = max(self.line_ids.mapped('local_subtotal'))  # Old Field is debit
             else:
                 # max_value = self.amount_total
                 max_value = sum(self.invoice_line_ids.mapped('local_subtotal'))
