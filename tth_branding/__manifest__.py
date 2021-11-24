@@ -11,7 +11,9 @@
     ],
     "data": ["views/favicon.xml",
             'views/custom_views.xml',
-            'views/web_login.xml'
+            'views/web_login.xml',
+            'views/mail_layout.xml',
+            'data/mail_data.xml'
     ],
     "qweb": ["static/src/xml/menu.xml"],
 }
