@@ -111,6 +111,5 @@ class IrMailServer(models.Model):
         if attachments:
             for (fname, fcontent, mime) in attachments:
                 maintype, subtype = mime.split('/') if mime and '/' in mime else ('application', 'octet-stream')
-                msg.add_attachment(fcontent, maintype, subtype, filename=fname)
+                msg.add_attachment(fcontent, maintype, subtype, filename=fname, cid="<%s>" % fname)
         return msg
-        

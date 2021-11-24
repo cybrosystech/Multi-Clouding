@@ -143,7 +143,7 @@
 
             .btn-basic {
             text-decoration: none;
-            color: #FFF;
+            color: #FFFFFF !important;
             background-color: #56503b !important;
             border: solid #56503b !important;
             border-width: 5px 10px !important;
