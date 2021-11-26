@@ -564,13 +564,13 @@ class LeaseeContract(models.Model):
         amount = self.remaining_lease_liability * self.interest_rate / (100 * 12)
         if amount:
             lines = [(0, 0, {
-                'name': 'Interest Recognition for %s' % date,
+                'name': 'Interest Recognition for %s' % date.strftime(DF),
                 'account_id': self.lease_liability_account_id.id,
                 'debit': 0,
                 'credit': amount,
                 'analytic_account_id': self.analytic_account_id.id,
             }),(0, 0, {
-                'name': 'Interest Recognition for %s' % date,
+                'name': 'Interest Recognition for %s' % date.strftime(DF),
                 'account_id': self.interest_expense_account_id.id,
                 'debit': amount,
                 'credit': 0,
@@ -799,13 +799,13 @@ class LeaseeContract(models.Model):
     def create_interset_move(self, installment, move_date, interest_amount):
         if interest_amount > 0:
             lines = [(0, 0, {
-                'name': 'Interest Recognition for %s' % date,
+                'name': 'Interest Recognition for %s' % date.strftime(DF),
                 'account_id': self.lease_liability_account_id.id,
                 'debit': 0,
                 'credit': interest_amount,
                 'analytic_account_id': self.analytic_account_id.id,
             }),(0, 0, {
-                'name': 'Interest Recognition for %s' % date,
+                'name': 'Interest Recognition for %s' % date.strftime(DF),
                 'account_id': self.interest_expense_account_id.id,
                 'debit': interest_amount,
                 'credit': 0,
