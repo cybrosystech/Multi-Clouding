@@ -318,7 +318,7 @@ class LeaseeContract(models.Model):
                 'move_type': 'in_invoice',
                 'currency_id': self.leasee_currency_id.id,
                 'ref': self.name,
-                'invoice_date': datetime.now(),
+                'invoice_date': self.commencement_date,
                 'invoice_line_ids': invoice_lines,
                 'journal_id': self.installment_journal_id.id,
                 'leasee_contract_id': self.id,
@@ -549,32 +549,33 @@ class LeaseeContract(models.Model):
 
     def create_subsequent_measurement_move(self, date):
         amount = self.remaining_lease_liability * self.interest_rate / (100 * 12)
-        lines = [(0, 0, {
-            'name': 'Interest Recognition for %s' % date,
-            'account_id': self.lease_liability_account_id.id,
-            'debit': 0,
-            'credit': amount,
-            'analytic_account_id': self.analytic_account_id.id,
-        }),(0, 0, {
-            'name': 'Interest Recognition for %s' % date,
-            'account_id': self.interest_expense_account_id.id,
-            'debit': amount,
-            'credit': 0,
-            'analytic_account_id': self.analytic_account_id.id,
-            'project_site_id': self.project_site_id.id,
-            'type_id': self.type_id.id,
-            'location_id': self.location_id.id,
-        })]
-        move = self.env['account.move'].create({
-            'partner_id': self.vendor_id.id,
-            'move_type': 'entry',
-            'currency_id': self.leasee_currency_id.id,
-            'ref': self.name,
-            'date': date,
-            'journal_id': self.asset_model_id.journal_id.id,
-            'leasee_contract_id': self.id,
-            'line_ids': lines,
-        })
+        if amount:
+            lines = [(0, 0, {
+                'name': 'Interest Recognition for %s' % date,
+                'account_id': self.lease_liability_account_id.id,
+                'debit': 0,
+                'credit': amount,
+                'analytic_account_id': self.analytic_account_id.id,
+            }),(0, 0, {
+                'name': 'Interest Recognition for %s' % date,
+                'account_id': self.interest_expense_account_id.id,
+                'debit': amount,
+                'credit': 0,
+                'analytic_account_id': self.analytic_account_id.id,
+                'project_site_id': self.project_site_id.id,
+                'type_id': self.type_id.id,
+                'location_id': self.location_id.id,
+            })]
+            move = self.env['account.move'].create({
+                'partner_id': self.vendor_id.id,
+                'move_type': 'entry',
+                'currency_id': self.leasee_currency_id.id,
+                'ref': self.name,
+                'date': date,
+                'journal_id': self.asset_model_id.journal_id.id,
+                'leasee_contract_id': self.id,
+                'line_ids': lines,
+            })
 
     def action_create_payment(self):
         context = {
@@ -722,29 +723,30 @@ class LeaseeContract(models.Model):
         ]).filtered(lambda rec: rec.date <= date.today())
         for install in instalments:
             contract = install.leasee_contract_id
-            invoice_lines = [(0, 0, {
-                'product_id': contract.installment_product_id.id,
-                'name': contract.installment_product_id.name,
-                'product_uom_id': contract.installment_product_id.uom_id.id,
-                'account_id': contract.installment_product_id.product_tmpl_id.get_product_accounts()['expense'].id,
-                'price_unit': install.amount,
-                'quantity': 1,
-                'analytic_account_id': self.analytic_account_id.id,
-                'project_site_id': self.project_site_id.id,
-                'type_id': self.type_id.id,
-                'location_id': self.location_id.id,
-            })]
-            invoice = self.env['account.move'].create({
-                'partner_id': contract.vendor_id.id,
-                'move_type': 'in_invoice',
-                'currency_id': contract.leasee_currency_id.id,
-                'ref': contract.name,
-                'invoice_date': install.date,
-                'invoice_line_ids': invoice_lines,
-                'journal_id': contract.installment_journal_id.id,
-                'leasee_contract_id': contract.id,
-            })
-            install.installment_invoice_id = invoice.id
+            if install.amount > 0:
+                invoice_lines = [(0, 0, {
+                    'product_id': contract.installment_product_id.id,
+                    'name': contract.installment_product_id.name,
+                    'product_uom_id': contract.installment_product_id.uom_id.id,
+                    'account_id': contract.installment_product_id.product_tmpl_id.get_product_accounts()['expense'].id,
+                    'price_unit': install.amount,
+                    'quantity': 1,
+                    'analytic_account_id': self.analytic_account_id.id,
+                    'project_site_id': self.project_site_id.id,
+                    'type_id': self.type_id.id,
+                    'location_id': self.location_id.id,
+                })]
+                invoice = self.env['account.move'].create({
+                    'partner_id': contract.vendor_id.id,
+                    'move_type': 'in_invoice',
+                    'currency_id': contract.leasee_currency_id.id,
+                    'ref': contract.name,
+                    'invoice_date': install.date,
+                    'invoice_line_ids': invoice_lines,
+                    'journal_id': contract.installment_journal_id.id,
+                    'leasee_contract_id': contract.id,
+                })
+                install.installment_invoice_id = invoice.id
 
     @api.model
     def leasee_action_generate_interest_entries(self):
@@ -782,33 +784,34 @@ class LeaseeContract(models.Model):
                             contract.create_interset_move(installment, n_date, interest_amount)
 
     def create_interset_move(self, installment, move_date, interest_amount):
-        lines = [(0, 0, {
-            'name': 'Interest Recognition for %s' % date,
-            'account_id': self.lease_liability_account_id.id,
-            'debit': 0,
-            'credit': interest_amount,
-            'analytic_account_id': self.analytic_account_id.id,
-        }),(0, 0, {
-            'name': 'Interest Recognition for %s' % date,
-            'account_id': self.interest_expense_account_id.id,
-            'debit': interest_amount,
-            'credit': 0,
-            'analytic_account_id': self.analytic_account_id.id,
-            'project_site_id': self.project_site_id.id,
-            'type_id': self.type_id.id,
-            'location_id': self.location_id.id,
-        })]
-        move = self.env['account.move'].create({
-            'partner_id': self.vendor_id.id,
-            'move_type': 'entry',
-            'currency_id': self.leasee_currency_id.id,
-            'ref': self.name,
-            'date': move_date,
-            'journal_id': self.asset_model_id.journal_id.id,
-            'leasee_contract_id': self.id,
-            'line_ids': lines,
-            'leasee_installment_id': installment.id,
-        })
+        if interest_amount > 0:
+            lines = [(0, 0, {
+                'name': 'Interest Recognition for %s' % date,
+                'account_id': self.lease_liability_account_id.id,
+                'debit': 0,
+                'credit': interest_amount,
+                'analytic_account_id': self.analytic_account_id.id,
+            }),(0, 0, {
+                'name': 'Interest Recognition for %s' % date,
+                'account_id': self.interest_expense_account_id.id,
+                'debit': interest_amount,
+                'credit': 0,
+                'analytic_account_id': self.analytic_account_id.id,
+                'project_site_id': self.project_site_id.id,
+                'type_id': self.type_id.id,
+                'location_id': self.location_id.id,
+            })]
+            move = self.env['account.move'].create({
+                'partner_id': self.vendor_id.id,
+                'move_type': 'entry',
+                'currency_id': self.leasee_currency_id.id,
+                'ref': self.name,
+                'date': move_date,
+                'journal_id': self.asset_model_id.journal_id.id,
+                'leasee_contract_id': self.id,
+                'line_ids': lines,
+                'leasee_installment_id': installment.id,
+            })
 
     def action_open_extended_contract(self):
         contracts = self.search([('id', 'in', self.child_ids.ids)])
