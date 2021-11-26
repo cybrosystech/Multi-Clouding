@@ -306,7 +306,10 @@ class LeaseeContract(models.Model):
                 ('account_id', '=', self.lease_liability_account_id.id),
             ])
             balance = sum([(l.debit - l.credit) for l in move_lines ])
-            rec.remaining_lease_liability = -1*balance
+            if rec.state == 'terminated':
+                rec.remaining_lease_liability = 0
+            else:
+                rec.remaining_lease_liability = -1*balance
 
     def create_initial_bill(self):
         amount = self.initial_direct_cost + self.initial_payment_value

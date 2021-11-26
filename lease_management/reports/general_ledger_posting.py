@@ -61,7 +61,7 @@ class GeneralLedgerPostingWizard(models.TransientModel):
         journal_items = self.env['account.move.line'].search(domain,order='account_id')
         for line in journal_items:
             data.append({
-                'posting_date': line.move_id.posting_date.strftime(DF),
+                'posting_date': line.move_id.posting_date.strftime(DF) if line.move_id.posting_date else '',
                 'document_no': line.move_id.name,
                 'account_number': line.account_id.code,
                 'account_name': line.account_id.name,
