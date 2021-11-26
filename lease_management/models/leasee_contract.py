@@ -222,7 +222,7 @@ class LeaseeContract(models.Model):
                 rec.rou_value = 0
             else:
                 if self.incentives_received_type == 'rent_free':
-                    rec.rou_value = rec.lease_liability + rec.initial_payment_value + rec.initial_direct_cost + rec.estimated_cost_dismantling
+                    rec.rou_value = rec.lease_liability + rec.initial_payment_value + rec.initial_direct_cost + rec.estimated_cost_dismantling + rec.incentives_received
                 else:
                     rec.rou_value = rec.lease_liability + rec.initial_payment_value + rec.initial_direct_cost + rec.estimated_cost_dismantling - rec.incentives_received
 
