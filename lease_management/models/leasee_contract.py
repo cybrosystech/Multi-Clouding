@@ -767,9 +767,9 @@ class LeaseeContract(models.Model):
                     # else:
                     if installment.subsequent_amount and len(installment.interest_move_ids) < delta:
                         if contract.payment_method == 'beginning':
-                            supposed_dates = [installment.date - relativedelta(months=i,days=-1) for i in range(delta) if (installment.date - relativedelta(months=i)) <= date.today()]
+                            supposed_dates = [installment.date - relativedelta(months=i,days=1) for i in range(delta) if (installment.date - relativedelta(months=i)) <= date.today()]
                         else:
-                            supposed_dates = [installment.date - relativedelta(months=i,days=-1) for i in range(delta) if (installment.date - relativedelta(months=i)) <= date.today()]
+                            supposed_dates = [installment.date - relativedelta(months=i,days=1) for i in range(delta) if (installment.date - relativedelta(months=i)) <= date.today()]
 
                         for move in installment.interest_move_ids:
                             for s_date in supposed_dates:
