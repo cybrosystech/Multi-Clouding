@@ -211,7 +211,7 @@ class LeaseeContract(models.Model):
             else:
                 increased_installments = [rec.get_future_value(rec.installment_amount, rec.increasement_rate, i) for i in period_range]
 
-                if rec.incentives_received == 'rent_free':
+                if rec.incentives_received_type == 'rent_free':
                     remaining_incentives = rec.incentives_received
                     for i in range(len(increased_installments)):
                         if remaining_incentives > 0:
