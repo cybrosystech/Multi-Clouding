@@ -210,9 +210,19 @@ class LeaseeContract(models.Model):
                 increased_installments = rec.installment_ids.mapped('amount')
             else:
                 increased_installments = [rec.get_future_value(rec.installment_amount, rec.increasement_rate, i) for i in period_range]
+
+                if rec.incentives_received == 'rent_free':
+                    remaining_incentives = rec.incentives_received
+                    for i in range(len(increased_installments)):
+                        if remaining_incentives > 0:
+                            if remaining_incentives >= increased_installments[i]:
+                                remaining_incentives -= increased_installments[i]
+                                increased_installments[i] = 0
+                            else:
+                                increased_installments[i] -= remaining_incentives
+                                remaining_incentives = 0
+
             net_present_value = sum([rec.get_present_value(installment, rec.interest_rate, i+start) for i, installment in enumerate(increased_installments)])
-            if rec.incentives_received_type == 'rent_free' and not rec.installment_ids:
-                net_present_value -= rec.incentives_received
             rec.lease_liability = net_present_value
 
     @api.depends('state','lease_liability', 'initial_payment_value', 'initial_direct_cost', 'estimated_cost_dismantling', 'incentives_received')
