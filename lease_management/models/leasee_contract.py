@@ -161,7 +161,7 @@ class LeaseeContract(models.Model):
     def action_activate(self):
         for contract in self:
             if contract.state == 'draft':
-                if contract.name != '/':
+                if contract.name == '/':
                     contract.name = self.env['ir.sequence'].next_by_code('leasee.contract')
                 contract.create_commencement_move()
                 contract.create_initial_bill()
