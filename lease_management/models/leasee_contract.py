@@ -61,6 +61,7 @@ class LeaseeContract(models.Model):
     asset_description = fields.Text(string="", default="", required=False, )
     initial_direct_cost = fields.Float(copy=True)
     incentives_received = fields.Float(copy=True)
+    incentives_received_type = fields.Selection(default="receivable", selection=[('receivable', 'Receivable'), ('rent_free', 'Rent Free'), ], required=True, )
     rou_value = fields.Float(string="ROU Asset Value",compute='compute_rou_value')
     # registered_paymen = fields.Float(string="Registered Payment Prior Commencement Date")
 
@@ -210,6 +211,8 @@ class LeaseeContract(models.Model):
             else:
                 increased_installments = [rec.get_future_value(rec.installment_amount, rec.increasement_rate, i) for i in period_range]
             net_present_value = sum([rec.get_present_value(installment, rec.interest_rate, i+start) for i, installment in enumerate(increased_installments)])
+            if rec.incentives_received_type == 'rent_free' and not rec.installment_ids:
+                net_present_value -= rec.incentives_received
             rec.lease_liability = net_present_value
 
     @api.depends('state','lease_liability', 'initial_payment_value', 'initial_direct_cost', 'estimated_cost_dismantling', 'incentives_received')
@@ -218,7 +221,10 @@ class LeaseeContract(models.Model):
             if rec.state == 'terminated':
                 rec.rou_value = 0
             else:
-                rec.rou_value = rec.lease_liability + rec.initial_payment_value + rec.initial_direct_cost + rec.estimated_cost_dismantling - rec.incentives_received
+                if self.incentives_received_type == 'rent_free':
+                    rec.rou_value = rec.lease_liability + rec.initial_payment_value + rec.initial_direct_cost + rec.estimated_cost_dismantling
+                else:
+                    rec.rou_value = rec.lease_liability + rec.initial_payment_value + rec.initial_direct_cost + rec.estimated_cost_dismantling - rec.incentives_received
 
     @api.model
     def get_present_value(self, future_value, interest, period):
@@ -431,81 +437,115 @@ class LeaseeContract(models.Model):
         num_installment = self.compute_installments_num()
         period_range = range(0, num_installment + 1)
         payment_months = self.payment_frequency * (1 if self.payment_frequency_type == 'months' else 12)
-
-        for i in period_range:
-            amount = self.get_future_value(self.installment_amount, self.increasement_rate, i )
-            new_start = start + relativedelta(months=i*payment_months, days=-1)
-            interest_recognition = remaining_lease_liability * self.interest_rate / 100
-            if i == 0:
-                interest_recognition = 0
-
-            remaining_lease_liability -= (amount - interest_recognition)
-            self.env['leasee.installment'].create({
-                'name': self.name + ' installment - ' + new_start.strftime(DF),
-                'period': i,
-                'amount': amount,
-                'date': new_start,
-                'leasee_contract_id': self.id,
-                'subsequent_amount': interest_recognition,
-                'remaining_lease_liability': round(remaining_lease_liability,2),
-            })
-
-    def create_end_installments(self):
-        start = self.commencement_date
-        remaining_lease_liability = self.lease_liability
-        num_installment = self.compute_installments_num()
-        period_range = range(1, num_installment + 1)
-        payment_months = self.payment_frequency * (1 if self.payment_frequency_type == 'months' else 12)
-        for i in period_range:
-            amount = self.get_future_value(self.installment_amount, self.increasement_rate, i )
-            new_start = start + relativedelta(months=i*payment_months, days=-1)
-            interest_recognition = remaining_lease_liability * self.interest_rate / 100
-            remaining_lease_liability -= (amount - interest_recognition)
-            self.env['leasee.installment'].create({
-                'name': self.name + ' installment - ' + new_start.strftime(DF),
-                'period': i,
-                'amount': amount,
-                'date': new_start,
-                'leasee_contract_id': self.id,
-                'subsequent_amount': interest_recognition,
-                'remaining_lease_liability': round(remaining_lease_liability,2),
-            })
-
-    def create_installments(self):
-        start = self.commencement_date
-        # remaining_lease_liability = self.lease_liability - self.incentives_received
-        remaining_lease_liability = self.lease_liability
-        num_installment = self.compute_installments_num()
-        period_range = range(num_installment)
-        payment_months = self.payment_frequency * (1 if self.payment_frequency_type == 'months' else 12)
-        if self.payment_method == 'beginning':
-            #     period_range = range(rec.lease_contract_period)
-            start_p = 0
-        else:
-            #     period_range = range(1, rec.lease_contract_period + 1)
-            start_p = 1
-
-        for i in period_range:
-            amount = self.get_future_value(self.installment_amount, self.increasement_rate, i )
-            if start_p:
-                new_start = start + relativedelta(months=(i+start_p)*payment_months, days=-1)
-            else:
-                new_start = start + relativedelta(months=i*payment_months)
-
-            interest_recognition = remaining_lease_liability * self.interest_rate / 100
-            if self.payment_method == 'beginning':
+        if self.incentives_received_type == 'receivable':
+            for i in period_range:
+                if i == num_installment:
+                    amount = 0
+                else:
+                    amount = self.get_future_value(self.installment_amount, self.increasement_rate, i)
+                new_start = start + relativedelta(months=i*payment_months, days=-1)
+                interest_recognition = remaining_lease_liability * self.interest_rate / 100
                 if i == 0:
                     interest_recognition = 0
-            remaining_lease_liability -= (amount - interest_recognition)
-            self.env['leasee.installment'].create({
-                'name': self.name + ' installment - ' + new_start.strftime(DF),
-                'period': i,
-                'amount': amount,
-                'date': new_start,
-                'leasee_contract_id': self.id,
-                'subsequent_amount': interest_recognition,
-                'remaining_lease_liability': round(remaining_lease_liability,2),
-            })
+
+                remaining_lease_liability -= (amount - interest_recognition)
+                self.env['leasee.installment'].create({
+                    'name': self.name + ' installment - ' + new_start.strftime(DF),
+                    'period': i,
+                    'amount': amount,
+                    'date': new_start,
+                    'leasee_contract_id': self.id,
+                    'subsequent_amount': interest_recognition,
+                    'remaining_lease_liability': round(remaining_lease_liability,2),
+                })
+        else:
+            remaining_incentives = self.incentives_received
+            for i in period_range:
+                if i == num_installment:
+                    amount = 0
+                else:
+                    amount = self.get_future_value(self.installment_amount, self.increasement_rate, i)
+                if remaining_incentives > 0:
+                    if amount <= remaining_incentives:
+                        remaining_incentives -= amount
+                        amount = 0
+                    else:
+                        amount -= remaining_incentives
+                else:
+                    remaining_incentives = 0
+                new_start = start + relativedelta(months=i * payment_months, days=-1)
+                interest_recognition = remaining_lease_liability * self.interest_rate / 100
+                if i == 0:
+                    interest_recognition = 0
+
+                remaining_lease_liability -= (amount - interest_recognition)
+                self.env['leasee.installment'].create({
+                    'name': self.name + ' installment - ' + new_start.strftime(DF),
+                    'period': i,
+                    'amount': amount,
+                    'date': new_start,
+                    'leasee_contract_id': self.id,
+                    'subsequent_amount': interest_recognition,
+                    'remaining_lease_liability': round(remaining_lease_liability, 2),
+                })
+
+    def create_end_installments(self):
+        if self.incentives_received_type == 'receivable':
+            start = self.commencement_date
+            remaining_lease_liability = self.lease_liability
+            num_installment = self.compute_installments_num()
+            period_range = range(1, num_installment + 1)
+            payment_months = self.payment_frequency * (1 if self.payment_frequency_type == 'months' else 12)
+            for i in period_range:
+                amount = self.get_future_value(self.installment_amount, self.increasement_rate, i )
+                new_start = start + relativedelta(months=i*payment_months, days=-1)
+                interest_recognition = remaining_lease_liability * self.interest_rate / 100
+                remaining_lease_liability -= (amount - interest_recognition)
+                self.env['leasee.installment'].create({
+                    'name': self.name + ' installment - ' + new_start.strftime(DF),
+                    'period': i,
+                    'amount': amount,
+                    'date': new_start,
+                    'leasee_contract_id': self.id,
+                    'subsequent_amount': interest_recognition,
+                    'remaining_lease_liability': round(remaining_lease_liability,2),
+                })
+        else:
+            start = self.commencement_date
+            remaining_lease_liability = self.lease_liability
+            num_installment = self.compute_installments_num()
+            period_range = range(1, num_installment + 1)
+            payment_months = self.payment_frequency * (1 if self.payment_frequency_type == 'months' else 12)
+            remaining_incentives = self.incentives_received
+            for i in period_range:
+                amount = self.get_future_value(self.installment_amount, self.increasement_rate, i)
+
+                if remaining_incentives > 0:
+                    if amount <= remaining_incentives:
+                        remaining_incentives -= amount
+                        amount = 0
+                    else:
+                        amount -= remaining_incentives
+                        remaining_incentives = 0
+
+                new_start = start + relativedelta(months=i*payment_months, days=-1)
+                interest_recognition = remaining_lease_liability * self.interest_rate / 100
+                remaining_lease_liability -= (amount - interest_recognition)
+                self.env['leasee.installment'].create({
+                    'name': self.name + ' installment - ' + new_start.strftime(DF),
+                    'period': i,
+                    'amount': amount,
+                    'date': new_start,
+                    'leasee_contract_id': self.id,
+                    'subsequent_amount': interest_recognition,
+                    'remaining_lease_liability': round(remaining_lease_liability,2),
+                })
+
+    def create_installments(self):
+        if self.payment_method == 'beginning':
+            self.create_beginning_installments()
+        else:
+            self.create_end_installments()
 
     def create_subsequent_measurement_move(self, date):
         amount = self.remaining_lease_liability * self.interest_rate / (100 * 12)
