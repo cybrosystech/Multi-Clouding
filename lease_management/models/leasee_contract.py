@@ -443,7 +443,7 @@ class LeaseeContract(models.Model):
                     amount = 0
                 else:
                     amount = self.get_future_value(self.installment_amount, self.increasement_rate, i)
-                new_start = start + relativedelta(months=i*payment_months, days=-1)
+                new_start = start + relativedelta(months=i*payment_months)
                 interest_recognition = remaining_lease_liability * self.interest_rate / 100
                 if i == 0:
                     interest_recognition = 0
@@ -473,7 +473,7 @@ class LeaseeContract(models.Model):
                         amount -= remaining_incentives
                 else:
                     remaining_incentives = 0
-                new_start = start + relativedelta(months=i * payment_months, days=-1)
+                new_start = start + relativedelta(months=i * payment_months)
                 interest_recognition = remaining_lease_liability * self.interest_rate / 100
                 if i == 0:
                     interest_recognition = 0
@@ -498,7 +498,7 @@ class LeaseeContract(models.Model):
             payment_months = self.payment_frequency * (1 if self.payment_frequency_type == 'months' else 12)
             for i in period_range:
                 amount = self.get_future_value(self.installment_amount, self.increasement_rate, i )
-                new_start = start + relativedelta(months=i*payment_months, days=-1)
+                new_start = start + relativedelta(months=i*payment_months)
                 interest_recognition = remaining_lease_liability * self.interest_rate / 100
                 remaining_lease_liability -= (amount - interest_recognition)
                 self.env['leasee.installment'].create({
@@ -528,7 +528,7 @@ class LeaseeContract(models.Model):
                         amount -= remaining_incentives
                         remaining_incentives = 0
 
-                new_start = start + relativedelta(months=i*payment_months, days=-1)
+                new_start = start + relativedelta(months=i*payment_months)
                 interest_recognition = remaining_lease_liability * self.interest_rate / 100
                 remaining_lease_liability -= (amount - interest_recognition)
                 self.env['leasee.installment'].create({
