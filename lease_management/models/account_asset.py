@@ -95,7 +95,7 @@ class AccountAsset(models.Model):
                     leasee_account = self.leasee_contract_ids.lease_liability_account_id
 
                     line_datas = [(initial_amount, initial_account), (remaining_leasee_amount, leasee_account),
-                                  (invoice_amount, invoice_account), (leasee_difference, leasee_difference_account), (difference, depreciation_account)]
+                                  (invoice_amount, invoice_account), (leasee_difference, leasee_difference_account), (depreciated_amount, depreciation_account)]
                     if not invoice_line_id:
                         del line_datas[2]
                 else:
