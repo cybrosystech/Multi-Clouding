@@ -222,7 +222,7 @@ class LeaseeContract(models.Model):
                 rec.rou_value = 0
             else:
                 if self.incentives_received_type == 'rent_free':
-                    rec.rou_value = rec.lease_liability + rec.initial_payment_value + rec.initial_direct_cost + rec.estimated_cost_dismantling + rec.incentives_received
+                    rec.rou_value = rec.lease_liability + rec.initial_payment_value + rec.initial_direct_cost + rec.estimated_cost_dismantling
                 else:
                     rec.rou_value = rec.lease_liability + rec.initial_payment_value + rec.initial_direct_cost + rec.estimated_cost_dismantling - rec.incentives_received
 
@@ -324,7 +324,7 @@ class LeaseeContract(models.Model):
                 'leasee_contract_id': self.id,
             })
 
-        if self.incentives_received:
+        if self.incentives_received and self.incentives_received_type != 'rent_free':
             invoice_lines = [(0, 0, {
                 'product_id': self.incentives_product_id.id,
                 'name': self.incentives_product_id.name,
@@ -364,7 +364,7 @@ class LeaseeContract(models.Model):
             'analytic_account_id': self.analytic_account_id.id,
         })]
 
-        if self.incentives_received:
+        if self.incentives_received and self.incentives_received_type != 'rent_free':
             lines.append( (0, 0, {
                 'name': 'create contract number %s' % self.name,
                 'account_id': self.incentives_account_id.id,
