@@ -95,14 +95,16 @@ class SaleOrder(models.Model):
                     ctx = self._context.copy()
                     ctx.update({'name': use.name})
                     if email_template_id:
-                        email_template_id.with_context(ctx).send_mail(self.id, force_send=True, email_values={'email_to': use.email, })
+                        email_template_id.with_context(ctx).send_mail(self.id, force_send=True, email_values={'email_to': use.email, 'model': None, 'res_id': None})
 
     def request_approval_button(self):
+        self.get_budgets_in_out_budget_tab()
         if self.out_budget and not self.sale_approval_cycle_ids:
             out_budget_list = []
-            out_budget = self.env['budget.in.out.check.sales'].search([('type', '=', 'out_budget')], limit=1)
-            if self.budget_collect_ids.mapped('difference_amount'):
+            out_budget = self.env['budget.in.out.check.sales'].search([('type', '=', 'out_budget'), ('company_id','=', self.env.company.id)], limit=1)
+            if self.budget_collect_ids.mapped('demand_amount'):
                 max_value = max(self.budget_collect_ids.mapped('demand_amount'))
+
             else:
                 max_value = 0
             for rec in out_budget.budget_line_ids:
@@ -120,8 +122,8 @@ class SaleOrder(models.Model):
             self.write({'sale_approval_cycle_ids': out_budget_list})
         if not self.out_budget and not self.sale_approval_cycle_ids:
             in_budget_list = []
-            in_budget = self.env['budget.in.out.check.sales'].search([('type', '=', 'in_budget')], limit=1)
-            max_value = self.amount_total
+            in_budget = self.env['budget.in.out.check.sales'].search([('type', '=', 'in_budget'), ('company_id','=', self.env.company.id)], limit=1)
+            max_value = max(self.order_line.mapped('local_subtotal'))  # Old Field is amount_total
             for rec in in_budget.budget_line_ids:
                 # if rec.to_amount >= max_value >= rec.from_amount:
                 if max_value >= rec.from_amount:

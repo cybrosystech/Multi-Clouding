@@ -56,7 +56,29 @@ class AccountMove(models.Model):
                 rec.new_sequence = self.env['ir.sequence'].next_by_code('entry.temporary.seq')
         return res
 
-
+    # Override native method to set invoice display name in 'to_approve'status.
+    def _get_move_display_name(self, show_ref=False):
+        ''' Helper to get the display name of an invoice depending of its type.
+        :param show_ref:    A flag indicating of the display name must include or not the journal entry reference.
+        :return:            A string representing the invoice.
+        '''
+        self.ensure_one()
+        draft_name = ''
+        if self.state in ('draft', 'to_approve'):
+            draft_name += {
+                'out_invoice': _('Draft Invoice'),
+                'out_refund': _('Draft Credit Note'),
+                'in_invoice': _('Draft Bill'),
+                'in_refund': _('Draft Vendor Credit Note'),
+                'out_receipt': _('Draft Sales Receipt'),
+                'in_receipt': _('Draft Purchase Receipt'),
+                'entry': _('Draft Entry'),
+            }[self.move_type]
+            if not self.name or self.name == '/':
+                draft_name += ' (* %s)' % str(self.id)
+            else:
+                draft_name += ' ' + self.name
+        return (draft_name or self.name) + (show_ref and self.ref and ' (%s%s)' % (self.ref[:50], '...' if len(self.ref) > 50 else '') or '')
 
 
 
@@ -65,8 +87,13 @@ class AccountMove(models.Model):
         self.show_post_button = False
         self.show_confirm_button = False
         if self.state not in ['draft','to_approve'] or self.auto_post or self.move_type != 'entry':
-            if self.is_from_purchase or self.is_from_sales:
+            if self.is_from_purchase or self.is_from_sales :
                 self.show_post_button = True
+            elif not self.is_from_purchase and not self.is_from_sales:
+                if not self.purchase_approval_cycle_ids:
+                    self.show_post_button = True
+                else:
+                    self.show_post_button = False
             else:
                 self.show_post_button = False
         elif self.state not in ['draft','to_approve'] or self.auto_post == True or self.move_type == 'entry':
@@ -159,13 +186,14 @@ class AccountMove(models.Model):
                     ctx = self._context.copy()
                     ctx.update({'name': us.name})
                     if email_template_id:
-                        email_template_id.with_context(ctx).send_mail(self.id, force_send=True, email_values={'email_to': us.email,})
+                        email_template_id.with_context(ctx).send_mail(self.id, force_send=True, email_values={'email_to': us.email, 'model': None, 'res_id': None})
 
     def request_approval_button(self):
+        self.get_budgets_in_out_budget_tab()
         # self.name = 'Bill/'+str(datetime.today().strftime('%Y'))+'/'+str(datetime.today().strftime('%m'))+'/'+str(random.randint(0,999))+str(datetime.today().strftime('%d'))
         if self.out_budget and not self.purchase_approval_cycle_ids:
             out_budget_list = []
-            out_budget = self.env['budget.in.out.check.invoice'].search([('type', '=', 'out_budget')], limit=1)
+            out_budget = self.env['budget.in.out.check.invoice'].search([('type', '=', 'out_budget'), ('company_id','=', self.env.company.id)], limit=1)
             max_value = max(self.budget_collect_ids.mapped('demand_amount'))
             for rec in out_budget.budget_line_ids:
                 # if rec.to_amount >= max_value >= rec.from_amount:
@@ -182,9 +210,10 @@ class AccountMove(models.Model):
             self.write({'purchase_approval_cycle_ids': out_budget_list})
         if not self.out_budget and not self.purchase_approval_cycle_ids:
             in_budget_list = []
-            in_budget = self.env['budget.in.out.check.invoice'].search([('type', '=', 'in_budget')], limit=1)
+            in_budget = self.env['budget.in.out.check.invoice'].search([('type', '=', 'in_budget'), ('company_id','=', self.env.company.id)], limit=1)
             if self.move_type == 'entry':
-                max_value = sum(self.line_ids.mapped('debit'))
+                # max_value = sum(self.line_ids.mapped('debit'))
+                max_value = max(self.line_ids.mapped('local_subtotal'))  # Old Field is debit
             else:
                 # max_value = self.amount_total
                 max_value = sum(self.invoice_line_ids.mapped('local_subtotal'))

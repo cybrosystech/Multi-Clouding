@@ -15,11 +15,11 @@
                 </xpath>
                 <xpath expr="//button[@name='action_post'][1]" position="attributes">
                     <attribute name="attrs">
-                        {'invisible':['|',('show_confirm_button','=',False),('state','!=','draft')]}
+                        {'invisible':['|','|',('show_request_approve_button','=',False),('show_confirm_button','=',False),('state','!=','draft')]}
                     </attribute>
                 </xpath>
                 <xpath expr="//button[@name='action_post'][2]" position="attributes">
-                    <attribute name="attrs">{'invisible':['|',('show_post_button','=',False),('state','!=','draft')]}
+                    <attribute name="attrs">{'invisible':['|','|',('show_request_approve_button','=',False),('show_post_button','=',False),('state','!=','draft')]}
                     </attribute>
                 </xpath>
                 <xpath expr="//button[@name='button_cancel']" position="attributes">
@@ -63,7 +63,7 @@
                     <field name="budget_id" optional="show" attrs="{'readonly': [('parent_state', '=', 'posted')]}"/>
                     <field name="budget_line_id" optional="show" attrs="{'readonly': [('parent_state', '=', 'posted')]}"/>
                     <field name="remaining_amount" optional="show" readonly="1"/>
-                    <field name="local_subtotal" optional="hide" attrs="{'readonly': [('parent_state', '=', 'posted')]}"/>
+                    <field name="local_subtotal" optional="hide" readonly="1" /> <!-- attrs="{'readonly': [('parent_state', '=', 'posted')]}" -->
                 </xpath>
 
                 <!-- position: after|before|replace|attributes|inside -->
