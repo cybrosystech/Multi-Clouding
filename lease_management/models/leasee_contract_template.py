@@ -24,6 +24,8 @@ class LeaseContractTemplate(models.Model):
     payment_frequency_type = fields.Selection(string="Payment Type",default="months", selection=[('years', 'Years'), ('months', 'Months'), ], required=True, )
     payment_frequency = fields.Integer(default=1, required=False, )
     increasement_rate = fields.Float()
+    initial_product_id = fields.Many2one(comodel_name="product.product", string="", required=True,
+                                         domain=[('type', '=', 'service')])
 
     increasement_frequency_type = fields.Selection(string="Increasement Type",default="months", selection=[('years', 'Years'), ('months', 'Months'), ], required=True, )
     increasement_frequency = fields.Integer(default=1, required=False, )

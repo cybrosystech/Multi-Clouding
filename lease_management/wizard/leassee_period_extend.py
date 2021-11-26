@@ -127,11 +127,13 @@ class LeaseePeriodExtend(models.TransientModel):
         })
 
     def update_asset_value(self, new_value):
-        asset = self.leasee_contract_id.asset_id
+        contract = self.leasee_contract_id
+        asset = contract.asset_id
+        new_period = (self.new_contract_period + contract.lease_contract_period ) * (1 if contract.lease_contract_period_type == 'months' else 12)
         self.env['asset.modify'].create({
             'name': "Extend Leasee Contract",
             'date': asset.acquisition_date,
-            'method_number': self.new_contract_period + self.leasee_contract_id.lease_contract_period,
+            'method_number': new_period,
             'asset_id': asset.id,
             'value_residual': new_value + asset.original_value,
             'salvage_value': asset.salvage_value,

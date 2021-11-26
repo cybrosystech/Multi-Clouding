@@ -82,7 +82,7 @@ class RouAssetSchedule(models.TransientModel):
                 'period_end_date': 1,
                 'comment': 1,
                 'posted_gl': True if ins.state == 'posted' else False,
-                'posting_date': ins.posting_date.strftime(DF),
+                'posting_date': ins.posting_date.strftime(DF) if ins.posting_date else '',
                 'posting_doc_no': ins.name,
             })
         return data

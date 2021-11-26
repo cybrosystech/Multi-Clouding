@@ -25,7 +25,7 @@ class LeaseeContract(models.Model):
     _description = 'Leasee Contract'
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
-    name = fields.Char(string="Name", required=True,copy=False )
+    name = fields.Char(string="Name", required=True, copy=False, readonly=True, default='/' )
     leasee_template_id = fields.Many2one(comodel_name="leasee.contract.template", string="Leasee Contract Template", required=False, )
 
     external_reference_number = fields.Char()
@@ -107,12 +107,12 @@ class LeaseeContract(models.Model):
     incentives_account_id = fields.Many2one(comodel_name="account.account", string="", required=True, )
     incentives_product_id = fields.Many2one(comodel_name="product.product", string="", required=True, domain=[('type', '=', 'service')] )
 
-    @api.model
-    def create(self, vals):
-        name = self.env['ir.sequence'].next_by_code('leasee.contract')
-        vals['name'] = name
-        vals['external_reference_number'] = name
-        return super(LeaseeContract, self).create(vals)
+    # @api.model
+    # def create(self, vals):
+    #     name = self.env['ir.sequence'].next_by_code('leasee.contract')
+    #     vals['name'] = name
+    #     vals['external_reference_number'] = name
+    #     return super(LeaseeContract, self).create(vals)
 
     @api.depends('commencement_date', 'lease_contract_period')
     def compute_estimated_ending_date(self):
@@ -154,15 +154,23 @@ class LeaseeContract(models.Model):
             'location_id': self.leasee_template_id.location_id.id,
             'incentives_account_id': self.leasee_template_id.incentives_account_id.id,
             'incentives_product_id': self.leasee_template_id.incentives_product_id.id,
+            'initial_product_id': self.leasee_template_id.initial_product_id.id,
         })
 
     def action_activate(self):
-        self.create_commencement_move()
-        self.create_initial_bill()
-        # self.create_installments()
-        self.create_rov_asset()
-        self.create_installments()
-        self.state = 'active'
+        for contract in self:
+            if contract.state == 'draft':
+                if contract.name != '/':
+                    contract.name = self.env['ir.sequence'].next_by_code('leasee.contract')
+                contract.create_commencement_move()
+                contract.create_initial_bill()
+                # self.create_installments()
+                contract.create_rov_asset()
+                contract.create_installments()
+                contract.state = 'active'
+
+        self.leasee_action_generate_installments_entries()
+        self.leasee_action_generate_interest_entries()
 
     def action_view_asset(self):
         view_id = self.env.ref('account_asset.view_account_asset_form')
@@ -416,6 +424,53 @@ class LeaseeContract(models.Model):
     #         'line_ids': lines,
     #     })
 
+    def create_beginning_installments(self):
+        start = self.commencement_date
+        # remaining_lease_liability = self.lease_liability - self.incentives_received
+        remaining_lease_liability = self.lease_liability
+        num_installment = self.compute_installments_num()
+        period_range = range(0, num_installment + 1)
+        payment_months = self.payment_frequency * (1 if self.payment_frequency_type == 'months' else 12)
+
+        for i in period_range:
+            amount = self.get_future_value(self.installment_amount, self.increasement_rate, i )
+            new_start = start + relativedelta(months=i*payment_months, days=-1)
+            interest_recognition = remaining_lease_liability * self.interest_rate / 100
+            if i == 0:
+                interest_recognition = 0
+
+            remaining_lease_liability -= (amount - interest_recognition)
+            self.env['leasee.installment'].create({
+                'name': self.name + ' installment - ' + new_start.strftime(DF),
+                'period': i,
+                'amount': amount,
+                'date': new_start,
+                'leasee_contract_id': self.id,
+                'subsequent_amount': interest_recognition,
+                'remaining_lease_liability': round(remaining_lease_liability,2),
+            })
+
+    def create_end_installments(self):
+        start = self.commencement_date
+        remaining_lease_liability = self.lease_liability
+        num_installment = self.compute_installments_num()
+        period_range = range(1, num_installment + 1)
+        payment_months = self.payment_frequency * (1 if self.payment_frequency_type == 'months' else 12)
+        for i in period_range:
+            amount = self.get_future_value(self.installment_amount, self.increasement_rate, i )
+            new_start = start + relativedelta(months=i*payment_months, days=-1)
+            interest_recognition = remaining_lease_liability * self.interest_rate / 100
+            remaining_lease_liability -= (amount - interest_recognition)
+            self.env['leasee.installment'].create({
+                'name': self.name + ' installment - ' + new_start.strftime(DF),
+                'period': i,
+                'amount': amount,
+                'date': new_start,
+                'leasee_contract_id': self.id,
+                'subsequent_amount': interest_recognition,
+                'remaining_lease_liability': round(remaining_lease_liability,2),
+            })
+
     def create_installments(self):
         start = self.commencement_date
         # remaining_lease_liability = self.lease_liability - self.incentives_received
@@ -444,6 +499,7 @@ class LeaseeContract(models.Model):
             remaining_lease_liability -= (amount - interest_recognition)
             self.env['leasee.installment'].create({
                 'name': self.name + ' installment - ' + new_start.strftime(DF),
+                'period': i,
                 'amount': amount,
                 'date': new_start,
                 'leasee_contract_id': self.id,
@@ -671,9 +727,9 @@ class LeaseeContract(models.Model):
                     # else:
                     if installment.subsequent_amount and len(installment.interest_move_ids) < delta:
                         if contract.payment_method == 'beginning':
-                            supposed_dates = [installment.date - relativedelta(months=i) for i in range(delta) if (installment.date - relativedelta(months=i)) <= date.today()]
+                            supposed_dates = [installment.date - relativedelta(months=i,days=-1) for i in range(delta) if (installment.date - relativedelta(months=i)) <= date.today()]
                         else:
-                            supposed_dates = [installment.date - relativedelta(months=i) for i in range(delta) if (installment.date - relativedelta(months=i)) <= date.today()]
+                            supposed_dates = [installment.date - relativedelta(months=i,days=-1) for i in range(delta) if (installment.date - relativedelta(months=i)) <= date.today()]
 
                         for move in installment.interest_move_ids:
                             for s_date in supposed_dates:
