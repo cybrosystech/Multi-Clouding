@@ -799,13 +799,13 @@ class LeaseeContract(models.Model):
     def create_interset_move(self, installment, move_date, interest_amount):
         if interest_amount > 0:
             lines = [(0, 0, {
-                'name': 'Interest Recognition for %s' % date.strftime(DF),
+                'name': 'Interest Recognition for %s' % move_date.strftime(DF),
                 'account_id': self.lease_liability_account_id.id,
                 'debit': 0,
                 'credit': interest_amount,
                 'analytic_account_id': self.analytic_account_id.id,
             }),(0, 0, {
-                'name': 'Interest Recognition for %s' % date.strftime(DF),
+                'name': 'Interest Recognition for %s' % move_date.strftime(DF),
                 'account_id': self.interest_expense_account_id.id,
                 'debit': interest_amount,
                 'credit': 0,
