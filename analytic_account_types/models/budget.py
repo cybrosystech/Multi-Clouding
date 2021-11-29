@@ -95,26 +95,6 @@ class CrossOveredBudgetLines(models.Model):
             self.env.cr.execute(select, where_clause_params)
             line.practical_amount = self.env.cr.fetchone()[0] or 0.0
 
-    # @api.constrains('general_budget_id', 'analytic_account_id','project_site_id','type_id','location_id')
-    # def _must_have_analytical_or_budgetary_or_both(self):
-    #     for record in self:
-    #         analytic_list = []
-    #         if record.analytic_account_id:
-    #             analytic_list.append(record.analytic_account_id)
-    #         if record.project_site_id:
-    #             analytic_list.append(record.project_site_id)
-    #         if record.type_id:
-    #             analytic_list.append(record.type_id)
-    #         if record.location_id:
-    #             analytic_list.append(record.location_id)
-    #         if not (record.analytic_account_id or record.project_site_id or record.type_id or record.location_id) and not record.general_budget_id:
-    #             raise ValidationError(
-    #                 _("You have to enter at least a budgetary position or analytic account on a budget line."))
-    #         if len(analytic_list) > 1:
-    #             raise ValidationError(
-    #                 _("You must set one analytic account in a single line."))
-
-
     def action_open_budget_entries(self):
         action = self.env['ir.actions.act_window']._for_xml_id('analytic.account_analytic_line_action_entries')
         if self.analytic_account_id:

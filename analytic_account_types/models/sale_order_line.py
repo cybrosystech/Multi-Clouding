@@ -15,7 +15,6 @@ class SaleOrder(models.Model):
     show_approve_button = fields.Boolean(string="", compute='check_show_approve_button')
     show_request_approve_button = fields.Boolean(string="", copy=False)
     show_button_confirm = fields.Boolean(string="", copy=False)
-    mail_link = fields.Text(string="", required=False, )
     state = fields.Selection(selection_add=[('to_approve', 'To Approve'), ('sent',), ],
                              ondelete={'to_approve': 'set default', 'draft': 'set default', })
 
@@ -67,30 +66,12 @@ class SaleOrder(models.Model):
                     'budget_id': bud.id
                 }))
         self.write({'budget_collect_ids': budget_lines})
-        # self.budget_collect_ids = budget_lines
 
     def send_user_notification(self, user):
         for use in user:
             reseiver = use.partner_id
             if reseiver:
                 for purchase in self:
-                    # self.message_post(
-                    #     subject='Sale Order Approval Needed',
-                    #     body=str('This Sale Order ' + str(
-                    #         purchase.name) + ' Need Your Approval ') + ' click here to open: <a target=_BLANK href="/web?#id=' + str(
-                    #         purchase.id) + '&view_type=form&model=sale.order&action=" style="font-weight: bold">' + str(
-                    #         purchase.name) + '</a>',
-                    #     partner_ids=[reseiver.id]
-                    # )
-                    # thread_pool = self.sudo().env['mail.thread']
-                    # thread_pool.message_notify(
-                    #     partner_ids=[reseiver.id],
-                    #     subject=str('Sales Approval Needed'),
-                    #     body=str('This Sale Order ' + str(
-                    #         purchase.name) + ' Need Your Approval ') + ' click here to open: <a target=_BLANK href="/web?#id=' + str(
-                    #         purchase.id) + '&view_type=form&model=sale.order&action=" style="font-weight: bold">' + str(
-                    #         purchase.name) + '</a>',
-                    #     email_from=self.env.user.company_id.catchall_formatted or self.env.user.company_id.email_formatted, )
                     email_template_id = self.env.ref('analytic_account_types.email_template_send_mail_approval_sales')
                     ctx = self._context.copy()
                     ctx.update({'name': use.name})
@@ -108,34 +89,23 @@ class SaleOrder(models.Model):
             else:
                 max_value = 0
             for rec in out_budget.budget_line_ids:
-                # if rec.to_amount >= max_value >= rec.from_amount:
                 if max_value >= rec.from_amount:
                     out_budget_list.append((0, 0, {
                         'approval_seq': rec.approval_seq,
                         'user_approve_ids': rec.user_ids.ids,
                     }))
-                # elif rec.to_amount <= max_value >= rec.from_amount:
-                #     out_budget_list.append((0, 0, {
-                #         'approval_seq': rec.approval_seq,
-                #         'user_approve_ids': rec.user_ids.ids,
-                #     }))
+
             self.write({'sale_approval_cycle_ids': out_budget_list})
         if not self.out_budget and not self.sale_approval_cycle_ids:
             in_budget_list = []
             in_budget = self.env['budget.in.out.check.sales'].search([('type', '=', 'in_budget'), ('company_id','=', self.env.company.id)], limit=1)
             max_value = max(self.order_line.mapped('local_subtotal'))  # Old Field is amount_total
             for rec in in_budget.budget_line_ids:
-                # if rec.to_amount >= max_value >= rec.from_amount:
                 if max_value >= rec.from_amount:
                     in_budget_list.append((0, 0, {
                         'approval_seq': rec.approval_seq,
                         'user_approve_ids': rec.user_ids.ids,
                     }))
-                # elif rec.to_amount <= max_value >= rec.from_amount:
-                #     in_budget_list.append((0, 0, {
-                #         'approval_seq': rec.approval_seq,
-                #         'user_approve_ids': rec.user_ids.ids,
-                #     }))
             self.write({'sale_approval_cycle_ids': in_budget_list})
         self.show_request_approve_button = True
         if self.sale_approval_cycle_ids:
@@ -164,7 +134,6 @@ class SaleOrder(models.Model):
                 if line == last_approval_user:
                     self.action_confirm()
                 break
-
 
 class SalesOrderLine(models.Model):
     _inherit = 'sale.order.line'
@@ -215,8 +184,6 @@ class SalesOrderLine(models.Model):
             print(invoices_budget, 'invoices_budget')
 
             rec.remaining_amount = 0.0
-            # if rec.order_id.date_order:
-            #     budget_lines = rec.budget_id.crossovered_budget_line.filtered(lambda x: rec.order_id.date_order.date() >= x.date_from and rec.order_id.date_order.date() <= x.date_to and x.analytic_account_id == rec.cost_center_id and x.project_site_id == rec.project_site_id and x.type_id == rec.type_id and x.location_id == rec.location_id)
             rec.remaining_amount = rec.budget_line_id.remaining_amount - order_lines_without_inv - invoices_budget
 
     @api.onchange('project_site_id')

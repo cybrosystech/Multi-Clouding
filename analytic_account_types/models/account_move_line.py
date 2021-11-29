@@ -25,9 +25,7 @@ class AccountMove(models.Model):
     is_from_sales = fields.Boolean(string="",compute='check_if_from_sales'  )
     show_confirm_button = fields.Boolean(string="",compute='check_show_confirm_and_post_buttons' )
     show_post_button = fields.Boolean(string="",compute='check_show_confirm_and_post_buttons' )
-    mail_link = fields.Text(string="\\4111", required=False, )
     state = fields.Selection(selection_add=[('to_approve', 'To Approve'),('posted',), ], ondelete={'to_approve': 'set default','draft': 'set default',})
-    new_sequence = fields.Char(string="New Seq", required=False, )
 
     def button_cancel(self):
         res = super(AccountMove, self).button_cancel()
@@ -38,22 +36,6 @@ class AccountMove(models.Model):
         res = super(AccountMove, self).button_draft()
         self.purchase_approval_cycle_ids = False
         self.show_request_approve_button = False
-        return res
-
-    @api.model_create_multi
-    def create(self, vals_list):
-        res = super(AccountMove, self).create(vals_list)
-        for rec in res:
-            if rec.move_type == 'in_invoice':
-                rec.new_sequence = self.env['ir.sequence'].next_by_code('vendor.bill.temporary.seq')
-            if rec.move_type == 'in_refund':
-                rec.new_sequence = self.env['ir.sequence'].next_by_code('debit.note.temporary.seq')
-            if rec.move_type == 'out_invoice':
-                rec.new_sequence = self.env['ir.sequence'].next_by_code('customer.invoice.temporary.seq')
-            if rec.move_type == 'out_refund':
-                rec.new_sequence = self.env['ir.sequence'].next_by_code('credit.note.temporary.seq')
-            if rec.move_type == 'entry':
-                rec.new_sequence = self.env['ir.sequence'].next_by_code('entry.temporary.seq')
         return res
 
     # Override native method to set invoice display name in 'to_approve'status.
@@ -164,24 +146,6 @@ class AccountMove(models.Model):
             reseiver = us.partner_id
             if reseiver:
                 for move in self:
-                    # self.message_post(
-                    #     subject='Invoice Approval Needed',
-                    #     body=str('This Invoice ' + str(
-                    #         move.name if move.name != '/' else move.new_sequence) + ' Need Your Approval ') + ' click here to open: <a target=_BLANK href="/web?#id=' + str(
-                    #         move.id) + '&view_type=form&model=account.move&action=" style="font-weight: bold">' + str(
-                    #         move.name if move.name != '/' else move.new_sequence) + '</a>',
-                    #     partner_ids=[reseiver.id]
-                    # )
-                    # thread_pool = self.sudo().env['mail.thread']
-                    # thread_pool.message_notify(
-                    #     partner_ids=[reseiver.id],
-                    #     subject=str('Invoice Approval Needed'),
-                    #     body=str('This Sale Order ' + str(
-                    #         move.name) + ' Need Your Approval ') + ' click here to open: <a target=_BLANK href="/web?#id=' + str(
-                    #         move.id) + '&view_type=form&model=account.move&action=" style="font-weight: bold">' + str(
-                    #         move.name) + '</a>',
-                    #     email_from=self.env.user.company_id.catchall_formatted or self.env.user.company_id.email_formatted, )
-
                     email_template_id = self.env.ref('analytic_account_types.email_template_send_mail_approval_account')
                     ctx = self._context.copy()
                     ctx.update({'name': us.name})
@@ -190,45 +154,32 @@ class AccountMove(models.Model):
 
     def request_approval_button(self):
         self.get_budgets_in_out_budget_tab()
-        # self.name = 'Bill/'+str(datetime.today().strftime('%Y'))+'/'+str(datetime.today().strftime('%m'))+'/'+str(random.randint(0,999))+str(datetime.today().strftime('%d'))
         if self.out_budget and not self.purchase_approval_cycle_ids:
             out_budget_list = []
             out_budget = self.env['budget.in.out.check.invoice'].search([('type', '=', 'out_budget'), ('company_id','=', self.env.company.id)], limit=1)
             max_value = max(self.budget_collect_ids.mapped('demand_amount'))
             for rec in out_budget.budget_line_ids:
-                # if rec.to_amount >= max_value >= rec.from_amount:
                 if max_value >= rec.from_amount:
                     out_budget_list.append((0, 0, {
                         'approval_seq': rec.approval_seq,
                         'user_approve_ids': rec.user_ids.ids,
                     }))
-                # elif rec.to_amount <= max_value >= rec.from_amount:
-                #     out_budget_list.append((0, 0, {
-                #         'approval_seq': rec.approval_seq,
-                #         'user_approve_ids': rec.user_ids.ids,
-                #     }))
+
             self.write({'purchase_approval_cycle_ids': out_budget_list})
         if not self.out_budget and not self.purchase_approval_cycle_ids:
             in_budget_list = []
             in_budget = self.env['budget.in.out.check.invoice'].search([('type', '=', 'in_budget'), ('company_id','=', self.env.company.id)], limit=1)
             if self.move_type == 'entry':
-                # max_value = sum(self.line_ids.mapped('debit'))
                 max_value = max(self.line_ids.mapped('local_subtotal'))  # Old Field is debit
             else:
-                # max_value = self.amount_total
                 max_value = sum(self.invoice_line_ids.mapped('local_subtotal'))
             for rec in in_budget.budget_line_ids:
-                # if rec.to_amount >= max_value >= rec.from_amount:
                 if max_value >= rec.from_amount:
                     in_budget_list.append((0, 0, {
                         'approval_seq': rec.approval_seq,
                         'user_approve_ids': rec.user_ids.ids,
                     }))
-                # elif rec.to_amount <= max_value >= rec.from_amount:
-                #     in_budget_list.append((0, 0, {
-                #         'approval_seq': rec.approval_seq,
-                #         'user_approve_ids': rec.user_ids.ids,
-                #     }))
+
             self.write({'purchase_approval_cycle_ids': in_budget_list})
         self.show_request_approve_button = True
         if self.purchase_approval_cycle_ids:
@@ -438,18 +389,6 @@ class AccountMoveLine(models.Model):
             elif rec.sale_line_ids:
                 rec.remaining_amount = rec.sale_line_ids[0].remaining_amount
             else:
-                # order_lines_without_inv = sum(
-                #     self.env['account.move.line'].search([('move_id.state', '=', 'draft')]).filtred(
-                #         lambda x: not x.order_id.invoice_ids and x.budet_id == self.budget_id).mapped('price_subtotal'))
-                # purchases_with_inv = self.env['purchase.order'].search([('state', '=', 'purchase')]).filtred(
-                #     lambda x: x.invoice_ids)
-                # invoices_budget = 0.0
-                # for order in purchases_with_inv:
-                #     for inv in order.invoice_ids:
-                #         if inv.state == 'draft':
-                #             for line in inv.invoice_line_ids.filtred(lambda x: x.budget_id == self.budget_id):
-                #                 invoices_budget += line.price_subtotal
-                # budget_lines = rec.budget_id.crossovered_budget_line.filtered(lambda x:rec.move_id.invoice_date >= x.date_from and rec.move_id.invoice_date <= x.date_to and x.analytic_account_id == rec.analytic_account_id and x.project_site_id == rec.project_site_id and x.type_id == rec.type_id and x.location_id == rec.location_id )
                 rec.remaining_amount = rec.budget_line_id.remaining_amount
 
 
@@ -475,7 +414,3 @@ class AccountMoveLine(models.Model):
                         },
             'target': 'new',
         }
-
-
-
-

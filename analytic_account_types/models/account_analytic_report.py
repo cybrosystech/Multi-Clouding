@@ -20,10 +20,6 @@ class Acc(models.Model):
     def _compute_debit_credit_balance(self):
         Curr = self.env['res.currency']
         analytic_line_obj = self.env['account.analytic.line']
-        # domain = [
-        #     ('account_id', 'in', self.ids),
-        #     ('company_id', 'in', [False] + self.env.companies.ids)
-        # ]
         domain = [
             '|', '|', '|', ('account_id', 'in', self.ids), ('project_site_id', 'in', self.ids),
             ('type_id', 'in', self.ids), ('location_id', 'in', self.ids)
@@ -83,14 +79,8 @@ class Acc(models.Model):
             account.credit = data_credit.get(account.id, 0.0)
             account.balance = account.credit - account.debit
 
-
-
-
 class analytic_report(models.AbstractModel):
     _inherit = 'account.analytic.report'
-
-
-
 
     @api.model
     def _get_lines(self, options, line_id=None):

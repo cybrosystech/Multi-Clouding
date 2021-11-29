@@ -10,11 +10,5 @@
                 </xpath>
             </field>
         </record>
-
-
-<!--        <record id="account.action_account_form" model="ir.actions.act_window">-->
-<!--            <field name="name">Inherit Chart of Accounts</field>-->
-<!--            <field name="context">{'order': 'group_sequence desc', 'search_default_activeacc': True}</field>-->
-<!--        </record>-->
     </data>
 </odoo>

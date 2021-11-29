@@ -12,10 +12,7 @@ class PurchaseOrder(models.Model):
     show_approve_button = fields.Boolean(string="",compute='check_show_approve_button'  )
     show_request_approve_button = fields.Boolean(string="", copy=False )
     show_button_confirm = fields.Boolean(string="", copy=False )
-    mail_link = fields.Text(string="", required=False, )
     state = fields.Selection(selection_add=[('to_approve', 'To Approve'),('sent',), ], ondelete={'to_approve': 'set default','draft': 'set default',})
-
-
 
     def button_cancel(self):
         res = super(PurchaseOrder, self).button_cancel()
@@ -65,31 +62,12 @@ class PurchaseOrder(models.Model):
                     'budget_id':bud.id
                 }))
         self.write({'budget_collect_ids':budget_lines})
-        # self.budget_collect_ids = budget_lines
 
     def send_user_notification(self,user):
         for us in user:
             reseiver = us.partner_id
             if reseiver:
                 for purchase in self:
-                    # self.message_post(
-                    #     subject='Purchase Approval Needed',
-                    #     body=str('This Purchase Order ' + str(
-                    #         purchase.name) + ' Need Your Approval ') + ' click here to open: <a target=_BLANK href="/web?#id=' + str(
-                    #         purchase.id) + '&view_type=form&model=purchase.order&action=" style="font-weight: bold">' + str(
-                    #         purchase.name) + '</a>',
-                    #     partner_ids=[reseiver.id]
-                    # )
-                    # thread_pool = self.sudo().env['mail.thread']
-                    # thread_pool.message_notify(
-                    #     partner_ids=[reseiver.id],
-                    #     subject=str('Purchase Approval Needed'),
-                    #     body=str('This Purchase Order ' + str(
-                    #         purchase.name) + ' Need Your Approval ') + ' click here to open: <a target=_BLANK href="/web?#id=' + str(
-                    #         purchase.id) + '&view_type=form&model=purchase.order&action=" style="font-weight: bold">' + str(
-                    #         purchase.name) + '</a>',
-                    #     email_from=self.env.user.company_id.catchall_formatted or self.env.user.company_id.email_formatted, )
-
                     email_template_id = self.env.ref('analytic_account_types.email_template_send_mail_approval_purchase')
                     ctx = self._context.copy()
                     ctx.update({'name': us.name})
@@ -106,34 +84,22 @@ class PurchaseOrder(models.Model):
             else:
                 max_value = 0
             for rec in out_budget.budget_line_ids:
-                # if rec.to_amount >= max_value >= rec.from_amount:
                 if max_value >= rec.from_amount:
                     out_budget_list.append((0,0,{
                         'approval_seq':rec.approval_seq,
                         'user_approve_ids':rec.user_ids.ids,
                     }))
-                # elif rec.to_amount <= max_value >= rec.from_amount:
-                #     out_budget_list.append((0, 0, {
-                #         'approval_seq': rec.approval_seq,
-                #         'user_approve_ids': rec.user_ids.ids,
-                #     }))
             self.write({'purchase_approval_cycle_ids':out_budget_list})
         if not self.out_budget and not self.purchase_approval_cycle_ids:
             in_budget_list = []
             in_budget = self.env['budget.in.out.check'].search([('type','=','in_budget'), ('company_id','=', self.env.company.id)],limit=1)
             max_value = max(self.order_line.mapped('local_subtotal'))  # Old Field is amount_total
             for rec in in_budget.budget_line_ids:
-                # if rec.to_amount >= max_value >= rec.from_amount:
                 if max_value >= rec.from_amount:
                     in_budget_list.append((0,0,{
                         'approval_seq':rec.approval_seq,
                         'user_approve_ids':rec.user_ids.ids,
                     }))
-                # elif rec.to_amount <= max_value >= rec.from_amount:
-                #     in_budget_list.append((0, 0, {
-                #         'approval_seq': rec.approval_seq,
-                #         'user_approve_ids': rec.user_ids.ids,
-                #     }))
             self.write({'purchase_approval_cycle_ids':in_budget_list})
         self.show_request_approve_button = True
         if self.purchase_approval_cycle_ids:
@@ -182,10 +148,6 @@ class PurchaseOrder(models.Model):
                 order.message_subscribe([order.partner_id.id])
         return True
 
-
-
-
-
 class PurchaseApprovalCycle(models.Model):
     _name = 'purchase.approval.cycle'
 
@@ -195,7 +157,6 @@ class PurchaseApprovalCycle(models.Model):
     approval_seq = fields.Integer(string="Approval Sequence", required=False, )
     user_approve_ids = fields.Many2many(comodel_name="res.users", string="User Approval", required=False, )
     is_approved = fields.Boolean(string="Approved",  )
-
 
 class BudgetCollect(models.Model):
     _name = 'budget.collect'
@@ -236,11 +197,9 @@ class BudgetCollect(models.Model):
                     if rec.demand_amount > rec.remaining_amount:
                         rec.difference_amount = rec.demand_amount - rec.remaining_amount
 
-
 class PurchaseOrderLine(models.Model):
     _inherit = 'purchase.order.line'
 
-    # cost_center_id = fields.Many2one(comodel_name="account.analytic.account", string="Cost Center", required=False, )
     project_site_id = fields.Many2one(comodel_name="account.analytic.account", string="Project/Site",domain=[('analytic_account_type','=','project_site')], required=False, )
     type_id = fields.Many2one(comodel_name="account.analytic.account", string="Type",domain=[('analytic_account_type','=','type')], required=False, )
     location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location",domain=[('analytic_account_type','=','location')], required=False, )
@@ -275,8 +234,6 @@ class PurchaseOrderLine(models.Model):
                         for line in inv.invoice_line_ids.filtered(lambda x: x.budget_id == self.budget_id):
                             invoices_budget += line.price_subtotal
             rec.remaining_amount = 0.0
-            # if rec.order_id.date_order:
-            #     budget_lines = rec.budget_id.crossovered_budget_line.filtered(lambda x: rec.order_id.date_order.date() >= x.date_from and rec.order_id.date_order.date() <= x.date_to and x.analytic_account_id == rec.account_analytic_id and x.project_site_id == rec.project_site_id and x.type_id == rec.type_id and x.location_id == rec.location_id)
             rec.remaining_amount = rec.budget_line_id.remaining_amount - order_lines_without_inv - invoices_budget
 
     @api.onchange('project_site_id')
@@ -306,4 +263,3 @@ class PurchaseOrderLine(models.Model):
         res = super(PurchaseOrderLine, self)._prepare_account_move_line()
         res.update({'project_site_id':self.project_site_id.id,'type_id':self.type_id.id,'location_id':self.location_id.id,'budget_id':self.budget_id.id,})
         return res
-

@@ -21,37 +21,6 @@ class WizardAnalyticAccountTypes(models.Model):
     po_line = fields.Many2one(comodel_name="purchase.order.line", string="po Line", required=False, )
     move_line = fields.Many2one(comodel_name="account.move.line", string="move Line", required=False, )
 
-
-
-    # @api.onchange('cost_center_id','project_site_id','type_id','location_id','budget_id','po_line','move_line')
-    # def _get_budgets(self):
-    #     if self.po_line:
-    #         budgets = []
-    #         if self.po_line.order_id.date_order:
-    #             budget_lines = self.env['crossovered.budget.lines'].search([]).filtered(lambda x: self.po_line.order_id.date_order.date() >= x.date_from and self.po_line.order_id.date_order.date() <= x.date_to and x.analytic_account_id == self.cost_center_id and x.project_site_id == self.project_site_id and x.type_id == self.type_id and x.location_id == self.location_id)
-    #             if budget_lines:
-    #                 for bud_line in budget_lines:
-    #                     budgets.append(bud_line.crossovered_budget_id.id)
-    #             return {'domain':{'budget_id':[('id','in',budgets)]}}
-    #     elif self.move_line:
-    #         budgets = []
-    #         if self.move_line.move_id.invoice_date:
-    #             budget_lines = self.env['crossovered.budget.lines'].search([]).filtered(lambda x: self.move_line.move_id.invoice_date >= x.date_from and self.move_line.move_id.invoice_date <= x.date_to and x.analytic_account_id == self.cost_center_id and x.project_site_id == self.project_site_id and x.type_id == self.type_id and x.location_id == self.location_id)
-    #             if budget_lines:
-    #                 for bud_line in budget_lines:
-    #                     budgets.append(bud_line.crossovered_budget_id.id)
-    #             return {'domain': {'budget_id': [('id', 'in', budgets)]}}
-    #     elif self.so_line:
-    #         budgets = []
-    #         if self.so_line.order_id.date_order:
-    #             budget_lines = self.env['crossovered.budget.lines'].search([]).filtered(lambda
-    #                                                                                         x: self.so_line.order_id.date_order.date() >= x.date_from and self.so_line.order_id.date_order.date() <= x.date_to and x.analytic_account_id == self.cost_center_id and x.project_site_id == self.project_site_id and x.type_id == self.type_id and x.location_id == self.location_id)
-    #             if budget_lines:
-    #                 for bud_line in budget_lines:
-    #                     budgets.append(bud_line.crossovered_budget_id.id)
-    #             return {'domain': {'budget_id': [('id', 'in', budgets)]}}
-
-
     @api.onchange('project_site_id')
     def get_location_and_types(self):
         for rec in self:

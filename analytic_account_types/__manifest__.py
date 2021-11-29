@@ -20,7 +20,7 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base','sale','purchase','account','account_accountant','analytic','account_reports','account_budget','account_asset'],
+    'depends': ['base','sale','purchase','account','account_accountant','analytic','account_reports','account_budget','account_asset','account_analytic_parent'],
 
     # always loaded
     'data': [
