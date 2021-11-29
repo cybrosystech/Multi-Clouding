@@ -6,16 +6,20 @@
             <field name="model">account.move</field>
             <field name="inherit_id" ref="account.view_move_form"/>
             <field name="arch" type="xml">
-<!--                <xpath expr="//field[@name='invoice_date']" position="attributes">-->
-<!--                    <attribute name="required">1</attribute>-->
-<!--                </xpath>-->
+                <xpath expr="//field[@name='invoice_date']" position="attributes">
+                    <attribute name="attrs">{
+                        'required': [('move_type', 'in', ('out_invoice', 'out_refund', 'in_invoice', 'in_refund', 'out_receipt', 'in_receipt'))],
+                        'invisible': [('move_type', 'not in', ('out_invoice', 'out_refund', 'in_invoice', 'in_refund', 'out_receipt', 'in_receipt'))]
+                    }</attribute>
+                    <attribute name="nolabel">1</attribute>
+                </xpath>
                 <xpath expr="//button[@name='action_post'][1]" position="attributes">
                     <attribute name="attrs">
-                        {'invisible':['|',('show_confirm_button','=',False),('state','!=','draft')]}
+                        {'invisible':['|','|',('show_request_approve_button','=',False),('show_confirm_button','=',False),('state','!=','draft')]}
                     </attribute>
                 </xpath>
                 <xpath expr="//button[@name='action_post'][2]" position="attributes">
-                    <attribute name="attrs">{'invisible':['|',('show_post_button','=',False),('state','!=','draft')]}
+                    <attribute name="attrs">{'invisible':['|','|',('show_request_approve_button','=',False),('show_post_button','=',False),('state','!=','draft')]}
                     </attribute>
                 </xpath>
                 <xpath expr="//button[@name='button_cancel']" position="attributes">
@@ -51,7 +55,7 @@
                 <!-- position: after|before|replace|attributes|inside -->
                 <xpath expr="//notebook/page/field/tree/field[@name='analytic_account_id']" position="after">
                     <field name="parent_state" invisible="1" />
-                    <field name="project_site_id" optional="show" attrs="{'readonly': [('parent_state', '=', 'posted')]}"/>
+                    <field name="project_site_id" optional="show" required="1" attrs="{'readonly': [('parent_state', '=', 'posted')]}"/>
                     <field name="type_id" optional="show" attrs="{'readonly': [('parent_state', '=', 'posted')]}"/>
                     <field name="location_id" optional="show" attrs="{'readonly': [('parent_state', '=', 'posted')]}"/>
                     <button name="open_account_analytic_types" type="object" string="Set Cost Center"
@@ -59,13 +63,16 @@
                     <field name="budget_id" optional="show" attrs="{'readonly': [('parent_state', '=', 'posted')]}"/>
                     <field name="budget_line_id" optional="show" attrs="{'readonly': [('parent_state', '=', 'posted')]}"/>
                     <field name="remaining_amount" optional="show" readonly="1"/>
-                    <field name="local_subtotal" optional="hide" attrs="{'readonly': [('parent_state', '=', 'posted')]}"/>
+                    <field name="local_subtotal" optional="hide" readonly="1" /> <!-- attrs="{'readonly': [('parent_state', '=', 'posted')]}" -->
                 </xpath>
 
                 <!-- position: after|before|replace|attributes|inside -->
+                <xpath expr="//notebook/page[2]/field[@name='line_ids']/tree/field[@name='analytic_account_id']" position="attributes">
+                    <attribute name="required">1</attribute>
+                </xpath>
                 <xpath expr="//notebook/page[2]/field[@name='line_ids']/tree/field[@name='analytic_account_id']"
                        position="after">
-                    <field name="project_site_id" optional="show"/>
+                    <field name="project_site_id" optional="show" required="1"/>
                     <field name="type_id" optional="show"/>
                     <field name="location_id" optional="show"/>
                     <button name="open_account_analytic_types"

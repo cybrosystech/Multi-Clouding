@@ -38,6 +38,8 @@
         'views/in_out_budget_sales.xml',
         'views/in_out_budget_invoice.xml',
         'views/approve_mail_template.xml',
+        'views/account_account.xml',
+        'views/account_group.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

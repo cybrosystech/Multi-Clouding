@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <data>
+        <template id="message_notification_email_custom" inherit_id="mail.message_notification_email">
+            <xpath expr="//div" position="replace">
+                <t t-call="tth_branding.tth_branding_mail_notification_layout">
+                    <meta itemprop="name" content="Notification Email"/>
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                    	<tr>
+							<td class="content-block">
+                                <h3 style="margin: 0;">Notification message</h3>
+                            </td>
+						</tr>
+                        <tr>
+                            <td class="content-block">
+                                <span><b>From: </b>
+                                    <t t-esc="message.author_id.display_name"/>vi
+                                </span>                                
+                                <div t-raw="message.body"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="content-block">
+                                <ul t-if="tracking_values">
+                                    <t t-foreach="tracking_values" t-as="tracking">
+                                        <li><t t-esc="tracking[0]"/>: <t t-esc="tracking[1]"/> -&gt; <t t-esc="tracking[2]"/></li>
+                                    </t>
+                                </ul>
+                                <div t-if="has_button_access" itemscope="itemscope" itemtype="http://schema.org/EmailMessage">
+                                    <div itemprop="potentialAction" itemscope="itemscope" itemtype="http://schema.org/ViewAction">
+                                        <link itemprop="target" t-att-href="button_access['url']"/>
+                                        <link itemprop="url" t-att-href="button_access['url']"/>
+                                        <meta itemprop="name" t-att-content="button_access['title']"/>
+                                    </div>
+                                </div>
+                                <div t-if="has_button_access or len(actions) &gt; 0 or not is_discussion">
+                                    <table width="100%" cellspacing="0" cellpadding="0" border="0">
+                                    <tbody><tr>
+                                    <td valign="center">
+                                        <a t-if="has_button_access"
+                                                t-att-href="button_access['url']"
+                                                class="btn-basic"
+                                                itemprop="url">
+                                            <t t-esc="button_access['title']"/>
+                                        </a>
+                                        <t t-if="actions">
+                                            <t t-foreach="actions" t-as="action">
+                                                |
+                                                <a t-att-href="action['url']" style="color: #875A7B; text-decoration:none !important;">
+                                                    <t t-esc="action['title']"/>
+                                                </a>
+                                            </t>
+                                        </t>
+                                    </td>
+                                    </tr>
+                                    </tbody>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </t>
+            </xpath>
+        </template>
+    </data>
+</odoo>

@@ -52,83 +52,85 @@
                         </div>
                         <group>
                             <group>
-                                <field name="leasee_template_id"/>
-                                <field name="external_reference_number"/>
-                                <field name="vendor_id"/>
-                                <field name="inception_date"/>
-                                <field name="commencement_date"/>
-                                <field name="initial_payment_value"/>
-                                <field name="estimated_ending_date"/>
-                                <field name="rou_value"/>
+                                <field name="leasee_template_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="external_reference_number" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="vendor_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="inception_date" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="commencement_date" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="initial_payment_value" />
+                                <field name="estimated_ending_date" />
+                                <field name="rou_value" />
                                 <!--                                <field name="registered_paymen" />-->
-                                <field name="estimated_cost_dismantling"/>
+                                <field name="estimated_cost_dismantling" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                             </group>
                             <group>
-                                <field name="leasee_currency_id"/>
-                                <field name="asset_name"/>
-                                <field name="asset_description"/>
-                                <field name="initial_direct_cost"/>
-                                <field name="incentives_received"/>
-                                <field name="useful_life"/>
-                                <field name="installment_amount"/>
+                                <field name="leasee_currency_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="asset_name" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="asset_description" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="initial_direct_cost" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="incentives_received" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="incentives_received_type" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="useful_life" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="installment_amount" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                                 <field name="lease_liability"/>
                                 <field name="remaining_lease_liability"/>
                             </group>
                         </group>
                         <notebook>
-                            <page string="Contract Details">
+                            <page string="Contract Details" attrs="{'readonly': [('state', '!=', 'draft')]}">
                                 <group>
                                     <group>
-                                        <field name="lease_contract_period"/>
-                                        <field name="lease_contract_period_type"/>
-                                        <field name="terminate_month_number"/>
+                                        <field name="lease_contract_period" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="lease_contract_period_type" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="terminate_month_number" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                                         <!--                                        <field name="terminate_month_number" />-->
-                                        <field name="terminate_fine"/>
-                                        <field name="type_terminate"/>
-                                        <field name="extendable"/>
-                                        <field name="prorata"/>
+                                        <field name="terminate_fine" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="type_terminate" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="extendable" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="prorata" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                                         <!--                                        <field name="asset_model_id" />-->
                                     </group>
                                     <group>
-                                        <field name="payment_method"/>
-                                        <field name="interest_rate"/>
-                                        <field name="payment_frequency_type"/>
-                                        <field name="payment_frequency"/>
-                                        <field name="increasement_frequency_type"/>
-                                        <field name="increasement_frequency"/>
-                                        <field name="increasement_rate"/>
+                                        <field name="payment_method" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="interest_rate" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="payment_frequency_type" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="payment_frequency" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="increasement_frequency_type" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="increasement_frequency" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="increasement_rate" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
 <!--                                        <field name="discount"/>-->
                                     </group>
                                 </group>
                             </page>
-                            <page string="Contract Accounts">
+                            <page string="Contract Accounts" attrs="{'readonly': [('state', '!=', 'draft')]}">
                                 <group>
                                     <group>
-                                        <field name="lease_liability_account_id"/>
-                                        <field name="provision_dismantling_account_id"/>
-                                        <field name="terminate_account_id"/>
-                                        <field name="interest_expense_account_id"/>
-                                        <field name="initial_journal_id"/>
-                                        <field name="installment_journal_id"/>
-                                        <field name="analytic_account_id"/>
-                                        <field name="project_site_id"/>
-                                        <field name="type_id"/>
-                                        <field name="location_id"/>
+                                        <field name="lease_liability_account_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="provision_dismantling_account_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="terminate_account_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="interest_expense_account_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="initial_journal_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="installment_journal_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="analytic_account_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="project_site_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="type_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="location_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                                     </group>
                                     <group>
-                                        <field name="terminate_product_id"/>
-                                        <field name="installment_product_id"/>
-                                        <field name="extension_product_id"/>
-                                        <field name="initial_product_id"/>
-                                        <field name="incentives_account_id"/>
-                                        <field name="incentives_product_id"/>
-                                        <field name="asset_model_id"/>
+                                        <field name="terminate_product_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="installment_product_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="extension_product_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="initial_product_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="incentives_account_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="incentives_product_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="asset_model_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                                     </group>
                                 </group>
                             </page>
-                            <page string="Installments">
-                                <field name="installment_ids">
+                            <page string="Installments" >
+                                <field name="installment_ids" attrs="{'readonly': [('state', '!=', 'draft')]}">
                                     <tree edit="0" create="0">
+                                        <field name="period" string="Year"/>
                                         <field name="date"/>
                                         <field name="amount" string="Installment Amount"/>
                                         <field name="subsequent_amount" string="Interest Recognition"/>
@@ -153,6 +155,14 @@
             <field name="arch" type="xml">
                 <tree create="true" duplicate="true" edit="true" delete="true">
                     <field name="name"/>
+                    <field name="create_date"/>
+                    <field name="commencement_date"/>
+                    <field name="vendor_id"/>
+                    <field name="lease_contract_period"/>
+                    <field name="lease_contract_period_type"/>
+                    <field name="external_reference_number"/>
+                    <field name="project_site_id"/>
+                    <field name="state"/>
                 </tree>
             </field>
         </record>
@@ -164,6 +174,20 @@
             <field name="view_mode">tree,form,pivot</field>
             <field name="domain">[('parent_id', '=', False)]</field>
         </record>
+
+
+        <record id="leasee_contract_action_server" model="ir.actions.server">
+            <field name="name">Contract Activation</field>
+            <field name="type">ir.actions.server</field>
+            <field name="model_id" ref="model_leasee_contract"/>
+            <field name="binding_model_id" ref="model_leasee_contract"/>
+            <field name="state">code</field>
+            <field name="code">
+records.action_activate()
+            </field>
+        </record>
+
+
 
         <!--        <menuitem id="menuitem_lease_contract_categ" name="Leasee Contract" parent="account.menu_finance" sequence="10"/>-->
         <menuitem id="menuitem_lease_contract_categ" name="Lease" parent="account_accountant.menu_accounting"

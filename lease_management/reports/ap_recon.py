@@ -58,8 +58,8 @@ class APRecon(models.TransientModel):
             if leasee_installment_id:
                 data.append({
                     'description': bill.display_name,
-                    'month': bill.invoice_date.strftime(DF),
-                    'due_date': bill.invoice_date_due.strftime(DF),
+                    'month': bill.invoice_date.strftime(DF) if bill.invoice_date else '',
+                    'due_date': bill.invoice_date_due.strftime(DF) if bill.invoice_date_due else '',
                     'leasor_name': bill.partner_id.name,
                     'lease_no': bill.leasee_contract_id.name,
                     'lease_payment_amount': bill.amount_untaxed,

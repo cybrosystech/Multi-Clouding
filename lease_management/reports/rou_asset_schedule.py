@@ -74,7 +74,7 @@ class RouAssetSchedule(models.TransientModel):
                 'direct_cost_added': 0,
                 'depreciation': ins.amount_total,
                 'adjustment_lease_liability': ins.asset_id.gross_increase_value,
-                'rou_sub_leased': leasor_contract.annual_payment,
+                'rou_sub_leased': leasor_contract.installment_amount,
                 'rou_increase_decrease': rou_increase_decrease,
                 'loss_leases': 1,
                 'loss_sub_lease': 1,
@@ -82,7 +82,7 @@ class RouAssetSchedule(models.TransientModel):
                 'period_end_date': 1,
                 'comment': 1,
                 'posted_gl': True if ins.state == 'posted' else False,
-                'posting_date': ins.posting_date.strftime(DF),
+                'posting_date': ins.posting_date.strftime(DF) if ins.posting_date else '',
                 'posting_doc_no': ins.name,
             })
         return data

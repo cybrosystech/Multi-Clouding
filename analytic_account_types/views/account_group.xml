@@ -1,0 +1,25 @@
+<odoo>
+    <data>
+        <!-- Inherit Form View to Modify it -->
+        <record id="inherit_view_account_group_form" model="ir.ui.view">
+            <field name="name">inherit_view_account_group_form</field>
+            <field name="model">account.group</field>
+            <field name="inherit_id" ref="account.view_account_group_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='name']" position="after">
+                    <field name="group_sequence" widget="handle" />
+                </xpath>
+            </field>
+        </record>
+        <record id="inherit_view_account_group_tree" model="ir.ui.view">
+            <field name="name">inherit_view_account_group_tree</field>
+            <field name="model">account.group</field>
+            <field name="inherit_id" ref="account.view_account_group_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='name']" position="after">
+                    <field name="group_sequence" />
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

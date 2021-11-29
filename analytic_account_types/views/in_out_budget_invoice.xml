@@ -1,64 +1,66 @@
 <odoo>
-  <data>
-     <record id="view_in_out_budget_invoice_form" model="ir.ui.view">
-         <field name="name">view_in_out_budget_form_invoice</field>
-         <field name="model">budget.in.out.check.invoice</field>
-         <field name="arch" type="xml">
-             <form string="">
-                 <sheet>
-                     <group>
-                         <group>
-                           <field name="name"/>
-                         </group>
-                         <group>
-                           <field name="type"/>
-                             <field name="company_id" groups="base.group_multi_company"/>
+    <data>
+        <record id="view_in_out_budget_invoice_form" model="ir.ui.view">
+            <field name="name">view_in_out_budget_form_invoice</field>
+            <field name="model">budget.in.out.check.invoice</field>
+            <field name="arch" type="xml">
+                <form string="">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                            </group>
+                            <group>
+                                <field name="type"/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                            </group>
+                        </group>
+                        <group>
+                            <div>
+                                <field name="budget_line_ids">
+                                    <tree editable="bottom">
+                                        <field name="name"/>
+                                        <field name="from_amount"/>
+<field name="to_amount" invisible="1"/>
+                                        <field name="approval_seq"/>
+                                        <field name="user_ids" widget="many2many_tags"/>
+                                    </tree>
+                                </field>
+                            </div>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
 
-                         </group>
-                     </group>
-                   <group>
-                     <div>
-                       <field name="budget_line_ids">
-                         <tree editable="bottom">
-                           <field name="name"/>
-                           <field name="from_amount"/>
-                           <field name="to_amount"/>
-                           <field name="approval_seq"/>
-                           <field name="user_ids" widget="many2many_tags"/>
-                         </tree>
-                       </field>
-                     </div>
-                   </group>
-                 </sheet>
-             </form>
-         </field>
-     </record>
+        <record id="view_in_out_budget_tree_invoice" model="ir.ui.view">
+            <field name="name">view_in_out_budget_tree_invoice</field>
+            <field name="model">budget.in.out.check.invoice</field>
+            <field name="arch" type="xml">
+                <tree string="">
+                    <field name="name"/>
+                    <field name="type"/>
+                </tree>
+            </field>
+        </record>
 
-    <record id="view_in_out_budget_tree_invoice" model="ir.ui.view">
-        <field name="name">view_in_out_budget_tree_invoice</field>
-        <field name="model">budget.in.out.check.invoice</field>
-        <field name="arch" type="xml">
-            <tree string="">
-                <field name="name"/>
-                <field name="type"/>
-            </tree>
-        </field>
-    </record>
+        <record id="action_in_out_budget_view_invoice" model="ir.actions.act_window">
+            <field name="name">Budget Check Invoice</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">budget.in.out.check.invoice</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
 
-    <record id="action_in_out_budget_view_invoice" model="ir.actions.act_window">
-        <field name="name">Budget Check Invoice</field>
-        <field name="type">ir.actions.act_window</field>
-        <field name="res_model">budget.in.out.check.invoice</field>
-        <field name="view_mode">tree,form</field>
-        <field name="help" type="html">
-          <p class="oe_view_nocontent_create">
+                </p>
+                <p>
 
-          </p><p>
+                </p>
+            </field>
+        </record>
 
-          </p>
-        </field>
-    </record>
-
-    <menuitem id="menu_in_out_budget_view_invoice" name="Budget Check Invoice" parent="account.menu_finance_configuration" action="action_in_out_budget_view_invoice" sequence="100"/>
-  </data>
+        <menuitem id="menu_in_out_budget_view_invoice" name="Budget Check Invoice"
+                  parent="account.menu_finance_configuration" action="action_in_out_budget_view_invoice"
+                  sequence="100"/>
+    </data>
 </odoo>

@@ -11,5 +11,8 @@
                    class="dropdown-item">Log out</a>
             </div>
         </t>
+        <t t-jquery=".dropdown-divider" t-operation="before">
+            <a role="menuitem" href="#" data-menu="shortcuts" class="dropdown-item d-none d-md-inline-block">Shortcuts</a>
+        </t>
     </t>
 </templates>
