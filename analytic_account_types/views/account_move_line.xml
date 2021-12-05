@@ -34,6 +34,9 @@
                     <field name="is_from_sales" invisible="1"/>
                     <field name="show_confirm_button" invisible="1"/>
                     <field name="show_post_button" invisible="1"/>
+                    <button name="action_post" string="Confirm" class="oe_highlight"
+                                type="object" groups="account.group_account_invoice"
+                                attrs="{'invisible': ['|',('is_from_purchase','=',False),('state','!=','draft')]}"/>
                     <button name="request_approval_button" string="Request Approval" type="object" class="btn-primary"
                             attrs="{'invisible':['|','|',('show_request_approve_button','=',True),('is_from_purchase','=',True),('is_from_sales','=',True)]}"/>
                     <button name="button_approve_purchase_cycle" string="Approve" type="object" class="btn-primary"
