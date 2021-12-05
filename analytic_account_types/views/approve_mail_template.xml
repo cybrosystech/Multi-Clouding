@@ -31,7 +31,7 @@
                     </tr>
                     <tr>
                         <td class="content-block" itemprop="handler" itemtype="http://schema.org/HttpActionHandler">
-                            <a href="/web?#id=${object.id}&amp;view_type=form&amp;model=account.move&amp;action=" class="btn-basic" itemprop="url">Open</a>
+                            <a href="/web?#id=${object.id}&amp;view_type=form&amp;model=sale.order&amp;action=" class="btn-basic" itemprop="url">Open</a>
                         </td>
                     </tr>
                 </table>
@@ -103,7 +103,7 @@
                     </tr>
                     <tr>
                         <td class="content-block" itemprop="handler" itemtype="http://schema.org/HttpActionHandler">
-                            <a href="/web?#id=${object.id}&amp;view_type=form&amp;model=account.move&amp;action=" class="btn-basic" itemprop="url">Open</a>
+                            <a href="/web?#id=${object.id}&amp;view_type=form&amp;model=purchase.order&amp;action=" class="btn-basic" itemprop="url">Open</a>
                         </td>
                     </tr>
                 </table>
