@@ -37,10 +37,20 @@
                     <button name="action_post" string="Confirm" class="oe_highlight"
                                 type="object" groups="account.group_account_invoice"
                                 attrs="{'invisible': ['|',('is_from_purchase','=',False),('state','!=','draft')]}"/>
+                    <button name="action_post" string="Confirm" class="oe_highlight"
+                                type="object" groups="account.group_account_invoice"
+                                attrs="{'invisible': ['|',('is_from_sales','=',False),('state','!=','draft')]}"/>
                     <button name="request_approval_button" string="Request Approval" type="object" class="btn-primary"
                             attrs="{'invisible':['|','|',('show_request_approve_button','=',True),('is_from_purchase','=',True),('is_from_sales','=',True)]}"/>
                     <button name="button_approve_purchase_cycle" string="Approve" type="object" class="btn-primary"
                             attrs="{'invisible':[('show_approve_button','=',False)]}"/>
+                </xpath>
+
+                <xpath expr="//sheet/group/group[@id='header_right_group']/div[@name='journal_div']" position="after">
+                    <field name="company_id" groups="base.group_multi_company"/>
+                </xpath>
+                <xpath expr="//notebook/page[@id='other_tab']/group[@id='other_tab_group']/group[@name='accounting_info_group']/field[@name='company_id']" position="attributes">
+                    <attribute name="invisible">1</attribute>
                 </xpath>
 
                 <!-- position: after|before|replace|attributes|inside -->
