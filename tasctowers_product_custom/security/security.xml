@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record model="ir.rule" id="product_category_rule">
+            <field name="name">Product Category</field>
+            <field name="model_id" ref="model_product_category"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+        <record model="ir.rule" id="product_template_rule">
+            <field name="name">Product Template</field>
+            <field name="model_id" ref="model_product_template"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|', ('categ_company_id', '=', False), ('categ_company_id', 'in', company_ids)]</field>
+        </record>
+    </data>
+</odoo>
