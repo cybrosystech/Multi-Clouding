@@ -9,6 +9,7 @@ var QWeb = core.qweb;
 var _t = core._t;
 var datepicker = require('web.datepicker');
 var BasicModel = require('web.BasicModel');
+var field_utils = require('web.field_utils');
 
 BasicModel.include({
     _getDomain: function (element, options) {
