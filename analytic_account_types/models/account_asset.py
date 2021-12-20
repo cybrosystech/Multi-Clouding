@@ -27,6 +27,18 @@ class AccountAsset(models.Model):
             rec.type_id = rec.project_site_id.analytic_type_filter_id.id
             rec.location_id = rec.project_site_id.analytic_location_id.id
 
+    def write(self, vals):
+        res = super(AccountAsset, self).write(vals)
+        if 'project_site_id' in vals or 'type_id' in vals or 'location_id' in vals:
+            moves = self.depreciation_move_ids.filtered(lambda line: line.state == 'draft')
+            for move in moves:
+                for line in move.line_ids:
+                    line.write({
+                        'project_site_id': self.project_site_id.id if self.project_site_id else False,
+                        'type_id': self.type_id.id if self.type_id else False,
+                        'location_id': self.location_id.id if self.location_id else False,
+                    })
+        return res
 
     @api.onchange('model_id')
     def _onchange_model_id(self):
