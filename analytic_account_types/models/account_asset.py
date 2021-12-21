@@ -20,6 +20,17 @@ class AccountAsset(models.Model):
     location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location",
                                   domain=[('analytic_account_type', '=', 'location')], required=False, )
 
+    def action_oe_compute_depreciation_board(self):
+        if self.filtered(lambda aa: aa.state != 'draft'):
+            raise UserError(_('Only draft assets can be compute depreciation.'))
+        for asset in self:
+            asset.compute_depreciation_board()
+
+    def action_oe_validate(self):
+        if self.filtered(lambda aa: aa.state != 'draft'):
+            raise UserError(_('Only draft assets can be confirm.'))
+        for asset in self:
+            asset.validate()
 
     @api.onchange('project_site_id')
     def _onchange_project_site_id(self):

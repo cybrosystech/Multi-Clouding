@@ -40,6 +40,7 @@
         'views/approve_mail_template.xml',
         'views/account_account.xml',
         'views/account_group.xml',
+        'views/account_asset_views.xml',
     ],
     # only loaded in demonstration mode
     'demo': [
