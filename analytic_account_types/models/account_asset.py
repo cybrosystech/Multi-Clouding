@@ -29,11 +29,12 @@ class AccountAsset(models.Model):
 
     def write(self, vals):
         res = super(AccountAsset, self).write(vals)
-        if 'project_site_id' in vals or 'type_id' in vals or 'location_id' in vals:
+        if 'account_analytic_id' in vals or 'project_site_id' in vals or 'type_id' in vals or 'location_id' in vals:
             moves = self.depreciation_move_ids.filtered(lambda line: line.state == 'draft')
             for move in moves:
                 for line in move.line_ids:
                     line.write({
+                        'analytic_account_id': self.account_analytic_id.id if self.account_analytic_id else False,
                         'project_site_id': self.project_site_id.id if self.project_site_id else False,
                         'type_id': self.type_id.id if self.type_id else False,
                         'location_id': self.location_id.id if self.location_id else False,
