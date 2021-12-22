@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_leasee_period_extend_form" model="ir.ui.view">
+            <field name="name">leasee.period.extend.form</field>
+            <field name="model">leasee.period.extend</field>
+            <field name="arch" type="xml">
+                <form string="MODEL" create="true" duplicate="true" edit="true" delete="true">
+                    <sheet>
+                        <group>
+                            <field name="new_contract_period"/>
+                            <field name="estimated_cost_dismantling"/>
+                            <field name="incentives_received"/>
+                            <field name="incentives_received_type"/>
+                            <field name="initial_direct_cost"/>
+                            <field name="installment_amount"/>
+                            <field name="increasement_rate"/>
+                            <field name="increasement_frequency"/>
+                        </group>
+                    </sheet>
+                    <footer>
+                        <button name="action_apply"   string="Apply" type="object" class="oe_highlight"/>
+                        <button string="Cancel" special="cancel" class="oe_link"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_leasee_period_extend_action" model="ir.actions.act_window">
+            <field name="name">Extend Contract Period</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">leasee.period.extend</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+    </data>
+</odoo>
