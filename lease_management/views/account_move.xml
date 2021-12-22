@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <record id="view_account_move_tree_inherit" model="ir.ui.view">
+            <field name="name">account.move.tree.inherit</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_invoice_tree"/>
+            <field name="arch" type="xml">
+                
+                <xpath expr="//field[@name='invoice_date_due']" position="before">
+                     <field name="date" optional="show"/>
+                </xpath>
+                
+            </field>
+        </record>
+    
+    </data>
+</odoo>

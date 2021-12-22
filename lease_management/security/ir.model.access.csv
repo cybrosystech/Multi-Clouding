@@ -1,0 +1,13 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_leasee_installment,leasee_installment,model_leasee_installment,,1,1,1,1
+access_leasee_contract_template,leasee_contract_template,model_leasee_contract_template,,1,1,1,1
+access_leasee_contract,leasee_contract,model_leasee_contract,,1,1,1,1
+access_leasee_contract_reassessment,leasee_contract_reassessment,model_leasee_contract_reassessment,,1,1,1,1
+access_leasee_reassessment_increase,leasee_reassessment_increase,model_leasee_reassessment_increase,,1,1,1,1
+access_leasee_period_extend,leasee_period_extend,model_leasee_period_extend,,1,1,1,1
+access_leasee_extend_log,leasee_extend_log,model_leasee_extend_log,,1,1,1,1
+access_general_ledger_posting_wizard,general_ledger_posting_wizard,model_general_ledger_posting_wizard,,1,1,1,1
+access_ap_recon_wizard,ap_recon_wizard,model_ap_recon_wizard,,1,1,1,1
+access_lease_liability_schedule_wizard,lease_liability_schedule_wizard,model_lease_liability_schedule_wizard,,1,1,1,1
+access_leasor_contract,leasor_contract,model_leasor_contract,,1,1,1,1
+access_rou_asset_schedule_wizard,rou_asset_schedule_wizard,model_rou_asset_schedule_wizard,,1,1,1,1
