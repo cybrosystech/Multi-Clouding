@@ -20,6 +20,17 @@ class AccountAsset(models.Model):
     location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location",
                                   domain=[('analytic_account_type', '=', 'location')], required=False, )
 
+    def action_oe_compute_depreciation_board(self):
+        if self.filtered(lambda aa: aa.state != 'draft'):
+            raise UserError(_('Only draft assets can be compute depreciation.'))
+        for asset in self:
+            asset.compute_depreciation_board()
+
+    def action_oe_validate(self):
+        if self.filtered(lambda aa: aa.state != 'draft'):
+            raise UserError(_('Only draft assets can be confirm.'))
+        for asset in self:
+            asset.validate()
 
     @api.onchange('project_site_id')
     def _onchange_project_site_id(self):
@@ -27,6 +38,19 @@ class AccountAsset(models.Model):
             rec.type_id = rec.project_site_id.analytic_type_filter_id.id
             rec.location_id = rec.project_site_id.analytic_location_id.id
 
+    def write(self, vals):
+        res = super(AccountAsset, self).write(vals)
+        if 'account_analytic_id' in vals or 'project_site_id' in vals or 'type_id' in vals or 'location_id' in vals:
+            moves = self.depreciation_move_ids.filtered(lambda line: line.state == 'draft')
+            for move in moves:
+                for line in move.line_ids:
+                    line.write({
+                        'analytic_account_id': self.account_analytic_id.id if self.account_analytic_id else False,
+                        'project_site_id': self.project_site_id.id if self.project_site_id else False,
+                        'type_id': self.type_id.id if self.type_id else False,
+                        'location_id': self.location_id.id if self.location_id else False,
+                    })
+        return res
 
     @api.onchange('model_id')
     def _onchange_model_id(self):
