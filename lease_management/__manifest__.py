@@ -2,7 +2,7 @@
 {
     'name': "Lease Management",
     'summary': """Lease Management""",
-    'author': "Mahmoud Naguib",
+    'author': "Bitsera",
     "version": "14.0.1.0.0",
     "category": "Accounting",
     "depends": ["account", "account_asset", "analytic_account_types"],
