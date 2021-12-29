@@ -176,8 +176,8 @@ class LeaseeContract(models.Model):
                 contract.create_installments()
                 contract.state = 'active'
 
-        self.leasee_action_generate_installments_entries()
-        self.leasee_action_generate_interest_entries()
+            contract.leasee_action_generate_installments_entries()
+            contract.leasee_action_generate_interest_entries()
 
     def action_view_asset(self):
         view_id = self.env.ref('account_asset.view_account_asset_form')
