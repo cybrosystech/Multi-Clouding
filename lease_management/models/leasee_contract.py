@@ -238,7 +238,7 @@ class LeaseeContract(models.Model):
             if rec.state == 'terminated':
                 rec.rou_value = 0
             else:
-                if self.incentives_received_type == 'rent_free':
+                if rec.incentives_received_type == 'rent_free':
                     rec.rou_value = rec.lease_liability + rec.initial_payment_value + rec.initial_direct_cost + rec.estimated_cost_dismantling
                 else:
                     rec.rou_value = rec.lease_liability + rec.initial_payment_value + rec.initial_direct_cost + rec.estimated_cost_dismantling - rec.incentives_received
