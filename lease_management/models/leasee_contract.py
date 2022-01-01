@@ -308,7 +308,8 @@ class LeaseeContract(models.Model):
     def compute_remaining_lease_liability(self):
         for rec in self:
             move_lines = self.env['account.move.line'].search([
-                ('move_id.state', '=', 'posted'),
+                # ('move_id.state', '=', 'posted'),
+                ('move_id.state', 'in', ['posted','cancel']),
                 ('move_id.leasee_contract_id', '=', self.id),
                 ('account_id', '=', self.lease_liability_account_id.id),
             ])
