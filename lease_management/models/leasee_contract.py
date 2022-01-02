@@ -176,8 +176,8 @@ class LeaseeContract(models.Model):
                 contract.create_installments()
                 contract.state = 'active'
 
-        self.leasee_action_generate_installments_entries()
-        self.leasee_action_generate_interest_entries()
+            contract.leasee_action_generate_installments_entries()
+            contract.leasee_action_generate_interest_entries()
 
     def action_view_asset(self):
         view_id = self.env.ref('account_asset.view_account_asset_form')
@@ -238,7 +238,7 @@ class LeaseeContract(models.Model):
             if rec.state == 'terminated':
                 rec.rou_value = 0
             else:
-                if self.incentives_received_type == 'rent_free':
+                if rec.incentives_received_type == 'rent_free':
                     rec.rou_value = rec.lease_liability + rec.initial_payment_value + rec.initial_direct_cost + rec.estimated_cost_dismantling
                 else:
                     rec.rou_value = rec.lease_liability + rec.initial_payment_value + rec.initial_direct_cost + rec.estimated_cost_dismantling - rec.incentives_received
@@ -308,7 +308,8 @@ class LeaseeContract(models.Model):
     def compute_remaining_lease_liability(self):
         for rec in self:
             move_lines = self.env['account.move.line'].search([
-                ('move_id.state', '=', 'posted'),
+                # ('move_id.state', '=', 'posted'),
+                ('move_id.state', 'in', ['posted','cancel']),
                 ('move_id.leasee_contract_id', '=', self.id),
                 ('account_id', '=', self.lease_liability_account_id.id),
             ])
