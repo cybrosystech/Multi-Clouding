@@ -22,8 +22,11 @@
     "CorporateHub, "
     "Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/account-analytic",
-    "depends": ["account", "analytic"],
-    "data": ["views/account_analytic_account_view.xml"],
+    "depends": ["account", "analytic", "account_asset"],
+    "data": [
+        "views/account_analytic_account_view.xml",
+        "views/account_deferred_revenue.xml",
+    ],
     "demo": ["data/analytic_account_demo.xml"],
     "post_init_hook": "post_init_hook",
 }
