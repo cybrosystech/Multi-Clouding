@@ -1,0 +1,18 @@
+<templates>
+    <t t-extend="reconciliation.line.create">
+        <t t-jquery="tr[class='create_analytic_account_id']" t-operation="append">
+            <tr class="create_project_site_id">
+                <td class="o_td_label"><label class="o_form_label">Project/Site</label></td>
+                    <td class="o_td_field"></td>
+            </tr>
+            <tr class="create_location_id">
+                <td class="o_td_label"><label class="o_form_label">Location</label></td>
+                    <td class="o_td_field"></td>
+            </tr>
+            <tr class="create_type_id">
+                <td class="o_td_label"><label class="o_form_label">Type</label></td>
+                    <td class="o_td_field"></td>
+            </tr>
+        </t>
+    </t>
+</templates>
