@@ -13,6 +13,36 @@ odoo.define('analytical_type.project_type', function (require) {
     var NewLineRenderer = require('account.ReconciliationRenderer');
 
 NewLineRenderer.LineRenderer.include({
+
+      events: {
+        'click .accounting_view caption .o_buttons button': '_onValidate',
+        'click .accounting_view tfoot': '_onChangeTab',
+        'click': '_onTogglePanel',
+        'click .o_field_widget': '_onStopPropagation',
+        'keydown .o_input, .edit_amount_input': '_onStopPropagation',
+        'click .o_notebook li a': '_onChangeTab',
+        'click .cell': '_onEditAmount',
+        'change input.filter': '_onFilterChange',
+        'click .match .load-more a': '_onLoadMore',
+        'click .match .mv_line td': '_onSelectMoveLine',
+        'click .accounting_view tbody .mv_line td': '_onSelectProposition',
+        'click .o_reconcile_models button': '_onQuickCreateProposition',
+        'click .create .add_line': '_onCreateProposition',
+        'click .reconcile_model_create': '_onCreateReconcileModel',
+        'click .reconcile_model_edit': '_onEditReconcileModel',
+        'keyup input': '_onInputKeyup',
+        'blur input': '_onInputKeyup',
+        'keydown': '_onKeydown',
+        'change tr.create_project_site_id': '_onProjectChange',
+    },
+//    events: _.extend({}, LineRenderer.prototype.events, {
+//        'change .create_project_site_id': '_onProjectChange'
+//    }),
+//
+    _onProjectChange: function (event) {
+        console.log('Filter');
+    },
+
     _renderCreate: function (state) {
         var self = this;
         return this.model.makeRecord('account.bank.statement.line', [{
@@ -34,7 +64,7 @@ NewLineRenderer.LineRenderer.include({
             relation: 'account.analytic.account',
             type: 'many2one',
             name: 'analytic_account_id',
-            domain: ["|", ['company_id', '=', state.st_line.company_id], ['company_id', '=', false], ['analytic_account_type', '=', 'project_site']],
+            domain: ["|", ['company_id', '=', state.st_line.company_id], ['company_id', '=', false], ['analytic_account_type', '=', 'cost_center']],
         }, {
             relation: 'account.analytic.account',
             type: 'many2one',
@@ -143,6 +173,27 @@ NewLineRenderer.LineRenderer.include({
             }
         });
     },
+//    _onFieldChanged: function (event) {
+//        event.stopPropagation();
+//        var fieldName = event.target.name;
+//        if (fieldName === 'partner_id') {
+//            var partner_id = event.data.changes.partner_id;
+//            this.trigger_up('change_partner', {'data': partner_id});
+//        } else {
+//            console.log(event.target.name)
+//            if (event.data.changes.amount && isNaN(event.data.changes.amount)) {
+//                return;
+//            }
+//            this.trigger_up('update_proposition', {'data': event.data.changes});
+//        }
+//        if (fieldName === 'project_site_id'){
+//        console.log(event.target)
+////            var $create = $(qweb.render("reconciliation.line.create", {}));
+//            var fd = 3
+////            fd.appendTo($create.find('.create_location_id .o_td_field'));
+//            $('.create_location_id .o_td_field').val('fd');
+//        }
+//    },
 });
 });
 
