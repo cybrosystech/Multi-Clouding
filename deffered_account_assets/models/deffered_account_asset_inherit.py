@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from odoo import fields, models, _
+from odoo import fields, models, _, api
 from dateutil.relativedelta import relativedelta
 import pandas as pd
 import numpy as np
@@ -14,6 +14,12 @@ class AccountAssetInherit(models.Model):
     method_period = fields.Selection(selection_add=[('day', 'Day')])
     start_date = fields.Date()
     end_date = fields.Date()
+
+    @api.onchange('start_date')
+    def onchange_start_date(self):
+        Date = self.start_date
+        self.acquisition_date = Date
+        self.first_depreciation_date =Date
 
     def _compute_board_amount(self, computation_sequence, residual_amount,
                               total_amount_to_depr, max_depreciation_nb,
@@ -74,6 +80,7 @@ class AccountAssetInherit(models.Model):
             [m.amount_total for m in amount_change_ids])
         depreciation_date = self.first_depreciation_date
         if self.method_period == 'day':
+            self.prorata = False
             df = pd.DataFrame({'Date1': np.array([self.end_date]),
                                'Date2': np.array([self.start_date])})
             df['nb_months'] = ((df.Date1 - df.Date2) / np.timedelta64(1,

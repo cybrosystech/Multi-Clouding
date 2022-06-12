@@ -17,12 +17,22 @@
             </xpath>
             <xpath expr="//label[@for='method_number']" position="attributes">
                 <attribute name="attrs">{'invisible': [('method_period', 'in',
-                    ('day',))]}
+                    ('day'))]}
                 </attribute>
             </xpath>
             <xpath expr="//field[@name='method_number']" position="attributes">
                 <attribute name="attrs">{'invisible': [('method_period', 'in',
                     ('day',))]}
+                </attribute>
+            </xpath>
+            <xpath expr="//label[@for='prorata']" position="attributes">
+                <attribute name="attrs">{'invisible': [('method_period', 'in',
+                    ('day'))]}
+                </attribute>
+            </xpath>
+            <xpath expr="//field[@name='prorata']" position="attributes">
+                <attribute name="attrs">{'invisible': [('method_period', 'in',
+                    ('day'))]}
                 </attribute>
             </xpath>
         </field>
