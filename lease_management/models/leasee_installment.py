@@ -14,16 +14,17 @@ class LeaseeInstallment(models.Model):
 
     name = fields.Char(string="", default="", required=True, )
 
-    amount = fields.Float(string="", default=0.0, required=False, )
-    period = fields.Integer(string="", default=0, required=False, )
+    amount = fields.Float(string="", default=0.0, required=False, digits=(16, 5) )
+    period = fields.Integer(string="Installment", default=0, required=False, )
     date = fields.Date(string="", )
     leasee_contract_id = fields.Many2one(comodel_name="leasee.contract", string="", required=False,ondelete='cascade' )
     installment_invoice_id = fields.Many2one(comodel_name="account.move", string="", required=False, )
-    subsequent_amount = fields.Float()
-    remaining_lease_liability = fields.Float()
+    subsequent_amount = fields.Float(digits=(16, 5))
+    remaining_lease_liability = fields.Float(digits=(16, 5))
     # installment_move_id = fields.Many2one(comodel_name="account.move", string="", required=False, )
     # interest_move_id = fields.Many2one(comodel_name="account.move", string="", required=False, )
     interest_move_ids = fields.One2many(comodel_name="account.move", inverse_name="leasee_installment_id", string="", required=False, )
+    is_advance = fields.Boolean(default=False)
 
     def get_period_order(self):
         if not max(self.leasee_contract_id.installment_ids.mapped('period')):

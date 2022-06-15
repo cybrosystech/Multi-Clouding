@@ -32,7 +32,8 @@ class LeaseContractTemplate(models.Model):
     # discount = fields.Float(string="Discount %", default=0.0, required=False, )
     asset_model_id = fields.Many2one(comodel_name="account.asset", string="Asset Model", required=False, domain=[('asset_type', '=', 'purchase'), ('state', '=', 'model')] )
 
-    lease_liability_account_id = fields.Many2one(comodel_name="account.account", string="", required=True, )
+    lease_liability_account_id = fields.Many2one(comodel_name="account.account", string="Short Lease Liability Account", required=True, )
+    long_lease_liability_account_id = fields.Many2one(comodel_name="account.account", string="Long Lease Liability Account", required=True, )
     provision_dismantling_account_id = fields.Many2one(comodel_name="account.account", string="", required=True, )
     terminate_account_id = fields.Many2one(comodel_name="account.account", string="", required=True, )
     interest_expense_account_id = fields.Many2one(comodel_name="account.account", string="", required=True, )

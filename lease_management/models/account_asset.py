@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 """ init object """
+import calendar
 from math import copysign
 from odoo import fields, models, api, _
 from odoo.exceptions import ValidationError, UserError
 from odoo.tools import float_compare
+from dateutil.relativedelta import relativedelta
 
 
 import logging
@@ -55,6 +57,8 @@ class AccountAsset(models.Model):
             move_ids = []
             assert len(self) == len(invoice_line_ids)
             for asset, invoice_line_id in zip(self, invoice_line_ids):
+                if asset.parent_id.leasee_contract_ids:
+                    continue
                 if disposal_date < max(asset.depreciation_move_ids.filtered(
                         lambda x: not x.reversal_move_id and x.state == 'posted').mapped('date') or [fields.Date.today()]):
                     if invoice_line_id:
@@ -62,17 +66,19 @@ class AccountAsset(models.Model):
                             'There are depreciation posted after the invoice date (%s).\nPlease revert them or change the date of the invoice.' % disposal_date)
                     else:
                         raise UserError('There are depreciation posted in the future, please revert them.')
+                disposal_date = self.env.context.get('disposal_date') or disposal_date
                 account_analytic_id = asset.account_analytic_id
                 analytic_tag_ids = asset.analytic_tag_ids
                 company_currency = asset.company_id.currency_id
                 current_currency = asset.currency_id
                 prec = company_currency.decimal_places
+                if self.leasee_contract_ids:
+                    self.create_last_termination_move(disposal_date)
                 unposted_depreciation_move_ids = asset.depreciation_move_ids.filtered(lambda x: x.state == 'draft')
 
                 old_values = {
                     'method_number': asset.method_number,
                 }
-
                 # Remove all unposted depr. lines
                 commands = [(2, line_id.id, False) for line_id in unposted_depreciation_move_ids]
 
@@ -90,18 +96,32 @@ class AccountAsset(models.Model):
                 invoice_account = invoice_line_id.account_id
                 difference = -initial_amount - depreciated_amount - invoice_amount
                 difference_account = asset.company_id.gain_account_id if difference > 0 else asset.company_id.loss_account_id
+                value_residual = asset.value_residual
                 if self.leasee_contract_ids:
                     # initial_amount = asset.book_value
-                    remaining_leasee_amount = -1 * self.leasee_contract_ids.remaining_lease_liability
-                    leasee_difference = -asset.value_residual - remaining_leasee_amount
+
+                    if asset.children_ids:
+                        initial_amount += sum(asset.children_ids.mapped('original_value'))
+                        value_residual += sum(asset.children_ids.mapped('value_residual'))
+                        child_depreciation_moves = asset.children_ids.depreciation_move_ids.filtered(lambda r: r.state == 'posted' and not (r.reversal_move_id and r.reversal_move_id[0].state == 'posted'))
+                        depreciated_amount += copysign(sum(child_depreciation_moves.mapped('amount_total')), -initial_amount)
+                    termination_residual = self.leasee_contract_ids.get_interest_amount_termination_amount(disposal_date)
+                    move = self.leasee_contract_ids.create_interset_move(self.env['leasee.installment'] , disposal_date, termination_residual)
+                    move.action_post()
+                    remaining_leasee_amount = -1 * (self.leasee_contract_ids.remaining_lease_liability)
+                    leasee_difference = -value_residual - remaining_leasee_amount
                     # leasee_difference = -asset.book_value - remaining_leasee_amount
                     leasee_difference_account = asset.company_id.gain_account_id if difference > 0 else asset.company_id.loss_account_id
-                    leasee_account = self.leasee_contract_ids.lease_liability_account_id
-
-                    line_datas = [(initial_amount, initial_account), (remaining_leasee_amount, leasee_account),
-                                  (invoice_amount, invoice_account), (leasee_difference, leasee_difference_account), (depreciated_amount, depreciation_account)]
+                    short_leasee_account = self.leasee_contract_ids.lease_liability_account_id
+                    short_lease_liability_amount = self.leasee_contract_ids.remaining_short_lease_liability
+                    short_remaining_leasee_amount = -1 * short_lease_liability_amount
+                    long_leasee_account = self.leasee_contract_ids.long_lease_liability_account_id
+                    remaining_long_lease_liability = -1 * self.leasee_contract_ids.remaining_long_lease_liability
+                    line_datas = [(initial_amount, initial_account), (short_remaining_leasee_amount, short_leasee_account),
+                                   (remaining_long_lease_liability, long_leasee_account),(invoice_amount, invoice_account),
+                                  (leasee_difference, leasee_difference_account),(depreciated_amount, depreciation_account)]
                     if not invoice_line_id:
-                        del line_datas[2]
+                        del line_datas[3]
                 else:
                     difference = -initial_amount - depreciated_amount - invoice_amount
                     difference_account = asset.company_id.gain_account_id if difference > 0 else asset.company_id.loss_account_id
@@ -110,7 +130,7 @@ class AccountAsset(models.Model):
                     if not invoice_line_id:
                         del line_datas[2]
                 vals = {
-                    'amount_total': current_currency._convert(asset.value_residual, company_currency, asset.company_id,
+                    'amount_total': current_currency._convert(value_residual, company_currency, asset.company_id,
                                                               disposal_date),
                     'asset_id': asset.id,
                     'ref': asset.name + ': ' + (_('Disposal') if not invoice_line_id else _('Sale')),
@@ -135,4 +155,64 @@ class AccountAsset(models.Model):
             return move_ids
         else:
             return super(AccountAsset, self)._get_disposal_moves(invoice_line_ids, disposal_date)
+
+    def create_last_termination_move(self, disposal_date):
+        end_move = self.depreciation_move_ids.filtered(lambda m: m.date.month == disposal_date.month and m.date.year == disposal_date.year)
+        start_month = disposal_date.replace(day=1)
+        end_month = start_month + relativedelta(months=1, days=-1)
+        ratio = ((disposal_date - start_month).days + 1) / ((end_month - start_month).days + 1)
+        if not end_move or not end_move.line_ids:
+            raise ValidationError(_('Please post the asset first'))
+        new_value = abs(end_move.line_ids[0].debit - end_move.line_ids[0].credit) * ratio
+        end_move.write({
+            'date': disposal_date,
+            'line_ids':[(1, line.id,{'debit': new_value if line.debit else 0,'credit': new_value if line.credit else 0 }) for line in end_move.line_ids]
+        })
+        end_move.action_post()
+
+    def set_to_close(self, invoice_line_id, date=None):
+        if self.env.context.get('disposal_date'):
+            date = self.env.context.get('disposal_date')
+        return super(AccountAsset, self).set_to_close(invoice_line_id, date)
+
+    def _recompute_board(self, depreciation_number, starting_sequence, amount_to_depreciate, depreciation_date, already_depreciated_amount, amount_change_ids):
+        move_vals = super(AccountAsset, self)._recompute_board(depreciation_number, starting_sequence, amount_to_depreciate, depreciation_date, already_depreciated_amount, amount_change_ids)
+        if self._context.get('decrease'):
+            # move_vals = move_vals[1:]
+            if move_vals:
+                first_date = self.prorata_date
+                if int(self.method_period) % 12 != 0:
+                    month_days = calendar.monthrange(first_date.year, first_date.month)[1]
+                    days = month_days - first_date.day + 1
+                    prorata_factor = days / month_days
+                else:
+                    total_days = (depreciation_date.year % 4) and 365 or 366
+                    days = (self.company_id.compute_fiscalyear_dates(first_date)['date_to'] - first_date).days + 1
+                    prorata_factor = days / total_days
+
+                last_factor = (1-prorata_factor)
+                move_vals[-1]['line_ids'][0][2]['debit'] = move_vals[-2]['line_ids'][0][2]['debit'] * last_factor
+                move_vals[-1]['line_ids'][0][2]['credit'] = move_vals[-2]['line_ids'][0][2]['credit'] * last_factor
+                move_vals[-1]['line_ids'][0][2]['amount_currency'] = move_vals[-2]['line_ids'][0][2]['amount_currency'] * last_factor
+                move_vals[-1]['line_ids'][1][2]['debit'] = move_vals[-2]['line_ids'][1][2]['debit'] * last_factor
+                move_vals[-1]['line_ids'][1][2]['credit'] = move_vals[-2]['line_ids'][1][2]['credit'] * last_factor
+                move_vals[-1]['line_ids'][1][2]['amount_currency'] = move_vals[-2]['line_ids'][1][2]['amount_currency'] * last_factor
+
+                move_vals[1]['line_ids'][0][2]['debit'] = move_vals[-2]['line_ids'][0][2]['debit']
+                move_vals[1]['line_ids'][0][2]['credit'] = move_vals[-2]['line_ids'][0][2]['credit']
+                move_vals[1]['line_ids'][0][2]['amount_currency'] = move_vals[-2]['line_ids'][0][2]['amount_currency']
+                move_vals[1]['line_ids'][1][2]['debit'] = move_vals[-2]['line_ids'][1][2]['debit']
+                move_vals[1]['line_ids'][1][2]['credit'] = move_vals[-2]['line_ids'][1][2]['credit']
+                move_vals[1]['line_ids'][1][2]['amount_currency'] = move_vals[-2]['line_ids'][1][2]['amount_currency']
+
+                move_vals[0]['line_ids'][0][2]['debit'] = move_vals[-2]['line_ids'][0][2]['debit'] * prorata_factor
+                move_vals[0]['line_ids'][0][2]['credit'] = move_vals[-2]['line_ids'][0][2]['credit'] * prorata_factor
+                move_vals[0]['line_ids'][0][2]['amount_currency'] = move_vals[-2]['line_ids'][0][2]['amount_currency'] * prorata_factor
+                move_vals[0]['line_ids'][1][2]['debit'] = move_vals[-2]['line_ids'][1][2]['debit'] * prorata_factor
+                move_vals[0]['line_ids'][1][2]['credit'] = move_vals[-2]['line_ids'][1][2]['credit'] * prorata_factor
+                move_vals[0]['line_ids'][1][2]['amount_currency'] = move_vals[-2]['line_ids'][1][2]['amount_currency'] * prorata_factor
+
+        return move_vals
+
+
 

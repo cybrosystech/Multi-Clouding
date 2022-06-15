@@ -14,6 +14,7 @@ class AccountMove(models.Model):
     leasee_installment_id = fields.Many2one(comodel_name="leasee.installment", string="", required=False, )
     leasor_contract_id = fields.Many2one(comodel_name="leasor.contract", string="", required=False, )
     posting_date = fields.Date()
+    is_installment_entry = fields.Boolean(default=False)
 
     def _post(self, soft=True):
         to_post = super(AccountMove, self)._post(soft)

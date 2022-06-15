@@ -36,6 +36,7 @@
                         <group string="Contract Accounts">
                             <group>
                                 <field name="lease_liability_account_id" />
+                                <field name="long_lease_liability_account_id" />
                                 <field name="provision_dismantling_account_id" />
                                 <field name="terminate_account_id" />
                                 <field name="interest_expense_account_id" />

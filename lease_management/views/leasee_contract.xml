@@ -11,16 +11,24 @@
                         <field name="child_ids" invisible="1" />
                         <button name="action_activate" string="Activate" class="oe_highlight" states="draft"
                                 type="object"/>
+                        <button name="action_create_installments" string="Create Installments" class="oe_highlight" states="draft"
+                                type="object"/>
                         <button name="action_create_payment" string="Create Payment" class="oe_highlight" states="draft"
                                 type="object"/>
                         <button name="action_terminate" string="Terminate" class="oe_highlight" states="active,extended"
                                 type="object"/>
                         <button name="%(lease_management.view_leasee_contract_reassessment_action)d"
                                 string="Reassessment" class="oe_highlight" states="active,extended" type="action"/>
+                        <button name="%(lease_management.view_advance_leasee_wizard_action)d"
+                                string="Advance Installments" class="oe_highlight" states="active,extended" type="action"/>
                         <button name="%(lease_management.view_leasee_period_extend_action)d" string="Extend Period"
                                 class="oe_highlight"
                                 attrs="{'invisible': ['|',('extendable', '!=', True),('state', 'not in', ['active'])]}"
                                 type="action"/>
+                        <button name="%(lease_management.view_change_leasor_wizard_action)d" string="Change Leasor" class="oe_highlight"
+                                attrs="{'invisible': [('state', 'not in', ['active'])]}"
+                                type="action"
+                                />
                         <field name="state" widget="statusbar" statusbar_visible=""/>
                     </header>
                     <sheet>
@@ -54,7 +62,8 @@
                             <group>
                                 <field name="leasee_template_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                                 <field name="external_reference_number" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                <field name="vendor_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="leasor_type" attrs="{'readonly': [('state', '!=', 'draft')]}" />
+                                <field name="vendor_id" attrs="{'invisible':[('leasor_type','!=','single')],'required':[('leasor_type','=','single')],'readonly': [('state', '!=', 'draft')]}"/>
                                 <field name="inception_date" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                                 <field name="commencement_date" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                                 <field name="initial_payment_value" />
@@ -87,7 +96,7 @@
                                         <field name="terminate_fine" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                                         <field name="type_terminate" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                                         <field name="extendable" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="prorata" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="prorata" />
                                         <!--                                        <field name="asset_model_id" />-->
                                     </group>
                                     <group>
@@ -106,6 +115,7 @@
                                 <group>
                                     <group>
                                         <field name="lease_liability_account_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="long_lease_liability_account_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                                         <field name="provision_dismantling_account_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                                         <field name="terminate_account_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                                         <field name="interest_expense_account_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
@@ -129,12 +139,22 @@
                             </page>
                             <page string="Installments" >
                                 <field name="installment_ids" attrs="{'readonly': [('state', '!=', 'draft')]}">
-                                    <tree edit="0" create="0">
-                                        <field name="period" string="Year"/>
-                                        <field name="date"/>
+                                    <tree editable="bottom" edit="1" create="0" delete="0">
+                                        <field name="period" string="Installment" readonly="1"/>
+                                        <field name="date" />
                                         <field name="amount" string="Installment Amount"/>
-                                        <field name="subsequent_amount" string="Interest Recognition"/>
-                                        <field name="remaining_lease_liability" />
+                                        <field name="subsequent_amount" string="Interest Recognition" readonly="1"/>
+                                        <field name="remaining_lease_liability" readonly="1"/>
+                                    </tree>
+                                </field>
+                            </page>
+                            <page string="Multi Leasors" attrs="{'invisible':[('leasor_type','=','single')]}">
+                                <field name="multi_leasor_ids" attrs="{'readonly': [('state', '!=', 'draft')]}" >
+                                    <tree editable="bottom">
+                                        <field name="partner_id" />
+                                        <field name="type" />
+                                        <field name="amount" attrs="{'invisible': [('type', '!=', 'amount')], 'required': [('type', '=', 'amount')]}"/>
+                                        <field name="percentage" attrs="{'invisible': [('type', '!=', 'percentage')], 'required': [('type', '=', 'percentage')]}" />
                                     </tree>
                                 </field>
                             </page>
