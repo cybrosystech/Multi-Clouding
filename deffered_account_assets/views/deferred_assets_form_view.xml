@@ -1,0 +1,44 @@
+<odoo>
+
+    <record id="view_account_asset_inherit" model="ir.ui.view">
+        <field name="name">account.asset.inherit</field>
+        <field name="model">account.asset</field>
+        <field name="inherit_id" ref="account_asset.view_account_asset_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='method_period']" position="after">
+                <label for="start_date" string="From"
+                       attrs="{'invisible': [('method_period', 'not in', ('day',))]}"/>
+                <field name="start_date"
+                       attrs="{'invisible': [('method_period', 'not in', ('day',))], 'required': [('method_period','=','day')]}"/>
+                <label for="end_date" string="To"
+                       attrs="{'invisible': [('method_period', 'not in', ('day',))]}"/>
+                <field name="end_date"
+                       attrs="{'invisible': [('method_period', 'not in', ('day',))], 'required': [('method_period','=','day')]}"/>
+            </xpath>
+            <xpath expr="//label[@for='method_number']" position="attributes">
+                <attribute name="attrs">{'invisible': [('method_period', 'in',
+                    ('day'))]}
+                </attribute>
+            </xpath>
+            <xpath expr="//field[@name='method_number']" position="attributes">
+                <attribute name="attrs">{'invisible': [('method_period', 'in',
+                    ('day',))]}
+                </attribute>
+            </xpath>
+            <xpath expr="//label[@for='prorata']" position="attributes">
+                <attribute name="attrs">{'invisible': [('method_period', 'in',
+                    ('day'))]}
+                </attribute>
+            </xpath>
+            <xpath expr="//field[@name='prorata']" position="attributes">
+                <attribute name="attrs">{'invisible': [('method_period', 'in',
+                    ('day'))]}
+                </attribute>
+            </xpath>
+            <field name="first_depreciation_date" position="after">
+                <field name="accounting_date"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>
