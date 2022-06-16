@@ -14,6 +14,7 @@ class AccountAssetInherit(models.Model):
     method_period = fields.Selection(selection_add=[('day', 'Day')])
     start_date = fields.Date()
     end_date = fields.Date()
+    accounting_date = fields.Date(string='Accounting Date')
 
     @api.onchange('start_date')
     def onchange_start_date(self):
@@ -193,7 +194,7 @@ class AccountAssetInherit(models.Model):
                                                          precision_rounding=self.currency_id.rounding),
                     'asset_depreciated_value': amount_to_depreciate - residual_amount + already_depreciated_amount,
                 }))
-                if depreciation_number:
+                if self.method_period == 'day':
                     max_day_in_month = \
                         calendar.monthrange(depreciation_date.year,
                                             depreciation_date.month)[1]
@@ -210,4 +211,10 @@ class AccountAssetInherit(models.Model):
                         depreciation_date = depreciation_date.replace(
                             day=max_day_in_month)
                 seq_fro = seq_fro + 1
+                if self.accounting_date:
+                    for i in move_vals:
+                        if i['date'] < self.accounting_date:
+                            i.update({
+                                'date': self.accounting_date
+                            })
         return move_vals

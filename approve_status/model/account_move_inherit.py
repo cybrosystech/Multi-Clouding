@@ -23,7 +23,7 @@ class AccountMoveReversalInherit(models.TransientModel):
         for move, default_vals in zip(moves, default_values_list):
             is_auto_post = bool(default_vals.get('auto_post'))
             is_cancel_needed = not is_auto_post and self.refund_method in (
-            'cancel', 'modify')
+                'cancel', 'modify')
             batch_index = 0 if is_cancel_needed else 1
             batches[batch_index][0] |= move
             batches[batch_index][1].append(default_vals)
@@ -33,14 +33,20 @@ class AccountMoveReversalInherit(models.TransientModel):
         for moves, default_values_list, is_cancel_needed in batches:
             new_moves = moves._reverse_moves(default_values_list,
                                              cancel=is_cancel_needed)
-            new_moves.button_draft()
-            moves.reverse_boolean = True
+            if moves and new_moves:
+                new_moves.button_draft()
+                message = 'Number/: ' + moves.name + \
+                          '<br/>Created the reverse entry<br/>' + \
+                          'Reverse Entry/: ' + new_moves.name + \
+                          '<br/>Status: ' + new_moves.state
+                moves.reverse_boolean = True
+                moves.message_post(body=message)
 
             if self.refund_method == 'modify':
                 moves_vals_list = []
                 for move in moves.with_context(include_business_fields=True):
                     moves_vals_list.append(move.copy_data({
-                                                              'date': self.date if self.date_mode == 'custom' else move.date})[
+                        'date': self.date if self.date_mode == 'custom' else move.date})[
                                                0])
                 new_moves = self.env['account.move'].create(moves_vals_list)
 

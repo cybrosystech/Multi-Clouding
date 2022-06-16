@@ -35,6 +35,9 @@
                     ('day'))]}
                 </attribute>
             </xpath>
+            <field name="first_depreciation_date" position="after">
+                <field name="accounting_date"/>
+            </field>
         </field>
     </record>
 
