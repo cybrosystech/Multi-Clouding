@@ -1,11 +1,12 @@
-from datetime import time
 from typing import io
 
-from odoo import api, fields, models, tools, exceptions
+from dateutil.relativedelta import relativedelta
+
+from odoo import fields, models
 from odoo.exceptions import UserError
-from odoo.osv import expression
 from odoo.tools import date_utils, io, xlsxwriter
 from odoo.tools.safe_eval import datetime, json
+import calendar
 
 
 class ProfitabilityReportWizard(models.TransientModel):
@@ -13,27 +14,45 @@ class ProfitabilityReportWizard(models.TransientModel):
 
     def default_service_revenue(self):
         return self.env['account.account'].search([('code', '=',
-                                                    '411201')])
+                                                    '411201'),
+                                                   ('company_id',
+                                                    '=',
+                                                    self.env.company.id)])
 
     def default_investment_revenue(self):
         return self.env['account.account'].search([('code', '=',
-                                                    '411101')])
+                                                    '411101'),
+                                                   ('company_id',
+                                                    '=',
+                                                    self.env.company.id)])
 
     def default_colocation(self):
         return self.env['account.account'].search([('code', '=',
-                                                    '411501')])
+                                                    '411501'),
+                                                   ('company_id',
+                                                    '=',
+                                                    self.env.company.id)])
 
     def default_insurance(self):
         return self.env['account.account'].search([('code', '=',
-                                                    '422701')])
+                                                    '422701'),
+                                                   ('company_id',
+                                                    '=',
+                                                    self.env.company.id)])
 
     def default_energy_cost(self):
         return self.env['account.account'].search([('code', 'in',
-                                                    ['422401', '422401'])])
+                                                    ['422401', '422401']),
+                                                   ('company_id',
+                                                    '=',
+                                                    self.env.company.id)])
 
     def default_security(self):
         return self.env['account.account'].search([('code', '=',
-                                                    '422301')])
+                                                    '422301'),
+                                                   ('company_id',
+                                                    '=',
+                                                    self.env.company.id)])
 
     service_revenue = fields.Many2many('account.account', 'service_revenue_rel',
                                        string='Service Revenue',
@@ -81,9 +100,49 @@ class ProfitabilityReportWizard(models.TransientModel):
     to_date = fields.Date('To')
 
     def generate_xlsx_report(self):
-        # if self.date_from and self.date_to:
-        #     if self.date_from > self.date_to:
-        #         raise UserError("Start date should be less than end date")
+
+        current_date = fields.Date.today()
+        from_date = ''
+        to_date = ''
+        first, last = calendar.monthrange(current_date.year, current_date.month)
+        if self.period == 'this_month':
+            from_date = datetime.date(current_date.year, current_date.month, 1)
+            to_date = datetime.date(current_date.year, current_date.month, last)
+        if self.period == 'this_quarter':
+            current_quarter = (current_date.month - 1) // 3 + 1
+            # date = current_date - relativedelta(months=2)
+            from_date = datetime.date(current_date.year,
+                                      3 * current_quarter - 2, 1)
+            to_date = datetime.date(current_date.year, 3 * current_quarter,
+                                    last)
+        if self.period == 'this_financial_year':
+            first, last = calendar.monthrange(current_date.year,
+                                              12)
+            from_date = datetime.date(current_date.year, 1, 1)
+            to_date = datetime.date(current_date.year, 12, last)
+        if self.period == 'last_month':
+            date = current_date - relativedelta(months=1)
+            first, last = calendar.monthrange(date.year,
+                                              date.month)
+            from_date = datetime.date(date.year, date.month, 1)
+            to_date = datetime.date(date.year, date.month, last)
+        if self.period == 'last_quarter':
+            last_quarter = ((current_date.month - 1) // 3 + 1) - 1
+            first, last = calendar.monthrange(current_date.year,
+                                              3 * last_quarter)
+            from_date = datetime.date(current_date.year,
+                                      3 * last_quarter - 2, 1)
+            to_date = datetime.date(current_date.year, 3 * last_quarter,
+                                    last)
+        if self.period == 'last_financial_year':
+            last_financial_year = current_date.year - 1
+            first, last = calendar.monthrange(last_financial_year,
+                                              12)
+            from_date = datetime.date(last_financial_year, 1, 1)
+            to_date = datetime.date(last_financial_year, 12, last)
+        if self.from_date and self.to_date:
+            if self.from_date > self.to_date:
+                raise UserError("Start date should be less than end date")
         data = {
             'ids': self.ids,
             'model': self._name,
@@ -109,8 +168,9 @@ class ProfitabilityReportWizard(models.TransientModel):
             'security_code': self.security.code,
             'service_level_credit_ids': self.service_level_credit.ids,
             'service_level_credit_code': self.service_level_credit.code,
-            'from': self.from_date,
-            'to': self.to_date,
+            'from': from_date if from_date else self.from_date,
+            'to': to_date if to_date else self.to_date,
+            'company_id': self.env.company.id
         }
         return {
             'type': 'ir.actions.report',
@@ -125,20 +185,19 @@ class ProfitabilityReportWizard(models.TransientModel):
 
     def get_xlsx_report(self, data, response):
         total_site = 0
-        print(data)
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
 
         project_site = self.env['account.analytic.account'].search(
             [('analytic_account_type',
-              '=', 'project_site')])
-        print(project_site)
+              '=', 'project_site'), ('company_id',
+                                     '=',
+                                     data['company_id'])])
         account_ids = self.env['account.account'].search(
             [('code', 'in', [site for
                              site in range(
                     int(data['site_maintenance_code']),
-                    int(data['site_maintenance_lim_code']) + 1)])]).mapped(
-            'id')
+                    int(data['site_maintenance_lim_code']) + 1)])]).mapped('id')
         profitability_report = []
         for i in project_site:
             prof_rep = {}
@@ -147,7 +206,9 @@ class ProfitabilityReportWizard(models.TransientModel):
             })
             service_revenue = self.env['account.move.line'].search(
                 [('account_id', 'in', data['service_revenue_ids']),
-                 ('project_site_id', '=', i.id)])
+                 ('project_site_id', '=', i.id),
+                 ('move_id.date', '<=', data['to']),
+                 ('move_id.date', '>=', data['from'])])
             total = sum(service_revenue.mapped('debit')) + sum(
                 service_revenue.mapped('credit'))
             prof_rep.update({
@@ -155,7 +216,9 @@ class ProfitabilityReportWizard(models.TransientModel):
             })
             investment_revenue = self.env['account.move.line'].search(
                 [('account_id', 'in', data['investment_revenue_ids']),
-                 ('project_site_id', '=', i.id)])
+                 ('project_site_id', '=', i.id),
+                 ('move_id.date', '<=', data['to']),
+                 ('move_id.date', '>=', data['from'])])
             total = sum(investment_revenue.mapped('debit')) + sum(
                 investment_revenue.mapped('credit'))
             prof_rep.update({
@@ -163,7 +226,9 @@ class ProfitabilityReportWizard(models.TransientModel):
             })
             colocation = self.env['account.move.line'].search(
                 [('account_id', 'in', data['colocation_ids']),
-                 ('project_site_id', '=', i.id)])
+                 ('project_site_id', '=', i.id),
+                 ('move_id.date', '<=', data['to']),
+                 ('move_id.date', '>=', data['from'])])
             total = sum(colocation.mapped('debit')) + sum(
                 colocation.mapped('credit'))
             prof_rep.update({
@@ -171,7 +236,9 @@ class ProfitabilityReportWizard(models.TransientModel):
             })
             pass_through_energy = self.env['account.move.line'].search(
                 [('account_id', 'in', data['pass_through_energy_ids']),
-                 ('project_site_id', '=', i.id)])
+                 ('project_site_id', '=', i.id),
+                 ('move_id.date', '<=', data['to']),
+                 ('move_id.date', '>=', data['from'])])
             total = sum(pass_through_energy.mapped('debit')) + sum(
                 pass_through_energy.mapped('credit'))
             prof_rep.update({
@@ -179,7 +246,9 @@ class ProfitabilityReportWizard(models.TransientModel):
             })
             active_sharing_fees = self.env['account.move.line'].search(
                 [('account_id', 'in', data['active_sharing_fees_ids']),
-                 ('project_site_id', '=', i.id)])
+                 ('project_site_id', '=', i.id),
+                 ('move_id.date', '<=', data['to']),
+                 ('move_id.date', '>=', data['from'])])
             total = sum(active_sharing_fees.mapped('debit')) + sum(
                 active_sharing_fees.mapped('credit'))
             prof_rep.update({
@@ -187,7 +256,9 @@ class ProfitabilityReportWizard(models.TransientModel):
             })
             discount = self.env['account.move.line'].search(
                 [('account_id', 'in', data['discount_ids']),
-                 ('project_site_id', '=', i.id)])
+                 ('project_site_id', '=', i.id),
+                 ('move_id.date', '<=', data['to']),
+                 ('move_id.date', '>=', data['from'])])
             total = sum(discount.mapped('debit')) + sum(
                 discount.mapped('credit'))
             prof_rep.update({
@@ -197,17 +268,18 @@ class ProfitabilityReportWizard(models.TransientModel):
                 'investment_revenue'] + prof_rep['colocation'] + prof_rep[
                                 'pass_through_energy'] + prof_rep[
                                 'active_sharing_fees'] + prof_rep['discount']
-            # print(type(prof_rep['service_revenue']))
             prof_rep.update({
                 'total_revenue': total_revenue,
             })
-            profitability_report.append(prof_rep)
+            # profitability_report.append(prof_rep)
             if data['site_maintenance_code'] and data[
                 'site_maintenance_lim_code']:
                 for account in account_ids:
                     site_maintenance = self.env['account.move.line'].search(
                         [('account_id', '=', account),
-                         ('project_site_id', '=', i.id)])
+                         ('project_site_id', '=', i.id),
+                         ('move_id.date', '<=', data['to']),
+                         ('move_id.date', '>=', data['from'])])
                     total_site += sum(site_maintenance.mapped('debit')) + sum(
                         site_maintenance.mapped('credit'))
             prof_rep.update({
@@ -215,7 +287,9 @@ class ProfitabilityReportWizard(models.TransientModel):
             })
             insurance = self.env['account.move.line'].search(
                 [('account_id', 'in', data['insurance_ids']),
-                 ('project_site_id', '=', i.id)])
+                 ('project_site_id', '=', i.id),
+                 ('move_id.date', '<=', data['to']),
+                 ('move_id.date', '>=', data['from'])])
             total = sum(insurance.mapped('debit')) + sum(
                 insurance.mapped('credit'))
             prof_rep.update({
@@ -223,7 +297,9 @@ class ProfitabilityReportWizard(models.TransientModel):
             })
             energy_cost = self.env['account.move.line'].search(
                 [('account_id', 'in', data['energy_cost_ids']),
-                 ('project_site_id', '=', i.id)])
+                 ('project_site_id', '=', i.id),
+                 ('move_id.date', '<=', data['to']),
+                 ('move_id.date', '>=', data['from'])])
             total = sum(energy_cost.mapped('debit')) + sum(
                 energy_cost.mapped('credit'))
             prof_rep.update({
@@ -231,7 +307,9 @@ class ProfitabilityReportWizard(models.TransientModel):
             })
             security = self.env['account.move.line'].search(
                 [('account_id', 'in', data['security_ids']),
-                 ('project_site_id', '=', i.id)])
+                 ('project_site_id', '=', i.id),
+                 ('move_id.date', '<=', data['to']),
+                 ('move_id.date', '>=', data['from'])])
             total = sum(security.mapped('debit')) + sum(
                 security.mapped('credit'))
             prof_rep.update({
@@ -239,7 +317,9 @@ class ProfitabilityReportWizard(models.TransientModel):
             })
             service_level_credit = self.env['account.move.line'].search(
                 [('account_id', 'in', data['service_level_credit_ids']),
-                 ('project_site_id', '=', i.id)])
+                 ('project_site_id', '=', i.id),
+                 ('move_id.date', '<=', data['to']),
+                 ('move_id.date', '>=', data['from'])])
             total = sum(service_level_credit.mapped('debit')) + sum(
                 service_level_credit.mapped('credit'))
             prof_rep.update({
@@ -257,6 +337,7 @@ class ProfitabilityReportWizard(models.TransientModel):
                 'jdo': jdo,
                 '%': total_percent if total_percent else 0
             })
+            profitability_report.append(prof_rep)
         print(profitability_report)
 
         logged_users = self.env['res.company']._company_default_get(
@@ -343,7 +424,6 @@ class ProfitabilityReportWizard(models.TransientModel):
         sheet.merge_range('K4:R4', 'Costs', head)
         sheet.merge_range('S4:T4', 'Gross profit', head)
 
-        #
         row_num = 4
         col_num = 1
         sln_no = 1

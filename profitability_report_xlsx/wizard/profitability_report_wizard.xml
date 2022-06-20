@@ -74,7 +74,7 @@
     </record>
 
     <menuitem id="profitable_report_menu_id"
-              name="Profitable Report"
+              name="Profitability Report"
               parent="account.account_reports_management_menu"
               action="profitable_report_wizard_action"
               sequence="15"
