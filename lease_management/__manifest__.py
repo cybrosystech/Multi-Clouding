@@ -2,7 +2,7 @@
 {
     'name': "Lease Management",
     'summary': """Lease Management""",
-    'author': "Bitsera",
+    'author': "Mahmoud Naguib",
     "version": "14.0.1.0.0",
     "category": "Accounting",
     "depends": ["account", "account_asset", "analytic_account_types"],
@@ -12,6 +12,8 @@
         'wizard/account_asset_sell.xml',
         'wizard/leassee_contract_reassessment.xml',
         'wizard/leassee_period_extend.xml',
+        'wizard/change_leassor_wizard.xml',
+        'wizard/advance_leasee_wizard.xml',
         'views/res_config_settings.xml',
         'views/leasee_contract.xml',
         'views/leasee_contract_template.xml',
@@ -22,6 +24,7 @@
         'reports/ap_recon.xml',
         'reports/lease_liability_schedule.xml',
         'reports/rou_asset_schedule_wizard.xml',
+        'wizard/cancel_lease_entries.xml',
 
     ],
     "license": 'AGPL-3',

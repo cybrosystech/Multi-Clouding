@@ -11,6 +11,7 @@ from odoo.exceptions import ValidationError,UserError
 from datetime import datetime , date ,timedelta
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT as DTF
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DF
+from odoo.tools.misc import get_lang
 from dateutil.relativedelta import relativedelta
 from odoo.fields import Datetime as fieldsDatetime
 import calendar
@@ -50,6 +51,7 @@ class GeneralLedgerPostingWizard(models.TransientModel):
     excel_sheet_name = fields.Char(string='Name', size=64)
 
     def get_report_data(self):
+        date_format = get_lang(self.env).date_format
         data = []
         domain = [('move_id.date', '<=', self.date_to),('move_id.date', '>=', self.date_from),]
         if self.is_posted:
@@ -60,12 +62,15 @@ class GeneralLedgerPostingWizard(models.TransientModel):
             domain.append(('analytic_account_id', 'in', self.analytic_account_ids.ids))
         if self.leasee_contract_ids:
             # domain.append(('move_id.leasee_contract_id', 'in', self.leasee_contract_ids.ids))
-            domain.append(('move_id.leasee_contract_id', 'child_of', self.leasee_contract_ids.ids))
+            domain += ['|', ('move_id.leasee_contract_id', 'child_of', self.leasee_contract_ids.ids)]
+            assets = self.leasee_contract_ids.mapped('asset_id')
+            domain += [('move_id.asset_id', 'child_of', assets.ids)]
 
         journal_items = self.env['account.move.line'].search(domain,order='account_id')
         for line in journal_items:
             data.append({
-                'posting_date': line.move_id.posting_date.strftime(DF) if line.move_id.posting_date else '',
+                'posting_date': line.move_id.posting_date.strftime(date_format) if line.move_id.posting_date else '',
+                'inv_date': line.move_id.date.strftime(date_format) if line.move_id.date else '',
                 'document_no': line.move_id.name,
                 'account_number': line.account_id.code,
                 'account_name': line.account_id.name,
@@ -185,6 +190,8 @@ class GeneralLedgerPostingWizard(models.TransientModel):
         col = 0
         worksheet.write(row, col, _('Posting Date'), header_format)
         col += 1
+        worksheet.write(row, col, _('Invoice Date'), header_format)
+        col += 1
         worksheet.write(row, col, _('Document No.'), header_format)
         col += 1
         worksheet.write(row, col, _('G/L Account No.'), header_format)
@@ -222,6 +229,8 @@ class GeneralLedgerPostingWizard(models.TransientModel):
             col = 0
             row += 1
             worksheet.write(row, col, line['posting_date'], STYLE_LINE_Data)
+            col += 1
+            worksheet.write(row, col, line['inv_date'], STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['document_no'], STYLE_LINE_Data)
             col += 1

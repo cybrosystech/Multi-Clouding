@@ -11,3 +11,9 @@ access_ap_recon_wizard,ap_recon_wizard,model_ap_recon_wizard,,1,1,1,1
 access_lease_liability_schedule_wizard,lease_liability_schedule_wizard,model_lease_liability_schedule_wizard,,1,1,1,1
 access_leasor_contract,leasor_contract,model_leasor_contract,,1,1,1,1
 access_rou_asset_schedule_wizard,rou_asset_schedule_wizard,model_rou_asset_schedule_wizard,,1,1,1,1
+access_multi_leasor,multi_leasor,model_multi_leasor,,1,1,1,1
+access_change_leasor_wizard,change_leasor_wizard,model_change_leasor_wizard,,1,1,1,1
+access_change_leasor_line_wizard,change_leasor_line_wizard,model_change_leasor_line_wizard,,1,1,1,1
+access_advance_leasee_wizard,advance_leasee_wizard,model_advance_leasee_wizard,,1,1,1,1
+access_advance_leasee_line_wizard,advance.leasee.line.wizard,model_advance_leasee_line_wizard,,1,1,1,1
+access_cancel_lease_entries,cancel_lease_entries,model_cancel_lease_entries,,1,1,1,1

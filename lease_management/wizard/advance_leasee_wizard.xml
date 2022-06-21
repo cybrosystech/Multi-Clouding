@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <record id="view_advance_leasee_wizard_form" model="ir.ui.view">
+            <field name="name">advance.leasee.wizard.form</field>
+            <field name="model">advance.leasee.wizard</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="date"/>
+                            <field name="amount"/>
+                            <field name="installment_ids" readonly="0" options="{'no_create': True, 'no_quick_create': True,'no_open': True, 'no_create_edit' : True}">
+                                <tree editable="bottom" edit="1" create="0" delete="0">
+                                    <field name="date" />
+                                    <field name="amount" string="Installment Amount"/>
+                                    <field name="installment_id" invisible="1" />
+                                </tree>
+                            </field>
+                        </group>
+                    </sheet>
+                    <footer>
+                        <button name="action_apply"   string="Apply" type="object" class="oe_highlight"/>
+                        <button string="Cancel" special="cancel" class="oe_link"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+        
+        <record id="view_advance_leasee_wizard_action" model="ir.actions.act_window">
+            <field name="name">Advance Leasee</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">advance.leasee.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+    
+    </data>
+</odoo>
