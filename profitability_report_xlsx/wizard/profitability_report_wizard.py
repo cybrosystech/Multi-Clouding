@@ -110,7 +110,6 @@ class ProfitabilityReportWizard(models.TransientModel):
             to_date = datetime.date(current_date.year, current_date.month, last)
         if self.period == 'this_quarter':
             current_quarter = (current_date.month - 1) // 3 + 1
-            # date = current_date - relativedelta(months=2)
             from_date = datetime.date(current_date.year,
                                       3 * current_quarter - 2, 1)
             to_date = datetime.date(current_date.year, 3 * current_quarter,
@@ -338,93 +337,96 @@ class ProfitabilityReportWizard(models.TransientModel):
                 '%': total_percent if total_percent else 0
             })
             profitability_report.append(prof_rep)
-        print(profitability_report)
 
         logged_users = self.env['res.company']._company_default_get(
             'rent.request')
         sheet = workbook.add_worksheet()
 
+        main_head = workbook.add_format({'align': 'center',
+                                         'bg_color': '#34a4eb',
+                                         'font_size': '13px'})
+        main_head.set_font_color('white')
+
         head = workbook.add_format({'align': 'center',
-                                    'bg_color': 'blue',
+                                    'bg_color': '#1a1c99',
                                     'font_size': '13px'})
         head.set_font_color('white')
 
         account = workbook.add_format({'bg_color': 'blue'})
         accounts = workbook.add_format({'bg_color': '#34eb77'})
         headings = workbook.add_format({'bg_color': 'blue'})
-        sub_heading = workbook.add_format({'bg_color': 'blue'})
+        sub_heading = workbook.add_format({'bg_color': '#1a1c99'})
 
         accounts.set_font_color('white')
         headings.set_font_color('white')
         sub_heading.set_font_color('white')
 
+        sub_heading.set_font_color('white')
         sub_heading.set_align('vcenter')
 
-        sheet.set_row(2, 70)
-        sheet.set_row(4, 60)
+        sub_heading1 = workbook.add_format({'bg_color': '#7434eb'})
+        sub_heading1.set_font_color('white')
+        sub_heading1.set_align('center')
 
-        sheet.set_column('B3:H3', 20)
-        sheet.set_column('J3:K3', 20)
-        sheet.set_column('L3:L3', 30)
-        sheet.set_column('M3:M3', 20)
-        sheet.set_column('N3:T3', 15)
-        sheet.set_column('E5:E5', 35)
-        sheet.set_column('F5:F5', 15)
-        sheet.set_column('I5:I5', 15)
-        sheet.set_column('O5:T5', 15)
+        sheet.set_row(3, 70)
+        # sheet.set_row(4, 60)
 
-        sheet.write('B3', 'Account', account)
-        sheet.write('C3', '', account)
-        sheet.write('D3', data['service_revenue_code'] if data[
-            'service_revenue_code'] else 'NA', accounts)
-        sheet.write('E3', data['investment_revenue_code'] if data[
-            'investment_revenue_code'] else 'NA', accounts)
-        sheet.write('F3', data['colocation_code'] if data[
-            'colocation_code'] else 'NA', accounts)
-        sheet.write('G3', 'NA', headings)
-        sheet.write('H3', 'NA', headings)
-        sheet.write('I3', 'NA', headings)
-        sheet.write('J3', 'Total', headings)
-        sheet.write('K3', '425100 to 425299', headings)
-        sheet.write('L3', 'Manual till IFRS goes ', headings)
-        sheet.write('M3', '', account)
-        sheet.write('N3', data['insurance_code'], headings)
-        sheet.write('O3', '422401 and 424201', headings)
-        sheet.write('P3', '422301', headings)
-        sheet.write('Q3', 'NA', headings)
-        sheet.write('R3', 'Calculations', headings)
-        sheet.write('S3', 'Calculations', headings)
-        sheet.write('T3', 'Calculations', headings)
+        sheet.set_column('B3:B3', 15)
+        sheet.set_column('C3:C3', 20)
+        sheet.set_column('D4:R4', 20)
 
-        sheet.write('B4', 'Site Number', headings)
-        sheet.write('C4', 'Site code', headings)
+        # sheet.write('B3', 'Account', account)
+        # sheet.write('C3', '', account)
+        # sheet.write('D3', data['service_revenue_code'] if data[
+        #     'service_revenue_code'] else 'NA', accounts)
+        # sheet.write('E3', data['investment_revenue_code'] if data[
+        #     'investment_revenue_code'] else 'NA', accounts)
+        # sheet.write('F3', data['colocation_code'] if data[
+        #     'colocation_code'] else 'NA', accounts)
+        # sheet.write('G3', 'NA', headings)
+        # sheet.write('H3', 'NA', headings)
+        # sheet.write('I3', 'NA', headings)
+        # sheet.write('J3', 'Total', headings)
+        # sheet.write('K3', '425100 to 425299', headings)
+        # sheet.write('L3', 'Manual till IFRS goes ', headings)
+        # sheet.write('M3', '', account)
+        # sheet.write('N3', data['insurance_code'], headings)
+        # sheet.write('O3', '422401 and 424201', headings)
+        # sheet.write('P3', '422301', headings)
+        # sheet.write('Q3', 'NA', headings)
+        # sheet.write('R3', 'Calculations', headings)
+        # sheet.write('S3', 'Calculations', headings)
+        # sheet.write('T3', 'Calculations', headings)
 
-        sheet.write('B5', 'Site Number', sub_heading)
-        sheet.write('C5', 'Site code', sub_heading)
-        sheet.write('D5', 'Service Revenue', sub_heading)
-        sheet.write('E5', 'Investment Revenue', sub_heading)
-        sheet.write('F5', 'Colocation', sub_heading)
-        sheet.write('G5', 'Pass Through Eenrgy', sub_heading)
-        sheet.write('H5', 'Active Sharing fees', sub_heading)
-        sheet.write('I5', 'Discount', sub_heading)
-        sheet.write('J5', 'Total Revenues', sub_heading)
-        sheet.write('K5', 'Site Maintennace', sub_heading)
-        sheet.write('L5', 'Site Rent', sub_heading)
-        sheet.write('M5', '', sub_heading)
-        sheet.write('N5', 'Insurance', sub_heading)
-        sheet.write('O5', 'Energy Cost', sub_heading)
-        sheet.write('P5', 'Security', sub_heading)
-        sheet.write('Q5', 'Service level Credits', sub_heading)
-        sheet.write('R5', 'Total Costs', sub_heading)
-        sheet.write('S5', 'JOD', sub_heading)
-        sheet.write('T5', '%', sub_heading)
+        sheet.write('B3', 'Site Number', sub_heading)
+        sheet.write('C3', 'Site code', sub_heading)
 
-        sheet.merge_range('C2:T2', 'JANUARY', head)
-        sheet.merge_range('D4:J4', 'Revenues', head)
-        sheet.merge_range('K4:R4', 'Costs', head)
-        sheet.merge_range('S4:T4', 'Gross profit', head)
+        sheet.write('B4', 'Site Number', sub_heading1)
+        sheet.write('C4', 'Site code', sub_heading1)
+        sheet.write('D4', 'Service Revenue', sub_heading1)
+        sheet.write('E4', 'Investment Revenue', sub_heading1)
+        sheet.write('F4', 'Colocation', sub_heading1)
+        sheet.write('G4', 'Pass Through Eenrgy', sub_heading1)
+        sheet.write('H4', 'Active Sharing fees', sub_heading1)
+        sheet.write('I4', 'Discount', sub_heading1)
+        sheet.write('J4', 'Total Revenues', sub_heading1)
+        sheet.write('K4', 'Site Maintenance', sub_heading1)
+        sheet.write('L4', 'Site Rent', sub_heading1)
+        sheet.write('M4', '', sub_heading1)
+        sheet.write('N4', 'Insurance', sub_heading1)
+        sheet.write('O4', 'Energy Cost', sub_heading1)
+        sheet.write('P4', 'Security', sub_heading1)
+        sheet.write('Q4', 'Service level Credits', sub_heading1)
+        sheet.write('R4', 'Total Costs', sub_heading1)
+        sheet.write('S4', 'JOD', sub_heading1)
+        sheet.write('T4', '%', sub_heading1)
 
-        row_num = 4
+        sheet.merge_range('B2:T2', 'JANUARY', main_head)
+        sheet.merge_range('D3:J3', 'Revenues', head)
+        sheet.merge_range('K3:R3', 'Costs', head)
+        sheet.merge_range('S3:T3', 'Gross Profit', head)
+
+        row_num = 3
         col_num = 1
         sln_no = 1
 

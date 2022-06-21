@@ -15,6 +15,6 @@
             'security/ir.model.access.csv',
             'views/assets.xml',
             'wizard/profitability_report_wizard.xml',
-            # 'wizard/profitability_report_managed.xml',
+            'wizard/profitability_report_managed.xml',
         ]
 }
