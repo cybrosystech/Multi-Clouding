@@ -1,4 +1,3 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_profitability_report_wizard,access.profitability.report.wizard,model_profitability_report_wizard,base.group_user,1,1,1,1
 access_profitability_report_managed_wizard,access.profitability.report.managed.wizard,model_profitability_report_managed_wizard,base.group_user,1,1,1,1
-access_sample_report_managed_wizard,access.sample.report.managed.wizard,model_sample_report_xlsx_wizard,base.group_user,1,1,1,1
