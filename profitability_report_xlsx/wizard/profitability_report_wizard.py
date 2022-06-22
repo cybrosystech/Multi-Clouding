@@ -146,27 +146,17 @@ class ProfitabilityReportWizard(models.TransientModel):
             'ids': self.ids,
             'model': self._name,
             'service_revenue_ids': self.service_revenue.ids,
-            'service_revenue_code': self.service_revenue.code,
             'investment_revenue_ids': self.investment_revenue.ids,
-            'investment_revenue_code': self.investment_revenue.code,
             'colocation_ids': self.colocation.ids,
-            'colocation_code': self.colocation.code,
             'pass_through_energy_ids': self.pass_through_energy.ids,
-            'pass_through_energy_code': self.pass_through_energy.code,
             'active_sharing_fees_ids': self.active_sharing_fees.ids,
-            'active_sharing_fees_code': self.active_sharing_fees.code,
             'discount_ids': self.discount.ids,
-            'discount_code': self.discount.code,
             'site_maintenance_code': self.site_maintenance.code,
             'site_maintenance_lim_code': self.site_maintenance_lim.code,
             'insurance_ids': self.insurance.ids,
-            'insurance_code': self.insurance.code,
             'energy_cost_ids': self.energy_cost.ids,
-            'energy_cost_code': self.energy_cost.code,
             'security_ids': self.security.ids,
-            'security_code': self.security.code,
             'service_level_credit_ids': self.service_level_credit.ids,
-            'service_level_credit_code': self.service_level_credit.code,
             'from': from_date if from_date else self.from_date,
             'to': to_date if to_date else self.to_date,
             'company_id': self.env.company.id
@@ -177,7 +167,7 @@ class ProfitabilityReportWizard(models.TransientModel):
                      'options': json.dumps(data,
                                            default=date_utils.json_default),
                      'output_format': 'xlsx',
-                     'report_name': 'Profitability Report',
+                     'report_name': 'Profitability Owned Report',
                      },
             'report_type': 'xlsx'
         }
@@ -191,7 +181,8 @@ class ProfitabilityReportWizard(models.TransientModel):
             [('analytic_account_type',
               '=', 'project_site'), ('company_id',
                                      '=',
-                                     data['company_id'])])
+                                     data['company_id']),
+             ('group_id.name', 'ilike', 'owned')])
         account_ids = self.env['account.account'].search(
             [('code', 'in', [site for
                              site in range(
@@ -344,22 +335,21 @@ class ProfitabilityReportWizard(models.TransientModel):
 
         main_head = workbook.add_format(
             {'font_size': 13, 'align': 'center', 'bg_color': '#34a4eb',
-             'font_color': '#f2f7f4'})
+             'font_color': '#f2f7f4', 'border': 2})
 
         head = workbook.add_format(
             {'font_size': 13, 'align': 'center', 'bg_color': '#1a1c99',
-             'font_color': '#f2f7f4'})
+             'font_color': '#f2f7f4', 'border': 2})
 
         sub_heading = workbook.add_format(
             {'valign': 'vcenter', 'bg_color': '#1a1c99',
-             'font_color': '#f2f7f4'})
+             'font_color': '#f2f7f4', 'border': 2})
 
         sub_heading1 = workbook.add_format(
             {'align': 'center', 'valign': 'vcenter', 'bg_color': '#7434eb',
-             'font_color': '#f2f7f4'})
+             'font_color': '#f2f7f4', 'border': 2})
 
         sheet.set_row(3, 70)
-        # sheet.set_row(4, 60)
 
         sheet.set_column('B3:B3', 15)
         sheet.set_column('C3:C3', 20)
@@ -379,19 +369,18 @@ class ProfitabilityReportWizard(models.TransientModel):
         sheet.write('J4', 'Total Revenues', sub_heading1)
         sheet.write('K4', 'Site Maintenance', sub_heading1)
         sheet.write('L4', 'Site Rent', sub_heading1)
-        sheet.write('M4', '', sub_heading1)
-        sheet.write('N4', 'Insurance', sub_heading1)
-        sheet.write('O4', 'Energy Cost', sub_heading1)
-        sheet.write('P4', 'Security', sub_heading1)
-        sheet.write('Q4', 'Service level Credits', sub_heading1)
-        sheet.write('R4', 'Total Costs', sub_heading1)
-        sheet.write('S4', 'JOD', sub_heading1)
-        sheet.write('T4', '%', sub_heading1)
+        sheet.write('M4', 'Insurance', sub_heading1)
+        sheet.write('N4', 'Energy Cost', sub_heading1)
+        sheet.write('O4', 'Security', sub_heading1)
+        sheet.write('P4', 'Service level Credits', sub_heading1)
+        sheet.write('Q4', 'Total Costs', sub_heading1)
+        sheet.write('R4', 'JOD', sub_heading1)
+        sheet.write('S4', '%', sub_heading1)
 
-        sheet.merge_range('B2:T2', 'JANUARY', main_head)
+        sheet.merge_range('B2:S2', 'JANUARY', main_head)
         sheet.merge_range('D3:J3', 'Revenues', head)
-        sheet.merge_range('K3:R3', 'Costs', head)
-        sheet.merge_range('S3:T3', 'Gross Profit', head)
+        sheet.merge_range('K3:Q3', 'Costs', head)
+        sheet.merge_range('R3:S3', 'Gross Profit', head)
 
         row_num = 3
         col_num = 1
@@ -408,15 +397,15 @@ class ProfitabilityReportWizard(models.TransientModel):
             sheet.write(row_num + 1, col_num + 7, i.get('discount'))
             sheet.write(row_num + 1, col_num + 8, i.get('total_revenue'))
             sheet.write(row_num + 1, col_num + 9, i.get('site_maintenance'))
-            sheet.write(row_num + 1, col_num + 12, i.get('insurance'))
-            sheet.write(row_num + 1, col_num + 13, i.get('energy_cost'))
-            sheet.write(row_num + 1, col_num + 14, i.get('security'))
-            sheet.write(row_num + 1, col_num + 15,
+            sheet.write(row_num + 1, col_num + 11, i.get('insurance'))
+            sheet.write(row_num + 1, col_num + 12, i.get('energy_cost'))
+            sheet.write(row_num + 1, col_num + 13, i.get('security'))
+            sheet.write(row_num + 1, col_num + 14,
                         i.get('service_level_credit'))
-            sheet.write(row_num + 1, col_num + 16,
+            sheet.write(row_num + 1, col_num + 15,
                         i.get('total_cost'))
-            sheet.write(row_num + 1, col_num + 17, i.get('jdo'))
-            sheet.write(row_num + 1, col_num + 18, i.get('%'))
+            sheet.write(row_num + 1, col_num + 16, i.get('jdo'))
+            sheet.write(row_num + 1, col_num + 17, i.get('%'))
             row_num = row_num + 1
             sln_no = sln_no + 1
 

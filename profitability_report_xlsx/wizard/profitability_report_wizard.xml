@@ -65,7 +65,7 @@
     </record>
 
     <record id="profitable_report_wizard_action" model="ir.actions.act_window">
-        <field name="name">Profitability Report</field>
+        <field name="name">Profitability Report Owned</field>
         <field name="type">ir.actions.act_window</field>
         <field name="res_model">profitability.report.wizard</field>
         <field name="view_mode">form</field>
@@ -74,7 +74,7 @@
     </record>
 
     <menuitem id="profitable_report_menu_id"
-              name="Profitability Report"
+              name="Profitability Report - owned"
               parent="account.account_reports_management_menu"
               action="profitable_report_wizard_action"
               sequence="15"

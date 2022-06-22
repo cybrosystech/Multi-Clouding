@@ -180,7 +180,7 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
                      'options': json.dumps(data,
                                            default=date_utils.json_default),
                      'output_format': 'xlsx',
-                     'report_name': 'Profitability Report',
+                     'report_name': 'Profitability Managed Report',
                      },
             'report_type': 'xlsx'
         }
@@ -194,7 +194,8 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
             [('analytic_account_type',
               '=', 'project_site'), ('company_id',
                                      '=',
-                                     data['company_id'])])
+                                     data['company_id']),
+             ('group_id.name', 'ilike', 'owned')])
 
         account_ids = self.env['account.account'].search(
             [('code', 'in', [site for
@@ -367,13 +368,13 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
 
         sheet = workbook.add_worksheet()
 
-        main_head = workbook.add_format({'font_size': 13, 'align': 'center', 'bg_color': '#34a4eb', 'font_color': '#f2f7f4'})
+        main_head = workbook.add_format({'font_size': 13, 'align': 'center', 'bg_color': '#34a4eb', 'font_color': '#f2f7f4', 'border': 2})
 
-        head = workbook.add_format({'font_size': 13, 'align': 'center', 'bg_color': '#1a1c99', 'font_color': '#f2f7f4'})
+        head = workbook.add_format({'font_size': 13, 'align': 'center', 'bg_color': '#1a1c99', 'font_color': '#f2f7f4', 'border': 2})
 
-        sub_heading = workbook.add_format({'valign': 'vcenter', 'bg_color': '#1a1c99', 'font_color': '#f2f7f4'})
+        sub_heading = workbook.add_format({'valign': 'vcenter', 'bg_color': '#1a1c99', 'font_color': '#f2f7f4', 'border': 2})
 
-        sub_heading1 = workbook.add_format({'align': 'center', 'valign': 'vcenter', 'bg_color': '#7434eb', 'font_color': '#f2f7f4'})
+        sub_heading1 = workbook.add_format({'align': 'center', 'valign': 'vcenter', 'bg_color': '#7434eb', 'font_color': '#f2f7f4', 'border': 2})
 
         sheet.set_row(3, 70)
 
