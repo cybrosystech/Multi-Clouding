@@ -1,23 +1,23 @@
-odoo.define('vehicle_rental_module.ActionManager', function (require) {
+odoo.define('profitability_report_xlsx.ActionManager', function (require) {
 "use strict";
 
 /**
  * The purpose of this file is to add the actions of type
  * 'ir_actions_xlsx_download' to the ActionManager.
  */
+
 var ActionManager = require('web.ActionManager');
 var framework = require('web.framework');
 var session = require('web.session');
-
 ActionManager.include({
 
-     /**
-     * Executes actions of type 'ir.actions.report'.
+    /**
+     * Executes actions of type 'ir_actions_xlsx_download'.
      *
      * @private
      * @param {Object} action the description of the action to execute
-     * @param {Object} options @see doAction for details
-     * @returns {Promise} resolved when the action has been executed
+     * @returns {Deferred} resolved when the report has been downloaded ;
+     *   rejected if an error occurred during the report generation
      */
     _executexlsxReportDownloadAction: function (action) {
         framework.blockUI();
@@ -31,14 +31,15 @@ ActionManager.include({
         });
         return def;
     },
-   /**
-     * Overrides to handle the 'ir.actions.report' actions.
+    /**
+     * Overrides to handle the 'ir_actions_xlsx_download' actions.
      *
      * @override
      * @private
      */
-    _executeReportAction: function (action, options) {
-        if (action.report_type === 'xlsx') {
+    _handleAction: function (action, options) {
+
+        if (action.type === 'ir_actions_xlsx_download') {
             return this._executexlsxReportDownloadAction(action, options);
         }
         return this._super.apply(this, arguments);

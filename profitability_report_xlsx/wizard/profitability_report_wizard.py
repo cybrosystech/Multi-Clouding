@@ -1,10 +1,10 @@
-from typing import io
+import io
 
 from dateutil.relativedelta import relativedelta
 
 from odoo import fields, models
 from odoo.exceptions import UserError
-from odoo.tools import date_utils, io, xlsxwriter
+from odoo.tools import date_utils, xlsxwriter
 from odoo.tools.safe_eval import datetime, json
 import calendar
 

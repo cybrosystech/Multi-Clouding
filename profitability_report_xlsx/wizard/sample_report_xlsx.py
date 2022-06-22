@@ -29,20 +29,26 @@ class SampleReportXLSX(models.TransientModel):
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
         sheet = workbook.add_worksheet()
 
-        format1 = workbook.add_format(
-            {'font_size': 12, 'align': 'center', 'bg_color': '#34a4eb', 'font_color': '#f2f7f4'})
-        sub_heading1 = workbook.add_format({'align': 'center', 'valign': 'vcenter', 'bg_color': '#7434eb', 'font_color': '#f2f7f4'})
-        # main_head = workbook.add_format({'font_size': '13px', 'align': 'center', 'bg_color': '#34a4eb', 'font_color': '#f2f7f4'})
         sheet.set_row(3, 70)
         sheet.set_column('B3:B3', 15)
+
+        format1 = workbook.add_format(
+            {'font_size': 12, 'align': 'center', 'bg_color': '#34a4eb',
+             'font_color': '#f2f7f4'})
+        format2 = workbook.add_format(
+            {'align': 'center', 'valign': 'vcenter', 'bg_color': '#7434eb',
+             'font_color': '#f2f7f4'})
+        format3 = workbook.add_format(
+            {'font_size': '13px', 'align': 'center', 'bg_color': '#34a4eb',
+             'font_color': '#f2f7f4'})
 
         row = 2
         col = 2
 
         sheet.write('B3', 'Site Number', format1)
-        sheet.write('B4', 'Site Number', sub_heading1)
+        sheet.write('B4', 'Site Number', format2)
 
-        # sheet.merge_range('B2:T2', 'JANUARY', main_head)
+        sheet.merge_range('B2:T2', 'JANUARY', format3)
 
         workbook.close()
         output.seek(0)
