@@ -13,7 +13,7 @@ class XLSXReportController(http.Controller):
                         **kw):
         uid = request.session.uid
         print(model, 'model')
-        report_obj = request.env[model].sudo(uid)
+        report_obj = request.env[model].with_user(uid)
         options = json.loads(options)
         try:
             if output_format == 'xlsx':

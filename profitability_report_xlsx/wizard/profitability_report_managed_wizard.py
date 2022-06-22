@@ -367,9 +367,9 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
 
         sheet = workbook.add_worksheet()
 
-        main_head = workbook.add_format({'font_size': '13px', 'align': 'center', 'bg_color': '#34a4eb', 'font_color': '#f2f7f4'})
+        main_head = workbook.add_format({'font_size': 13, 'align': 'center', 'bg_color': '#34a4eb', 'font_color': '#f2f7f4'})
 
-        head = workbook.add_format({'font_size': '13px', 'align': 'center', 'bg_color': '#1a1c99', 'font_color': '#f2f7f4'})
+        head = workbook.add_format({'font_size': 13, 'align': 'center', 'bg_color': '#1a1c99', 'font_color': '#f2f7f4'})
 
         sub_heading = workbook.add_format({'valign': 'vcenter', 'bg_color': '#1a1c99', 'font_color': '#f2f7f4'})
 
@@ -409,7 +409,7 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
         sheet.merge_range('K3:R3', 'Costs', head)
         sheet.merge_range('S3:T3', 'Gross Profit', head)
 
-        row_num = 4
+        row_num = 3
         col_num = 1
         sln_no = 1
 

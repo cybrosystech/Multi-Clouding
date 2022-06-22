@@ -342,31 +342,21 @@ class ProfitabilityReportWizard(models.TransientModel):
             'rent.request')
         sheet = workbook.add_worksheet()
 
-        main_head = workbook.add_format({'align': 'center',
-                                         'bg_color': '#34a4eb',
-                                         'font_size': '13px'})
-        main_head.set_font_color('white')
+        main_head = workbook.add_format(
+            {'font_size': 13, 'align': 'center', 'bg_color': '#34a4eb',
+             'font_color': '#f2f7f4'})
 
-        head = workbook.add_format({'align': 'center',
-                                    'bg_color': '#1a1c99',
-                                    'font_size': '13px'})
-        head.set_font_color('white')
+        head = workbook.add_format(
+            {'font_size': 13, 'align': 'center', 'bg_color': '#1a1c99',
+             'font_color': '#f2f7f4'})
 
-        account = workbook.add_format({'bg_color': 'blue'})
-        accounts = workbook.add_format({'bg_color': '#34eb77'})
-        headings = workbook.add_format({'bg_color': 'blue'})
-        sub_heading = workbook.add_format({'bg_color': '#1a1c99'})
+        sub_heading = workbook.add_format(
+            {'valign': 'vcenter', 'bg_color': '#1a1c99',
+             'font_color': '#f2f7f4'})
 
-        accounts.set_font_color('white')
-        headings.set_font_color('white')
-        sub_heading.set_font_color('white')
-
-        sub_heading.set_font_color('white')
-        sub_heading.set_align('vcenter')
-
-        sub_heading1 = workbook.add_format({'bg_color': '#7434eb'})
-        sub_heading1.set_font_color('white')
-        sub_heading1.set_align('center')
+        sub_heading1 = workbook.add_format(
+            {'align': 'center', 'valign': 'vcenter', 'bg_color': '#7434eb',
+             'font_color': '#f2f7f4'})
 
         sheet.set_row(3, 70)
         # sheet.set_row(4, 60)
@@ -374,29 +364,6 @@ class ProfitabilityReportWizard(models.TransientModel):
         sheet.set_column('B3:B3', 15)
         sheet.set_column('C3:C3', 20)
         sheet.set_column('D4:R4', 20)
-
-        # sheet.write('B3', 'Account', account)
-        # sheet.write('C3', '', account)
-        # sheet.write('D3', data['service_revenue_code'] if data[
-        #     'service_revenue_code'] else 'NA', accounts)
-        # sheet.write('E3', data['investment_revenue_code'] if data[
-        #     'investment_revenue_code'] else 'NA', accounts)
-        # sheet.write('F3', data['colocation_code'] if data[
-        #     'colocation_code'] else 'NA', accounts)
-        # sheet.write('G3', 'NA', headings)
-        # sheet.write('H3', 'NA', headings)
-        # sheet.write('I3', 'NA', headings)
-        # sheet.write('J3', 'Total', headings)
-        # sheet.write('K3', '425100 to 425299', headings)
-        # sheet.write('L3', 'Manual till IFRS goes ', headings)
-        # sheet.write('M3', '', account)
-        # sheet.write('N3', data['insurance_code'], headings)
-        # sheet.write('O3', '422401 and 424201', headings)
-        # sheet.write('P3', '422301', headings)
-        # sheet.write('Q3', 'NA', headings)
-        # sheet.write('R3', 'Calculations', headings)
-        # sheet.write('S3', 'Calculations', headings)
-        # sheet.write('T3', 'Calculations', headings)
 
         sheet.write('B3', 'Site Number', sub_heading)
         sheet.write('C3', 'Site code', sub_heading)

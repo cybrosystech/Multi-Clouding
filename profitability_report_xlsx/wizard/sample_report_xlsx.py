@@ -38,9 +38,9 @@ class SampleReportXLSX(models.TransientModel):
         format2 = workbook.add_format(
             {'align': 'center', 'valign': 'vcenter', 'bg_color': '#7434eb',
              'font_color': '#f2f7f4'})
-        # format3 = workbook.add_format(
-        #     {'font_size': '13px', 'align': 'center', 'bg_color': '#34a4eb',
-        #      'font_color': '#f2f7f4'})
+        format3 = workbook.add_format(
+            {'font_size': 13, 'align': 'center', 'bg_color': '#34a4eb',
+             'font_color': '#f2f7f4'})
 
         row = 2
         col = 2
@@ -48,7 +48,7 @@ class SampleReportXLSX(models.TransientModel):
         sheet.write('B3', 'Site Number', format1)
         sheet.write('B4', 'Site Number', format2)
 
-        # sheet.merge_range('B2:T2', 'JANUARY', format3)
+        sheet.merge_range('B2:T2', 'JANUARY', format3)
 
         workbook.close()
         output.seek(0)
