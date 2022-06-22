@@ -16,6 +16,5 @@
             'views/assets.xml',
             'wizard/profitability_report_wizard.xml',
             'wizard/profitability_report_managed.xml',
-            'wizard/sample_report_xlsx.xml',
         ]
 }
