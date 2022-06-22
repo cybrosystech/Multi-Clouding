@@ -1,10 +1,11 @@
-from typing import io
+import io
 
 from dateutil.relativedelta import relativedelta
 
 from odoo import fields, models
 from odoo.exceptions import UserError
-from odoo.tools import date_utils, io, xlsxwriter
+from odoo.tools import date_utils
+import xlsxwriter
 from odoo.tools.safe_eval import datetime, json
 import calendar
 
@@ -366,29 +367,19 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
 
         sheet = workbook.add_worksheet()
 
-        main_head = workbook.add_format({'align': 'center',
-                                         'bg_color': '#34a4eb',
-                                         'font_size': '13px'})
-        main_head.set_font_color('white')
+        main_head = workbook.add_format({'font_size': '13px', 'align': 'center', 'bg_color': '#34a4eb', 'font_color': '#f2f7f4'})
 
-        head = workbook.add_format({'align': 'center',
-                                    'bg_color': '#1a1c99',
-                                    'font_size': '13px'})
-        head.set_font_color('white')
+        head = workbook.add_format({'font_size': '13px', 'align': 'center', 'bg_color': '#1a1c99', 'font_color': '#f2f7f4'})
+
+        sub_heading = workbook.add_format({'valign': 'vcenter', 'bg_color': '#1a1c99', 'font_color': '#f2f7f4'})
+
+        sub_heading1 = workbook.add_format({'align': 'center', 'valign': 'vcenter', 'bg_color': '#7434eb', 'font_color': '#f2f7f4'})
 
         sheet.set_row(3, 70)
 
         sheet.set_column('B3:B3', 15)
         sheet.set_column('C3:C3', 20)
         sheet.set_column('D4:R4', 20)
-
-        sub_heading = workbook.add_format({'bg_color': '#1a1c99'})
-        sub_heading.set_font_color('white')
-        sub_heading.set_align('vcenter')
-
-        sub_heading1 = workbook.add_format({'bg_color': '#7434eb'})
-        sub_heading1.set_font_color('white')
-        sub_heading1.set_align('center')
 
         sheet.write('B3', 'Site Number', sub_heading)
         sheet.write('C3', 'Site code', sub_heading)
