@@ -50,8 +50,8 @@
                                 <span t-field="doc.name"/>
                             </div>
                             <div>
-                                <span style="font-weight:bold" >Service Date:</span>
-                                <span t-field="doc.service_date_from" /> <span style="margin:10px">TO</span><span t-field="doc.service_date_to"/>
+                                <span style="font-weight:bold" >Payment Reference:</span>
+                                <span t-field="doc.payment_reference"/>
                             </div>
 
                         </div>
@@ -96,8 +96,8 @@
                                 <th>No.</th>
                                 <th>Service Description</th>
                                 <th>Qty</th>
-                                <th>Rate USD</th>
-                                <th>Total Amount USD</th>
+                                <th>Rate <t t-esc="doc.currency_id.name"/></th>
+                                <th>Total Amount <t t-esc="doc.currency_id.name"/></th>
                                 <th>Exchange rate</th>
                                 <th>Total Amount AED</th>
                             </tr>

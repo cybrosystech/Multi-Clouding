@@ -8,10 +8,11 @@ class Sale(models.Model):
 
     service_date_from = fields.Date('Service Date From')
     service_date_to = fields.Date('Service Date To')
-    def _prepare_invoice(self):
-        res = super(Sale, self)._prepare_invoice()
-        res.update({
-            'service_date_from':self.service_date_from,
-            'service_date_to':self.service_date_to,
-        })
-        return res
+
+    # def _prepare_invoice(self):
+    #     res = super(Sale, self)._prepare_invoice()
+    #     res.update({
+    #         'service_date_from':self.service_date_from,
+    #         'service_date_to':self.service_date_to,
+    #     })
+    #     return res

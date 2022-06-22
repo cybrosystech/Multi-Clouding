@@ -6,8 +6,8 @@ from odoo import api, fields, models, _
 class AccountMove(models.Model):
     _inherit = 'account.move'
 
-    service_date_from = fields.Date('Service Date From')
-    service_date_to = fields.Date('Service Date To')
+    # service_date_from = fields.Date('Service Date From')
+    # service_date_to = fields.Date('Service Date To')
     subtotal_local_amount = fields.Float('Subtotal Local Amount', compute='calc_local_amount',store=True)
     total_local_amount = fields.Float('Total Local Amount',compute='calc_local_amount',store=True )
     local_tax_amount = fields.Float('Total Local Tax',compute='calc_local_tax_amount',store=True)
