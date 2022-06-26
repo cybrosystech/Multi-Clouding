@@ -54,6 +54,13 @@ class ProfitabilityReportWizard(models.TransientModel):
                                                     '=',
                                                     self.env.company.id)])
 
+    def default_rou_depreciation(self):
+        return self.env['account.account'].search([('code', '=',
+                                                    '554101'),
+                                                   ('company_id',
+                                                    '=',
+                                                    self.env.company.id)])
+
     service_revenue = fields.Many2many('account.account', 'service_revenue_rel',
                                        string='Service Revenue',
                                        default=default_service_revenue)
@@ -85,6 +92,20 @@ class ProfitabilityReportWizard(models.TransientModel):
     service_level_credit = fields.Many2many('account.account',
                                             'service_level_credit',
                                             string='Service Level Credit')
+    rou_depreciation = fields.Many2many('account.account',
+                                        'rou_depreciation_rels',
+                                        string='ROU Depreciation',
+                                        default=default_rou_depreciation)
+    fa_depreciation = fields.Many2many('account.account',
+                                       'fa_depreciation_rels',
+                                       string='FA Depreciation')
+    fa_depreciation_lim = fields.Many2many('account.account',
+                                           'fa_depreciation_lim_rels',
+                                           string='FA Depreciation')
+    lease_finance_cost = fields.Many2many('account.account',
+                                          'lease_finance_cost_rels',
+                                          string='Leases Finance Cost')
+
     period = fields.Selection(selection=([('this_month', 'This Month'),
                                           ('this_quarter', 'This Quarter'),
                                           ('this_financial_year',
@@ -157,6 +178,10 @@ class ProfitabilityReportWizard(models.TransientModel):
             'energy_cost_ids': self.energy_cost.ids,
             'security_ids': self.security.ids,
             'service_level_credit_ids': self.service_level_credit.ids,
+            'rou_depreciation_ids': self.rou_depreciation.ids,
+            'fa_depreciation_code': self.fa_depreciation.code,
+            'fa_depreciation_lim_code': self.fa_depreciation_lim.code,
+            'lease_finance_cost_ids': self.lease_finance_cost.ids,
             'from': from_date if from_date else self.from_date,
             'to': to_date if to_date else self.to_date,
             'company_id': self.env.company.id
@@ -188,6 +213,11 @@ class ProfitabilityReportWizard(models.TransientModel):
                              site in range(
                     int(data['site_maintenance_code']),
                     int(data['site_maintenance_lim_code']) + 1)])]).mapped('id')
+        account_fa_depreciation_ids = self.env['account.account'].search(
+            [('code', 'in', [site for
+                             site in range(
+                    int(data['fa_depreciation_code']),
+                    int(data['fa_depreciation_lim_code']) + 1)])]).mapped('id')
         profitability_report = []
         for i in project_site:
             prof_rep = {}
@@ -327,6 +357,39 @@ class ProfitabilityReportWizard(models.TransientModel):
                 'jdo': jdo,
                 '%': total_percent if total_percent else 0
             })
+            rou_depreciation = self.env['account.move.line'].search(
+                [('account_id', 'in', data['rou_depreciation_ids']),
+                 ('project_site_id', '=', i.id),
+                 ('move_id.date', '<=', data['to']),
+                 ('move_id.date', '>=', data['from'])])
+            total = sum(rou_depreciation.mapped('debit')) + sum(
+                rou_depreciation.mapped('credit'))
+            prof_rep.update({
+                'rou_depreciation': total
+            })
+            if data['fa_depreciation_code'] and data[
+                'fa_depreciation_lim_code']:
+                for account in account_fa_depreciation_ids:
+                    fa_depreciation = self.env['account.move.line'].search(
+                        [('account_id', '=', account),
+                         ('project_site_id', '=', i.id),
+                         ('move_id.date', '<=', data['to']),
+                         ('move_id.date', '>=', data['from'])])
+                    total_site += sum(fa_depreciation.mapped('debit')) + sum(
+                        fa_depreciation.mapped('credit'))
+            prof_rep.update({
+                'fa_depreciation': total_site,
+            })
+            lease_finance_cost = self.env['account.move.line'].search(
+                [('account_id', 'in', data['lease_finance_cost_ids']),
+                 ('project_site_id', '=', i.id),
+                 ('move_id.date', '<=', data['to']),
+                 ('move_id.date', '>=', data['from'])])
+            total = sum(lease_finance_cost.mapped('debit')) + sum(
+                lease_finance_cost.mapped('credit'))
+            prof_rep.update({
+                'lease_finance_cost': total
+            })
             profitability_report.append(prof_rep)
 
         logged_users = self.env['res.company']._company_default_get(
@@ -376,11 +439,16 @@ class ProfitabilityReportWizard(models.TransientModel):
         sheet.write('Q4', 'Total Costs', sub_heading1)
         sheet.write('R4', 'JOD', sub_heading1)
         sheet.write('S4', '%', sub_heading1)
+        sheet.write('U4', 'ROU Depreciation', sub_heading1)
+        sheet.write('V4', 'FA Depreciation', sub_heading1)
+        sheet.write('W4', 'Leases Finance Cost', sub_heading1)
 
         sheet.merge_range('B2:S2', 'JANUARY', main_head)
+        sheet.merge_range('U2:W2', '', main_head)
         sheet.merge_range('D3:J3', 'Revenues', head)
         sheet.merge_range('K3:Q3', 'Costs', head)
         sheet.merge_range('R3:S3', 'Gross Profit', head)
+        sheet.merge_range('U3:W3', '', head)
 
         row_num = 3
         col_num = 1
@@ -406,6 +474,9 @@ class ProfitabilityReportWizard(models.TransientModel):
                         i.get('total_cost'))
             sheet.write(row_num + 1, col_num + 16, i.get('jdo'))
             sheet.write(row_num + 1, col_num + 17, i.get('%'))
+            sheet.write(row_num + 1, col_num + 19, i.get('rou_depreciation'))
+            sheet.write(row_num + 1, col_num + 20, i.get('fa_depreciation'))
+            sheet.write(row_num + 1, col_num + 21, i.get('lease_finance_cost'))
             row_num = row_num + 1
             sln_no = sln_no + 1
 
