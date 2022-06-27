@@ -39,6 +39,25 @@
                     </group>
                 </group>
                 <group>
+                    <label for="fa_depreciation"
+                           string="FA Depreciation"/>
+                    <div>
+                        <field name="fa_depreciation" class="oe_inline"
+                               widget="many2many_tags"/>
+                        <span>To</span>
+                        <field name="fa_depreciation_lim" class="oe_inline"
+                               widget="many2many_tags"/>
+                    </div>
+                </group>
+                <group>
+                    <group>
+                        <field name="rou_depreciation" widget="many2many_tags"/>
+                    </group>
+                    <group>
+                       <field name="lease_finance_cost" widget="many2many_tags"/>
+                    </group>
+                </group>
+                <group>
                     <group>
                         <field name="period"/>
                     </group>
