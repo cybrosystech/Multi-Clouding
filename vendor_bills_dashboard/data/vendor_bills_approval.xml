@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <record id="action_to_approve_bills" model="ir.actions.server">
+            <field name="name">Approve Bills</field>
+            <field name="type">ir.actions.server</field>
+            <field name="model_id" ref="analytic_account_types.model_account_move"/>
+            <field name="binding_model_id" ref="account.model_account_move"/>
+            <field name="state">code</field>
+            <field name="code">
+                for rec in records:
+                    rec.button_approve_purchase_cycle()
+            </field>
+        </record>
+    </data>
+</odoo>

@@ -24,7 +24,6 @@
                 </group>
                 <group>
                     <group>
-                        <field name="discount" widget="many2many_tags"/>
                         <field name="rou_depreciation" widget="many2many_tags"/>
                     </group>
                     <group>
