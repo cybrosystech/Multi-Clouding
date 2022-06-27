@@ -1,4 +1,5 @@
 import io
+from email.policy import default
 
 from dateutil.relativedelta import relativedelta
 
@@ -13,6 +14,9 @@ class ProfitabilityReportWizard(models.TransientModel):
     _name = "profitability.report.wizard"
 
     def default_service_revenue(self):
+        profitability = self.env['profitability.report.owned'].search([])
+        if profitability.service_revenue:
+            return profitability.service_revenue
         return self.env['account.account'].search([('code', '=',
                                                     '411201'),
                                                    ('company_id',
@@ -20,6 +24,9 @@ class ProfitabilityReportWizard(models.TransientModel):
                                                     self.env.company.id)])
 
     def default_investment_revenue(self):
+        profitability = self.env['profitability.report.owned'].search([])
+        if profitability.investment_revenue:
+            return profitability.investment_revenue
         return self.env['account.account'].search([('code', '=',
                                                     '411101'),
                                                    ('company_id',
@@ -27,13 +34,44 @@ class ProfitabilityReportWizard(models.TransientModel):
                                                     self.env.company.id)])
 
     def default_colocation(self):
+        profitability = self.env['profitability.report.owned'].search([])
+        if profitability.colocation:
+            return profitability.colocation
         return self.env['account.account'].search([('code', '=',
                                                     '411501'),
                                                    ('company_id',
                                                     '=',
                                                     self.env.company.id)])
 
+    def default_pass_through_energy(self):
+        profitability = self.env['profitability.report.owned'].search([])
+        if profitability.pass_through_energy:
+            return profitability.pass_through_energy
+
+    def default_active_sharing_fees(self):
+        profitability = self.env['profitability.report.owned'].search([])
+        if profitability.active_sharing_fees:
+            return profitability.active_sharing_fees
+
+    def default_discount(self):
+        profitability = self.env['profitability.report.owned'].search([])
+        if profitability.discount:
+            return profitability.discount
+
+    def default_site_maintenance(self):
+        profitability = self.env['profitability.report.owned'].search([])
+        if profitability.site_maintenance:
+            return profitability.site_maintenance
+
+    def default_site_maintenance_lim(self):
+        profitability = self.env['profitability.report.owned'].search([])
+        if profitability.site_maintenance_lim:
+            return profitability.site_maintenance_lim
+
     def default_insurance(self):
+        profitability = self.env['profitability.report.owned'].search([])
+        if profitability.insurance:
+            return profitability.insurance
         return self.env['account.account'].search([('code', '=',
                                                     '422701'),
                                                    ('company_id',
@@ -41,6 +79,9 @@ class ProfitabilityReportWizard(models.TransientModel):
                                                     self.env.company.id)])
 
     def default_energy_cost(self):
+        profitability = self.env['profitability.report.owned'].search([])
+        if profitability.energy_cost:
+            return profitability.energy_cost
         return self.env['account.account'].search([('code', 'in',
                                                     ['422401', '422401']),
                                                    ('company_id',
@@ -48,18 +89,44 @@ class ProfitabilityReportWizard(models.TransientModel):
                                                     self.env.company.id)])
 
     def default_security(self):
+        profitability = self.env['profitability.report.owned'].search([])
+        if profitability.security:
+            return profitability.security
         return self.env['account.account'].search([('code', '=',
                                                     '422301'),
                                                    ('company_id',
                                                     '=',
                                                     self.env.company.id)])
 
+    def default_service_level_credit(self):
+        profitability = self.env['profitability.report.owned'].search([])
+        if profitability.service_level_credit:
+            return profitability.service_level_credit
+
     def default_rou_depreciation(self):
+        profitability = self.env['profitability.report.owned'].search([])
+        if profitability.rou_depreciation:
+            return profitability.rou_depreciation
         return self.env['account.account'].search([('code', '=',
                                                     '554101'),
                                                    ('company_id',
                                                     '=',
                                                     self.env.company.id)])
+
+    def default_fa_depreciation(self):
+        profitability = self.env['profitability.report.owned'].search([])
+        if profitability.fa_depreciation:
+            return profitability.fa_depreciation
+
+    def default_fa_depreciation_lim(self):
+        profitability = self.env['profitability.report.owned'].search([])
+        if profitability.fa_depreciation_lim:
+            return profitability.fa_depreciation_lim
+
+    def default_lease_finance_cost(self):
+        profitability = self.env['profitability.report.owned'].search([])
+        if profitability.lease_finance_cost:
+            return profitability.lease_finance_cost
 
     service_revenue = fields.Many2many('account.account', 'service_revenue_rel',
                                        string='Service Revenue',
@@ -73,15 +140,20 @@ class ProfitabilityReportWizard(models.TransientModel):
                                   default=default_colocation)
     pass_through_energy = fields.Many2many('account.account',
                                            'pass_through_energy',
-                                           string='Pass Through Energy')
+                                           string='Pass Through Energy',
+                                           default=default_pass_through_energy)
     active_sharing_fees = fields.Many2many('account.account',
                                            'active_sharing_fees',
-                                           string='Active Sharing Fees')
+                                           string='Active Sharing Fees',
+                                           default=default_active_sharing_fees)
     discount = fields.Many2many('account.account', 'disc',
-                                string='Discount')
-    site_maintenance = fields.Many2many('account.account', 'site_maintenance')
+                                string='Discount',
+                                default=default_discount)
+    site_maintenance = fields.Many2many('account.account', 'site_maintenance',
+                                        default=default_site_maintenance)
     site_maintenance_lim = fields.Many2many('account.account',
-                                            'site_maintenance_lim')
+                                            'site_maintenance_lim',
+                                            default=default_site_maintenance_lim)
     insurance = fields.Many2many('account.account', 'insurance',
                                  string="Insurance", default=default_insurance)
     energy_cost = fields.Many2many('account.account', 'energy_cost',
@@ -91,20 +163,24 @@ class ProfitabilityReportWizard(models.TransientModel):
                                 string='Security', default=default_security)
     service_level_credit = fields.Many2many('account.account',
                                             'service_level_credit',
-                                            string='Service Level Credit')
+                                            string='Service Level Credit',
+                                            default=default_service_level_credit)
     rou_depreciation = fields.Many2many('account.account',
                                         'rou_depreciation_rels',
                                         string='ROU Depreciation',
                                         default=default_rou_depreciation)
     fa_depreciation = fields.Many2many('account.account',
                                        'fa_depreciation_rels',
-                                       string='FA Depreciation')
+                                       string='FA Depreciation',
+                                       default=default_fa_depreciation)
     fa_depreciation_lim = fields.Many2many('account.account',
                                            'fa_depreciation_lim_rels',
-                                           string='FA Depreciation')
+                                           string='FA Depreciation',
+                                           default=default_fa_depreciation_lim)
     lease_finance_cost = fields.Many2many('account.account',
                                           'lease_finance_cost_rels',
-                                          string='Leases Finance Cost')
+                                          string='Leases Finance Cost',
+                                          default=default_lease_finance_cost)
 
     period = fields.Selection(selection=([('this_month', 'This Month'),
                                           ('this_quarter', 'This Quarter'),
@@ -163,6 +239,42 @@ class ProfitabilityReportWizard(models.TransientModel):
         if self.from_date and self.to_date:
             if self.from_date > self.to_date:
                 raise UserError("Start date should be less than end date")
+        profitability = self.env['profitability.report.owned'].search([])
+        if not profitability:
+            self.env['profitability.report.owned'].create({
+                'service_revenue': self.service_revenue,
+                'investment_revenue': self.investment_revenue,
+                'colocation': self.colocation,
+                'pass_through_energy': self.pass_through_energy,
+                'active_sharing_fees': self.active_sharing_fees,
+                'discount': self.discount,
+                'site_maintenance': self.site_maintenance,
+                'site_maintenance_lim': self.site_maintenance_lim,
+                'insurance': self.insurance,
+                'energy_cost': self.energy_cost,
+                'security': self.security,
+                'service_level_credit': self.service_level_credit,
+                'rou_depreciation': self.rou_depreciation,
+                'fa_depreciation': self.fa_depreciation,
+                'lease_finance_cost': self.lease_finance_cost
+            })
+        profitability.update({
+            'service_revenue': self.service_revenue,
+            'investment_revenue': self.investment_revenue,
+            'colocation': self.colocation,
+            'pass_through_energy': self.pass_through_energy,
+            'active_sharing_fees': self.active_sharing_fees,
+            'discount': self.discount,
+            'site_maintenance': self.site_maintenance,
+            'site_maintenance_lim': self.site_maintenance_lim,
+            'insurance': self.insurance,
+            'energy_cost': self.energy_cost,
+            'security': self.security,
+            'service_level_credit': self.service_level_credit,
+            'rou_depreciation': self.rou_depreciation,
+            'fa_depreciation': self.fa_depreciation,
+            'lease_finance_cost': self.lease_finance_cost
+        })
         data = {
             'ids': self.ids,
             'model': self._name,

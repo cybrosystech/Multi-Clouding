@@ -1,0 +1,60 @@
+<odoo>
+
+    <record id="account_journal_dashboard_kanban_view_inherit_vendor_bill"
+            model="ir.ui.view">
+        <field name="name">account.journal.dashboard.kanban.vendor</field>
+        <field name="model">account.journal</field>
+        <field name="inherit_id"
+               ref="account.account_journal_dashboard_kanban_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//t[@id='account.JournalBodySalePurchase']//div[hasclass('o_kanban_primary_right')]"
+                   position="inside">
+                <div class="row" t-if="dashboard.number_to_approve">
+                    <div class="col overflow-hidden text-left">
+                        <a type="object" name="open_action"
+                           context="{'search_default_to_approve': 1}">
+                            <span t-if="journal_type == 'purchase'"
+                                  title="Bill to approve">
+                                <t t-esc="dashboard.number_to_approve"/>
+                                Bills to approve
+                            </span>
+                        </a>
+                        <a type="object" name="open_action"
+                           context="{'search_default_to_approve': 1}">
+                            <span t-if="journal_type == 'sale'"
+                                  title="Bill to approve">
+                                <t t-esc="dashboard.number_to_approve"/>
+                                Invoices to approve
+                            </span>
+                        </a>
+                    </div>
+                    <div class="col-auto text-right">
+                        <span>
+                            <t t-esc="dashboard.sum_to_approve"/>
+                        </span>
+                    </div>
+                </div>
+            </xpath>
+            <xpath expr="//t[@id='account.JournalBodySalePurchase']//div[hasclass('o_kanban_primary_right')]//div[@t-if='dashboard.number_waiting']"
+                   position="replace">
+                        <div class="row" t-if="dashboard.number_waiting">
+                            <div class="col overflow-hidden text-left">
+                                <a type="object" t-if="journal_type == 'sale'" name="open_action"
+                                context="{'search_default_unpaid':1, 'search_default_posted':1, 'search_default_partial': 1}" id="account_dashboard_sale_pay_link">
+                                    <t t-esc="dashboard.number_waiting"/> Unpaid Invoices
+                                </a>
+
+                                <a type="object" t-if="journal_type == 'purchase'" name="open_action"
+                                context="{'search_default_unpaid':1, 'search_default_posted':1}" id="account_dashboard_purchase_pay_link">
+                                    <t t-esc="dashboard.number_waiting"/> Bills to Pay
+                                </a>
+                            </div>
+                            <div class="col-auto text-right">
+                                <span><t t-esc="dashboard.sum_waiting"/></span>
+                            </div>
+                        </div>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

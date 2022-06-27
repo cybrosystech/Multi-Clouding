@@ -1,4 +1,5 @@
 import io
+from email.policy import default
 
 from dateutil.relativedelta import relativedelta
 
@@ -14,18 +15,98 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
     _name = "profitability.report.managed.wizard"
 
     def lease_anchor_tenant(self):
+        profitability_managed = self.env['profitability.report.managed'].search(
+            [])
+        if profitability_managed:
+            return profitability_managed.lease_anchor_tenant
         return self.env['account.account'].search([('code', '=',
                                                     '411401'),
                                                    ('company_id',
                                                     '=',
                                                     self.env.company.id)])
 
+    def default_lease_colo_tenant(self):
+        profitability_managed = self.env['profitability.report.managed'].search(
+            [])
+        if profitability_managed:
+            return profitability_managed.lease_colo_tenant
+    
+    def default_additional_space_revenue(self):
+        profitability_managed = self.env['profitability.report.managed'].search(
+            [])
+        if profitability_managed:
+            return profitability_managed.additional_space_revenue
+    
+    def default_bts_revenue(self):
+        profitability_managed = self.env['profitability.report.managed'].search(
+            [])
+        if profitability_managed:
+            return profitability_managed.bts_revenue
+    
+    def default_active_sharing_fees(self):
+        profitability_managed = self.env['profitability.report.managed'].search(
+            [])
+        if profitability_managed:
+            return profitability_managed.active_sharing_fees
+    
+    def default_discount(self):
+        profitability_managed = self.env['profitability.report.managed'].search(
+            [])
+        if profitability_managed:
+            return profitability_managed.discount
+    
+    def default_rou_depreciation(self):
+        profitability_managed = self.env['profitability.report.managed'].search(
+            [])
+        if profitability_managed:
+            return profitability_managed.rou_depreciation
+    
+    def default_fa_depreciation(self):
+        profitability_managed = self.env['profitability.report.managed'].search(
+            [])
+        if profitability_managed:
+            return profitability_managed.fa_depreciation
+    
+    def default_lease_finance_cost(self):
+        profitability_managed = self.env['profitability.report.managed'].search(
+            [])
+        if profitability_managed:
+            return profitability_managed.lease_finance_cost
+    
+    def default_site_maintenance_managed(self):
+        profitability_managed = self.env['profitability.report.managed'].search(
+            [])
+        if profitability_managed:
+            return profitability_managed.site_maintenance_managed
+    
+    def default_site_maintenance_managed_lim(self):
+        profitability_managed = self.env['profitability.report.managed'].search(
+            [])
+        if profitability_managed:
+            return profitability_managed.site_maintenance_managed_lim
+            
+    def default_site_rent(self):
+        profitability_managed = self.env['profitability.report.managed'].search(
+            [])
+        if profitability_managed:
+            return profitability_managed.site_rent
+
     def default_security(self):
+        profitability_managed = self.env['profitability.report.managed'].search(
+            [])
+        if profitability_managed:
+            return profitability_managed.security
         return self.env['account.account'].search([('code', '=',
                                                     '422301'),
                                                    ('company_id',
                                                     '=',
                                                     self.env.company.id)])
+    
+    def default_service_level_credits(self):
+        profitability_managed = self.env['profitability.report.managed'].search(
+            [])
+        if profitability_managed:
+            return profitability_managed.service_level_credits
 
     lease_anchor_tenant = fields.Many2many('account.account',
                                            'lease_anchor_tenant_rel',
@@ -34,47 +115,58 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
 
     lease_colo_tenant = fields.Many2many('account.account',
                                          'lease_colo_tenant_rel',
-                                         string='Lease Colo tenant')
+                                         string='Lease Colo tenant',
+                                         default=default_lease_colo_tenant)
 
     additional_space_revenue = fields.Many2many('account.account',
                                                 'additional_space_revenue_rel',
                                                 string='Additional Space '
-                                                       'Revenues')
+                                                       'Revenues',
+                                                default=default_additional_space_revenue)
 
     bts_revenue = fields.Many2many('account.account',
                                    'bts_revenue_rel',
-                                   string='BTS Revenue')
+                                   string='BTS Revenue',
+                                   default=default_bts_revenue)
 
     active_sharing_fees = fields.Many2many('account.account',
                                            'active_sharing_fees_rel',
-                                           string='Active Sharing fees')
+                                           string='Active Sharing fees',
+                                           default=default_active_sharing_fees)
 
     discount = fields.Many2many('account.account',
                                 'discount_rel',
-                                string='Discount')
+                                string='Discount',
+                                default=default_discount)
 
     rou_depreciation = fields.Many2many('account.account',
                                         'rou_depreciation_rel',
-                                        string='ROU Depreciation')
+                                        string='ROU Depreciation',
+                                        default=default_rou_depreciation)
 
     fa_depreciation = fields.Many2many('account.account',
                                        'fa_depreciation_rel',
-                                       string='FA Depreciation')
+                                       string='FA Depreciation',
+                                       default=default_fa_depreciation)
 
     lease_finance_cost = fields.Many2many('account.account',
                                           'lease_finance_cost_rel',
-                                          string='Lease Finance Cost')
+                                          string='Lease Finance Cost',
+                                          default=default_lease_finance_cost)
 
     site_maintenance_managed = fields.Many2many('account.account',
-                                                'site_maintenance_managed')
+                                                'site_maintenance_managed',
+                                                default=default_site_maintenance_managed)
 
     site_maintenance_managed_lim = fields.Many2many('account.account',
                                                     'site_maintenance_managed_'
-                                                    'lim')
+                                                    'lim',
+                                                    default=default_site_maintenance_managed_lim)
 
     site_rent = fields.Many2many('account.account',
                                  'site_rent_rel',
-                                 string='Site Rent')
+                                 string='Site Rent',
+                                 default=default_site_rent)
 
     security = fields.Many2many('account.account',
                                 'security_rel',
@@ -82,7 +174,8 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
 
     service_level_credits = fields.Many2many('account.account',
                                              'service_level_credits_rel',
-                                             string='Service level Credits')
+                                             string='Service level Credits',
+                                             default=default_service_level_credits)
 
     period = fields.Selection(selection=([('this_month', 'This Month'),
                                           ('this_quarter', 'This Quarter'),
@@ -141,6 +234,41 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
         if self.from_date and self.to_date:
             if self.from_date > self.to_date:
                 raise UserError("Start date should be less than end date")
+        profitability_managed = self.env['profitability.report.managed'].search(
+            [])
+        if not profitability_managed:
+            self.env['profitability.report.managed'].create({
+                'lease_anchor_tenant': self.lease_anchor_tenant,
+                'lease_colo_tenant': self.lease_colo_tenant,
+                'additional_space_revenue': self.additional_space_revenue,
+                'bts_revenue': self.bts_revenue,
+                'active_sharing_fees': self.active_sharing_fees,
+                'discount': self.discount,
+                'rou_depreciation': self.rou_depreciation,
+                'fa_depreciation': self.fa_depreciation,
+                'lease_finance_cost': self.lease_finance_cost,
+                'site_maintenance_managed': self.site_maintenance_managed,
+                'site_maintenance_managed_lim': self.site_maintenance_managed_lim,
+                'site_rent': self.site_rent,
+                'security': self.security,
+                'service_level_credits': self.service_level_credits
+            })
+        profitability_managed.update({
+            'lease_anchor_tenant': self.lease_anchor_tenant,
+            'lease_colo_tenant': self.lease_colo_tenant,
+            'additional_space_revenue': self.additional_space_revenue,
+            'bts_revenue': self.bts_revenue,
+            'active_sharing_fees': self.active_sharing_fees,
+            'discount': self.discount,
+            'rou_depreciation': self.rou_depreciation,
+            'fa_depreciation': self.fa_depreciation,
+            'lease_finance_cost': self.lease_finance_cost,
+            'site_maintenance_managed': self.site_maintenance_managed,
+            'site_maintenance_managed_lim': self.site_maintenance_managed_lim,
+            'site_rent': self.site_rent,
+            'security': self.security,
+            'service_level_credits': self.service_level_credits
+        })
         data = {
             'ids': self.ids,
             'model': self._name,
@@ -368,13 +496,21 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
 
         sheet = workbook.add_worksheet()
 
-        main_head = workbook.add_format({'font_size': 13, 'align': 'center', 'bg_color': '#34a4eb', 'font_color': '#f2f7f4', 'border': 2})
+        main_head = workbook.add_format(
+            {'font_size': 13, 'align': 'center', 'bg_color': '#34a4eb',
+             'font_color': '#f2f7f4', 'border': 2})
 
-        head = workbook.add_format({'font_size': 13, 'align': 'center', 'bg_color': '#1a1c99', 'font_color': '#f2f7f4', 'border': 2})
+        head = workbook.add_format(
+            {'font_size': 13, 'align': 'center', 'bg_color': '#1a1c99',
+             'font_color': '#f2f7f4', 'border': 2})
 
-        sub_heading = workbook.add_format({'valign': 'vcenter', 'bg_color': '#1a1c99', 'font_color': '#f2f7f4', 'border': 2})
+        sub_heading = workbook.add_format(
+            {'valign': 'vcenter', 'bg_color': '#1a1c99',
+             'font_color': '#f2f7f4', 'border': 2})
 
-        sub_heading1 = workbook.add_format({'align': 'center', 'valign': 'vcenter', 'bg_color': '#7434eb', 'font_color': '#f2f7f4', 'border': 2})
+        sub_heading1 = workbook.add_format(
+            {'align': 'center', 'valign': 'vcenter', 'bg_color': '#7434eb',
+             'font_color': '#f2f7f4', 'border': 2})
 
         sheet.set_row(3, 70)
 
