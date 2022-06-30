@@ -16,7 +16,7 @@
                     </div>
                 </xpath> -->
                 <xpath expr="//field[@name='invoice_line_ids']/tree//field[@name='price_unit']" position="after">
-                    <field name="new_rate"/>
+                    <field name="new_rate" optional="hide"/>
                 </xpath>
                 <xpath expr="//field[@name='line_ids']/tree//field[@name='price_unit']" position="after">
                     <field name="new_rate" invisible="1"/>
@@ -31,7 +31,9 @@
                     <field name="local_tax_amount"   invisible="1"/>
                     <field name="total_local_amount"   invisible="1" />
                 </xpath>
-
+                <xpath expr="//field[@name='invoice_line_ids']/tree/field[@name='price_subtotal']" position="attributes">
+                    <attribute name="optional">hide</attribute>
+                </xpath>
             </field>
         </record>
 

@@ -32,9 +32,10 @@ class AccountMoveLine(models.Model):
     @api.onchange('company_currency_id')
     def _onchange_local_curr(self):
         for rec in self:
-            rate = rec.company_currency_id._get_rates(rec.company_id, fields.date.today())
-            exchange_rate = rate.get(rec.company_currency_id.id)
-            rec.new_rate = exchange_rate
+            to_currency = self.env['res.currency'].search([('name','=','AED')])
+            rate = rec.company_currency_id._get_conversion_rate(self.currency_id,to_currency,rec.company_id, fields.date.today())
+            # exchange_rate = rate.get(rec.company_currency_id.id)
+            rec.new_rate = rate
 
     @api.depends('new_rate','price_subtotal','price_total')
     def calc_local_amount(self):

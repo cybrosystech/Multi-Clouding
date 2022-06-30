@@ -24,7 +24,7 @@
                 <t t-set="doc" t-value="doc.with_context({'lang':doc.partner_id.lang})"/>
                 <div class="page">
                     <div class="oe_structure"/>
-                    <p style="text-align:center;font-weight:bold;font-size:18px;">TAX INVOICE</p>
+                    <p style="text-align:center;font-weight:bold;font-size:18px;"><t t-esc="doc.name"/></p>
                     <div class="row">
                         <div class="col-6">
                             <div>
