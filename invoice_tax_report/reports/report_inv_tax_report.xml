@@ -50,7 +50,7 @@
                                 <span t-field="doc.name"/>
                             </div>
                             <div>
-                                <span style="font-weight:bold" >Payment Reference:</span>
+                                <span style="font-weight:bold" >Service Date:</span>
                                 <span t-field="doc.payment_reference"/>
                             </div>
 

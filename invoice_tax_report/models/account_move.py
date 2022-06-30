@@ -29,7 +29,8 @@ class AccountMoveLine(models.Model):
     total_local_amount = fields.Float('Total Amount',compute='calc_local_amount',store=True)
     local_tax_amount = fields.Float('Local Tax',compute='calc_local_tax_amount',store=True)
 
-    @api.onchange('company_currency_id')
+    @api.onchange('currency_id')
+    @api.constrains('currency_id')
     def _onchange_local_curr(self):
         for rec in self:
             to_currency = self.env['res.currency'].search([('name','=','AED')])
@@ -41,8 +42,8 @@ class AccountMoveLine(models.Model):
     def calc_local_amount(self):
         for rec in self:
             if rec.new_rate:
-                rec.subtotal_local_amount = round((rec.price_subtotal / rec.new_rate), 2)
-                rec.total_local_amount = round((rec.price_total / rec.new_rate), 2)
+                rec.subtotal_local_amount = round((rec.price_subtotal * rec.new_rate), 2)
+                rec.total_local_amount = round((rec.price_total * rec.new_rate), 2)
             else:
                 rec.subtotal_local_amount = rec.total_local_amount = 0
     @api.depends('subtotal_local_amount','total_local_amount')
