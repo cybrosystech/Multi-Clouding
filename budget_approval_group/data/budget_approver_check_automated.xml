@@ -1,0 +1,14 @@
+<odoo>
+    <data>
+        <record id="approver_update_budget" model="ir.cron">
+            <field name="name">Budget Approval</field>
+            <field name="model_id" ref="model_budget_in_out_check_invoice"/>
+            <field name="type">ir.actions.server</field>
+            <field name="state">code</field>
+            <field name="code">action = records.user_group_update()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+        </record>
+    </data>
+</odoo>
