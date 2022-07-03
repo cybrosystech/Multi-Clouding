@@ -1,0 +1,21 @@
+<odoo>
+    <data>
+        <record id="ks_discount_sale_order_form_inherited" model="ir.ui.view">
+            <field name="name">ks.discount.sale_order.form.inherited</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//field[@name='payment_term_id']" position="after">
+
+                    <label for="service_date_from" string="Service Date"/>
+                    <div class="o_row">
+                        <field name="service_date_from"  widget="daterange" nolabel="1" class="oe_inline" options="{'related_end_date': 'service_date_to'}"/>
+                        <i class="fa fa-long-arrow-right mx-2" aria-label="Arrow icon" title="Arrow"/>
+                        <field name="service_date_to"  widget="daterange" nolabel="1" class="oe_inline" options="{'related_start_date': 'service_date_from'}"/>
+                    </div>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

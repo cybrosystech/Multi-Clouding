@@ -1,0 +1,42 @@
+<odoo>
+    <data>
+
+        <record id="view_move_form" model="ir.ui.view">
+            <field name="name">account.move.form</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml">
+                 <!-- <xpath expr="//div[@name='journal_div']" position="after">
+
+                    <label for="service_date_from" string="Service Date"/>
+                    <div class="o_row">
+                        <field name="service_date_from"  widget="daterange" nolabel="1" class="oe_inline" options="{'related_end_date': 'service_date_to'}"/>
+                        <i class="fa fa-long-arrow-right mx-2" aria-label="Arrow icon" title="Arrow"/>
+                        <field name="service_date_to"  widget="daterange" nolabel="1" class="oe_inline" options="{'related_start_date': 'service_date_from'}"/>
+                    </div>
+                </xpath> -->
+                <xpath expr="//field[@name='invoice_line_ids']/tree//field[@name='price_unit']" position="after">
+                    <field name="new_rate" optional="hide"/>
+                </xpath>
+                <xpath expr="//field[@name='line_ids']/tree//field[@name='price_unit']" position="after">
+                    <field name="new_rate" invisible="1"/>
+                </xpath>
+                <xpath expr="//field[@name='price_subtotal']" position="after">
+                    <field name="subtotal_local_amount" optional="hide" />
+                    <field name="local_tax_amount" optional="hide" />
+                    <field name="total_local_amount" optional="hide" />
+                </xpath>
+                <xpath expr="//field[@name='amount_by_group']" position="after">
+                    <field name="subtotal_local_amount"   invisible="1"/>
+                    <field name="local_tax_amount"   invisible="1"/>
+                    <field name="total_local_amount"   invisible="1" />
+                </xpath>
+                <xpath expr="//field[@name='invoice_line_ids']/tree/field[@name='price_subtotal']" position="attributes">
+                    <attribute name="optional">hide</attribute>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>
+
