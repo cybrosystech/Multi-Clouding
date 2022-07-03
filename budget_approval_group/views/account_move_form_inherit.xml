@@ -1,0 +1,13 @@
+<odoo>
+    <record id="account_move_view_reset_button_new" model="ir.ui.view">
+        <field name="name">account.view.reset.button.new</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='button_draft']" position="after">
+                <button name="button_draft" string="Reset to Draft" type="object" groups="budget_approval_group.group_budget_check_approver"
+                                attrs="{'invisible' : [('state', '!=', 'posted')]}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
