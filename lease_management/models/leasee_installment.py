@@ -23,6 +23,7 @@ class LeaseeInstallment(models.Model):
     leasee_contract_id = fields.Many2one(comodel_name="leasee.contract", string="", required=False,ondelete='cascade' )
     installment_invoice_id = fields.Many2one(comodel_name="account.move", string="", required=False, )
     subsequent_amount = fields.Float(digits=(16, 5))
+    interest_amount = fields.Float(digits=(16, 5), compute="compute_interest_amount")
     remaining_lease_liability = fields.Float(digits=(16, 5))
     # installment_move_id = fields.Many2one(comodel_name="account.move", string="", required=False, )
     # interest_move_id = fields.Many2one(comodel_name="account.move", string="", required=False, )
@@ -54,6 +55,13 @@ class LeaseeInstallment(models.Model):
             #         rec.is_long_liability = True
             else:
                 rec.is_long_liability = True
+
+    def compute_interest_amount(self):
+        for ins in self:
+            if ins.interest_move_ids:
+                ins.interest_amount = sum(ins.interest_move_ids.filtered(lambda i: ins.leasee_contract_id.interest_expense_account_id in i.line_ids.mapped('account_id')).mapped('amount_total'))
+            else:
+                ins.interest_amount = ins.subsequent_amount
 
     #
     # def get_total_amount_installment_annual(self):
