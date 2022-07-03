@@ -61,7 +61,7 @@ class LeaseeContract(models.Model):
     asset_description = fields.Text(string="", default="", required=False, )
     initial_direct_cost = fields.Float(copy=True, tracking=True)
     incentives_received = fields.Float(copy=True, tracking=True)
-    incentives_received_type = fields.Selection(default="receivable", selection=[('receivable', 'Receivable'), ('rent_free', 'Rent Free'), ], required=True, tracking=True)
+    incentives_received_type = fields.Selection(default="receivable", selection=[('receivable', 'Receivable'), ('rent_free', 'Rent Free - Advance Discount'), ], required=True, tracking=True)
     rou_value = fields.Float(string="ROU Asset Value",compute='compute_rou_value', tracking=True)
     # registered_paymen = fields.Float(string="Registered Payment Prior Commencement Date")
 
@@ -112,13 +112,6 @@ class LeaseeContract(models.Model):
     incentives_product_id = fields.Many2one(comodel_name="product.product", string="", required=True, domain=[('type', '=', 'service')] )
     leasor_type = fields.Selection(string="Leasor Type",default="single", selection=[('single', 'Single'), ('multi', 'Multi'), ], required=True, copy=True , tracking=True)
     multi_leasor_ids = fields.One2many(comodel_name="multi.leasor", inverse_name="leasee_contract_id", string="", required=False, copy=True, tracking=True)
-
-    # @api.model
-    # def create(self, vals):
-    #     name = self.env['ir.sequence'].next_by_code('leasee.contract')
-    #     vals['name'] = name
-    #     vals['external_reference_number'] = name
-    #     return super(LeaseeContract, self).create(vals)
 
     @api.depends('commencement_date', 'lease_contract_period')
     def compute_estimated_ending_date(self):
@@ -237,11 +230,15 @@ class LeaseeContract(models.Model):
         start_interest_adj = first_installment.date.replace(day=1) if not installment_same else before_first.date
         interest_adj_days = (first_installment.date - start_interest_adj).days
         adjustment_amount = old_interest * interest_adj_days / num_days
-        if first_entry:
-            debit_line = first_entry.line_ids.filtered(lambda l: l.debit > 0)
-            credit_line = first_entry.line_ids.filtered(lambda l: l.credit > 0)
-            first_entry.write({'line_ids': [(1, debit_line.id, {'debit': debit_line.debit + adjustment_amount}),
+        if first_entry and after_first.amount > 0:
+            entry = first_entry[0]
+            first_entry[1:].unlink()
+            debit_line = entry.line_ids.filtered(lambda l: l.debit > 0)
+            credit_line = entry.line_ids.filtered(lambda l: l.credit > 0)
+            entry.write({'line_ids': [(1, debit_line.id, {'debit': debit_line.debit + adjustment_amount}),
                                             (1, credit_line.id, {'credit': credit_line.credit + adjustment_amount})]})
+        elif first_entry and not after_first.amount and after_first.is_long_liability:
+            self.with_context(use_short=True).create_interset_move(after_first, first_installment.date, adjustment_amount)
         else:
             move_date = first_installment.date.replace(day=1) + relativedelta(days=-1,months=1)
             self.with_context(reassessment=True).create_interset_move(after_first, move_date, adjustment_amount)
@@ -1222,7 +1219,7 @@ class LeaseeContract(models.Model):
 
     def create_interset_move(self, installment, move_date, interest_amount):
         if round(interest_amount, 3) > 0:
-            lease_account_id = self.lease_liability_account_id.id if (installment.amount or not installment or self._context.get('reassessment')) else self.long_lease_liability_account_id.id
+            lease_account_id = self.lease_liability_account_id.id if (installment.amount or not installment or self._context.get('use_short') or (self._context.get('reassessment') and not installment.is_long_liability)) else self.long_lease_liability_account_id.id
             lines = [(0, 0, {
                 'name': 'Interest Recognition for %s' % move_date.strftime(DF),
                 'account_id': lease_account_id,
@@ -1646,14 +1643,16 @@ class LeaseeContract(models.Model):
         return lease_liability
 
     def get_reassessment_after_remaining_lease(self, reassessment_installments):
-        if self.is_contract_not_annual():
-            num_installments = self.get_installments_per_year()
-            lease_liability = 0
-            for ins in reassessment_installments[:num_installments]:
-                lease_liability += ins.amount - ins.subsequent_amount
-        else:
-            first_installment = reassessment_installments[0]
-            lease_liability = first_installment.amount - first_installment.subsequent_amount
+        # if self.is_contract_not_annual():
+        #     num_installments = self.get_installments_per_year()
+        #     lease_liability = 0
+        #     for ins in reassessment_installments[:num_installments]:
+        #         lease_liability += ins.amount - ins.subsequent_amount
+        # else:
+        #     first_installment = reassessment_installments[0]
+        #     lease_liability = first_installment.amount - first_installment.subsequent_amount
+        first_installment = reassessment_installments[0]
+        lease_liability = first_installment.amount - first_installment.subsequent_amount
         return lease_liability
 
     def unlink(self):
