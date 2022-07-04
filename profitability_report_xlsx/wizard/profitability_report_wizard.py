@@ -336,66 +336,59 @@ class ProfitabilityReportWizard(models.TransientModel):
             prof_rep.update({
                 'project': i.name,
             })
-            service_revenue = self.env['account.move.line'].search(
-                [('account_id', 'in', data['service_revenue_ids']),
-                 ('project_site_id', '=', i.id),
+            projects = self.env['account.move.line'].search(
+                [('project_site_id', '=', i.id),
                  ('move_id.date', '<=', data['to']),
                  ('move_id.date', '>=', data['from'])])
+
+            service_revenue = projects.filtered(
+                lambda x: x.account_id.id in data['service_revenue_ids'])
             total = sum(service_revenue.mapped('debit')) + sum(
                 service_revenue.mapped('credit'))
             prof_rep.update({
                 'service_revenue': total,
             })
-            investment_revenue = self.env['account.move.line'].search(
-                [('account_id', 'in', data['investment_revenue_ids']),
-                 ('project_site_id', '=', i.id),
-                 ('move_id.date', '<=', data['to']),
-                 ('move_id.date', '>=', data['from'])])
-            total = sum(investment_revenue.mapped('debit')) + sum(
-                investment_revenue.mapped('credit'))
-            prof_rep.update({
-                'investment_revenue': total,
-            })
-            colocation = self.env['account.move.line'].search(
-                [('account_id', 'in', data['colocation_ids']),
-                 ('project_site_id', '=', i.id),
-                 ('move_id.date', '<=', data['to']),
-                 ('move_id.date', '>=', data['from'])])
+            
+            colocation = projects.filtered(
+                lambda x: x.account_id.id in data['colocation_ids'])
             total = sum(colocation.mapped('debit')) + sum(
                 colocation.mapped('credit'))
             prof_rep.update({
                 'colocation': total,
             })
-            pass_through_energy = self.env['account.move.line'].search(
-                [('account_id', 'in', data['pass_through_energy_ids']),
-                 ('project_site_id', '=', i.id),
-                 ('move_id.date', '<=', data['to']),
-                 ('move_id.date', '>=', data['from'])])
+            
+            investment_revenue = projects.filtered(
+                lambda x: x.account_id.id in data['investment_revenue_ids'])
+            total = sum(investment_revenue.mapped('debit')) + sum(
+                investment_revenue.mapped('credit'))
+            prof_rep.update({
+                'investment_revenue': total,
+            })
+            
+            pass_through_energy = projects.filtered(
+                lambda x: x.account_id.id in data['pass_through_energy_ids'])
             total = sum(pass_through_energy.mapped('debit')) + sum(
                 pass_through_energy.mapped('credit'))
             prof_rep.update({
                 'pass_through_energy': total,
             })
-            active_sharing_fees = self.env['account.move.line'].search(
-                [('account_id', 'in', data['active_sharing_fees_ids']),
-                 ('project_site_id', '=', i.id),
-                 ('move_id.date', '<=', data['to']),
-                 ('move_id.date', '>=', data['from'])])
-            total = sum(active_sharing_fees.mapped('debit')) + sum(
-                active_sharing_fees.mapped('credit'))
-            prof_rep.update({
-                'active_sharing_fees': total,
-            })
-            discount = self.env['account.move.line'].search(
-                [('account_id', 'in', data['discount_ids']),
-                 ('project_site_id', '=', i.id),
-                 ('move_id.date', '<=', data['to']),
-                 ('move_id.date', '>=', data['from'])])
+            
+            discount = projects.filtered(
+                lambda x: x.account_id.id in data['discount_ids'])
             total = sum(discount.mapped('debit')) + sum(
                 discount.mapped('credit'))
             prof_rep.update({
                 'discount': total,
             })
+            
+            active_sharing_fees = projects.filtered(
+                lambda x: x.account_id.id in data['active_sharing_fees_ids'])
+            total = sum(active_sharing_fees.mapped('debit')) + sum(
+                active_sharing_fees.mapped('credit'))
+            prof_rep.update({
+                'active_sharing_fees': total,
+            })
+
             total_revenue = prof_rep['service_revenue'] + prof_rep[
                 'investment_revenue'] + prof_rep['colocation'] + prof_rep[
                                 'pass_through_energy'] + prof_rep[
@@ -403,60 +396,47 @@ class ProfitabilityReportWizard(models.TransientModel):
             prof_rep.update({
                 'total_revenue': total_revenue,
             })
-            # profitability_report.append(prof_rep)
-            if data['site_maintenance_code'] and data[
-                'site_maintenance_lim_code']:
-                for account in account_ids:
-                    site_maintenance = self.env['account.move.line'].search(
-                        [('account_id', '=', account),
-                         ('project_site_id', '=', i.id),
-                         ('move_id.date', '<=', data['to']),
-                         ('move_id.date', '>=', data['from'])])
-                    total_site += sum(site_maintenance.mapped('debit')) + sum(
-                        site_maintenance.mapped('credit'))
+
+            site_maintenance = projects.filtered(
+                lambda x: x.account_id.id in account_ids)
+            total = sum(site_maintenance.mapped('debit')) + sum(
+                site_maintenance.mapped('credit'))
             prof_rep.update({
-                'site_maintenance': total_site,
+                'site_maintenance': total,
             })
-            insurance = self.env['account.move.line'].search(
-                [('account_id', 'in', data['insurance_ids']),
-                 ('project_site_id', '=', i.id),
-                 ('move_id.date', '<=', data['to']),
-                 ('move_id.date', '>=', data['from'])])
+            
+            insurance = projects.filtered(
+                lambda x: x.account_id.id in data['insurance_ids'])
             total = sum(insurance.mapped('debit')) + sum(
                 insurance.mapped('credit'))
             prof_rep.update({
-                'insurance': total
+                'insurance': total,
             })
-            energy_cost = self.env['account.move.line'].search(
-                [('account_id', 'in', data['energy_cost_ids']),
-                 ('project_site_id', '=', i.id),
-                 ('move_id.date', '<=', data['to']),
-                 ('move_id.date', '>=', data['from'])])
+            
+            energy_cost = projects.filtered(
+                lambda x: x.account_id.id in data['energy_cost_ids'])
             total = sum(energy_cost.mapped('debit')) + sum(
                 energy_cost.mapped('credit'))
             prof_rep.update({
-                'energy_cost': total
+                'energy_cost': total,
             })
-            security = self.env['account.move.line'].search(
-                [('account_id', 'in', data['security_ids']),
-                 ('project_site_id', '=', i.id),
-                 ('move_id.date', '<=', data['to']),
-                 ('move_id.date', '>=', data['from'])])
-            total = sum(security.mapped('debit')) + sum(
-                security.mapped('credit'))
-            prof_rep.update({
-                'security': total
-            })
-            service_level_credit = self.env['account.move.line'].search(
-                [('account_id', 'in', data['service_level_credit_ids']),
-                 ('project_site_id', '=', i.id),
-                 ('move_id.date', '<=', data['to']),
-                 ('move_id.date', '>=', data['from'])])
+            
+            service_level_credit = projects.filtered(
+                lambda x: x.account_id.id in data['service_level_credit_ids'])
             total = sum(service_level_credit.mapped('debit')) + sum(
                 service_level_credit.mapped('credit'))
             prof_rep.update({
-                'service_level_credit': total
+                'service_level_credit': total,
             })
+            
+            security = projects.filtered(
+                lambda x: x.account_id.id in data['security_ids'])
+            total = sum(security.mapped('debit')) + sum(
+                security.mapped('credit'))
+            prof_rep.update({
+                'security': total,
+            })
+
             total_cost = prof_rep['site_maintenance'] + prof_rep['insurance'] + \
                          prof_rep['energy_cost'] + prof_rep['security'] + \
                          prof_rep['service_level_credit']
@@ -469,41 +449,31 @@ class ProfitabilityReportWizard(models.TransientModel):
                 'jdo': jdo,
                 '%': total_percent if total_percent else 0
             })
-            rou_depreciation = self.env['account.move.line'].search(
-                [('account_id', 'in', data['rou_depreciation_ids']),
-                 ('project_site_id', '=', i.id),
-                 ('move_id.date', '<=', data['to']),
-                 ('move_id.date', '>=', data['from'])])
+
+            rou_depreciation = projects.filtered(
+                lambda x: x.account_id.id in data['rou_depreciation_ids'])
             total = sum(rou_depreciation.mapped('debit')) + sum(
                 rou_depreciation.mapped('credit'))
             prof_rep.update({
-                'rou_depreciation': total
+                'rou_depreciation': total,
             })
-            if data['fa_depreciation_code'] and data[
-                'fa_depreciation_lim_code']:
-                for account in account_fa_depreciation_ids:
-                    fa_depreciation = self.env['account.move.line'].search(
-                        [('account_id', '=', account),
-                         ('project_site_id', '=', i.id),
-                         ('move_id.date', '<=', data['to']),
-                         ('move_id.date', '>=', data['from'])])
-                    total_site += sum(fa_depreciation.mapped('debit')) + sum(
-                        fa_depreciation.mapped('credit'))
+            
+            fa_depreciation = projects.filtered(
+                lambda x: x.account_id.id in account_fa_depreciation_ids)
+            total = sum(fa_depreciation.mapped('debit')) + sum(
+                fa_depreciation.mapped('credit'))
             prof_rep.update({
-                'fa_depreciation': total_site,
+                'fa_depreciation': total,
             })
-            lease_finance_cost = self.env['account.move.line'].search(
-                [('account_id', 'in', data['lease_finance_cost_ids']),
-                 ('project_site_id', '=', i.id),
-                 ('move_id.date', '<=', data['to']),
-                 ('move_id.date', '>=', data['from'])])
+            
+            lease_finance_cost = projects.filtered(
+                lambda x: x.account_id.id in data['lease_finance_cost_ids'])
             total = sum(lease_finance_cost.mapped('debit')) + sum(
                 lease_finance_cost.mapped('credit'))
             prof_rep.update({
-                'lease_finance_cost': total
+                'lease_finance_cost': total,
             })
             profitability_report.append(prof_rep)
-
         logged_users = self.env['res.company']._company_default_get(
             'rent.request')
         sheet = workbook.add_worksheet()
