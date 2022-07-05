@@ -128,6 +128,11 @@ class ProfitabilityReportWizard(models.TransientModel):
         if profitability.lease_finance_cost:
             return profitability.lease_finance_cost
 
+    def default_analatyc_account_group(self):
+        group = self.env['account.analytic.group'].search(
+            [('name', 'ilike', 'owned')])
+        return group
+
     service_revenue = fields.Many2many('account.account', 'service_revenue_rel',
                                        string='Service Revenue',
                                        default=default_service_revenue)
@@ -193,6 +198,8 @@ class ProfitabilityReportWizard(models.TransientModel):
                                           ('custom', 'Custom')]),
                               string='Periods', required=True,
                               default='this_month')
+    analatyc_account_group = fields.Many2one('account.analytic.group',
+                                             default=default_analatyc_account_group)
     from_date = fields.Date('From')
     to_date = fields.Date('To')
 
@@ -255,6 +262,7 @@ class ProfitabilityReportWizard(models.TransientModel):
                 'security': self.security,
                 'service_level_credit': self.service_level_credit,
                 'rou_depreciation': self.rou_depreciation,
+                'fa_depreciation_lim': self.fa_depreciation_lim,
                 'fa_depreciation': self.fa_depreciation,
                 'lease_finance_cost': self.lease_finance_cost
             })
@@ -273,6 +281,7 @@ class ProfitabilityReportWizard(models.TransientModel):
             'service_level_credit': self.service_level_credit,
             'rou_depreciation': self.rou_depreciation,
             'fa_depreciation': self.fa_depreciation,
+            'fa_depreciation_lim': self.fa_depreciation_lim,
             'lease_finance_cost': self.lease_finance_cost
         })
         data = {
@@ -296,7 +305,8 @@ class ProfitabilityReportWizard(models.TransientModel):
             'lease_finance_cost_ids': self.lease_finance_cost.ids,
             'from': from_date if from_date else self.from_date,
             'to': to_date if to_date else self.to_date,
-            'company_id': self.env.company.id
+            'company_id': self.env.company.id,
+            'analatyc_account_group': self.analatyc_account_group.id
         }
         return {
             'type': 'ir.actions.report',
@@ -314,30 +324,46 @@ class ProfitabilityReportWizard(models.TransientModel):
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
 
-        project_site = self.env['account.analytic.account'].search(
-            [('analytic_account_type',
-              '=', 'project_site'), ('company_id',
-                                     '=',
-                                     data['company_id']),
-             ('group_id.name', 'ilike', 'owned')])
-        account_ids = self.env['account.account'].search(
-            [('code', 'in', [site for
-                             site in range(
-                    int(data['site_maintenance_code']),
-                    int(data['site_maintenance_lim_code']) + 1)])]).mapped('id')
-        account_fa_depreciation_ids = self.env['account.account'].search(
-            [('code', 'in', [site for
-                             site in range(
-                    int(data['fa_depreciation_code']),
-                    int(data['fa_depreciation_lim_code']) + 1)])]).mapped('id')
+        query = '''
+                select id,name from account_analytic_account as analatyc_account 
+                WHERE analatyc_account.analytic_account_type = 'project_site'
+                and analatyc_account.company_id = ''' + str(
+            data['company_id']) + ''' 
+                and analatyc_account.group_id = ''' + str(
+            data['analatyc_account_group'])
+
+        cr = self._cr
+        cr.execute(query)
+        project_site = cr.dictfetchall()
+
+        query2 = '''
+                select id from account_account as account
+                where account.code BETWEEN \'''' + data['site_maintenance_code'] + '\' and \'' + data['site_maintenance_lim_code'] + "\'"
+
+        cr = self._cr
+        cr.execute(query2)
+        account_ids1 = cr.dictfetchall()
+        account_ids = [dic['id'] for dic in account_ids1]
+
+        query3 = '''
+                        select id from account_account as account
+                        where account.code BETWEEN \'''' + data[
+            'fa_depreciation_code'] + '\' and \'' + data[
+                     'fa_depreciation_lim_code'] + "\'"
+
+        cr = self._cr
+        cr.execute(query3)
+        account_ids_depreciation = cr.dictfetchall()
+        account_fa_depreciation_ids = [dic['id'] for dic in account_ids_depreciation]
+
         profitability_report = []
         for i in project_site:
             prof_rep = {}
             prof_rep.update({
-                'project': i.name,
+                'project': i['name'],
             })
             projects = self.env['account.move.line'].search(
-                [('project_site_id', '=', i.id),
+                [('project_site_id', '=', i['id']),
                  ('move_id.date', '<=', data['to']),
                  ('move_id.date', '>=', data['from'])])
 
@@ -348,7 +374,7 @@ class ProfitabilityReportWizard(models.TransientModel):
             prof_rep.update({
                 'service_revenue': total,
             })
-            
+
             colocation = projects.filtered(
                 lambda x: x.account_id.id in data['colocation_ids'])
             total = sum(colocation.mapped('debit')) + sum(
@@ -356,7 +382,7 @@ class ProfitabilityReportWizard(models.TransientModel):
             prof_rep.update({
                 'colocation': total,
             })
-            
+
             investment_revenue = projects.filtered(
                 lambda x: x.account_id.id in data['investment_revenue_ids'])
             total = sum(investment_revenue.mapped('debit')) + sum(
@@ -364,7 +390,7 @@ class ProfitabilityReportWizard(models.TransientModel):
             prof_rep.update({
                 'investment_revenue': total,
             })
-            
+
             pass_through_energy = projects.filtered(
                 lambda x: x.account_id.id in data['pass_through_energy_ids'])
             total = sum(pass_through_energy.mapped('debit')) + sum(
@@ -372,7 +398,7 @@ class ProfitabilityReportWizard(models.TransientModel):
             prof_rep.update({
                 'pass_through_energy': total,
             })
-            
+
             discount = projects.filtered(
                 lambda x: x.account_id.id in data['discount_ids'])
             total = sum(discount.mapped('debit')) + sum(
@@ -380,7 +406,7 @@ class ProfitabilityReportWizard(models.TransientModel):
             prof_rep.update({
                 'discount': total,
             })
-            
+
             active_sharing_fees = projects.filtered(
                 lambda x: x.account_id.id in data['active_sharing_fees_ids'])
             total = sum(active_sharing_fees.mapped('debit')) + sum(
@@ -404,7 +430,7 @@ class ProfitabilityReportWizard(models.TransientModel):
             prof_rep.update({
                 'site_maintenance': total,
             })
-            
+
             insurance = projects.filtered(
                 lambda x: x.account_id.id in data['insurance_ids'])
             total = sum(insurance.mapped('debit')) + sum(
@@ -412,7 +438,7 @@ class ProfitabilityReportWizard(models.TransientModel):
             prof_rep.update({
                 'insurance': total,
             })
-            
+
             energy_cost = projects.filtered(
                 lambda x: x.account_id.id in data['energy_cost_ids'])
             total = sum(energy_cost.mapped('debit')) + sum(
@@ -420,7 +446,7 @@ class ProfitabilityReportWizard(models.TransientModel):
             prof_rep.update({
                 'energy_cost': total,
             })
-            
+
             service_level_credit = projects.filtered(
                 lambda x: x.account_id.id in data['service_level_credit_ids'])
             total = sum(service_level_credit.mapped('debit')) + sum(
@@ -428,7 +454,7 @@ class ProfitabilityReportWizard(models.TransientModel):
             prof_rep.update({
                 'service_level_credit': total,
             })
-            
+
             security = projects.filtered(
                 lambda x: x.account_id.id in data['security_ids'])
             total = sum(security.mapped('debit')) + sum(
@@ -457,7 +483,7 @@ class ProfitabilityReportWizard(models.TransientModel):
             prof_rep.update({
                 'rou_depreciation': total,
             })
-            
+
             fa_depreciation = projects.filtered(
                 lambda x: x.account_id.id in account_fa_depreciation_ids)
             total = sum(fa_depreciation.mapped('debit')) + sum(
@@ -465,7 +491,7 @@ class ProfitabilityReportWizard(models.TransientModel):
             prof_rep.update({
                 'fa_depreciation': total,
             })
-            
+
             lease_finance_cost = projects.filtered(
                 lambda x: x.account_id.id in data['lease_finance_cost_ids'])
             total = sum(lease_finance_cost.mapped('debit')) + sum(
