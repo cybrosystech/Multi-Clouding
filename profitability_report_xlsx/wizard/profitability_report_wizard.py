@@ -319,7 +319,7 @@ class ProfitabilityReportWizard(models.TransientModel):
               '=', 'project_site'), ('company_id',
                                      '=',
                                      data['company_id']),
-             ('group_id.name', 'ilike', 'owned')])
+             ('group_id.name', 'ilike', 'owned')], limit=500)
         account_ids = self.env['account.account'].search(
             [('code', 'in', [site for
                              site in range(
