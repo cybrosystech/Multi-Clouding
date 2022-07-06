@@ -25,6 +25,7 @@
                 <group>
                     <group>
                         <field name="rou_depreciation" widget="many2many_tags"/>
+                        <field name="analytic_account_group" invisible="1"/>
                     </group>
                     <group>
                         <field name="fa_depreciation" widget="many2many_tags"/>

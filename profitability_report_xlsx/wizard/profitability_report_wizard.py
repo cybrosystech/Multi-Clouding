@@ -128,7 +128,7 @@ class ProfitabilityReportWizard(models.TransientModel):
         if profitability.lease_finance_cost:
             return profitability.lease_finance_cost
 
-    def default_analatyc_account_group(self):
+    def default_analytic_account_group(self):
         group = self.env['account.analytic.group'].search(
             [('name', 'ilike', 'owned')])
         return group
@@ -199,7 +199,7 @@ class ProfitabilityReportWizard(models.TransientModel):
                               string='Periods', required=True,
                               default='this_month')
     analatyc_account_group = fields.Many2one('account.analytic.group',
-                                             default=default_analatyc_account_group)
+                                             default=default_analytic_account_group)
     from_date = fields.Date('From')
     to_date = fields.Date('To')
 
@@ -246,6 +246,14 @@ class ProfitabilityReportWizard(models.TransientModel):
         if self.from_date and self.to_date:
             if self.from_date > self.to_date:
                 raise UserError("Start date should be less than end date")
+        if self.site_maintenance and self.site_maintenance_lim:
+            if not self.site_maintenance.code < self.site_maintenance_lim.code:
+                raise UserError("Please set the limit of site maintenance "
+                                "correctly")
+        if self.fa_depreciation and self.fa_depreciation_lim:
+            if not self.fa_depreciation.code < self.fa_depreciation_lim.code:
+                raise UserError("Please set the limit of Fa depreciation "
+                                "correctly")
         profitability = self.env['profitability.report.owned'].search([])
         if not profitability:
             self.env['profitability.report.owned'].create({
@@ -323,6 +331,8 @@ class ProfitabilityReportWizard(models.TransientModel):
         total_site = 0
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+        account_ids = ''
+        account_fa_depreciation_ids = ''
 
         query = '''
                 select id,name from account_analytic_account as analatyc_account 
@@ -336,25 +346,27 @@ class ProfitabilityReportWizard(models.TransientModel):
         cr.execute(query)
         project_site = cr.dictfetchall()
 
-        query2 = '''
-                select id from account_account as account
-                where account.code BETWEEN \'''' + data['site_maintenance_code'] + '\' and \'' + data['site_maintenance_lim_code'] + "\'"
+        if data['site_maintenance_code'] and data['site_maintenance_lim_code']:
+            query2 = '''
+                    select id from account_account as account
+                    where account.code BETWEEN \'''' + data['site_maintenance_code'] + '\' and \'' + data['site_maintenance_lim_code'] + "\'"
 
-        cr = self._cr
-        cr.execute(query2)
-        account_ids1 = cr.dictfetchall()
-        account_ids = [dic['id'] for dic in account_ids1]
+            cr = self._cr
+            cr.execute(query2)
+            account_ids1 = cr.dictfetchall()
+            account_ids = [dic['id'] for dic in account_ids1]
 
-        query3 = '''
-                        select id from account_account as account
-                        where account.code BETWEEN \'''' + data[
-            'fa_depreciation_code'] + '\' and \'' + data[
-                     'fa_depreciation_lim_code'] + "\'"
+        if data['fa_depreciation_code'] and data['fa_depreciation_lim_code']:
+            query3 = '''
+                            select id from account_account as account
+                            where account.code BETWEEN \'''' + data[
+                'fa_depreciation_code'] + '\' and \'' + data[
+                         'fa_depreciation_lim_code'] + "\'"
 
-        cr = self._cr
-        cr.execute(query3)
-        account_ids_depreciation = cr.dictfetchall()
-        account_fa_depreciation_ids = [dic['id'] for dic in account_ids_depreciation]
+            cr = self._cr
+            cr.execute(query3)
+            account_ids_depreciation = cr.dictfetchall()
+            account_fa_depreciation_ids = [dic['id'] for dic in account_ids_depreciation]
 
         profitability_report = []
         for i in project_site:
@@ -424,7 +436,7 @@ class ProfitabilityReportWizard(models.TransientModel):
             })
 
             site_maintenance = projects.filtered(
-                lambda x: x.account_id.id in account_ids)
+                lambda x: x.account_id.id in account_ids if account_ids else None)
             total = sum(site_maintenance.mapped('debit')) + sum(
                 site_maintenance.mapped('credit'))
             prof_rep.update({
@@ -485,7 +497,8 @@ class ProfitabilityReportWizard(models.TransientModel):
             })
 
             fa_depreciation = projects.filtered(
-                lambda x: x.account_id.id in account_fa_depreciation_ids)
+                lambda x: x.account_id.id in account_fa_depreciation_ids if
+                account_fa_depreciation_ids else None)
             total = sum(fa_depreciation.mapped('debit')) + sum(
                 fa_depreciation.mapped('credit'))
             prof_rep.update({

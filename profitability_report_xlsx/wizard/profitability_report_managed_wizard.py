@@ -102,6 +102,11 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
                                                     '=',
                                                     self.env.company.id)])
 
+    def default_analytic_account_group(self):
+        group = self.env['account.analytic.group'].search(
+            [('name', 'ilike', 'managed')])
+        return group
+
     def default_service_level_credits(self):
         profitability_managed = self.env['profitability.report.managed'].search(
             [])
@@ -188,7 +193,8 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
                                           ('custom', 'Custom')]),
                               string='Periods', required=True,
                               default='this_month')
-
+    analytic_account_group = fields.Many2one('account.analytic.group',
+                                             default=default_analytic_account_group)
     from_date = fields.Date('From')
     to_date = fields.Date('To')
 
@@ -300,7 +306,8 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
             'service_level_credit_code': self.service_level_credits.code,
             'from': from_date if from_date else self.from_date,
             'to': to_date if to_date else self.to_date,
-            'company_id': self.env.company.id
+            'company_id': self.env.company.id,
+            'analytic_account_group': self.analytic_account_group.id
         }
         return {
             'type': 'ir.actions.report',
@@ -317,27 +324,38 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
         total_site = 0
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+        account_ids = ''
 
-        project_site = self.env['account.analytic.account'].search(
-            [('analytic_account_type',
-              '=', 'project_site'), ('company_id',
-                                     '=',
-                                     data['company_id']),
-             ('group_id.name', 'ilike', 'managed')])
+        query = '''
+                        select id,name from account_analytic_account as analatyc_account 
+                        WHERE analatyc_account.analytic_account_type = 'project_site'
+                        and analatyc_account.company_id = ''' + str(
+            data['company_id']) + ''' 
+                        and analatyc_account.group_id = ''' + str(
+            data['analytic_account_group'])
 
-        account_ids = self.env['account.account'].search(
-            [('code', 'in', [site for
-                             site in range(
-                    int(data['site_maintenance_code']),
-                    int(data['site_maintenance_lim_code']) + 1)])]).mapped('id')
+        cr = self._cr
+        cr.execute(query)
+        project_site = cr.dictfetchall()
+        if data['site_maintenance_code'] and data['site_maintenance_lim_code']:
+            query2 = '''
+                    select id from account_account as account
+                    where account.code BETWEEN \'''' + data[
+                'site_maintenance_code'] + '\' and \'' + data[
+                         'site_maintenance_lim_code'] + "\'"
+
+            cr = self._cr
+            cr.execute(query2)
+            account_ids1 = cr.dictfetchall()
+            account_ids = [dic['id'] for dic in account_ids1]
         profitability_managed_report = []
         for i in project_site:
             prof_rep = {}
             prof_rep.update({
-                'project': i.name,
+                'project': i['name'],
             })
             projects = self.env['account.move.line'].search(
-                [('project_site_id', '=', i.id),
+                [('project_site_id', '=', i['id']),
                  ('move_id.date', '<=', data['to']),
                  ('move_id.date', '>=', data['from'])])
 
@@ -431,10 +449,8 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
                 'lease_finance_cost': total,
             })
 
-            # if data['site_maintenance_code'] and data[
-            #     'site_maintenance_lim_code']:
             site_maintenance = projects.filtered(
-                lambda x: x.account_id.id in account_ids)
+                lambda x: x.account_id.id in account_ids if account_ids else None)
             total = sum(site_maintenance.mapped('debit')) + sum(
                 site_maintenance.mapped('credit'))
             prof_rep.update({
@@ -482,7 +498,6 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
             })
 
             profitability_managed_report.append(prof_rep)
-        # print(profitability_managed_report)
         sheet = workbook.add_worksheet()
 
         main_head = workbook.add_format(
