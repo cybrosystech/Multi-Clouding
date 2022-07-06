@@ -208,6 +208,8 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
             to_date = datetime.date(current_date.year, current_date.month, last)
         if self.period == 'this_quarter':
             current_quarter = (current_date.month - 1) // 3 + 1
+            first, last = calendar.monthrange(current_date.year,
+                                              3 * current_quarter)
             from_date = datetime.date(current_date.year,
                                       3 * current_quarter - 2, 1)
             to_date = datetime.date(current_date.year, 3 * current_quarter,
