@@ -213,11 +213,15 @@ class ProfitabilityReportWizard(models.TransientModel):
             from_date = datetime.date(current_date.year, current_date.month, 1)
             to_date = datetime.date(current_date.year, current_date.month, last)
         if self.period == 'this_quarter':
+            print('heyyy')
             current_quarter = (current_date.month - 1) // 3 + 1
+            first, last = calendar.monthrange(current_date.year,
+                                              3 * current_quarter)
             from_date = datetime.date(current_date.year,
                                       3 * current_quarter - 2, 1)
             to_date = datetime.date(current_date.year, 3 * current_quarter,
                                     last)
+            print(to_date)
         if self.period == 'this_financial_year':
             first, last = calendar.monthrange(current_date.year,
                                               12)
