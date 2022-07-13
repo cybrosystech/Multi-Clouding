@@ -129,7 +129,7 @@
                                         <span t-esc="line.price_subtotal"/>
                                     </td>
                                     <td>
-                                        <span t-esc="round(exchange_rate, 2)"/>
+                                        <span t-esc="round(exchange_rate, 4)"/>
                                     </td>
 
                                     <td>
