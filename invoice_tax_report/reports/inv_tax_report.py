@@ -1,4 +1,5 @@
 from odoo import models, api, fields
+from odoo.exceptions import ValidationError
 
 
 class ReportInvoiceTaxReport(models.AbstractModel):
@@ -8,13 +9,14 @@ class ReportInvoiceTaxReport(models.AbstractModel):
     @api.model
     def _get_report_values(self, docids, data=None):
         docs = self.env['account.move'].browse(docids)
-        print(docs.currency_id.name)
         to_currency = self.env['res.currency'].search(
             [('name', '=', 'AED')])
+        if not to_currency:
+            raise ValidationError('For conversion enable Multi Currency and '
+                                  'Currency. AED')
         rate = docs.company_currency_id._get_conversion_rate(
             docs.currency_id, to_currency, docs.company_id,
             docs.date)
-        print('rate', rate)
         return {
             'doc_ids': docids,
             'doc_model': 'account.move',
