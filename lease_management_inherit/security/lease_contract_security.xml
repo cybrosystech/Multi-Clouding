@@ -1,0 +1,31 @@
+<odoo>
+    <data>
+        <record model="ir.rule" id="lease_contract_comp_rule">
+            <field name="name">Lease Contract multi-company</field>
+            <field name="model_id" ref="model_leasee_contract"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">
+                ['|',('company_id','=',False),('company_id','=',company_id)]
+            </field>
+        </record>
+
+        <record model="ir.rule" id="lease_contract_template_comp_rule">
+            <field name="name">Lease Contract template multi-company</field>
+            <field name="model_id" ref="model_leasee_contract_template"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">
+                ['|',('company_id','=',False),('company_id','=',company_id)]
+            </field>
+        </record>
+
+        <record model="ir.rule" id="leasor_contract_comp_rule">
+            <field name="name">Leasor Contract  multi-company</field>
+            <field name="model_id" ref="model_leasor_contract"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">
+                ['|',('company_id','=',False),('company_id','=',company_id)]
+            </field>
+        </record>
+
+    </data>
+</odoo>

@@ -1,0 +1,12 @@
+<odoo>
+    <record id="inherit_view_leasee_contract_form" model="ir.ui.view">
+        <field name="name">leasee.contract.form.inherit</field>
+        <field name="model">leasee.contract</field>
+        <field name="inherit_id" ref="lease_management.view_leasee_contract_form"/>
+        <field name="arch" type="xml">
+            <field name="remaining_lease_liability" position="after">
+                <field name="company_id"/>
+            </field>
+        </field>
+    </record>
+</odoo>
