@@ -182,14 +182,8 @@ class AccountAsset(models.Model):
             date = self.env.context.get('disposal_date')
         return super(AccountAsset, self).set_to_close(invoice_line_id, date)
 
-    def _recompute_board(self, depreciation_number, starting_sequence,
-                         amount_to_depreciate, depreciation_date,
-                         already_depreciated_amount, amount_change_ids,
-                         depreciation_pymonths, total_days):
-        move_vals = super(AccountAsset, self)._recompute_board(
-            depreciation_number, starting_sequence, amount_to_depreciate,
-            depreciation_date, already_depreciated_amount, amount_change_ids,
-            depreciation_pymonths, total_days)
+    def _recompute_board(self, depreciation_number, starting_sequence, amount_to_depreciate, depreciation_date, already_depreciated_amount, amount_change_ids):
+        move_vals = super(AccountAsset, self)._recompute_board(depreciation_number, starting_sequence, amount_to_depreciate, depreciation_date, already_depreciated_amount, amount_change_ids)
         if self._context.get('decrease'):
             if move_vals:
                 first_date = self.prorata_date
