@@ -55,6 +55,16 @@
                                 <span style="font-weight:bold" >Service Date:</span>
                                 <span t-field="doc.payment_reference"/>
                             </div>
+                            <div>
+                                <t t-if="doc.invoice_payment_term_id">
+                                    <span style="font-weight:bold" >Payment Terms:</span>
+                                    <span t-field="doc.invoice_payment_term_id.name"/>
+                                </t>
+                                <t t-else="">
+                                    <span style="font-weight:bold" >Due Date:</span>
+                                    <span t-field="doc.invoice_date_due"/>
+                                </t>
+                            </div>
 
                         </div>
 
@@ -164,7 +174,7 @@
                     <t t-foreach="range(10-len(doc.invoice_line_ids))" t-as="l">
                         <br/>
                     </t>
-                    <div class="row" style="page-break-inside: avoid !important;">
+                    <div class="row">
                         <div class="col-12" >
                             <span>
                                <span style="text-decoration:underline;font-weight:bold">BANK DETAIL :</span>
@@ -179,8 +189,16 @@
                             </span>
                         </div>
                     </div>
-
-
+                    <div class="row">
+                        <div class="col-12">
+                            <img t-if="doc.company_id.company_stamp" class="float-right" style="height: 150px;width: 300px;" t-att-src="image_data_uri(doc.company_id.company_stamp)" alt="Stamp"/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <span style="font-weight:bold;">This is an automated invoice no signature is needed.</span>
+                        </div>
+                    </div>
                 </div>
             </t>
         </template>
