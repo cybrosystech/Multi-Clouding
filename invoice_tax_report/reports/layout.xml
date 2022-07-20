@@ -27,6 +27,10 @@
                                 <address t-field="company.partner_id" t-options='{"widget": "contact", "fields": ["address"], "no_marker": True}' />
                             </div>
                             <div>
+                                P.O.Box:
+                                <span t-field="company.zip"/>
+                            </div>
+                            <div>
                                 TRN:
                                 <span t-field="company.vat"/>
                             </div>
