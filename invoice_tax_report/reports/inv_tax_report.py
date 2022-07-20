@@ -22,18 +22,6 @@ class ReportInvoiceTaxReport(models.AbstractModel):
             'doc_model': 'account.move',
             'docs': docs,
             'report_type': data.get('report_type') if data else '',
-            'exchange_rate': rate
+            'exchange_rate': rate,
+            'exchange_currency_id': to_currency
         }
-
-# class ReportInvoiceWithPayment(models.AbstractModel):
-#     _name = 'report.account.report_invoice_with_payments'
-#     _description = 'Account report with payment lines'
-#
-#     @api.model
-#     def _get_report_values(self, docids, data=None):
-#         return {
-#             'doc_ids': docids,
-#             'doc_model': 'account.move',
-#             'docs': self.env['account.move'].browse(docids),
-#             'report_type': data.get('report_type') if data else '',
-#         }
