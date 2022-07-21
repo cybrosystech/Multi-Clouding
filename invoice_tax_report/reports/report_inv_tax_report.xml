@@ -147,7 +147,7 @@
 
                         </tbody>
                         <tr style="border:0px">
-                            <td style="border:0px" colspan="5" class="text-right">
+                            <td style="border:0px" colspan="4" class="text-right">
                                 <t t-set="taxes" t-value="', '.join(map(lambda x: (x.description or x.name), doc.invoice_line_ids.mapped('tax_ids')))"/>
                                 <span style="font-weight:bold">Total Excluding VAT</span><br/>
 
