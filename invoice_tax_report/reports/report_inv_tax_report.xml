@@ -144,36 +144,80 @@
 
                                 </tr>
                             </t>
-
                         </tbody>
-                        <tr style="border:0px">
-                            <td style="border:0px" colspan="2" class="text-right">
-                                <t t-set="taxes" t-value="', '.join(map(lambda x: (x.description or x.name), doc.invoice_line_ids.mapped('tax_ids')))"/>
-                                <span style="font-weight:bold">Total Excluding VAT</span><br/>
+<!--                        <tr style="border:0px">-->
+<!--                            <td style="border:0px" colspan="2" class="text-right">-->
+<!--                                <t t-set="taxes" t-value="', '.join(map(lambda x: (x.description or x.name), doc.invoice_line_ids.mapped('tax_ids')))"/>-->
+<!--                                <span style="font-weight:bold">Total Excluding VAT</span><br/>-->
 
-                                <span style="font-weight:bold"><span t-if="taxes" t-esc="', '.join(map(lambda x: (x.description or x.name), doc.invoice_line_ids.mapped('tax_ids')))"/><t t-else="">VAT</t></span><br/>
-                                <span style="font-weight:bold">Total Including VAT</span>
-                            </td>
-                            <td style="border:0px" colspan="3">
-                                <t t-set="amount_untaxed" t-value="'{:20,.2f}'.format(doc.amount_untaxed)"/>
-                                <span t-esc="doc.currency_id.symbol"/>
-                                <span style="font-weight:bold" t-esc="'{:20,.2f}'.format(doc.amount_untaxed)"/><br/>
-                                <span t-esc="doc.currency_id.symbol"/>
-                                <span style="font-weight:bold" t-esc="'{:20,.2f}'.format(doc.amount_tax)"/><br/>
-                                <span t-esc="doc.currency_id.symbol"/>
-                                <span style="font-weight:bold" t-esc="'{:20,.2f}'.format(doc.amount_total)"/>
-                            </td>
-                            <td style="border:0px" colspan="3">
-                                <span t-esc="exchange_currency_id.symbol"/>
-                                <span style="font-weight:bold" t-esc="'{:20,.2f}'.format(round(sum([doc.amount_untaxed * exchange_rate]), 2))"/><br/>
-                                <span t-esc="exchange_currency_id.symbol"/>
-                                <span style="font-weight:bold" t-esc="'{:20,.2f}'.format(round(sum([doc.amount_tax * exchange_rate]), 2))"/><br/>
-                                <span t-esc="exchange_currency_id.symbol"/>
-                                <span style="font-weight:bold" t-esc="'{:20,.2f}'.format(round(sum([doc.amount_total * exchange_rate]), 2))"/>
-                            </td>
-                        </tr>
-
+<!--                                <span style="font-weight:bold"><span t-if="taxes" t-esc="', '.join(map(lambda x: (x.description or x.name), doc.invoice_line_ids.mapped('tax_ids')))"/><t t-else="">VAT</t></span><br/>-->
+<!--                                <span style="font-weight:bold">Total Including VAT</span>-->
+<!--                            </td>-->
+<!--                            <td style="border:0px" class="text-right" colspan="3">-->
+<!--                                <t t-set="amount_untaxed" t-value="'{:20,.2f}'.format(doc.amount_untaxed)"/>-->
+<!--                                <span t-esc="doc.currency_id.symbol"/>-->
+<!--                                <span style="font-weight:bold" t-esc="'{:20,.2f}'.format(doc.amount_untaxed)"/><br/>-->
+<!--                                <span t-esc="doc.currency_id.symbol"/>-->
+<!--                                <span style="font-weight:bold" t-esc="'{:20,.2f}'.format(doc.amount_tax)"/><br/>-->
+<!--                                <span t-esc="doc.currency_id.symbol"/>-->
+<!--                                <span style="font-weight:bold" t-esc="'{:20,.2f}'.format(doc.amount_total)"/>-->
+<!--                            </td>-->
+<!--                            <td style="border:0px" class="text-right" colspan="3">-->
+<!--                                <span t-esc="exchange_currency_id.symbol"/>-->
+<!--                                <span style="font-weight:bold" t-esc="'{:20,.2f}'.format(round(sum([doc.amount_untaxed * exchange_rate]), 2))"/><br/>-->
+<!--                                <span t-esc="exchange_currency_id.symbol"/>-->
+<!--                                <span style="font-weight:bold" t-esc="'{:20,.2f}'.format(round(sum([doc.amount_tax * exchange_rate]), 2))"/><br/>-->
+<!--                                <span t-esc="exchange_currency_id.symbol"/>-->
+<!--                                <span style="font-weight:bold" t-esc="'{:20,.2f}'.format(round(sum([doc.amount_total * exchange_rate]), 2))"/>-->
+<!--                            </td>-->
+<!--                        </tr>-->
                     </table>
+                    <div class="row">
+                        <div class="col-7 text-right">
+                            <t t-set="taxes"
+                               t-value="', '.join(map(lambda x: (x.description or x.name), doc.invoice_line_ids.mapped('tax_ids')))"/>
+                            <span style="font-weight:bold">Total Excluding VAT
+                            </span>
+                            <br/>
+
+                            <span style="font-weight:bold">
+                                <span t-if="taxes"
+                                      t-esc="', '.join(map(lambda x: (x.description or x.name), doc.invoice_line_ids.mapped('tax_ids')))"/>
+                                <t t-else="">VAT</t>
+                            </span>
+                            <br/>
+                            <span style="font-weight:bold">Total Including VAT
+                            </span>
+                        </div>
+                        <div class="col-3">
+                            <t t-set="amount_untaxed"
+                               t-value="'{:20,.2f}'.format(doc.amount_untaxed)"/>
+                            <span t-esc="doc.currency_id.symbol"/>
+                            <span style="font-weight:bold"
+                                  t-esc="'{:20,.2f}'.format(doc.amount_untaxed)"/>
+                            <br/>
+                            <span t-esc="doc.currency_id.symbol"/>
+                            <span style="font-weight:bold"
+                                  t-esc="'{:20,.2f}'.format(doc.amount_tax)"/>
+                            <br/>
+                            <span t-esc="doc.currency_id.symbol"/>
+                            <span style="font-weight:bold"
+                                  t-esc="'{:20,.2f}'.format(doc.amount_total)"/>
+                        </div>
+                        <div class="col-2">
+                            <span t-esc="exchange_currency_id.symbol"/>
+                            <span style="font-weight:bold"
+                                  t-esc="'{:20,.2f}'.format(round(sum([doc.amount_untaxed * exchange_rate]), 2))"/>
+                            <br/>
+                            <span t-esc="exchange_currency_id.symbol"/>
+                            <span style="font-weight:bold"
+                                  t-esc="'{:20,.2f}'.format(round(sum([doc.amount_tax * exchange_rate]), 2))"/>
+                            <br/>
+                            <span t-esc="exchange_currency_id.symbol"/>
+                            <span style="font-weight:bold"
+                                  t-esc="'{:20,.2f}'.format(round(sum([doc.amount_total * exchange_rate]), 2))"/>
+                        </div>
+                    </div>
                     <t t-foreach="range(10-len(doc.invoice_line_ids))" t-as="l">
                         <br/>
                     </t>
