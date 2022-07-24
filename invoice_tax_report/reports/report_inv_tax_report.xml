@@ -122,13 +122,13 @@
                                     <br/>
                                     <t t-esc="doc.currency_id.name"/>
                                 </th>
-                                <th>Total Amount
+                                <th>Amount
                                     <br/>
                                     <t t-esc="doc.currency_id.name"/>
                                 </th>
                                 <th>Exchange<br/>rate
                                 </th>
-                                <th>Total Amount<br/>AED
+                                <th>Amount<br/>AED
                                 </th>
                                 <th>VAT %</th>
                                 <th>VAT Amount
