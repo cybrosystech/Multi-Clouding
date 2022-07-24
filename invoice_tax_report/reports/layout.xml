@@ -32,10 +32,8 @@
                             </div>
                         </div>
                         <div class="col-5">
-                            <img t-if="company.logo" style="height: 700px;width: 300px;" t-att-src="image_data_uri(company.logo)" alt="Logo"/>
+                            <img t-if="company.logo" style="margin-top: 2rem;" t-att-src="image_data_uri(company.logo)" alt="Logo"/>
                         </div>
-
-
                 </div>
                 </div>
                <div class="col-12">
