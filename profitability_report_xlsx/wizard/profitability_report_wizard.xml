@@ -1,0 +1,104 @@
+<odoo>
+    <record id="view_profitability_report_wizard_form" model="ir.ui.view">
+        <field name="name">report.profitability.wizard.form</field>
+        <field name="model">profitability.report.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <group>
+                        <field name="service_revenue" widget="many2many_tags"/>
+                        <field name="investment_revenue"
+                               widget="many2many_tags"/>
+                    </group>
+                    <group>
+                        <field name="colocation" widget="many2many_tags"/>
+                        <field name="pass_through_energy" widget="many2many_tags"/>
+                    </group>
+                    <group>
+                        <field name="active_sharing_fees" widget="many2many_tags"/>
+                        <field name="discount" widget="many2many_tags"/>
+                    </group>
+                </group>
+                <group>
+                    <label for="site_maintenance" string="Site Maintenance"/>
+                    <div>
+                        <field name="site_maintenance" class="oe_inline" widget="many2many_tags"/>
+                        <span>To</span>
+                        <field name="site_maintenance_lim" class="oe_inline" widget="many2many_tags"/>
+                    </div>
+                </group>
+                <group>
+                    <group>
+                        <field name="insurance" widget="many2many_tags"/>
+                        <field name="energy_cost" widget="many2many_tags"/>
+                    </group>
+                    <group>
+                        <field name="security" widget="many2many_tags"/>
+                        <field name="service_level_credit"
+                               widget="many2many_tags"/>
+                    </group>
+                </group>
+                <group>
+                    <label for="fa_depreciation"
+                           string="FA Depreciation"/>
+                    <div>
+                        <field name="fa_depreciation" class="oe_inline"
+                               widget="many2many_tags"/>
+                        <span>To</span>
+                        <field name="fa_depreciation_lim" class="oe_inline"
+                               widget="many2many_tags"/>
+                    </div>
+                </group>
+                <group>
+                    <group>
+                        <field name="rou_depreciation" widget="many2many_tags"/>
+                    </group>
+                    <group>
+                       <field name="lease_finance_cost" widget="many2many_tags"/>
+                       <field name="analatyc_account_group" invisible="1"/>
+                    </group>
+                </group>
+                <group>
+                    <group>
+                        <field name="period"/>
+                    </group>
+                </group>
+                <group>
+                    <label for="from_date" string="From"
+                           attrs="{'invisible': [('period', '!=', 'custom')]}"/>
+                    <div>
+                        <field name="from_date" class="oe_inline"
+                               attrs="{'invisible': [('period', '!=', 'custom')], 'required': [('period', '=', 'custom')]}"/>
+                        <label for="to_date" string="To"
+                               attrs="{'invisible': [('period', '!=', 'custom')]}"/>
+                        <field name="to_date" class="oe_inline"
+                               attrs="{'invisible': [('period', '!=', 'custom')], 'required': [('period', '=', 'custom')]}"/>
+                    </div>
+                </group>
+                <footer>
+                    <button name="generate_xlsx_report" string="Excel" type="object" default_focus="1" class="oe_highlight"/>
+                    <button string="Cancel" class="btn btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="profitable_report_wizard_action" model="ir.actions.act_window">
+        <field name="name">Profitability Report Owned</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">profitability.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_profitability_report_wizard_form"/>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="profitable_report_menu_id"
+              name="Profitability Report - owned"
+              parent="account.account_reports_management_menu"
+              action="profitable_report_wizard_action"
+              sequence="15"
+    />
+
+
+</odoo>

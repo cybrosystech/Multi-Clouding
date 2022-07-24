@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_profitability_report_wizard,access.profitability.report.wizard,model_profitability_report_wizard,base.group_user,1,1,1,1
+access_profitability_report_managed_wizard,access.profitability.report.managed.wizard,model_profitability_report_managed_wizard,base.group_user,1,1,1,1
+access_profitability_report_owned,access.profitability.report.owned,model_profitability_report_owned,base.group_user,1,1,1,1
+access_profitability_report_managed,access.profitability.report.managed,model_profitability_report_managed,base.group_user,1,1,1,1

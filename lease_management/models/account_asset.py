@@ -13,6 +13,13 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 
+def copy_if_not_zero(a, b):
+    if b:
+        return a
+    else:
+        return 0
+
+
 class AccountAsset(models.Model):
     _inherit = 'account.asset'
 
@@ -175,10 +182,15 @@ class AccountAsset(models.Model):
             date = self.env.context.get('disposal_date')
         return super(AccountAsset, self).set_to_close(invoice_line_id, date)
 
-    def _recompute_board(self, depreciation_number, starting_sequence, amount_to_depreciate, depreciation_date, already_depreciated_amount, amount_change_ids, depreciation_pymonths, total_days):
-        move_vals = super(AccountAsset, self)._recompute_board(depreciation_number, starting_sequence, amount_to_depreciate, depreciation_date, already_depreciated_amount, amount_change_ids, depreciation_pymonths, total_days)
+    def _recompute_board(self, depreciation_number, starting_sequence,
+                         amount_to_depreciate, depreciation_date,
+                         already_depreciated_amount, amount_change_ids,
+                         depreciation_pymonths, total_days):
+        move_vals = super(AccountAsset, self)._recompute_board(
+            depreciation_number, starting_sequence, amount_to_depreciate,
+            depreciation_date, already_depreciated_amount, amount_change_ids,
+            depreciation_pymonths, total_days)
         if self._context.get('decrease'):
-            # move_vals = move_vals[1:]
             if move_vals:
                 first_date = self.prorata_date
                 if int(self.method_period) % 12 != 0:
@@ -189,14 +201,6 @@ class AccountAsset(models.Model):
                     total_days = (depreciation_date.year % 4) and 365 or 366
                     days = (self.company_id.compute_fiscalyear_dates(first_date)['date_to'] - first_date).days + 1
                     prorata_factor = days / total_days
-
-                last_factor = (1-prorata_factor)
-                move_vals[-1]['line_ids'][0][2]['debit'] = move_vals[-2]['line_ids'][0][2]['debit'] * last_factor
-                move_vals[-1]['line_ids'][0][2]['credit'] = move_vals[-2]['line_ids'][0][2]['credit'] * last_factor
-                move_vals[-1]['line_ids'][0][2]['amount_currency'] = move_vals[-2]['line_ids'][0][2]['amount_currency'] * last_factor
-                move_vals[-1]['line_ids'][1][2]['debit'] = move_vals[-2]['line_ids'][1][2]['debit'] * last_factor
-                move_vals[-1]['line_ids'][1][2]['credit'] = move_vals[-2]['line_ids'][1][2]['credit'] * last_factor
-                move_vals[-1]['line_ids'][1][2]['amount_currency'] = move_vals[-2]['line_ids'][1][2]['amount_currency'] * last_factor
 
                 move_vals[1]['line_ids'][0][2]['debit'] = move_vals[-2]['line_ids'][0][2]['debit']
                 move_vals[1]['line_ids'][0][2]['credit'] = move_vals[-2]['line_ids'][0][2]['credit']
@@ -211,6 +215,26 @@ class AccountAsset(models.Model):
                 move_vals[0]['line_ids'][1][2]['debit'] = move_vals[-2]['line_ids'][1][2]['debit'] * prorata_factor
                 move_vals[0]['line_ids'][1][2]['credit'] = move_vals[-2]['line_ids'][1][2]['credit'] * prorata_factor
                 move_vals[0]['line_ids'][1][2]['amount_currency'] = move_vals[-2]['line_ids'][1][2]['amount_currency'] * prorata_factor
+
+                asset_depreciated_value = 0
+                for vals in move_vals[:-1]:
+                    amount = abs(vals['line_ids'][0][2]['debit'] - vals['line_ids'][0][2]['credit'])
+                    asset_depreciated_value -= amount
+                    vals['amount_total'] = amount
+                    vals['asset_depreciated_value'] = asset_depreciated_value
+                    asset_remaining_value = self.original_value - asset_depreciated_value
+                    vals['asset_remaining_value'] = asset_remaining_value
+
+                amount = abs(self.original_value - asset_depreciated_value)
+                move_vals[-1]['amount_total'] = amount
+                move_vals[-1]['asset_depreciated_value'] = self.original_value
+                move_vals[-1]['asset_remaining_value'] = 0
+                move_vals[-1]['line_ids'][0][2]['debit'] = copy_if_not_zero(amount, move_vals[-2]['line_ids'][0][2]['debit'])
+                move_vals[-1]['line_ids'][0][2]['credit'] = copy_if_not_zero(amount, move_vals[-2]['line_ids'][0][2]['credit'])
+                move_vals[-1]['line_ids'][0][2]['amount_currency'] = copy_if_not_zero(amount,  move_vals[-2]['line_ids'][0][2]['amount_currency'])
+                move_vals[-1]['line_ids'][1][2]['debit'] = copy_if_not_zero(amount, move_vals[-2]['line_ids'][1][2]['debit'])
+                move_vals[-1]['line_ids'][1][2]['credit'] = copy_if_not_zero(amount, move_vals[-2]['line_ids'][1][2]['credit'])
+                move_vals[-1]['line_ids'][1][2]['amount_currency'] = copy_if_not_zero(amount, move_vals[-2]['line_ids'][1][2]['amount_currency'])
 
         return move_vals
 

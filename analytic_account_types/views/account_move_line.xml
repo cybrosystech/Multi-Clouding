@@ -74,13 +74,13 @@
                 <xpath expr="//notebook/page[2]/field[@name='line_ids']/tree/field[@name='analytic_account_id']"
                        position="after">
                     <field name="project_site_id" optional="show" required="1"/>
-                    <field name="type_id" optional="show"/>
-                    <field name="location_id" optional="show"/>
+                    <field name="type_id" optional="hide"/>
+                    <field name="location_id" optional="hide"/>
                     <button name="open_account_analytic_types"
                             attrs="{'invisible': [('parent.move_type','!=','entry')]}" type="object"
                             string="Set Cost Center" class="oe_edit_only"/>
-                    <field name="budget_id" optional="show"/>
-                    <field name="budget_line_id" optional="show"/>
+                    <field name="budget_id" optional="hide"/>
+                    <field name="budget_line_id" optional="hide"/>
                     <field name="remaining_amount" optional="show" readonly="1"/>
                 </xpath>
                 <xpath expr="//notebook" position="inside">
