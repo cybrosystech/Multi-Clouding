@@ -204,10 +204,8 @@
 
                             <span style="font-weight:bold">
                                 <t t-if="taxes">
-                                    <t t-foreach="doc.invoice_line_ids.tax_ids" t-as="tax">
-                                        <span t-if="tax.amount != 0"
-                                          t-esc="', '.join(map(lambda x: (x.description or x.name), doc.invoice_line_ids.mapped('tax_ids')))"/>
-                                    </t>
+                                    <span
+                                      t-esc="', '.join(map(lambda x: (x.name), doc.invoice_line_ids.mapped(lambda x: x.tax_ids.filtered(lambda x: x.amount != 0))))"/>
                                 </t>
                                 <t t-else="">
                                     <span>VAT</span>
