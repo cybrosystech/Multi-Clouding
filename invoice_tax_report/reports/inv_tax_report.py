@@ -1,5 +1,6 @@
 from odoo import models, api, fields
 from odoo.exceptions import ValidationError
+from PIL import Image
 
 
 class ReportInvoiceTaxReport(models.AbstractModel):
@@ -11,6 +12,7 @@ class ReportInvoiceTaxReport(models.AbstractModel):
         docs = self.env['account.move'].browse(docids)
         to_currency = self.env['res.currency'].search(
             [('name', '=', 'AED')])
+        print(docs.company_id.company_stamp, 'docs.company_id')
         if not to_currency:
             raise ValidationError('For conversion enable Multi Currency and '
                                   'Currency. AED')
