@@ -278,7 +278,7 @@
                         <div class="col-12">
                             <img t-if="doc.company_id.company_stamp"
                                  class="float-right"
-                                 style="height: 100px;width: 200px;"
+                                 style="max-width: 100%; height: 70px;"
                                  t-att-src="image_data_uri(doc.company_id.company_stamp)"
                                  alt="Stamp"/>
                         </div>
