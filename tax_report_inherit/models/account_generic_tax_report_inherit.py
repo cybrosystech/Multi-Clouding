@@ -6,6 +6,36 @@ from odoo.tools import safe_eval
 class generic_tax_report_inherit(models.AbstractModel):
     _inherit = 'account.generic.tax.report'
 
+    def _init_filter_tax_report(self, options, previous_options=None):
+        options['available_tax_reports'] = []
+        available_reports = self.env.company.get_available_tax_reports()
+        for report in available_reports:
+            options['available_tax_reports'].append({
+                'id': report.id,
+                'name': report.name,
+            })
+        # The computation of lines groupped by account require calling `compute_all` with the
+        # param handle_price_include set to False. This is not compatible with taxes of type group
+        # because the base amount can affect the computation of other taxes; hence we disable the
+        # option if there are taxes with that configuration.
+        options['by_account_available'] = not self.env['account.tax'].search([
+            ('amount_type', '=', 'group'),
+        ], limit=1)
+
+        options['tax_report'] = (previous_options or {}).get('tax_report')
+
+        generic_reports_with_groupby = {'account_tax', 'tax_account', 'tax_report_custom'}
+
+        if options['tax_report'] not in {0, *generic_reports_with_groupby} and options['tax_report'] not in available_reports.ids:
+            # Replace the report in options by the default report if it is not the generic report
+            # (always available for all companies) and the report in options is not available for this company
+            options['tax_report'] = available_reports and available_reports[0].id or 0
+
+        if options['tax_report'] in generic_reports_with_groupby:
+            options['group_by'] = options['tax_report']
+        else:
+            options['group_by'] = False
+
     @api.model
     def _get_lines(self, options, line_id=None):
         options.update({'menu': 'custom', 'report': 'not_custom'})
