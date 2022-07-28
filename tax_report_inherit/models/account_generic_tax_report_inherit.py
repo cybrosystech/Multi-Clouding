@@ -24,12 +24,15 @@ class generic_tax_report_inherit(models.AbstractModel):
 
         options['tax_report'] = (previous_options or {}).get('tax_report')
 
-        generic_reports_with_groupby = {'account_tax', 'tax_account', 'tax_report_custom'}
+        generic_reports_with_groupby = {'account_tax', 'tax_account',
+                                        'tax_report_custom'}
 
-        if options['tax_report'] not in {0, *generic_reports_with_groupby} and options['tax_report'] not in available_reports.ids:
+        if options['tax_report'] not in {0, *generic_reports_with_groupby} and \
+                options['tax_report'] not in available_reports.ids:
             # Replace the report in options by the default report if it is not the generic report
             # (always available for all companies) and the report in options is not available for this company
-            options['tax_report'] = available_reports and available_reports[0].id or 0
+            options['tax_report'] = available_reports and available_reports[
+                0].id or 0
 
         if options['tax_report'] in generic_reports_with_groupby:
             options['group_by'] = options['tax_report']
@@ -102,6 +105,33 @@ class generic_tax_report_inherit(models.AbstractModel):
                                                   hierarchy_level,
                                                   total_period_number, options)
         if options['report'] == 'custom':
+            for i in lines:
+                if i.get('id') == 'section_1':
+                    sales = i.get('columns')[1]
+                if i.get('id') == 'total_48':
+                    i.get('columns').append({})
+                    i.get('columns').append(sales)
+                if i.get('id') == 'section_19':
+                    purchase = i.get('columns')[1]
+                if i.get('id') == 'total_49':
+                    i.get('columns').append({})
+                    i.get('columns').append(purchase)
+                if i.get('id') == 'total_50':
+                    i.get('columns').append({})
+                    i.get('columns').append(
+                        {'name': str(sales['balance'] - purchase['balance']) + ' ' + str(self.env.company.currency_id.name),
+                         'style': 'white-space:nowrap;',
+                         'balance': sales['balance'] - purchase[
+                             'balance'] or 0})
+                if i.get('id') == 'total_47':
+                    i.get('columns').append({})
+                    i.get('columns').append(
+                        {'name': str(sales['balance'] - purchase['balance']) + ' ' + str(self.env.company.currency_id.name),
+                         'style': 'white-space:nowrap;',
+                         'balance': sales['balance'] - purchase[
+                             'balance'] or 0})
+                if i.get('name') == 'Sub Total':
+                    lines.remove(i)
             options.update(
                 {'report': 'custom', 'menu': 'custom',
                  'group_by': 'tax_report_custom',
@@ -168,7 +198,7 @@ class generic_tax_report_inherit(models.AbstractModel):
         Used when grouping the report by tax grid.
         """
         if options['report'] == 'custom':
-            if not re.search("(Tax)", section.name):
+            if not re.search("(Tax)", section.name) or re.search("scope", section.name):
                 return {
                     'id': 'section_' + str(section.id),
                     'name': section.name.replace('(Base)', ''),
