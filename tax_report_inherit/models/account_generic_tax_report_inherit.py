@@ -317,9 +317,12 @@ class generic_tax_report_inherit(models.AbstractModel):
         abc = []
         for line in lines:
             if line:
-                amount = to_currency.name + ' ' + str(round(int(line['balance']) * rate if rate > 1 else 3.6725, 2))
+                rates = rate if rate > 1 else 3.6725
+                aed_amount = int(line['balance']) * rates
+                amount = to_currency.name + ' ' + str(round(aed_amount, 2))
+                print('amount', amount)
                 abc.append({
-                    'name': amount,
+                    'name': amount ,
                     'style': 'white-space:nowrap;',
                     'balance': amount
                 })
