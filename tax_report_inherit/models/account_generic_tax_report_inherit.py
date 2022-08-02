@@ -1,6 +1,7 @@
-from odoo import models, api
+from odoo import models, api, fields
 import re
 from odoo.tools import safe_eval
+from odoo.tools.translate import _
 
 
 class generic_tax_report_inherit(models.AbstractModel):
@@ -39,6 +40,30 @@ class generic_tax_report_inherit(models.AbstractModel):
         else:
             options['group_by'] = False
 
+    def _get_columns_name(self, options):
+        columns_header = [{}]
+
+        if options.get('tax_report') and not options.get('group_by'):
+            columns_header += [{'name': '%s \n %s' % (_('Balance'), self.format_date(options)), 'class': 'number', 'style': 'white-space: pre;'}]
+            if options.get('comparison') and options['comparison'].get('periods'):
+                for p in options['comparison']['periods']:
+                    columns_header += [{'name': '%s \n %s' % (_('Balance'), p.get('string')), 'class': 'number', 'style': 'white-space: pre;'}]
+        else:
+            if options['tax_report'] == 'tax_report_custom' and self.env.company.currency_id.name == 'USD':
+                columns_header += [
+                    {'name': '%s \n %s' % (_('NET'), self.format_date(options)),
+                     'class': 'number'}, {'name': _('TAX'), 'class': 'number'},
+                    {'name': '%s \n %s' % (_('NET'), self.format_date(options)),
+                     'class': 'number'}, {'name': _('TAX'), 'class': 'number'}]
+            elif options.get('comparison') and options['comparison'].get('periods'):
+                for p in options['comparison']['periods']:
+                    columns_header += [{'name': '%s \n %s' % (_('NET'), p.get('string')), 'class': 'number'}, {'name': _('TAX'), 'class': 'number'}]
+            else:
+                columns_header += [
+                    {'name': '%s \n %s' % (_('NET'), self.format_date(options)),
+                     'class': 'number'}, {'name': _('TAX'), 'class': 'number'}]
+        return columns_header
+
     @api.model
     def _get_lines(self, options, line_id=None):
         options.update({'menu': 'custom', 'report': 'not_custom'})
@@ -48,10 +73,26 @@ class generic_tax_report_inherit(models.AbstractModel):
                  'tax_report': int(options['available_tax_reports'][0]['id'])})
         data = self._compute_tax_report_data(options)
         if options.get('tax_report') and not options.get('group_by'):
-            return self._get_lines_by_grid(options, line_id, data)
+            if options['report'] == 'custom':
+                lines = self._get_lines_by_grid(options, line_id, data)
+                for line in lines:
+                    if not line.get('columns'):
+                        lines.remove(line)
+
+
+                return lines
+            else:
+                return self._get_lines_by_grid(options, line_id, data)
         return self._get_lines_by_tax(options, line_id, data)
 
     def _get_lines_by_grid(self, options, line_id, grids):
+        rate = 0
+        to_currency = self.env['res.currency'].search(
+            [('name', '=', 'AED')])
+        if to_currency:
+            rate = self.env['res.currency']._get_conversion_rate(
+                self.env.company.currency_id, to_currency, self.env.company,
+                fields.date.today())
         report = self.env['account.tax.report'].browse(options['tax_report'])
         formulas_dict = dict(
             report.line_ids.filtered(lambda l: l.code and l.formula).mapped(
@@ -106,32 +147,35 @@ class generic_tax_report_inherit(models.AbstractModel):
                                                   total_period_number, options)
         if options['report'] == 'custom':
             for i in lines:
-                if i.get('id') == 'section_1':
+                if i.get('name') == 'VAT on Sales and all other Outputs ':
                     sales = i.get('columns')[1]
-                if i.get('id') == 'total_48':
+                if i.get('name') == '14. Total value of due tax for the period':
                     i.get('columns').append({})
                     i.get('columns').append(sales)
-                if i.get('id') == 'section_19':
+                if i.get('name') == 'VAT on Expenses and all other Inputs ':
                     purchase = i.get('columns')[1]
-                if i.get('id') == 'total_49':
+                if i.get('name') == '15. Total value of recoverable tax for the period':
                     i.get('columns').append({})
                     i.get('columns').append(purchase)
-                if i.get('id') == 'total_50':
+                if i.get('name') == '16. Net VAT due (or reclaimed) for the period':
                     i.get('columns').append({})
                     i.get('columns').append(
-                        {'name': str(sales['balance'] - purchase['balance']) + ' ' + str(self.env.company.currency_id.name),
+                        {'name': str(sales['balance'] - purchase['balance']) + '' + str(self.env.company.currency_id.name),
                          'style': 'white-space:nowrap;',
                          'balance': sales['balance'] - purchase[
                              'balance'] or 0})
-                if i.get('id') == 'total_47':
+                if i.get('name') == 'Net VAT Due':
                     i.get('columns').append({})
                     i.get('columns').append(
-                        {'name': str(sales['balance'] - purchase['balance']) + ' ' + str(self.env.company.currency_id.name),
+                        {'name': str(sales['balance'] - purchase['balance']) + '' + str(self.env.company.currency_id.name),
                          'style': 'white-space:nowrap;',
                          'balance': sales['balance'] - purchase[
                              'balance'] or 0})
-                if i.get('name') == 'Sub Total':
-                    lines.remove(i)
+                if self.env.company.currency_id.name == 'USD':
+                    append_line = self.columns_add(i.get('columns'), rate,
+                                                   to_currency)
+                    for append in append_line:
+                        i.get('columns').append(append)
             options.update(
                 {'report': 'custom', 'menu': 'custom',
                  'group_by': 'tax_report_custom',
@@ -198,17 +242,19 @@ class generic_tax_report_inherit(models.AbstractModel):
         Used when grouping the report by tax grid.
         """
         if options['report'] == 'custom':
-            if not re.search("(Tax)", section.name) or re.search("scope", section.name):
-                return {
-                    'id': 'section_' + str(section.id),
-                    'name': section.name.replace('(Base)', ''),
-                    'unfoldable': False,
-                    'columns': [],
-                    'level': hierarchy_level,
-                    'line_code': section.code,
-                }
-            else:
-                return None
+            if not re.search("scope", section.name):
+                if not re.search("Total", section.name):
+                    if not re.search("(Tax)", section.name):
+                        return {
+                            'id': 'section_' + str(section.id),
+                            'name': section.name.replace('(Base)', ''),
+                            'unfoldable': False,
+                            'columns': [],
+                            'level': hierarchy_level,
+                            'line_code': section.code,
+                        }
+                    else:
+                        return None
         else:
             return {
                 'id': 'section_' + str(section.id),
@@ -266,3 +312,20 @@ class generic_tax_report_inherit(models.AbstractModel):
             'level': hierarchy_level,
             'line_code': report_line.code
         }
+
+    def columns_add(self, lines, rate, to_currency):
+        abc = []
+        for line in lines:
+            if line:
+                rates = rate if rate > 1 else 3.6725
+                aed_amount = int(line['balance']) * rates
+                amount = to_currency.name + ' ' + str(round(aed_amount, 2))
+                print('amount', amount)
+                abc.append({
+                    'name': amount ,
+                    'style': 'white-space:nowrap;',
+                    'balance': amount
+                })
+            else:
+                abc.append({})
+        return abc
