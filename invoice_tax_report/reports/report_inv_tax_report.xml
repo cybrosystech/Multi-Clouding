@@ -195,9 +195,9 @@
                         </tbody>
                     </table>
                     <div class="row">
-                        <div class="col-7 text-right">
+                        <div class="col-6 text-right">
                             <t t-set="taxes"
-                               t-value="', '.join(map(lambda x: (x.name), doc.invoice_line_ids.mapped('tax_ids')))"/>
+                               t-value="', '.join(map(lambda x: (x.name), doc.invoice_line_ids.mapped(lambda x: x.tax_ids.filtered(lambda x: x.amount != 0))))"/>
                             <span style="font-weight:bold">Total Excluding VAT
                             </span>
                             <br/>
@@ -230,7 +230,7 @@
                             <span style="font-weight:bold"
                                   t-esc="'{:20,.2f}'.format(doc.amount_total)"/>
                         </div>
-                        <div class="col-2">
+                        <div class="col-3">
                             <span t-esc="exchange_currency_id.symbol"/>
                             <span style="font-weight:bold"
                                   t-esc="'{:20,.2f}'.format(round(sum([doc.amount_untaxed * exchange_rate]), 2))"/>
