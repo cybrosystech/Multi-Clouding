@@ -204,16 +204,16 @@ class ProfitabilityReportWizard(models.TransientModel):
     to_date = fields.Date('To')
 
     def generate_xlsx_report(self):
-
         current_date = fields.Date.today()
         from_date = ''
         to_date = ''
+        Current_months = ''
         first, last = calendar.monthrange(current_date.year, current_date.month)
         if self.period == 'this_month':
             from_date = datetime.date(current_date.year, current_date.month, 1)
             to_date = datetime.date(current_date.year, current_date.month, last)
+            Current_months = from_date.strftime("%B")
         if self.period == 'this_quarter':
-            print('heyyy')
             current_quarter = (current_date.month - 1) // 3 + 1
             first, last = calendar.monthrange(current_date.year,
                                               3 * current_quarter)
@@ -221,18 +221,22 @@ class ProfitabilityReportWizard(models.TransientModel):
                                       3 * current_quarter - 2, 1)
             to_date = datetime.date(current_date.year, 3 * current_quarter,
                                     last)
-            print(to_date)
+            from_month = from_date.strftime("%B")
+            to_month = to_date.strftime("%B")
+            Current_months = from_month + ' - ' + to_month
         if self.period == 'this_financial_year':
             first, last = calendar.monthrange(current_date.year,
                                               12)
             from_date = datetime.date(current_date.year, 1, 1)
             to_date = datetime.date(current_date.year, 12, last)
+            Current_months = from_date.year
         if self.period == 'last_month':
             date = current_date - relativedelta(months=1)
             first, last = calendar.monthrange(date.year,
                                               date.month)
             from_date = datetime.date(date.year, date.month, 1)
             to_date = datetime.date(date.year, date.month, last)
+            Current_months = from_date.strftime("%B")
         if self.period == 'last_quarter':
             last_quarter = ((current_date.month - 1) // 3 + 1) - 1
             first, last = calendar.monthrange(current_date.year,
@@ -241,12 +245,16 @@ class ProfitabilityReportWizard(models.TransientModel):
                                       3 * last_quarter - 2, 1)
             to_date = datetime.date(current_date.year, 3 * last_quarter,
                                     last)
+            from_month = from_date.strftime("%B")
+            to_month = to_date.strftime("%B")
+            Current_months = from_month + ' - ' + to_month
         if self.period == 'last_financial_year':
             last_financial_year = current_date.year - 1
             first, last = calendar.monthrange(last_financial_year,
                                               12)
             from_date = datetime.date(last_financial_year, 1, 1)
             to_date = datetime.date(last_financial_year, 12, last)
+            Current_months = from_date.year
         if self.from_date and self.to_date:
             if self.from_date > self.to_date:
                 raise UserError("Start date should be less than end date")
@@ -318,7 +326,8 @@ class ProfitabilityReportWizard(models.TransientModel):
             'from': from_date if from_date else self.from_date,
             'to': to_date if to_date else self.to_date,
             'company_id': self.env.company.id,
-            'analatyc_account_group': self.analatyc_account_group.id
+            'analatyc_account_group': self.analatyc_account_group.id,
+            'Current_months': Current_months
         }
         return {
             'type': 'ir.actions.report',
