@@ -44,20 +44,30 @@ class generic_tax_report_inherit(models.AbstractModel):
         columns_header = [{}]
 
         if options.get('tax_report') and not options.get('group_by'):
-            columns_header += [{'name': '%s \n %s' % (_('Balance'), self.format_date(options)), 'class': 'number', 'style': 'white-space: pre;'}]
-            if options.get('comparison') and options['comparison'].get('periods'):
+            columns_header += [
+                {'name': '%s \n %s' % (_('Balance'), self.format_date(options)),
+                 'class': 'number', 'style': 'white-space: pre;'}]
+            if options.get('comparison') and options['comparison'].get(
+                    'periods'):
                 for p in options['comparison']['periods']:
-                    columns_header += [{'name': '%s \n %s' % (_('Balance'), p.get('string')), 'class': 'number', 'style': 'white-space: pre;'}]
+                    columns_header += [
+                        {'name': '%s \n %s' % (_('Balance'), p.get('string')),
+                         'class': 'number', 'style': 'white-space: pre;'}]
         else:
-            if options['tax_report'] == 'tax_report_custom' and self.env.company.currency_id.name == 'USD':
+            if options[
+                'tax_report'] == 'tax_report_custom' and self.env.company.currency_id.name == 'USD':
                 columns_header += [
                     {'name': '%s \n %s' % (_('NET'), self.format_date(options)),
                      'class': 'number'}, {'name': _('TAX'), 'class': 'number'},
                     {'name': '%s \n %s' % (_('NET'), self.format_date(options)),
                      'class': 'number'}, {'name': _('TAX'), 'class': 'number'}]
-            elif options.get('comparison') and options['comparison'].get('periods'):
+            elif options.get('comparison') and options['comparison'].get(
+                    'periods'):
                 for p in options['comparison']['periods']:
-                    columns_header += [{'name': '%s \n %s' % (_('NET'), p.get('string')), 'class': 'number'}, {'name': _('TAX'), 'class': 'number'}]
+                    columns_header += [
+                        {'name': '%s \n %s' % (_('NET'), p.get('string')),
+                         'class': 'number'},
+                        {'name': _('TAX'), 'class': 'number'}]
             else:
                 columns_header += [
                     {'name': '%s \n %s' % (_('NET'), self.format_date(options)),
@@ -72,14 +82,22 @@ class generic_tax_report_inherit(models.AbstractModel):
                 {'report': 'custom', 'menu': 'custom', 'group_by': False,
                  'tax_report': int(options['available_tax_reports'][0]['id'])})
         data = self._compute_tax_report_data(options)
+        abcd = 1
         if options.get('tax_report') and not options.get('group_by'):
             if options['report'] == 'custom':
                 lines = self._get_lines_by_grid(options, line_id, data)
                 for line in lines:
                     if not line.get('columns'):
                         lines.remove(line)
-
-
+                lines.remove(lines[18])
+                for abc in lines:
+                    if re.match("[0-9]", abc.get('name')):
+                        ggg = abc.get('name')[0:3]
+                        bbb = abc.get('name').strip('%s' % ggg)
+                        abc.update({
+                            'name': str(abcd) + '. ' + bbb
+                        })
+                        abcd += 1
                 return lines
             else:
                 return self._get_lines_by_grid(options, line_id, data)
@@ -146,6 +164,9 @@ class generic_tax_report_inherit(models.AbstractModel):
                                                   hierarchy_level,
                                                   total_period_number, options)
         if options['report'] == 'custom':
+            lines[15].get('columns').append(lines[22].get('columns')[0])
+            lines.remove(lines[22])
+            lines.remove(lines[21])
             for i in lines:
                 if i.get('name') == 'VAT on Sales and all other Outputs ':
                     sales = i.get('columns')[1]
@@ -154,23 +175,31 @@ class generic_tax_report_inherit(models.AbstractModel):
                     i.get('columns').append(sales)
                 if i.get('name') == 'VAT on Expenses and all other Inputs ':
                     purchase = i.get('columns')[1]
-                if i.get('name') == '15. Total value of recoverable tax for the period':
+                if i.get(
+                        'name') == '15. Total value of recoverable tax for the period':
                     i.get('columns').append({})
                     i.get('columns').append(purchase)
-                if i.get('name') == '16. Net VAT due (or reclaimed) for the period':
+                if i.get(
+                        'name') == '16. Net VAT due (or reclaimed) for the period':
                     i.get('columns').append({})
                     i.get('columns').append(
-                        {'name': str(sales['balance'] - purchase['balance']) + '' + str(self.env.company.currency_id.name),
+                        {'name': str('{:20,.2f}'.format(round(
+                            sales['balance'] - purchase[
+                                'balance'], 2))) + '' + str(
+                            self.env.company.currency_id.name),
                          'style': 'white-space:nowrap;',
-                         'balance': sales['balance'] - purchase[
-                             'balance'] or 0})
+                         'balance': round(sales['balance'] - purchase[
+                             'balance'], 2) or 0})
                 if i.get('name') == 'Net VAT Due':
                     i.get('columns').append({})
                     i.get('columns').append(
-                        {'name': str(sales['balance'] - purchase['balance']) + '' + str(self.env.company.currency_id.name),
+                        {'name': str('{:20,.2f}'.format(round(
+                            sales['balance'] - purchase[
+                                'balance'], 2))) + ' ' + str(
+                            self.env.company.currency_id.name),
                          'style': 'white-space:nowrap;',
-                         'balance': sales['balance'] - purchase[
-                             'balance'] or 0})
+                         'balance': round(sales['balance'] - purchase[
+                             'balance'], 2) or 0})
                 if self.env.company.currency_id.name == 'USD':
                     append_line = self.columns_add(i.get('columns'), rate,
                                                    to_currency)
@@ -189,7 +218,6 @@ class generic_tax_report_inherit(models.AbstractModel):
         """
         columns = []
         if options['report'] == 'custom':
-            # abc = lines
             for period in grid_data['periods']:
                 columns += [{'name': self.format_value(period['balance']),
                              'style': 'white-space:nowrap;',
@@ -243,18 +271,17 @@ class generic_tax_report_inherit(models.AbstractModel):
         """
         if options['report'] == 'custom':
             if not re.search("scope", section.name):
-                if not re.search("Total", section.name):
-                    if not re.search("(Tax)", section.name):
-                        return {
-                            'id': 'section_' + str(section.id),
-                            'name': section.name.replace('(Base)', ''),
-                            'unfoldable': False,
-                            'columns': [],
-                            'level': hierarchy_level,
-                            'line_code': section.code,
-                        }
-                    else:
-                        return None
+                if not re.search("(Tax)", section.name):
+                    return {
+                        'id': 'section_' + str(section.id),
+                        'name': section.name.replace('(Base)', ''),
+                        'unfoldable': False,
+                        'columns': [],
+                        'level': hierarchy_level,
+                        'line_code': section.code,
+                    }
+                else:
+                    return None
         else:
             return {
                 'id': 'section_' + str(section.id),
@@ -319,10 +346,10 @@ class generic_tax_report_inherit(models.AbstractModel):
             if line:
                 rates = rate if rate > 1 else 3.6725
                 aed_amount = int(line['balance']) * rates
-                amount = to_currency.name + ' ' + str(round(aed_amount, 2))
-                print('amount', amount)
+                amount = to_currency.name + ' ' + str(
+                    '{:20,.2f}'.format(round(aed_amount, 2)))
                 abc.append({
-                    'name': amount ,
+                    'name': amount,
                     'style': 'white-space:nowrap;',
                     'balance': amount
                 })
