@@ -577,7 +577,7 @@ class ProfitabilityReportWizard(models.TransientModel):
         sheet.write('V4', 'FA Depreciation', sub_heading1)
         sheet.write('W4', 'Leases Finance Cost', sub_heading1)
 
-        sheet.merge_range('B2:S2', 'JANUARY', main_head)
+        sheet.merge_range('B2:S2', data['Current_months'], main_head)
         sheet.merge_range('U2:W2', '', main_head)
         sheet.merge_range('D3:J3', 'Revenues', head)
         sheet.merge_range('K3:Q3', 'Costs', head)
