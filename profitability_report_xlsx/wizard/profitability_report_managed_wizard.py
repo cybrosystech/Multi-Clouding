@@ -501,13 +501,13 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
                              'site_maintenance'] + \
                          prof_rep['site_rent'] + prof_rep['security'] + \
                          prof_rep['service_level_credit']
-            jdo = total_revenue + total_cost
+            jdo = total_revenue - total_cost
             total_percent = ''
             if total_revenue != 0:
-                total_percent = (total_cost / total_revenue) * 100
+                total_percent = (abs(jdo) / total_revenue) * 100
             prof_rep.update({
                 'total_cost': total_cost,
-                'jdo': jdo,
+                'jdo': abs(jdo),
                 '%': total_percent if total_percent else 0
             })
 
