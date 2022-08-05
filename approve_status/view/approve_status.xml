@@ -5,8 +5,12 @@
         <field name="inherit_id" ref="analytic_account_types.view_inherit_view_move_form"/>
         <field name="arch" type="xml">
             <xpath expr="//button[@name='request_approval_button']" position="attributes">
-                <attribute name="attrs">{'invisible':[('state','in', ['posted', 'to_approve'])]}</attribute>
+                <attribute name="attrs">{'invisible':['|', ('state','in', ['posted', 'to_approve']),
+                    ('request_approve_bool', '=', True)]}</attribute>
             </xpath>
+            <field name="show_approve_button" position="after">
+                <field name="request_approve_bool" invisible="1"/>
+            </field>
         </field>
     </record>
 
@@ -18,11 +22,31 @@
         <field name="arch" type="xml">
             <xpath expr="//button[@name='request_approval_button']"
                    position="attributes">
-                <attribute name="attrs">{'invisible':[('state','=',
-                    'posted')]}
+                <attribute name="attrs">{'invisible':['|', ('state','in', ['posted', 'to_approve']),
+                    ('request_approve_bool', '=', True)]}
                 </attribute>
             </xpath>
+            <field name="show_approve_button" position="after">
+                <field name="request_approve_bool" invisible="1"/>
+            </field>
 
+        </field>
+    </record>
+
+    <record id="view_approval_sale_button_form" model="ir.ui.view">
+        <field name="name">sale.order.request.button</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id"
+               ref="analytic_account_types.view_inherit_view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='request_approval_button']"
+                   position="attributes">
+                <attribute name="attrs">{'invisible':[('request_approve_bool', '=', True)]}
+                </attribute>
+            </xpath>
+            <field name="show_approve_button" position="after">
+                <field name="request_approve_bool" invisible="1"/>
+            </field>
         </field>
     </record>
 
