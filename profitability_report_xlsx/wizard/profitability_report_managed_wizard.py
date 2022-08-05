@@ -375,59 +375,59 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
 
             lease_anchor_tenant = projects.filtered(
                 lambda x: x.account_id.id in data['lease_anchor_tenant_ids'])
-            total = sum(lease_anchor_tenant.mapped('debit')) + sum(
+            total = sum(lease_anchor_tenant.mapped('debit')) - sum(
                 lease_anchor_tenant.mapped('credit'))
             prof_rep.update({
-                'lease_anchor_tenant': total,
+                'lease_anchor_tenant': abs(total),
             })
 
             lease_colo_tenant = projects.filtered(
                 lambda x: x.account_id.id in data['lease_colo_tenant_ids'])
-            total = sum(lease_colo_tenant.mapped('debit')) + sum(
+            total = sum(lease_colo_tenant.mapped('debit')) - sum(
                 lease_colo_tenant.mapped('credit'))
             prof_rep.update({
-                'lease_colo_tenant': total,
+                'lease_colo_tenant': abs(total),
             })
 
             additional_space_revenue = projects.filtered(
                 lambda x: x.account_id.id in data[
                     'additional_space_revenue_ids'])
-            total = sum(additional_space_revenue.mapped('debit')) + sum(
+            total = sum(additional_space_revenue.mapped('debit')) - sum(
                 additional_space_revenue.mapped('credit'))
             prof_rep.update({
-                'additional_space_revenue': total,
+                'additional_space_revenue': abs(total),
             })
 
             bts_revenue = projects.filtered(
                 lambda x: x.account_id.id in data['bts_revenue_ids'])
-            total = sum(bts_revenue.mapped('debit')) + sum(
+            total = sum(bts_revenue.mapped('debit')) - sum(
                 bts_revenue.mapped('credit'))
             prof_rep.update({
-                'bts_revenue': total,
+                'bts_revenue': abs(total),
             })
 
             active_sharing_fees = projects.filtered(
                 lambda x: x.account_id.id in data['active_sharing_fees_ids'])
-            total = sum(active_sharing_fees.mapped('debit')) + sum(
+            total = sum(active_sharing_fees.mapped('debit')) - sum(
                 active_sharing_fees.mapped('credit'))
             prof_rep.update({
-                'active_sharing_fees': total,
+                'active_sharing_fees': abs(total),
             })
 
             discount = projects.filtered(
                 lambda x: x.account_id.id in data['discount_ids'])
-            total = sum(discount.mapped('debit')) + sum(
+            total = sum(discount.mapped('debit')) - sum(
                 discount.mapped('credit'))
             prof_rep.update({
-                'discount': total,
+                'discount': abs(total),
             })
 
             discount = projects.filtered(
                 lambda x: x.account_id.id in data['discount_ids'])
-            total = sum(discount.mapped('debit')) + sum(
+            total = sum(discount.mapped('debit')) - sum(
                 discount.mapped('credit'))
             prof_rep.update({
-                'discount': total,
+                'discount': abs(total),
             })
 
             total_revenue = prof_rep['lease_anchor_tenant'] + prof_rep[
@@ -441,58 +441,58 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
 
             rou_depreciation = projects.filtered(
                 lambda x: x.account_id.id in data['rou_depreciation_ids'])
-            total = sum(rou_depreciation.mapped('debit')) + sum(
+            total = sum(rou_depreciation.mapped('debit')) - sum(
                 rou_depreciation.mapped('credit'))
             prof_rep.update({
-                'rou_depreciation': total,
+                'rou_depreciation': abs(total),
             })
 
             fa_depreciation = projects.filtered(
                 lambda x: x.account_id.id in data['fa_depreciation_ids'])
-            total = sum(fa_depreciation.mapped('debit')) + sum(
+            total = sum(fa_depreciation.mapped('debit')) - sum(
                 fa_depreciation.mapped('credit'))
             prof_rep.update({
-                'fa_depreciation': total,
+                'fa_depreciation': abs(total),
             })
 
             lease_finance_cost = projects.filtered(
                 lambda x: x.account_id.id in data['lease_finance_cost_ids'])
-            total = sum(lease_finance_cost.mapped('debit')) + sum(
+            total = sum(lease_finance_cost.mapped('debit')) - sum(
                 lease_finance_cost.mapped('credit'))
             prof_rep.update({
-                'lease_finance_cost': total,
+                'lease_finance_cost': abs(total),
             })
 
             site_maintenance = projects.filtered(
                 lambda x: x.account_id.id in account_ids if account_ids else None)
-            total = sum(site_maintenance.mapped('debit')) + sum(
+            total = sum(site_maintenance.mapped('debit')) - sum(
                 site_maintenance.mapped('credit'))
             prof_rep.update({
-                'site_maintenance': total,
+                'site_maintenance': abs(total),
             })
 
             site_rent = projects.filtered(
                 lambda x: x.account_id.id in data['site_rent_ids'])
-            total = sum(site_rent.mapped('debit')) + sum(
+            total = sum(site_rent.mapped('debit')) - sum(
                 site_rent.mapped('credit'))
             prof_rep.update({
-                'site_rent': total,
+                'site_rent': abs(total),
             })
 
             security = projects.filtered(
                 lambda x: x.account_id.id in data['security_ids'])
-            total = sum(security.mapped('debit')) + sum(
+            total = sum(security.mapped('debit')) - sum(
                 security.mapped('credit'))
             prof_rep.update({
-                'security': total,
+                'security': abs(total),
             })
 
             service_level_credit = projects.filtered(
                 lambda x: x.account_id.id in data['service_level_credit_ids'])
-            total = sum(service_level_credit.mapped('debit')) + sum(
+            total = sum(service_level_credit.mapped('debit')) - sum(
                 service_level_credit.mapped('credit'))
             prof_rep.update({
-                'service_level_credit': total,
+                'service_level_credit': abs(total),
             })
 
             total_cost = prof_rep['rou_depreciation'] + prof_rep[
