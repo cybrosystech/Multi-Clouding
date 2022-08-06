@@ -204,16 +204,16 @@ class ProfitabilityReportWizard(models.TransientModel):
     to_date = fields.Date('To')
 
     def generate_xlsx_report(self):
-
         current_date = fields.Date.today()
         from_date = ''
         to_date = ''
+        Current_months = ''
         first, last = calendar.monthrange(current_date.year, current_date.month)
         if self.period == 'this_month':
             from_date = datetime.date(current_date.year, current_date.month, 1)
             to_date = datetime.date(current_date.year, current_date.month, last)
+            Current_months = from_date.strftime("%B")
         if self.period == 'this_quarter':
-            print('heyyy')
             current_quarter = (current_date.month - 1) // 3 + 1
             first, last = calendar.monthrange(current_date.year,
                                               3 * current_quarter)
@@ -221,18 +221,22 @@ class ProfitabilityReportWizard(models.TransientModel):
                                       3 * current_quarter - 2, 1)
             to_date = datetime.date(current_date.year, 3 * current_quarter,
                                     last)
-            print(to_date)
+            from_month = from_date.strftime("%B")
+            to_month = to_date.strftime("%B")
+            Current_months = from_month + ' - ' + to_month
         if self.period == 'this_financial_year':
             first, last = calendar.monthrange(current_date.year,
                                               12)
             from_date = datetime.date(current_date.year, 1, 1)
             to_date = datetime.date(current_date.year, 12, last)
+            Current_months = from_date.year
         if self.period == 'last_month':
             date = current_date - relativedelta(months=1)
             first, last = calendar.monthrange(date.year,
                                               date.month)
             from_date = datetime.date(date.year, date.month, 1)
             to_date = datetime.date(date.year, date.month, last)
+            Current_months = from_date.strftime("%B")
         if self.period == 'last_quarter':
             last_quarter = ((current_date.month - 1) // 3 + 1) - 1
             first, last = calendar.monthrange(current_date.year,
@@ -241,12 +245,16 @@ class ProfitabilityReportWizard(models.TransientModel):
                                       3 * last_quarter - 2, 1)
             to_date = datetime.date(current_date.year, 3 * last_quarter,
                                     last)
+            from_month = from_date.strftime("%B")
+            to_month = to_date.strftime("%B")
+            Current_months = from_month + ' - ' + to_month
         if self.period == 'last_financial_year':
             last_financial_year = current_date.year - 1
             first, last = calendar.monthrange(last_financial_year,
                                               12)
             from_date = datetime.date(last_financial_year, 1, 1)
             to_date = datetime.date(last_financial_year, 12, last)
+            Current_months = from_date.year
         if self.from_date and self.to_date:
             if self.from_date > self.to_date:
                 raise UserError("Start date should be less than end date")
@@ -318,7 +326,8 @@ class ProfitabilityReportWizard(models.TransientModel):
             'from': from_date if from_date else self.from_date,
             'to': to_date if to_date else self.to_date,
             'company_id': self.env.company.id,
-            'analatyc_account_group': self.analatyc_account_group.id
+            'analatyc_account_group': self.analatyc_account_group.id,
+            'Current_months': Current_months
         }
         return {
             'type': 'ir.actions.report',
@@ -385,50 +394,50 @@ class ProfitabilityReportWizard(models.TransientModel):
 
             service_revenue = projects.filtered(
                 lambda x: x.account_id.id in data['service_revenue_ids'])
-            total = sum(service_revenue.mapped('debit')) + sum(
+            total = sum(service_revenue.mapped('debit')) - sum(
                 service_revenue.mapped('credit'))
             prof_rep.update({
-                'service_revenue': total,
+                'service_revenue': abs(total),
             })
 
             colocation = projects.filtered(
                 lambda x: x.account_id.id in data['colocation_ids'])
-            total = sum(colocation.mapped('debit')) + sum(
+            total = sum(colocation.mapped('debit')) - sum(
                 colocation.mapped('credit'))
             prof_rep.update({
-                'colocation': total,
+                'colocation': abs(total),
             })
 
             investment_revenue = projects.filtered(
                 lambda x: x.account_id.id in data['investment_revenue_ids'])
-            total = sum(investment_revenue.mapped('debit')) + sum(
+            total = sum(investment_revenue.mapped('debit')) - sum(
                 investment_revenue.mapped('credit'))
             prof_rep.update({
-                'investment_revenue': total,
+                'investment_revenue': abs(total),
             })
 
             pass_through_energy = projects.filtered(
                 lambda x: x.account_id.id in data['pass_through_energy_ids'])
-            total = sum(pass_through_energy.mapped('debit')) + sum(
+            total = sum(pass_through_energy.mapped('debit')) - sum(
                 pass_through_energy.mapped('credit'))
             prof_rep.update({
-                'pass_through_energy': total,
+                'pass_through_energy': abs(total),
             })
 
             discount = projects.filtered(
                 lambda x: x.account_id.id in data['discount_ids'])
-            total = sum(discount.mapped('debit')) + sum(
+            total = sum(discount.mapped('debit')) - sum(
                 discount.mapped('credit'))
             prof_rep.update({
-                'discount': total,
+                'discount': abs(total),
             })
 
             active_sharing_fees = projects.filtered(
                 lambda x: x.account_id.id in data['active_sharing_fees_ids'])
-            total = sum(active_sharing_fees.mapped('debit')) + sum(
+            total = sum(active_sharing_fees.mapped('debit')) - sum(
                 active_sharing_fees.mapped('credit'))
             prof_rep.update({
-                'active_sharing_fees': total,
+                'active_sharing_fees': abs(total),
             })
 
             total_revenue = prof_rep['service_revenue'] + prof_rep[
@@ -441,7 +450,7 @@ class ProfitabilityReportWizard(models.TransientModel):
 
             site_maintenance = projects.filtered(
                 lambda x: x.account_id.id in account_ids if account_ids else None)
-            total = sum(site_maintenance.mapped('debit')) + sum(
+            total = sum(site_maintenance.mapped('debit')) - sum(
                 site_maintenance.mapped('credit'))
             prof_rep.update({
                 'site_maintenance': total,
@@ -449,72 +458,72 @@ class ProfitabilityReportWizard(models.TransientModel):
 
             insurance = projects.filtered(
                 lambda x: x.account_id.id in data['insurance_ids'])
-            total = sum(insurance.mapped('debit')) + sum(
+            total = sum(insurance.mapped('debit')) - sum(
                 insurance.mapped('credit'))
             prof_rep.update({
-                'insurance': total,
+                'insurance': abs(total),
             })
 
             energy_cost = projects.filtered(
                 lambda x: x.account_id.id in data['energy_cost_ids'])
-            total = sum(energy_cost.mapped('debit')) + sum(
+            total = sum(energy_cost.mapped('debit')) - sum(
                 energy_cost.mapped('credit'))
             prof_rep.update({
-                'energy_cost': total,
+                'energy_cost': abs(total),
             })
 
             service_level_credit = projects.filtered(
                 lambda x: x.account_id.id in data['service_level_credit_ids'])
-            total = sum(service_level_credit.mapped('debit')) + sum(
+            total = sum(service_level_credit.mapped('debit')) - sum(
                 service_level_credit.mapped('credit'))
             prof_rep.update({
-                'service_level_credit': total,
+                'service_level_credit': abs(total),
             })
 
             security = projects.filtered(
                 lambda x: x.account_id.id in data['security_ids'])
-            total = sum(security.mapped('debit')) + sum(
+            total = sum(security.mapped('debit')) - sum(
                 security.mapped('credit'))
             prof_rep.update({
-                'security': total,
+                'security': abs(total),
             })
 
             total_cost = prof_rep['site_maintenance'] + prof_rep['insurance'] + \
                          prof_rep['energy_cost'] + prof_rep['security'] + \
                          prof_rep['service_level_credit']
-            jdo = total_revenue + total_cost
+            jdo = total_revenue - total_cost
             total_percent = ''
             if total_revenue != 0:
-                total_percent = (total_cost / total_revenue) * 100
+                total_percent = (abs(jdo) / total_revenue) * 100
             prof_rep.update({
                 'total_cost': total_cost,
-                'jdo': jdo,
+                'jdo': abs(jdo),
                 '%': total_percent if total_percent else 0
             })
 
             rou_depreciation = projects.filtered(
                 lambda x: x.account_id.id in data['rou_depreciation_ids'])
-            total = sum(rou_depreciation.mapped('debit')) + sum(
+            total = sum(rou_depreciation.mapped('debit')) - sum(
                 rou_depreciation.mapped('credit'))
             prof_rep.update({
-                'rou_depreciation': total,
+                'rou_depreciation': abs(total),
             })
 
             fa_depreciation = projects.filtered(
                 lambda x: x.account_id.id in account_fa_depreciation_ids if
                 account_fa_depreciation_ids else None)
-            total = sum(fa_depreciation.mapped('debit')) + sum(
+            total = sum(fa_depreciation.mapped('debit')) - sum(
                 fa_depreciation.mapped('credit'))
             prof_rep.update({
-                'fa_depreciation': total,
+                'fa_depreciation': abs(total),
             })
 
             lease_finance_cost = projects.filtered(
                 lambda x: x.account_id.id in data['lease_finance_cost_ids'])
-            total = sum(lease_finance_cost.mapped('debit')) + sum(
+            total = sum(lease_finance_cost.mapped('debit')) - sum(
                 lease_finance_cost.mapped('credit'))
             prof_rep.update({
-                'lease_finance_cost': total,
+                'lease_finance_cost': abs(total),
             })
             profitability_report.append(prof_rep)
         logged_users = self.env['res.company']._company_default_get(
@@ -568,7 +577,7 @@ class ProfitabilityReportWizard(models.TransientModel):
         sheet.write('V4', 'FA Depreciation', sub_heading1)
         sheet.write('W4', 'Leases Finance Cost', sub_heading1)
 
-        sheet.merge_range('B2:S2', 'JANUARY', main_head)
+        sheet.merge_range('B2:S2', data['Current_months'], main_head)
         sheet.merge_range('U2:W2', '', main_head)
         sheet.merge_range('D3:J3', 'Revenues', head)
         sheet.merge_range('K3:Q3', 'Costs', head)

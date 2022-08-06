@@ -20,7 +20,7 @@ class AccountAssetInherit(models.Model):
     def onchange_start_date(self):
         Date = self.start_date
         self.acquisition_date = Date
-        self.first_depreciation_date =Date
+        self.first_depreciation_date = Date
 
     def _compute_board_amount(self, computation_sequence, residual_amount,
                               total_amount_to_depr, max_depreciation_nb,
@@ -44,7 +44,7 @@ class AccountAssetInherit(models.Model):
                         days = depreciation_months[
                                    0].day - self.start_date.day + 1
                         linear_amount = (
-                                                    total_amount_to_depr * days) / total_days
+                                                total_amount_to_depr * days) / total_days
                     elif seq_fro == len(depreciation_months):
                         linear_amount = (total_amount_to_depr *
                                          depreciation_months[
@@ -84,16 +84,13 @@ class AccountAssetInherit(models.Model):
             self.prorata = False
             df = pd.DataFrame({'Date1': np.array([self.end_date]),
                                'Date2': np.array([self.start_date])})
-            df['nb_months'] = ((df.Date1 - df.Date2) / np.timedelta64(1,
-                                                                      'M')) + 1
-            df['nb_months'] = df['nb_months'].astype(int)
             df['nb_days'] = ((df.Date1 - df.Date2) / np.timedelta64(1,
                                                                     'D')) + 1
             df['nb_days'] = df['nb_days'].astype(int)
-            depreciation_number = df.loc[0, 'nb_months']
-            total_days = df.loc[0, 'nb_days']
             depreciation_months = pd.date_range(self.start_date, self.end_date,
                                                 freq='M')
+            depreciation_number = len(depreciation_months) + 1
+            total_days = df.loc[0, 'nb_days']
             depreciation_pymonths = depreciation_months.to_pydatetime()
             depreciation_date = self.start_date
         # if we already have some previous validated entries, starting date is last entry + method period
@@ -195,10 +192,13 @@ class AccountAssetInherit(models.Model):
                     'asset_depreciated_value': amount_to_depreciate - residual_amount + already_depreciated_amount,
                 }))
                 if self.method_period == 'day':
+                    depreciation_date = depreciation_date + relativedelta(
+                        months=1)
                     max_day_in_month = \
                         calendar.monthrange(depreciation_date.year,
                                             depreciation_date.month)[1]
-                    depreciation_date = depreciation_date + timedelta(days=max_day_in_month)
+                    depreciation_date = depreciation_date.replace(
+                        day=max_day_in_month)
                 else:
                     depreciation_date = depreciation_date + relativedelta(
                         months=+int(

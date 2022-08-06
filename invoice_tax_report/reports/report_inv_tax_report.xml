@@ -112,90 +112,93 @@
                         }
                     </style>
                     <br/>
-                    <table class="custom_table_lines" width="100%">
-                        <thead>
-                            <tr>
-                                <th>No.</th>
-                                <th>Service Description</th>
-                                <th>Qty</th>
-                                <th>Unit price
-                                    <br/>
-                                    <t t-esc="doc.currency_id.name"/>
-                                </th>
-                                <th>Amount
-                                    <br/>
-                                    <t t-esc="doc.currency_id.name"/>
-                                </th>
-                                <th>Exchange<br/>rate
-                                </th>
-                                <th>Amount<br/>AED
-                                </th>
-                                <th>VAT %</th>
-                                <th>VAT Amount
-                                    <br/>
-                                    AED
-                                </th>
-                                <th>Total Amount
-                                    <br/>
-                                    AED
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <t t-set="line_index" t-value="0"/>
-
-                            <t t-foreach="doc.invoice_line_ids" t-as="line">
+                    <div>
+                        <table class="custom_table_lines" width="100%">
+                            <thead>
                                 <tr>
-                                    <td>
-                                        <span t-set="line_index"
-                                              t-value="line_index+1"/>
-
-                                        <span t-esc="line_index"/>
-                                    </td>
-                                    <td>
-                                        <span t-esc="line.name"/>
-                                    </td>
-                                    <td>
-                                        <span t-esc="line.quantity"/>
-                                    </td>
-                                    <td>
-                                        <span t-field="line.price_unit"/>
-                                    </td>
-
-
-                                    <td>
-                                        <span t-esc="'{:20,.2f}'.format(line.price_subtotal)"/>
-                                    </td>
-                                    <td>
-                                        <span t-esc="round(exchange_rate, 4)"/>
-                                    </td>
-                                    <td>
-                                        <span t-set="total_aed"
-                                              t-value="round(sum([line.price_subtotal * exchange_rate]), 2)"/>
-                                        <span t-esc="'{:20,.2f}'.format(round(sum([line.price_subtotal * exchange_rate]), 2))"/>
-                                    </td>
-                                    <td>
-                                        <span t-esc="line.tax_ids.description or line.tax_ids.name"/>
-                                    </td>
-                                    <td>
-                                        <span t-if="line.tax_ids"
-                                              t-set="total_vat_aed"
-                                              t-value="round(sum([(total_aed * line.tax_ids.amount)/100]), 2)"/>
-                                        <span t-else="" t-set="total_vat_aed"
-                                              t-value="int(0)"/>
-                                        <span t-if="line.tax_ids"
-                                              t-esc="'{:20,.2f}'.format(round(sum([(total_aed * line.tax_ids.amount)/100]), 2))"/>
-                                        <span t-else="" t-esc="int(0)"/>
-                                    </td>
-                                    <td>
-                                        <span t-esc="'{:20,.2f}'.format(round(sum([total_aed + total_vat_aed]), 2))"/>
-                                    </td>
+                                    <th>No.</th>
+                                    <th>Service Description</th>
+                                    <th>Qty</th>
+                                    <th>Unit price
+                                        <br/>
+                                        <t t-esc="doc.currency_id.name"/>
+                                    </th>
+                                    <th>Amount
+                                        <br/>
+                                        <t t-esc="doc.currency_id.name"/>
+                                    </th>
+                                    <th>Exchange<br/>rate
+                                    </th>
+                                    <th>Amount<br/>AED
+                                    </th>
+                                    <th>VAT %</th>
+                                    <th>VAT Amount
+                                        <br/>
+                                        AED
+                                    </th>
+                                    <th>Total Amount
+                                        <br/>
+                                        AED
+                                    </th>
                                 </tr>
-                            </t>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <t t-set="line_index" t-value="0"/>
+
+                                <t t-foreach="doc.invoice_line_ids" t-as="line">
+                                    <tr>
+                                        <td>
+                                            <span t-set="line_index"
+                                                  t-value="line_index+1"/>
+
+                                            <span t-esc="line_index"/>
+                                        </td>
+                                        <td>
+                                            <span t-esc="line.name"/>
+                                        </td>
+                                        <td>
+                                            <span t-esc="line.quantity"/>
+                                        </td>
+                                        <td>
+                                            <span t-field="line.price_unit"/>
+                                        </td>
+
+
+                                        <td>
+                                            <span t-esc="'{:20,.2f}'.format(line.price_subtotal)"/>
+                                        </td>
+                                        <td>
+                                            <span t-esc="round(exchange_rate, 4)"/>
+                                        </td>
+                                        <td>
+                                            <span t-set="total_aed"
+                                                  t-value="round(sum([line.price_subtotal * exchange_rate]), 2)"/>
+                                            <span t-esc="'{:20,.2f}'.format(round(sum([line.price_subtotal * exchange_rate]), 2))"/>
+                                        </td>
+                                        <td>
+                                            <span t-esc="line.tax_ids.description or line.tax_ids.name"/>
+                                        </td>
+                                        <td>
+                                            <span t-if="line.tax_ids"
+                                                  t-set="total_vat_aed"
+                                                  t-value="round(sum([(total_aed * line.tax_ids.amount)/100]), 2)"/>
+                                            <span t-else=""
+                                                  t-set="total_vat_aed"
+                                                  t-value="int(0)"/>
+                                            <span t-if="line.tax_ids"
+                                                  t-esc="'{:20,.2f}'.format(round(sum([(total_aed * line.tax_ids.amount)/100]), 2))"/>
+                                            <span t-else="" t-esc="int(0)"/>
+                                        </td>
+                                        <td>
+                                            <span t-esc="'{:20,.2f}'.format(round(sum([total_aed + total_vat_aed]), 2))"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
                     <div class="row">
-                        <div class="col-7 text-right">
+                        <div class="col-6 text-right">
                             <t t-set="taxes"
                                t-value="', '.join(map(lambda x: (x.name), doc.invoice_line_ids.mapped('tax_ids')))"/>
                             <span style="font-weight:bold">Total Excluding VAT
@@ -205,7 +208,7 @@
                             <span style="font-weight:bold">
                                 <t t-if="taxes">
                                     <span
-                                      t-esc="', '.join(map(lambda x: (x.name), doc.invoice_line_ids.mapped(lambda x: x.tax_ids.filtered(lambda x: x.amount != 0))))"/>
+                                      t-esc="', '.join(map(lambda x: (x.name), doc.invoice_line_ids.mapped('tax_ids')))"/>
                                 </t>
                                 <t t-else="">
                                     <span>VAT</span>
@@ -230,7 +233,7 @@
                             <span style="font-weight:bold"
                                   t-esc="'{:20,.2f}'.format(doc.amount_total)"/>
                         </div>
-                        <div class="col-2">
+                        <div class="col-3">
                             <span t-esc="exchange_currency_id.symbol"/>
                             <span style="font-weight:bold"
                                   t-esc="'{:20,.2f}'.format(round(sum([doc.amount_untaxed * exchange_rate]), 2))"/>
@@ -244,14 +247,11 @@
                                   t-esc="'{:20,.2f}'.format(round(sum([doc.amount_total * exchange_rate]), 2))"/>
                         </div>
                     </div>
-                    <t t-foreach="range(10-len(doc.invoice_line_ids))" t-as="l">
-                        <br/>
-                    </t>
-                    <div class="row">
+                    <div class="row" style="margin-top: 5rem;">
                         <div class="col-12">
                             <span>
                                 <span style="text-decoration:underline;font-weight:bold">
-                                    BANK DETAIL :
+                                    BANK DETAILS :
                                 </span>
                                 <br/>
                                 Transfer the amount to the business account
@@ -283,7 +283,7 @@
                                  alt="Stamp"/>
                         </div>
                     </div>
-                    <div class="row">
+                    <div class="row" style="margin-top: 3px;">
                         <div class="col-12">
                             <span style="font-weight:bold;">This is an automated
                                 invoice and no signature required.
