@@ -130,3 +130,8 @@ class AccountMoveInherit(models.Model):
             self.state = 'to_approve'
             self.send_user_notification(user)
             self.request_approve_bool = True
+
+    def button_draft(self):
+        res = super(AccountMoveInherit, self).button_draft()
+        self.request_approve_bool = False
+        return res

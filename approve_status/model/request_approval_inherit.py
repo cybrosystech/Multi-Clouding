@@ -54,6 +54,11 @@ class PurchaseOrderInheritApproval(models.Model):
             self.show_button_confirm = True
             self.request_approve_bool = True
 
+    def button_draft(self):
+        res = super(PurchaseOrderInheritApproval, self).button_draft()
+        self.request_approve_bool = False
+        return res
+
 
 class SaleOrderRequestApproval(models.Model):
     _inherit = 'sale.order'
@@ -64,7 +69,9 @@ class SaleOrderRequestApproval(models.Model):
         self.get_budgets_in_out_budget_tab()
         if self.out_budget and not self.sale_approval_cycle_ids:
             out_budget_list = []
-            out_budget = self.env['budget.in.out.check.sales'].search([('type', '=', 'out_budget'), ('company_id','=', self.env.company.id)], limit=1)
+            out_budget = self.env['budget.in.out.check.sales'].search(
+                [('type', '=', 'out_budget'),
+                 ('company_id', '=', self.env.company.id)], limit=1)
             if self.budget_collect_ids.mapped('demand_amount'):
                 max_value = max(self.budget_collect_ids.mapped('demand_amount'))
 
@@ -77,3 +84,8 @@ class SaleOrderRequestApproval(models.Model):
                         'user_approve_ids': rec.user_ids.ids,
                     }))
         self.request_approve_bool = True
+
+    def action_draft(self):
+        res = super(SaleOrderRequestApproval, self).action_draft()
+        self.request_approve_bool = False
+        return res
