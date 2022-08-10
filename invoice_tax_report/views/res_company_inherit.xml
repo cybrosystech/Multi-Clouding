@@ -7,6 +7,24 @@
             <field name="favicon" position="after">
                 <field name="company_stamp" widget="image" class="oe_avatar"/>
             </field>
+            <xpath expr="//page[@name='general_info']" position="after">
+                <page string="Bank Details" name="bank_info">
+                    <group>
+                        <group>
+                            <field name="bank_name"/>
+                            <field name="bank_account_name"/>
+                            <field name="iban"/>
+                            <field name="short_code"/>
+                            <field name="swift"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+            <xpath expr="//group" position="after">
+                <group>
+                    <field name="footer_detail"/>
+                </group>
+            </xpath>
         </field>
     </record>
 </odoo>
