@@ -86,10 +86,13 @@ class generic_tax_report_inherit(models.AbstractModel):
         if options.get('tax_report') and not options.get('group_by'):
             if options['report'] == 'custom':
                 lines = self._get_lines_by_grid(options, line_id, data)
+                for i in lines[0].get('columns'):
+                    lines[16].get('columns').append(i)
+                for i in lines[17].get('columns'):
+                    lines[21].get('columns').append(i)
                 for line in lines:
                     if not line.get('columns'):
                         lines.remove(line)
-                lines.remove(lines[18])
                 for abc in lines:
                     if re.match("[0-9]", abc.get('name')):
                         ggg = abc.get('name')[0:3]
@@ -151,6 +154,10 @@ class generic_tax_report_inherit(models.AbstractModel):
                         self._build_tax_section_line(current_line,
                                                      hierarchy_level,
                                                      options))
+        if options['report'] == 'custom':
+            lines[11].get('columns').clear()
+            for rec in lines[19].get('columns'):
+                lines[11].get('columns').append(rec)
         # Fill in in the total for each title line and get a mapping linking line codes to balances
         balances_by_code = self._postprocess_lines(lines, options)
         for (index, total_line) in deferred_total_lines:
@@ -183,20 +190,22 @@ class generic_tax_report_inherit(models.AbstractModel):
                         'name') == '16. Net VAT due (or reclaimed) for the period':
                     i.get('columns').append({})
                     i.get('columns').append(
-                        {'name': str('{:20,.2f}'.format(round(
-                            sales['balance'] - purchase[
-                                'balance'], 2))) + '' + str(
-                            self.env.company.currency_id.name),
+                        {'name': str(
+                            self.env.company.currency_id.symbol) + ' ' +
+                                 str('{:20,.2f}'.format(round(
+                                     sales['balance'] - purchase[
+                                         'balance'], 2))),
                          'style': 'white-space:nowrap;',
                          'balance': round(sales['balance'] - purchase[
                              'balance'], 2) or 0})
                 if i.get('name') == 'Net VAT Due':
                     i.get('columns').append({})
                     i.get('columns').append(
-                        {'name': str('{:20,.2f}'.format(round(
-                            sales['balance'] - purchase[
-                                'balance'], 2))) + ' ' + str(
-                            self.env.company.currency_id.name),
+                        {'name': str(
+                            self.env.company.currency_id.symbol) + ' ' + str(
+                            '{:20,.2f}'.format(round(
+                                sales['balance'] - purchase[
+                                    'balance'], 2))),
                          'style': 'white-space:nowrap;',
                          'balance': round(sales['balance'] - purchase[
                              'balance'], 2) or 0})
