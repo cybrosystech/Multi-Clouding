@@ -190,20 +190,22 @@ class generic_tax_report_inherit(models.AbstractModel):
                         'name') == '16. Net VAT due (or reclaimed) for the period':
                     i.get('columns').append({})
                     i.get('columns').append(
-                        {'name': str('{:20,.2f}'.format(round(
-                            sales['balance'] - purchase[
-                                'balance'], 2))) + '' + str(
-                            self.env.company.currency_id.symbol),
+                        {'name': str(
+                            self.env.company.currency_id.symbol) + ' ' +
+                                 str('{:20,.2f}'.format(round(
+                                     sales['balance'] - purchase[
+                                         'balance'], 2))),
                          'style': 'white-space:nowrap;',
                          'balance': round(sales['balance'] - purchase[
                              'balance'], 2) or 0})
                 if i.get('name') == 'Net VAT Due':
                     i.get('columns').append({})
                     i.get('columns').append(
-                        {'name': str('{:20,.2f}'.format(round(
-                            sales['balance'] - purchase[
-                                'balance'], 2))) + ' ' + str(
-                            self.env.company.currency_id.symbol),
+                        {'name': str(
+                            self.env.company.currency_id.symbol) + ' ' + str(
+                            '{:20,.2f}'.format(round(
+                                sales['balance'] - purchase[
+                                    'balance'], 2))),
                          'style': 'white-space:nowrap;',
                          'balance': round(sales['balance'] - purchase[
                              'balance'], 2) or 0})
