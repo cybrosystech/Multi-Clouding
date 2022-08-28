@@ -109,12 +109,15 @@ class AccountAsset(models.Model):
 
                     if asset.children_ids:
                         initial_amount += sum(asset.children_ids.mapped('original_value'))
-                        value_residual += sum(asset.children_ids.mapped('value_residual'))
+                        # value_residual += sum(asset.children_ids.mapped('value_residual'))
                         child_depreciation_moves = asset.children_ids.depreciation_move_ids.filtered(lambda r: r.state == 'posted' and not (r.reversal_move_id and r.reversal_move_id[0].state == 'posted'))
-                        depreciated_amount += copysign(sum(child_depreciation_moves.mapped('amount_total')), -initial_amount)
+                        depreciated_amount += sum(move.amount_total *(-1 if move.asset_id.original_value > 0 else 1) for move in child_depreciation_moves)
                     termination_residual = self.leasee_contract_ids.get_interest_amount_termination_amount(disposal_date)
                     move = self.leasee_contract_ids.create_interset_move(self.env['leasee.installment'] , disposal_date, termination_residual)
-                    move.action_post()
+                    if move:
+                        move.auto_post = False
+                        move.action_post()
+                    value_residual = initial_amount + depreciated_amount
                     remaining_leasee_amount = -1 * (self.leasee_contract_ids.remaining_lease_liability)
                     leasee_difference = -value_residual - remaining_leasee_amount
                     # leasee_difference = -asset.book_value - remaining_leasee_amount
@@ -175,6 +178,7 @@ class AccountAsset(models.Model):
             'date': disposal_date,
             'line_ids':[(1, line.id,{'debit': new_value if line.debit else 0,'credit': new_value if line.credit else 0 }) for line in end_move.line_ids]
         })
+        end_move.auto_post = False
         end_move.action_post()
 
     def set_to_close(self, invoice_line_id, date=None):
@@ -182,14 +186,8 @@ class AccountAsset(models.Model):
             date = self.env.context.get('disposal_date')
         return super(AccountAsset, self).set_to_close(invoice_line_id, date)
 
-    def _recompute_board(self, depreciation_number, starting_sequence,
-                         amount_to_depreciate, depreciation_date,
-                         already_depreciated_amount, amount_change_ids,
-                         depreciation_pymonths, total_days):
-        move_vals = super(AccountAsset, self)._recompute_board(
-            depreciation_number, starting_sequence, amount_to_depreciate,
-            depreciation_date, already_depreciated_amount, amount_change_ids,
-            depreciation_pymonths, total_days)
+    def _recompute_board(self, depreciation_number, starting_sequence, amount_to_depreciate, depreciation_date, already_depreciated_amount, amount_change_ids):
+        move_vals = super(AccountAsset, self)._recompute_board(depreciation_number, starting_sequence, amount_to_depreciate, depreciation_date, already_depreciated_amount, amount_change_ids)
         if self._context.get('decrease'):
             if move_vals:
                 first_date = self.prorata_date
