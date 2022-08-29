@@ -526,8 +526,8 @@ class LeaseeContract(models.Model):
         else:
             for leasor in self.multi_leasor_ids:
                 partner = leasor.partner_id
-                leasor_direct_cost = (leasor.amount / self.installment_amount) * self.initial_direct_cost if leasor.type == 'amount' else leasor.percentage * self.initial_direct_cost / 100
-                leasor_payment_value = (leasor.amount / self.installment_amount) * self.initial_payment_value if leasor.type == 'amount' else leasor.percentage * self.initial_payment_value / 100
+                leasor_direct_cost = (leasor.amount / self.installment_amount) * self.initial_direct_cost if leasor.type == 'amount' else leasor.percentage * amount / 100
+                leasor_payment_value = (leasor.amount / self.installment_amount) * self.initial_payment_value if leasor.type == 'amount' else leasor.percentage * amount / 100
                 incentives_received = (leasor.amount / self.installment_amount) * self.incentives_received if leasor.type == 'amount' else leasor.percentage * self.incentives_received / 100
                 self.create_single_initial_bill(partner, leasor_direct_cost, leasor_payment_value, incentives_received)
 
@@ -549,9 +549,9 @@ class LeaseeContract(models.Model):
                 }))
             if direct_cost:
                 invoice_lines.append((0, 0, {
-                    'product_id': self.extension_product_id.id,
-                    'name': self.extension_product_id.name,
-                    'product_uom_id': self.extension_product_id.uom_id.id,
+                    'product_id': self.initial_product_id.id,
+                    'name': self.initial_product_id.name,
+                    'product_uom_id': self.initial_product_id.uom_id.id,
                     'account_id': self.extension_product_id.product_tmpl_id.get_product_accounts()['expense'].id,
                     'price_unit': direct_cost,
                     'quantity': 1,
