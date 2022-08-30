@@ -5,7 +5,7 @@
             <field name="model_id" ref="model_leasee_contract"/>
             <field name="global" eval="True"/>
             <field name="domain_force">
-                ['|',('company_id','=',False),('company_id','=',company_id)]
+                ['|',('company_id','=',False),('company_id','in',company_ids)]
             </field>
         </record>
 
@@ -14,7 +14,7 @@
             <field name="model_id" ref="model_leasee_contract_template"/>
             <field name="global" eval="True"/>
             <field name="domain_force">
-                ['|',('company_id','=',False),('company_id','=',company_id)]
+                ['|',('company_id','=',False),('company_id','in',company_ids)]
             </field>
         </record>
 
@@ -23,7 +23,7 @@
             <field name="model_id" ref="model_leasor_contract"/>
             <field name="global" eval="True"/>
             <field name="domain_force">
-                ['|',('company_id','=',False),('company_id','=',company_id)]
+                ['|',('company_id','=',False),('company_id','in',company_ids)]
             </field>
         </record>
 
