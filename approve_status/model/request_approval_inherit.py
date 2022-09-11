@@ -59,6 +59,18 @@ class PurchaseOrderInheritApproval(models.Model):
         self.request_approve_bool = False
         return res
 
+    def button_reject_purchase_cycle(self):
+        view_id = self.env.ref('approve_status.view_budget_rejection_form').id
+        return {
+            'name': 'Rejection Send',
+            'type': 'ir.actions.act_window',
+            'res_model': 'budget.rejection.wizard',
+            'view_type': 'form',
+            'view_mode': 'form',
+            'target': 'new',
+            'view_id': view_id,
+        }
+
 
 class SaleOrderRequestApproval(models.Model):
     _inherit = 'sale.order'
@@ -83,9 +95,48 @@ class SaleOrderRequestApproval(models.Model):
                         'approval_seq': rec.approval_seq,
                         'user_approve_ids': rec.user_ids.ids,
                     }))
+
+            self.write({'sale_approval_cycle_ids': out_budget_list})
+        if not self.out_budget and not self.sale_approval_cycle_ids:
+            in_budget_list = []
+            in_budget = self.env['budget.in.out.check.sales'].search(
+                [('type', '=', 'in_budget'),
+                 ('company_id', '=', self.env.company.id)], limit=1)
+            max_value = max(self.order_line.mapped(
+                'local_subtotal'))  # Old Field is amount_total
+            for rec in in_budget.budget_line_ids:
+                if max_value >= rec.from_amount:
+                    in_budget_list.append((0, 0, {
+                        'approval_seq': rec.approval_seq,
+                        'user_approve_ids': rec.user_ids.ids,
+                    }))
+            self.write({'sale_approval_cycle_ids': in_budget_list})
+        self.show_request_approve_button = True
+        if self.sale_approval_cycle_ids:
+            min_seq_approval = min(
+                self.sale_approval_cycle_ids.mapped('approval_seq'))
+            notification_to_user = self.sale_approval_cycle_ids.filtered(
+                lambda x: x.approval_seq == int(min_seq_approval))
+            user = notification_to_user.user_approve_ids
+            self.send_user_notification(user)
+            self.state = 'to_approve'
+        else:
+            self.show_button_confirm = True
         self.request_approve_bool = True
 
     def action_draft(self):
         res = super(SaleOrderRequestApproval, self).action_draft()
         self.request_approve_bool = False
         return res
+
+    def button_reject_sales_cycle(self):
+        view_id = self.env.ref('approve_status.view_budget_rejection_form').id
+        return {
+            'name': 'Rejection Send',
+            'type': 'ir.actions.act_window',
+            'res_model': 'budget.rejection.wizard',
+            'view_type': 'form',
+            'view_mode': 'form',
+            'target': 'new',
+            'view_id': view_id,
+        }
