@@ -15,6 +15,8 @@ class AccountAssetInherit(models.Model):
     start_date = fields.Date()
     end_date = fields.Date()
     accounting_date = fields.Date(string='Accounting Date')
+    cumulative_expense = fields.Monetary(string='Cumulative Expense',
+                                         compute='_compute_cumulative_expense')
 
     @api.onchange('start_date')
     def onchange_start_date(self):
@@ -218,3 +220,12 @@ class AccountAssetInherit(models.Model):
                                 'date': self.accounting_date
                             })
         return move_vals
+
+    # @api.depends('original_value', 'value_residual')
+    # def _compute_cumulative_expense(self):
+    #     for rec in self:
+    #         if rec.original_value and rec.value_residual:
+    #             rec.cumulative_expense = rec.original_value - rec.value_residual
+    #         else:
+    #             rec.cumulative_expense = 0
+
