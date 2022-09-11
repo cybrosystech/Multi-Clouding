@@ -1,0 +1,8 @@
+<odoo>
+    <template id="button_create_po" inherit_id="web.assets_backend">
+        <xpath expr="." position="inside">
+             <script type="text/javascript" src="vendor_report/static/src/js/vendor_report_wizard.js"/>
+             <script type="text/javascript" src="vendor_report/static/src/js/action_manager.js"/>
+         </xpath>
+    </template>
+</odoo>
