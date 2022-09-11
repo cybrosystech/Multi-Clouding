@@ -74,10 +74,11 @@ class GeneralLedgerPostingWizard(models.TransientModel):
                 'document_no': line.move_id.name,
                 'account_number': line.account_id.code,
                 'account_name': line.account_id.name,
-                'description': line.name,
+                'description': line.name.split(':', 1)[0] if line.name else line.product_id.name,
                 'amount': line.amount_currency,
-                'lease_no': line.move_id.leasee_contract_id.name or '',
+                'lease_no': line.move_id.leasee_contract_id.name if line.move_id.leasee_contract_id.name else line.name.split(':', 1)[0],
                 'lease_state': line.move_id.leasee_contract_id.state or '',
+                'move_state': line.move_id.state or '',
                 'dimension_1': line.analytic_account_id.name or '',
                 'dimension_2': line.project_site_id.name or '',
                 'dimension_3': line.type_id.name or '',
@@ -207,6 +208,8 @@ class GeneralLedgerPostingWizard(models.TransientModel):
         col += 1
         worksheet.write(row, col, _('Lease Status'), header_format)
         col += 1
+        worksheet.write(row, col, _('Journal Status'), header_format)
+        col += 1
         worksheet.write(row, col, _('Dimension 1'), header_format)
         col += 1
         worksheet.write(row, col, _('Dimension 2'), header_format)
@@ -248,6 +251,8 @@ class GeneralLedgerPostingWizard(models.TransientModel):
             worksheet.write(row, col, line['lease_no'], STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['lease_state'], STYLE_LINE_Data)
+            col += 1
+            worksheet.write(row, col, line['move_state'], STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['dimension_1'], STYLE_LINE_Data)
             col += 1
