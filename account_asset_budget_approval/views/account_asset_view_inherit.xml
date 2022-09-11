@@ -1,0 +1,36 @@
+<odoo>
+    <record id="view_approval_account_asset_form" model="ir.ui.view">
+        <field name="name">account.asset.budget.request.approval</field>
+        <field name="model">account.asset</field>
+        <field name="inherit_id" ref="account_asset.view_account_asset_form"/>
+        <field name="arch" type="xml">
+            <field name="original_value" position="after">
+                <field name="request_approval_bool" invisible="1"/>
+                <field name="asset_approve_bool" invisible="1"/>
+                <field name="approved_life_bool" invisible="1"/>
+                <field name="button_validate_bool" invisible="1"/>
+            </field>
+            <xpath expr="//button[@name='compute_depreciation_board']" position="before">
+                 <button name="request_approval_asset" string="Request Approval" type="object" class="btn-primary" attrs="{'invisible': ['|', ('request_approval_bool', '=', True), ('state', 'in', ['to_approve', 'model'])]}"/>
+                 <button name="asset_approve" string="Approve" type="object" class="btn-primary" attrs="{'invisible': ['|', ('asset_approve_bool', '=', False), ('approved_life_bool', '=', True)]}"/>
+                 <button name="reject_asset" string="Reject" type="object" class="btn-primary" attrs="{'invisible': ['|', ('asset_approve_bool', '=', False), ('approved_life_bool', '=', True)]}"/>
+            </xpath>
+            <button name="validate" position="replace">
+                <button name="validate" attrs="{'invisible': [('button_validate_bool', '=', False)]}" string="Confirm" type="object" class="oe_highlight"/>
+            </button>
+            <xpath expr="//notebook" position="inside">
+                <page name="asset_approval_cycle" string="Approval Cycle">
+                    <field name="life_cycle_id" invisible="1"/>
+                    <field name="asset_approval_cycle_ids">
+                        <tree>
+                            <field name="approval_seq"/>
+                            <field name="user_approve_ids"
+                                   widget="many2many_tags"/>
+                            <field name="is_approved"/>
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

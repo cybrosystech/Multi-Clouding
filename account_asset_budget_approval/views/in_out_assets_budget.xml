@@ -1,0 +1,68 @@
+<odoo>
+    <record id="view_in_out_budget_assets_form" model="ir.ui.view">
+        <field name="name">view_in_out_budget_form_assets</field>
+        <field name="model">budget.asset.check.in.out</field>
+        <field name="arch" type="xml">
+            <form string="">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                        </group>
+                        <group>
+                            <field name="active" widget='boolean_toggle'/>
+                            <field name="company_id"
+                                   groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <group>
+                        <div>
+                            <field name="budget_line_ids">
+                                <tree editable="bottom">
+                                    <field name="name"/>
+                                    <field name="from_amount"/>
+                                    <field name="to_amount" invisible="1"/>
+                                    <field name="approval_seq"/>
+                                    <field name="user_ids"
+                                           widget="many2many_tags"/>
+                                </tree>
+                            </field>
+                        </div>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_in_out_budget_tree_assets" model="ir.ui.view">
+        <field name="name">view_in_out_budget_tree_assets</field>
+        <field name="model">budget.asset.check.in.out</field>
+        <field name="arch" type="xml">
+            <tree string="">
+                <field name="name"/>
+                <field name="active" widget='boolean_toggle'/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_in_out_budget_view_assets" model="ir.actions.act_window">
+        <field name="name">Budget Check Assets</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">budget.asset.check.in.out</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+
+            </p>
+            <p>
+
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_in_out_budget_view_assets" name="Budget Check Assets"
+                  parent="account.menu_finance_configuration" action="action_in_out_budget_view_assets"
+                  sequence="100"/>
+
+
+</odoo>
