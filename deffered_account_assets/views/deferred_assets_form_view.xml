@@ -38,6 +38,20 @@
             <field name="first_depreciation_date" position="after">
                 <field name="accounting_date"/>
             </field>
+<!--            <field name="analytic_tag_ids" position="after">-->
+<!--                <field name="cumulative_expense"/>-->
+<!--            </field>-->
+        </field>
+    </record>
+
+    <record id="view_account_asset_inherit_tree" model="ir.ui.view">
+        <field name="name">account.asset.inherit.tree</field>
+        <field name="model">account.asset</field>
+        <field name="inherit_id" ref="account_asset.view_account_asset_expense_tree"/>
+        <field name="arch" type="xml">
+<!--            <field name="value_residual" position="after">-->
+<!--                <field name="cumulative_expense"/>-->
+<!--            </field>-->
         </field>
     </record>
 </odoo>

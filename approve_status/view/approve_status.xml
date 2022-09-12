@@ -29,7 +29,10 @@
             <field name="show_approve_button" position="after">
                 <field name="request_approve_bool" invisible="1"/>
             </field>
-
+            <xpath expr="//button[@name='button_approve_purchase_cycle']" position="after">
+                <button name="button_reject_purchase_cycle" string="Reject" type="object" class="btn-primary"
+                            attrs="{'invisible':['|',('show_approve_button','=',False),('state', '=', 'draft')]}"/>
+            </xpath>
         </field>
     </record>
 
@@ -47,6 +50,10 @@
             <field name="show_approve_button" position="after">
                 <field name="request_approve_bool" invisible="1"/>
             </field>
+            <xpath expr="//button[@name='button_approve_sales_cycle']" position="after">
+                <button name="button_reject_sales_cycle" string="Reject" type="object" class="btn-primary"
+                            attrs="{'invisible':[('show_approve_button','=',False)]}"/>
+            </xpath>
         </field>
     </record>
 

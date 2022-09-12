@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_budget_asset_check_in_out,access.budget.asset.check.in.out,model_budget_asset_check_in_out,,1,1,1,1
+access_budget_asset_lines_in_out,access.budget.asset.lines.in.out,model_budget_asset_lines_in_out,,1,1,1,1

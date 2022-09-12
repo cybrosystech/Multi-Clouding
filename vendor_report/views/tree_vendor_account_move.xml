@@ -1,0 +1,12 @@
+<odoo>
+    <record id="tree_account_move_vendor" model="ir.ui.view">
+        <field name="name">vendor.action.report</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_in_invoice_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="vendor_report" type="object" string="Vendor report"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

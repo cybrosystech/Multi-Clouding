@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+    <t t-extend="BillsListView.buttons">
+        <t t-jquery="button.o_list_button_add" t-operation="after">
+            <button class="btn btn-secondary new" type="button">
+                Vendor Report
+            </button>
+        </t>
+    </t>
+</templates>

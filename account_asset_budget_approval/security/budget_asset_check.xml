@@ -1,0 +1,11 @@
+<odoo>
+    <record model="ir.rule" id="budget_asset_comp_rule">
+        <field name="name">Budget Asset multi-company</field>
+        <field name="model_id" ref="model_budget_asset_check_in_out"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">
+            ['|',('company_id','=',False),('company_id','in',company_ids)]
+        </field>
+    </record>
+
+</odoo>

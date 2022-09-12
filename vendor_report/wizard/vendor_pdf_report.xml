@@ -1,0 +1,79 @@
+<odoo>
+    <report id="action_vendor_pdf_report"
+                string="Vendor Report"
+                model="account.move"
+                menu="False"
+                report_type="qweb-pdf"
+                name="vendor_report.template_vendor_pdf_report"
+                file="vendor_report.template_vendor_pdf_report"
+        />
+    <template id="template_vendor_pdf_report">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <h1 style="padding-left:10px !important ; text-align:center">
+                    Vendor Report
+                </h1>
+                <table style="width:90%;margin:2px auto;"
+                       class="table table-condensed">
+                    <thead>
+                        <tr style="font-size:13px;  padding: 0.25rem !important;">
+                            <th class="text-center">Bill Date</th>
+                            <th class="text-center">Accounting Date</th>
+                            <th class="text-center">Supplier</th>
+                            <th class="text-center">Bill Reference</th>
+                            <th class="text-center">Bill Number</th>
+                            <th class="text-center">Label</th>
+                            <th class="text-center">Currency</th>
+                            <th class="text-center">Pre Vat <br/>Amount</th>
+                            <th class="text-center">VAT Amount</th>
+                            <th class="text-center">Total</th>
+                            <th class="text-center">Taxes</th>
+                            <th class="text-center">Tax ID</th>
+                        </tr>
+                    </thead>
+                    <tbody style="font-size:12px" t-foreach="fetched_data"
+                           t-as="fetch">
+                            <tr>
+                                <td class="text-center">
+                                    <span t-esc="fetch['bill_date']"/>
+                                </td>
+                                <td class="text-center">
+                                    <span t-esc="fetch['accounting_date']"/>
+                                </td>
+                                <td class="text-center">
+                                    <span t-esc="fetch['supplier']"/>
+                                </td>
+                                <td class="text-center">
+                                    <span t-esc="fetch['bill_ref']"/>
+                                </td>
+                                <td class="text-center">
+                                    <span t-esc="fetch['journal']"/>
+                                </td>
+                                <td class="text-center">
+                                    <span t-esc="fetch['label']"/>
+                                </td>
+                                <td class="text-center">
+                                    <span t-esc="fetch['currency']"/>
+                                </td>
+                                <td class="text-center">
+                                    <span t-esc="fetch['pre_vat_amt']"/>
+                                </td>
+                                <td class="text-center">
+                                    <span t-esc="fetch['vat_amt']"/>
+                                </td>
+                                <td class="text-center">
+                                    <span t-esc="fetch['total']"/>
+                                </td>
+                                <td class="text-center">
+                                    <span t-esc="fetch['taxes']"/>
+                                </td>
+                                <td class="text-center">
+                                    <span t-esc="fetch['tax_id']"/>
+                                </td>
+                            </tr>
+                    </tbody>
+                </table>
+            </t>
+        </t>
+    </template>
+</odoo>
