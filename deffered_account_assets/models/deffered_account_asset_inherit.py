@@ -220,12 +220,3 @@ class AccountAssetInherit(models.Model):
                                 'date': self.accounting_date
                             })
         return move_vals
-
-    # @api.depends('original_value', 'value_residual')
-    # def _compute_cumulative_expense(self):
-    #     for rec in self:
-    #         if rec.original_value and rec.value_residual:
-    #             rec.cumulative_expense = rec.original_value - rec.value_residual
-    #         else:
-    #             rec.cumulative_expense = 0
-
