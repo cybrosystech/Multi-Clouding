@@ -8,8 +8,8 @@ from datetime import datetime
 class VendorReportWizard(models.TransientModel):
     _name = 'vendor.report.wizard'
 
-    date_from = fields.Date(string="Date From")
-    date_to = fields.Date(string="Date To")
+    date_from = fields.Date(string="Accounting Date From")
+    date_to = fields.Date(string="Accounting Date To")
     state = fields.Selection(selection=[
         ('draft', 'Draft'),
         ('posted', 'Posted'),
