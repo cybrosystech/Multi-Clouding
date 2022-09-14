@@ -8,8 +8,8 @@ from datetime import datetime
 class VendorReportWizard(models.TransientModel):
     _name = 'vendor.report.wizard'
 
-    date_from = fields.Date(string="Date From")
-    date_to = fields.Date(string="Date To")
+    date_from = fields.Date(string="Accounting Date From")
+    date_to = fields.Date(string="Accounting Date To")
     state = fields.Selection(selection=[
         ('draft', 'Draft'),
         ('posted', 'Posted'),
@@ -75,20 +75,20 @@ class VendorReportWizard(models.TransientModel):
         if date_from and date_to:
             journals = self.env['account.move'].search(
                 [('move_type', '=', 'in_invoice'),
-                 ('invoice_date', '>=', date_from),
-                 ('invoice_date', '<=', date_to),
+                 ('date', '>=', date_from),
+                 ('date', '<=', date_to),
                  ('company_id', '=', self.env.company.id),
                  ('state', '=', data['state'])])
         elif date_from:
             journals = self.env['account.move'].search(
                 [('move_type', '=', 'in_invoice'),
-                 ('invoice_date', '>=', date_from),
+                 ('date', '>=', date_from),
                  ('company_id', '=', int(data['company_id'])),
                  ('state', '=', data['state'])])
         elif date_to:
             journals = self.env['account.move'].search(
                 [('move_type', '=', 'in_invoice'),
-                 ('invoice_date', '<=', date_to),
+                 ('date', '<=', date_to),
                  ('company_id', '=', int(data['company_id'])),
                  ('state', '=', data['state'])])
         sheet = workbook.add_worksheet()
