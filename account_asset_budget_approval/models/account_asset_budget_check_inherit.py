@@ -20,7 +20,7 @@ class AccountAssetBudget(models.Model):
             if name.find('lease') != -1:
                 rec.request_approval_bool = True
                 rec.button_validate_bool = True
-                if self.state == 'open':
+                if self.state in ['open', 'model']:
                     rec.button_validate_bool = False
             else:
                 if self.env['budget.asset.check.in.out'].search(
