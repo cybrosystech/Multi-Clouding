@@ -242,20 +242,20 @@ class Reassessment(models.TransientModel):
             if contract.leasor_type == 'single':
                 invoice = ins.installment_invoice_id
                 self.update_invoice_amount(invoice, ins.amount)
-        #     else:
-        #         for ml in contract.multi_leasor_ids:
-        #             invoice = contract.account_move_ids.filtered(lambda
-        #                                                              inv: inv.move_type == 'in_invoice' and ml.partner_id == inv.partner_id and ins.date == inv.date)
-        #             amount = (
-        #                              ml.amount / contract.installment_amount) * ins.amount if ml.type == 'amount' else ml.percentage * ins.amount / 100
-        #             if invoice:
-        #                 self.update_invoice_amount(invoice, amount)
-        #     if i:
-        #         ins.interest_move_ids.sudo().unlink()
-        # contract.create_contract_installment_entries(
-        #     installments_to_modify[1].date)
-        # contract.leasee_action_generate_interest_entries_reassessment(
-        #     installments_to_modify[1].date)
+            else:
+                for ml in contract.multi_leasor_ids:
+                    invoice = contract.account_move_ids.filtered(lambda
+                                                                     inv: inv.move_type == 'in_invoice' and ml.partner_id == inv.partner_id and ins.date == inv.date)
+                    amount = (
+                                     ml.amount / contract.installment_amount) * ins.amount if ml.type == 'amount' else ml.percentage * ins.amount / 100
+                    if invoice:
+                        self.update_invoice_amount(invoice, amount)
+            if i:
+                ins.interest_move_ids.sudo().unlink()
+        contract.create_contract_installment_entries(
+            installments_to_modify[1].date)
+        contract.leasee_action_generate_interest_entries_reassessment(
+            installments_to_modify[1].date)
 
     def update_invoice_amount(self, invoice, new_amount):
         inv_state = invoice.state
