@@ -352,8 +352,24 @@ class LeaseeContract(models.Model):
         else:
             return i
 
+    def get_increase_period(self, installment_num):
+        if self.payment_frequency_type == 'months':
+            payment_months_delta = self.payment_frequency
+        else:
+            payment_months_delta = 12 * self.payment_frequency
+
+        if self.increasement_frequency_type == 'months':
+            increase_months_delta = self.increasement_frequency
+        else:
+            increase_months_delta = 12 * self.increasement_frequency
+        if payment_months_delta > increase_months_delta:
+            raise ValidationError(_('Payment frequency can not be greater than increase frequency'))
+        increase_period = int(math.ceil(installment_num * payment_months_delta / increase_months_delta)) - 1
+        return increase_period
+
     @api.depends('installment_amount', 'lease_contract_period', 'increasement_rate', 'installment_ids', 'installment_ids.amount')
     def compute_lease_liability(self):
+        monthly_freq = {'1': 12, '3': 4, '6': 2}
         for rec in self:
             period_range = range(rec.compute_installments_num())
             if rec.payment_method == 'beginning':
@@ -368,7 +384,36 @@ class LeaseeContract(models.Model):
                 installments = rec.installment_ids[1:]
                 increased_installments = installments.mapped('amount')
             else:
-                increased_installments = [rec.get_future_value(rec.installment_amount, rec.increasement_rate, math.floor(i/installments_count) ) for i in period_range]
+                increased_installments = []
+                present_value = self.installment_amount
+                increasement_frequency = self.increasement_frequency
+                if self.payment_frequency_type == 'months' and self.payment_frequency:
+                    if self.payment_frequency not in [1, 3, 6]:
+                        increasement_frequency = 0
+                    else:
+                        increasement_frequency = (
+                                self.increasement_frequency * monthly_freq[
+                            '' + str(self.payment_frequency)])
+                for i in period_range:
+                    amount = rec.get_future_value(present_value,
+                                                  rec.increasement_rate,
+                                                  math.floor(
+                                                      i / installments_count),
+                                                  i,
+                                                  increasement_frequency)
+                    if i == increasement_frequency:
+                        present_value = round(amount, 5)
+                    if increasement_frequency > 1:
+                        if i == increasement_frequency:
+                            if self.payment_frequency_type == 'months' and \
+                                    monthly_freq[
+                                        '' + str(self.payment_frequency)]:
+                                increasement_frequency += self.increasement_frequency * \
+                                                          monthly_freq['' + str(
+                                                              self.payment_frequency)]
+                            else:
+                                increasement_frequency += self.increasement_frequency
+                    increased_installments.append(round(amount, 5))
 
                 remaining_advanced = rec.initial_payment_value
                 if rec.incentives_received_type == 'rent_free':
@@ -439,8 +484,15 @@ class LeaseeContract(models.Model):
         return present_value
 
     @api.model
-    def get_future_value(self, present_value, interest, period):
-        future_value = present_value * (1 + interest/100) ** period
+    def get_future_value(self, present_value, interest, period, i,
+                         increasement_frequency):
+        if increasement_frequency > 1 and interest > 0:
+            if i == increasement_frequency:
+                future_value = present_value * (1 + interest / 100)
+            else:
+                future_value = present_value
+        else:
+            future_value = present_value * (1 + interest / 100) ** period
         return future_value
 
     def create_rov_asset(self):
@@ -526,8 +578,8 @@ class LeaseeContract(models.Model):
         else:
             for leasor in self.multi_leasor_ids:
                 partner = leasor.partner_id
-                leasor_direct_cost = (leasor.amount / self.installment_amount) * self.initial_direct_cost if leasor.type == 'amount' else leasor.percentage * amount / 100
-                leasor_payment_value = (leasor.amount / self.installment_amount) * self.initial_payment_value if leasor.type == 'amount' else leasor.percentage * amount / 100
+                leasor_direct_cost = (leasor.amount / self.installment_amount) * self.initial_direct_cost if leasor.type == 'amount' else leasor.percentage * self.initial_direct_cost / 100
+                leasor_payment_value = (leasor.amount / self.installment_amount) * self.initial_payment_value if leasor.type == 'amount' else leasor.percentage * self.initial_payment_value / 100
                 incentives_received = (leasor.amount / self.installment_amount) * self.incentives_received if leasor.type == 'amount' else leasor.percentage * self.incentives_received / 100
                 self.create_single_initial_bill(partner, leasor_direct_cost, leasor_payment_value, incentives_received)
 
@@ -549,9 +601,9 @@ class LeaseeContract(models.Model):
                 }))
             if direct_cost:
                 invoice_lines.append((0, 0, {
-                    'product_id': self.initial_product_id.id,
-                    'name': self.initial_product_id.name,
-                    'product_uom_id': self.initial_product_id.uom_id.id,
+                    'product_id': self.extension_product_id.id,
+                    'name': self.extension_product_id.name,
+                    'product_uom_id': self.extension_product_id.uom_id.id,
                     'account_id': self.extension_product_id.product_tmpl_id.get_product_accounts()['expense'].id,
                     'price_unit': direct_cost,
                     'quantity': 1,
@@ -746,6 +798,8 @@ class LeaseeContract(models.Model):
             return i
 
     def create_beginning_installments(self, remaining_lease_liability):
+        # pr
+        monthly_freq = {'1': 12, '3': 4, '6': 2}
         start = self.commencement_date
         # remaining_lease_liability = self.lease_liability - self.incentives_received
         # remaining_lease_liability = self.lease_liability
@@ -755,7 +809,16 @@ class LeaseeContract(models.Model):
         remaining_advanced = self.initial_payment_value
         if self.incentives_received_type == 'rent_free':
             remaining_advanced += self.incentives_received
-
+        increasement_frequency = self.increasement_frequency + 1
+        if self.payment_frequency_type == 'months' and self.payment_frequency:
+            if self.payment_frequency not in [1, 3, 6]:
+                raise UserError(
+                    _('Payment frequency for type months are quater: 3, semi: 6, and Monthly: 1'))
+            increasement_frequency = (self.increasement_frequency *
+                                      monthly_freq[
+                                          '' + str(self.payment_frequency)]) + 1
+        present_value = self.installment_amount
+        amount = 0
         for i in period_range:
             if i != 1 and i != 0:
                 new_start = start + relativedelta(months=(i - 1) * payment_months)
@@ -763,11 +826,12 @@ class LeaseeContract(models.Model):
                 new_start = start
 
             if i > 0:
-                amount = self.get_future_value(self.installment_amount, self.increasement_rate,
-                                               self.get_annual_period(i - 1))
-            else:
-                amount = 0
-
+                amount = self.get_future_value(present_value,
+                                               self.increasement_rate,
+                                               self.get_annual_period(i - 1), i,
+                                               increasement_frequency)
+                if i == increasement_frequency:
+                    present_value = amount
             if remaining_advanced > 0:
                 if amount <= remaining_advanced:
                     remaining_advanced -= amount
@@ -786,6 +850,23 @@ class LeaseeContract(models.Model):
                 interest_recognition = 0
 
             remaining_lease_liability -= (amount - interest_recognition)
+            if increasement_frequency > 1:
+                if i == increasement_frequency:
+                    if self.payment_frequency_type == 'months' and self.payment_frequency:
+                        if self.payment_frequency not in [1, 3, 6]:
+                            raise UserError(
+                                _('Payment frequency for type months are quater: 3, semi: 6, and Monthly: 1'))
+                        increasement_frequency += self.increasement_frequency * \
+                                                  monthly_freq['' + str(
+                                                      self.payment_frequency)]
+                    else:
+                        increasement_frequency += self.increasement_frequency
+            if i == 0:
+                journals = self.env['account.move'].search(
+                    [('leasee_contract_id',
+                      '=', self.id), ('date', '=', self.commencement_date)])
+                if journals:
+                    amount = journals.amount_total_signed
 
             self.env['leasee.installment'].create({
                 'name': self.name + ' installment - ' + new_start.strftime(DF),
@@ -798,12 +879,20 @@ class LeaseeContract(models.Model):
             })
 
     def create_end_installments(self, remaining_lease_liability):
+        monthly_freq = {'1': 12, '3': 4, '6': 2}
         # remaining_lease_liability = self.lease_liability
-        payment_months = self.payment_frequency * (1 if self.payment_frequency_type == 'months' else 12)
+        amount_advance = 0
+        journals = self.env['account.move'].search(
+            [('leasee_contract_id',
+              '=', self.id), ('date', '=', self.commencement_date)])
+        if journals:
+            amount_advance = journals.amount_total_signed
+        payment_months = self.payment_frequency * (
+            1 if self.payment_frequency_type == 'months' else 12)
         self.env['leasee.installment'].create({
             'name': self.name + ' installment - ' + self.commencement_date.strftime(DF),
             'period': 0,
-            'amount': 0,
+            'amount': amount_advance if amount_advance else 0,
             # 'date': self.commencement_date + relativedelta(months=payment_months, days=-1),
             'date': self.commencement_date,
             'leasee_contract_id': self.id,
@@ -818,8 +907,22 @@ class LeaseeContract(models.Model):
         remaining_advanced = self.initial_payment_value
         if self.incentives_received_type == 'rent_free':
             remaining_advanced += self.incentives_received
+        increasement_frequency = self.increasement_frequency + 1
+        if self.payment_frequency_type == 'months' and self.payment_frequency:
+            if str(self.payment_frequency) not in [1, 3, 6]:
+                raise UserError(
+                    _('Payment frequency for type months are quater: 3, semi: 6, and Monthly: 1'))
+            increasement_frequency = (self.increasement_frequency *
+                                      monthly_freq[
+                                          '' + str(self.payment_frequency)]) + 1
+        present_value = self.installment_amount
         for i in period_range:
-            amount = self.get_future_value(self.installment_amount, self.increasement_rate, self.get_annual_period(i - 1))
+            amount = self.get_future_value(present_value,
+                                           self.increasement_rate,
+                                           self.get_annual_period(i - 1), i,
+                                           increasement_frequency)
+            if i == increasement_frequency:
+                present_value = amount
 
             if remaining_advanced > 0:
                 if amount <= remaining_advanced:
@@ -834,6 +937,17 @@ class LeaseeContract(models.Model):
             period_ratio = ((new_start - prev_start).days) / 365
             interest_recognition = remaining_lease_liability * ((1 + self.interest_rate / 100) ** period_ratio - 1)
             remaining_lease_liability -= (amount - interest_recognition)
+            if increasement_frequency > 1:
+                if i == increasement_frequency:
+                    if self.payment_frequency_type == 'months' and self.payment_frequency:
+                        if self.payment_frequency not in [1, 3, 6]:
+                            raise UserError(
+                                _('Payment frequency for type months are quater: 3, semi: 6, and Monthly: 1'))
+                        increasement_frequency += self.increasement_frequency * \
+                                                  monthly_freq['' + str(
+                                                      self.payment_frequency)]
+                    else:
+                        increasement_frequency += self.increasement_frequency
             self.env['leasee.installment'].create({
                 'name': self.name + ' installment - ' + new_start.strftime(DF),
                 'period': i,

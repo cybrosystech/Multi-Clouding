@@ -133,7 +133,7 @@ class Reassessment(models.TransientModel):
         for i, installment in enumerate(reassessment_installments):
             installment.amount = installment_amount
             installment_amount = self.leasee_contract_id.get_future_value(installment_amount,
-                                                                          contract.increasement_rate, 1)
+                                                                          0, 1, 0, 0)
         start = 1 if contract.payment_method == 'end' else 0
         new_lease_liability = sum([contract.get_present_value_modified(installment.amount, contract.interest_rate,
                                                                        i + start, self.reassessment_start_Date,
