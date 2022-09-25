@@ -11,9 +11,13 @@ class Reassessment(models.TransientModel):
     _name = 'leasee.contract.reassessment'
     _description = 'Leasee Contract Reassessment'
 
-    reassessment_start_Date = fields.Date(default=lambda self: fields.Date.today(), required=True, )
-    leasee_contract_id = fields.Many2one(comodel_name="leasee.contract", string="", required=False, ondelete='cascade')
-    new_installment_amount = fields.Float(string="", default=0.0, required=True, )
+    reassessment_start_Date = fields.Date(
+        default=lambda self: fields.Date.today(), required=True, )
+    leasee_contract_id = fields.Many2one(comodel_name="leasee.contract",
+                                         string="", required=False,
+                                         ondelete='cascade')
+    new_installment_amount = fields.Float(string="", default=0.0,
+                                          required=True, )
 
     @api.model
     def default_get(self, fields):
@@ -116,33 +120,43 @@ class Reassessment(models.TransientModel):
             'installment_amount': self.new_installment_amount,
             'installment_date': self.reassessment_start_Date,
         })
-        reassessment_installments = contract.installment_ids.filtered(lambda i: i.date >= self.reassessment_start_Date)
+        reassessment_installments = contract.installment_ids.filtered(
+            lambda i: i.date >= self.reassessment_start_Date)
         first_installment = reassessment_installments[0]
         before_first = contract.installment_ids.filtered(
-            lambda i: i.get_period_order() == first_installment.get_period_order() - 1)
-        days_before_reassessment = (self.reassessment_start_Date - before_first.date).days
-        days_after_reassessment = (first_installment.date - self.reassessment_start_Date).days
+            lambda
+                i: i.get_period_order() == first_installment.get_period_order() - 1)
+        days_before_reassessment = (
+                    self.reassessment_start_Date - before_first.date).days
+        days_after_reassessment = (
+                    first_installment.date - self.reassessment_start_Date).days
         old_amount = first_installment.amount
         old_subsequent = first_installment.subsequent_amount
         # days = (first_installment.date - before_first.date).days if contract.is_contract_not_annual() else 365
         days = (first_installment.date - before_first.date).days
         old_remaining_liability = before_first.remaining_lease_liability + old_subsequent * days_before_reassessment / days
-        remaining_lease_liability_before = self.get_before_remaining_lease(reassessment_installments,
-                                                                           days_before_reassessment, days)
+        remaining_lease_liability_before = self.get_before_remaining_lease(
+            reassessment_installments,
+            days_before_reassessment, days)
         installment_amount = self.new_installment_amount
         for i, installment in enumerate(reassessment_installments):
             installment.amount = installment_amount
-            installment_amount = self.leasee_contract_id.get_future_value(installment_amount,
-                                                                          contract.increasement_rate, 1)
+            installment_amount = self.leasee_contract_id.get_future_value(
+                installment_amount,
+                contract.increasement_rate, 1, 0, 0)
         start = 1 if contract.payment_method == 'end' else 0
-        new_lease_liability = sum([contract.get_present_value_modified(installment.amount, contract.interest_rate,
-                                                                       i + start, self.reassessment_start_Date,
-                                                                       installment.date) for i, installment in
+        new_lease_liability = sum([contract.get_present_value_modified(
+            installment.amount, contract.interest_rate,
+            i + start, self.reassessment_start_Date,
+            installment.date) for i, installment in
                                    enumerate(reassessment_installments)])
         # num_days_year = 365 if contract.is_contract_not_annual() else contract.get_days_per_year(first_installment.date)
-        period_ratio = ((first_installment.date - self.reassessment_start_Date).days) / 365
-        interest_recognition = new_lease_liability * ((1 + contract.interest_rate / 100) ** period_ratio - 1)
-        remaining_liability = new_lease_liability - (first_installment.amount - interest_recognition)
+        period_ratio = ((
+                                    first_installment.date - self.reassessment_start_Date).days) / 365
+        interest_recognition = new_lease_liability * (
+                    (1 + contract.interest_rate / 100) ** period_ratio - 1)
+        remaining_liability = new_lease_liability - (
+                    first_installment.amount - interest_recognition)
         first_installment.write({
             'remaining_lease_liability': new_lease_liability,
             'subsequent_amount': interest_recognition,
@@ -151,22 +165,28 @@ class Reassessment(models.TransientModel):
         for i, installment in enumerate(reassessment_installments[1:]):
             # num_days_year = 365 if contract.is_contract_not_annual() else contract.get_days_per_year(installment.date)
             period_ratio = ((installment.date - prev_install.date).days) / 365
-            interest_recognition = remaining_liability * ((1 + contract.interest_rate / 100) ** period_ratio - 1)
+            interest_recognition = remaining_liability * (
+                        (1 + contract.interest_rate / 100) ** period_ratio - 1)
             remaining_liability -= (installment.amount - interest_recognition)
             installment.subsequent_amount = interest_recognition
             installment.remaining_lease_liability = remaining_liability
             prev_install = installment
-        self.create_reassessment_move(contract, new_lease_liability - old_remaining_liability)
+        self.create_reassessment_move(contract,
+                                      new_lease_liability - old_remaining_liability)
         self.update_asset_value(new_lease_liability - old_remaining_liability)
         self.update_related_journal_items(reassessment_installments)
-        if first_installment.date != self.reassessment_start_Date:
-            self.update_first_installment_entries(first_installment, old_subsequent, days_after_reassessment, days)
-        remaining_lease_liability_after = self.get_after_remaining_lease(reassessment_installments)
-        stl_amount = remaining_lease_liability_after - remaining_lease_liability_before
-        self.create_installment_entry(contract, stl_amount)
-        body = self.env.user.name + _(' reassess the contract to ') + str(
-            self.new_installment_amount) + ' starting from ' + self.reassessment_start_Date.strftime('%d/%m/%Y') + ' .'
-        contract.message_post(body=body)
+        # if first_installment.date != self.reassessment_start_Date:
+        #     self.update_first_installment_entries(first_installment,
+        #                                           old_subsequent,
+        #                                           days_after_reassessment, days)
+        # remaining_lease_liability_after = self.get_after_remaining_lease(
+        #     reassessment_installments)
+        # stl_amount = remaining_lease_liability_after - remaining_lease_liability_before
+        # self.create_installment_entry(contract, stl_amount)
+        # body = self.env.user.name + _(' reassess the contract to ') + str(
+        #     self.new_installment_amount) + ' starting from ' + self.reassessment_start_Date.strftime(
+        #     '%d/%m/%Y') + ' .'
+        # contract.message_post(body=body)
 
     def create_reassessment_move(self, contract, amount):
         rou_account = contract.asset_model_id.account_asset_id
@@ -216,23 +236,26 @@ class Reassessment(models.TransientModel):
 
     def update_related_journal_items(self, installments_to_modify):
         contract = self.leasee_contract_id
-        delta = contract.payment_frequency * (1 if contract.payment_frequency_type == 'months' else 12)
+        delta = contract.payment_frequency * (
+            1 if contract.payment_frequency_type == 'months' else 12)
         for i, ins in enumerate(installments_to_modify):
             if contract.leasor_type == 'single':
                 invoice = ins.installment_invoice_id
                 self.update_invoice_amount(invoice, ins.amount)
-            else:
-                for ml in contract.multi_leasor_ids:
-                    invoice = contract.account_move_ids.filtered(lambda
-                                                                     inv: inv.move_type == 'in_invoice' and ml.partner_id == inv.partner_id and ins.date == inv.date)
-                    amount = (
-                                         ml.amount / contract.installment_amount) * ins.amount if ml.type == 'amount' else ml.percentage * ins.amount / 100
-                    if invoice:
-                        self.update_invoice_amount(invoice, amount)
-            if i:
-                ins.interest_move_ids.sudo().unlink()
-        contract.create_contract_installment_entries(installments_to_modify[1].date)
-        contract.leasee_action_generate_interest_entries_reassessment(installments_to_modify[1].date)
+        #     else:
+        #         for ml in contract.multi_leasor_ids:
+        #             invoice = contract.account_move_ids.filtered(lambda
+        #                                                              inv: inv.move_type == 'in_invoice' and ml.partner_id == inv.partner_id and ins.date == inv.date)
+        #             amount = (
+        #                              ml.amount / contract.installment_amount) * ins.amount if ml.type == 'amount' else ml.percentage * ins.amount / 100
+        #             if invoice:
+        #                 self.update_invoice_amount(invoice, amount)
+        #     if i:
+        #         ins.interest_move_ids.sudo().unlink()
+        # contract.create_contract_installment_entries(
+        #     installments_to_modify[1].date)
+        # contract.leasee_action_generate_interest_entries_reassessment(
+        #     installments_to_modify[1].date)
 
     def update_invoice_amount(self, invoice, new_amount):
         inv_state = invoice.state
@@ -256,6 +279,7 @@ class Reassessment(models.TransientModel):
             new_invoice.invoice_line_ids._onchange_price_subtotal()
 
             new_invoice._compute_invoice_taxes_by_group()
+            print('new_invoice', new_invoice)
             new_invoice._onchange_invoice_line_ids()
             new_invoice._compute_amount()
             values = new_invoice._convert_to_write(new_invoice._cache)
@@ -264,32 +288,43 @@ class Reassessment(models.TransientModel):
             if inv_state == 'posted':
                 invoice.action_post()
 
-    def update_first_installment_entries(self, first_installment, old_subsequent, days_after_reassessment, days):
+    def update_first_installment_entries(self, first_installment,
+                                         old_subsequent,
+                                         days_after_reassessment, days):
         contract = first_installment.leasee_contract_id
-        interest_move_accounts = [contract.interest_expense_account_id.id, contract.lease_liability_account_id.id]
+        interest_move_accounts = [contract.interest_expense_account_id.id,
+                                  contract.lease_liability_account_id.id]
         beginning_entries = first_installment.interest_move_ids.filtered(lambda
                                                                              m: m.date.month == self.reassessment_start_Date.month and m.date.year == self.reassessment_start_Date.year)
         after_reassessment_moves = first_installment.interest_move_ids.filtered(
-            lambda m: m.date > self.reassessment_start_Date and set(m.line_ids.mapped('account_id').ids) == set(
+            lambda m: m.date > self.reassessment_start_Date and set(
+                m.line_ids.mapped('account_id').ids) == set(
                 interest_move_accounts))
         beginning_interest_move = beginning_entries.filtered(
-            lambda m: set(m.line_ids.mapped('account_id').ids) == set(interest_move_accounts))
+            lambda m: set(m.line_ids.mapped('account_id').ids) == set(
+                interest_move_accounts))
         if beginning_interest_move:
             after_reassessment_moves -= beginning_interest_move
-            debit_line = beginning_interest_move.line_ids.filtered(lambda l: l.debit > 0)
-            credit_line = beginning_interest_move.line_ids.filtered(lambda l: l.credit > 0)
+            debit_line = beginning_interest_move.line_ids.filtered(
+                lambda l: l.debit > 0)
+            credit_line = beginning_interest_move.line_ids.filtered(
+                lambda l: l.credit > 0)
             start_month = beginning_interest_move.date.replace(day=1)
             end_month = start_month + relativedelta(months=1, days=-1)
             prev_start = start_month
             prev_installment = self.leasee_contract_id.installment_ids.filtered(
-                lambda i: i.get_period_order() == first_installment.get_period_order() - 1)
+                lambda
+                    i: i.get_period_order() == first_installment.get_period_order() - 1)
             if prev_installment.date.month == self.reassessment_start_Date.month and prev_installment.date.year == self.reassessment_start_Date.year:
                 prev_start = prev_installment.date
             interest_amount = old_subsequent * (
-                        self.reassessment_start_Date - prev_start).days / days + first_installment.subsequent_amount * (
-                                          (end_month - self.reassessment_start_Date).days + 1) / days_after_reassessment
-            beginning_interest_move.write({'line_ids': [(1, debit_line.id, {'debit': interest_amount}),
-                                                        (1, credit_line.id, {'credit': interest_amount})]})
+                    self.reassessment_start_Date - prev_start).days / days + first_installment.subsequent_amount * (
+                                      (
+                                                  end_month - self.reassessment_start_Date).days + 1) / days_after_reassessment
+            beginning_interest_move.write(
+                {'line_ids': [(1, debit_line.id, {'debit': interest_amount}),
+                              (
+                              1, credit_line.id, {'credit': interest_amount})]})
 
         for move in after_reassessment_moves:
             debit_line = move.line_ids.filtered(lambda l: l.debit > 0)
@@ -298,21 +333,29 @@ class Reassessment(models.TransientModel):
             end_month = start_month + relativedelta(months=1, days=-1)
             if first_installment.date.month == move.date.month and first_installment.date.year == move.date.year:
                 interest_amount = first_installment.subsequent_amount * (
-                            first_installment.date - start_month).days / days_after_reassessment
+                        first_installment.date - start_month).days / days_after_reassessment
             else:
                 interest_amount = first_installment.subsequent_amount * (
-                            (end_month - start_month).days + 1) / days_after_reassessment
-            move.write({'line_ids': [(1, debit_line.id, {'debit': interest_amount}),
-                                     (1, credit_line.id, {'credit': interest_amount})]})
-        lease_liability_accounts = [contract.long_lease_liability_account_id.id, contract.lease_liability_account_id.id]
+                        (
+                                    end_month - start_month).days + 1) / days_after_reassessment
+            move.write(
+                {'line_ids': [(1, debit_line.id, {'debit': interest_amount}),
+                              (
+                              1, credit_line.id, {'credit': interest_amount})]})
+        lease_liability_accounts = [contract.long_lease_liability_account_id.id,
+                                    contract.lease_liability_account_id.id]
         amount = self.get_installment_entry_amount(first_installment)
         if amount:
             installment_entry = first_installment.interest_move_ids.filtered(
-                lambda m: set(m.line_ids.mapped('account_id').ids) == set(lease_liability_accounts))
-            debit_line = installment_entry.line_ids.filtered(lambda l: l.debit > 0)
-            credit_line = installment_entry.line_ids.filtered(lambda l: l.credit > 0)
+                lambda m: set(m.line_ids.mapped('account_id').ids) == set(
+                    lease_liability_accounts))
+            debit_line = installment_entry.line_ids.filtered(
+                lambda l: l.debit > 0)
+            credit_line = installment_entry.line_ids.filtered(
+                lambda l: l.credit > 0)
             installment_entry.write(
-                {'line_ids': [(1, debit_line.id, {'debit': amount}), (1, credit_line.id, {'credit': amount})]})
+                {'line_ids': [(1, debit_line.id, {'debit': amount}),
+                              (1, credit_line.id, {'credit': amount})]})
 
     def get_installment_entry_amount(self, installment):
         contract = self.leasee_contract_id
@@ -323,9 +366,12 @@ class Reassessment(models.TransientModel):
             else:
                 period = installment.get_period_order()
                 current_installment = contract.installment_ids.filtered(
-                    lambda i: i.get_period_order() <= installments_count and i.get_period_order() == (period + 1))
+                    lambda
+                        i: i.get_period_order() <= installments_count and i.get_period_order() == (
+                                period + 1))
                 if current_installment:
-                    amount = contract.get_installment_entry_amount(current_installment)
+                    amount = contract.get_installment_entry_amount(
+                        current_installment)
                 else:
                     amount = 0
         else:
@@ -334,16 +380,19 @@ class Reassessment(models.TransientModel):
                 period = installment.get_period_order()
                 current_installment = installment
                 if current_installment:
-                    amount = contract.get_installment_entry_amount(current_installment)
+                    amount = contract.get_installment_entry_amount(
+                        current_installment)
                 else:
                     amount = 0
             else:
                 period = installment.get_period_order()
                 current_installment = contract.installment_ids.filtered(
-                    lambda i: i.get_period_order() <= installments_count and i.get_period_order() == (
-                                period + installments_per_year))
+                    lambda
+                        i: i.get_period_order() <= installments_count and i.get_period_order() == (
+                            period + installments_per_year))
                 if current_installment:
-                    amount = contract.get_installment_entry_amount(current_installment)
+                    amount = contract.get_installment_entry_amount(
+                        current_installment)
                 else:
                     amount = 0
 
@@ -383,7 +432,8 @@ class Reassessment(models.TransientModel):
                 'auto_post': True,
             })
 
-    def get_before_remaining_lease(self, reassessment_installments, days_before_reassessment, days):
+    def get_before_remaining_lease(self, reassessment_installments,
+                                   days_before_reassessment, days):
         contract = self.leasee_contract_id
         first_installment = reassessment_installments[0]
         if contract.is_contract_not_annual():
@@ -406,4 +456,3 @@ class Reassessment(models.TransientModel):
             first_installment = reassessment_installments[0]
             lease_liability = first_installment.amount - first_installment.subsequent_amount
         return lease_liability
-
