@@ -406,3 +406,4 @@ class Reassessment(models.TransientModel):
             first_installment = reassessment_installments[0]
             lease_liability = first_installment.amount - first_installment.subsequent_amount
         return lease_liability
+

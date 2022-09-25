@@ -508,9 +508,22 @@ class LeaseeContract(models.Model):
         else:
             return i
 
-    @api.depends('installment_amount', 'lease_contract_period',
-                 'increasement_rate', 'installment_ids',
-                 'installment_ids.amount')
+    def get_increase_period(self, installment_num):
+        if self.payment_frequency_type == 'months':
+            payment_months_delta = self.payment_frequency
+        else:
+            payment_months_delta = 12 * self.payment_frequency
+
+        if self.increasement_frequency_type == 'months':
+            increase_months_delta = self.increasement_frequency
+        else:
+            increase_months_delta = 12 * self.increasement_frequency
+        if payment_months_delta > increase_months_delta:
+            raise ValidationError(_('Payment frequency can not be greater than increase frequency'))
+        increase_period = int(math.ceil(installment_num * payment_months_delta / increase_months_delta)) - 1
+        return increase_period
+
+    @api.depends('installment_amount', 'lease_contract_period', 'increasement_rate', 'installment_ids', 'installment_ids.amount')
     def compute_lease_liability(self):
         monthly_freq = {'1': 12, '3': 4, '6': 2}
         for rec in self:
@@ -775,12 +788,10 @@ class LeaseeContract(models.Model):
                 }))
             if direct_cost:
                 invoice_lines.append((0, 0, {
-                    'product_id': self.initial_product_id.id,
-                    'name': self.initial_product_id.name,
-                    'product_uom_id': self.initial_product_id.uom_id.id,
-                    'account_id':
-                        self.extension_product_id.product_tmpl_id.get_product_accounts()[
-                            'expense'].id,
+                    'product_id': self.extension_product_id.id,
+                    'name': self.extension_product_id.name,
+                    'product_uom_id': self.extension_product_id.uom_id.id,
+                    'account_id': self.extension_product_id.product_tmpl_id.get_product_accounts()['expense'].id,
                     'price_unit': direct_cost,
                     'quantity': 1,
                     'analytic_account_id': self.analytic_account_id.id,
@@ -981,6 +992,7 @@ class LeaseeContract(models.Model):
             return i
 
     def create_beginning_installments(self, remaining_lease_liability):
+        # pr
         monthly_freq = {'1': 12, '3': 4, '6': 2}
         start = self.commencement_date
         # remaining_lease_liability = self.lease_liability - self.incentives_received
