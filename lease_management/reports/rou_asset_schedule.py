@@ -6,9 +6,9 @@ import io
 from io import BytesIO
 from psycopg2.extensions import AsIs
 from babel.dates import format_date, format_datetime, format_time
-from odoo import fields, models, api, _ ,tools, SUPERUSER_ID
-from odoo.exceptions import ValidationError,UserError
-from datetime import datetime , date ,timedelta
+from odoo import fields, models, api, _, tools, SUPERUSER_ID
+from odoo.exceptions import ValidationError, UserError
+from datetime import datetime, date, timedelta
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT as DTF
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DF
 from dateutil.relativedelta import relativedelta
@@ -29,21 +29,25 @@ class RouAssetSchedule(models.TransientModel):
     _description = 'rou.asset.schedule.wizard'
 
     def _get_date_from_now(self):
-            today=datetime.now().today()
-            first_day_this_month = date(day=1, month=today.month, year=today.year)
-            return first_day_this_month
+        today = datetime.now().today()
+        first_day_this_month = date(day=1, month=today.month, year=today.year)
+        return first_day_this_month
 
     def _get_date_to(self):
         # import calendar
         today = datetime.now().today()
-        last_day = calendar.monthrange(today.year,today.month)
-        last_day_this_month = date(day=last_day[1], month=today.month, year=today.year)
+        last_day = calendar.monthrange(today.year, today.month)
+        last_day_this_month = date(day=last_day[1], month=today.month,
+                                   year=today.year)
         return last_day_this_month
 
-    date_from = fields.Date(string="Date From",default=_get_date_from_now , required=False, )
-    date_to = fields.Date(string="Date To",default=_get_date_to , required=False, )
-    vendor_ids = fields.Many2many(comodel_name="res.partner",)
-    contract_ids = fields.Many2many(comodel_name="leasee.contract", domain=[('parent_id', '=', False)])
+    date_from = fields.Date(string="Date From", default=_get_date_from_now,
+                            required=False, )
+    date_to = fields.Date(string="Date To", default=_get_date_to,
+                          required=False, )
+    vendor_ids = fields.Many2many(comodel_name="res.partner", )
+    contract_ids = fields.Many2many(comodel_name="leasee.contract",
+                                    domain=[('parent_id', '=', False)])
     excel_sheet = fields.Binary('Download Report')
     excel_sheet_name = fields.Char(string='Name', size=64)
 
@@ -52,20 +56,24 @@ class RouAssetSchedule(models.TransientModel):
         if self.contract_ids:
             contracts = self.contract_ids
         elif self.vendor_ids:
-            contracts = self.env['leasee.contract'].search([('vendor_id', 'in', self.vendor_ids.ids)])
+            contracts = self.env['leasee.contract'].search(
+                [('vendor_id', 'in', self.vendor_ids.ids)])
         else:
-            contracts = self.env['leasee.contract'].search([('state', '!=', 'draft')])
+            contracts = self.env['leasee.contract'].search(
+                [('state', '!=', 'draft')])
 
-        contracts = self.env['leasee.contract'].search([('id', 'child_of', contracts.ids)])
+        contracts = self.env['leasee.contract'].search(
+            [('id', 'child_of', contracts.ids)])
         asset_ids = contracts.mapped('asset_id').ids
-        print('asset_ids', asset_ids)
         asset_domain = [('asset_id', 'child_of', asset_ids)]
-        installments = self.env['account.move'].search(asset_domain,order='asset_id,date')
-        installments = installments.filtered(lambda i: self.date_from <= i.date <= self.date_to)
+        installments = self.env['account.move'].search(asset_domain,
+                                                       order='asset_id,date')
+        installments = installments.filtered(
+            lambda i: self.date_from <= i.date <= self.date_to)
         for contract in contracts.asset_id:
             data.append({
                 'period_no': 0,
-                'period_start_date': contract.acquisition_date,
+                'period_start_date': contract.acquisition_date.strftime(DF),
                 'depreciation_term': contract.method_number,
                 'opening_balance': contract.original_value,
                 'initial_measurement': 0,
@@ -82,25 +90,39 @@ class RouAssetSchedule(models.TransientModel):
                 'closing_balance': contract.original_value,
                 'period_end_date': 0,
                 'comment': 0,
-                'posted_gl': 0,
-                'posting_date':  0,
+                'posted_gl': 'True',
+                'posting_date': 0,
                 'posting_doc_no': contract.name,
                 'lease_number': contract.name,
             })
-            for ins in installments:
-                initial_direct_cost = sum( ins.asset_id.leasee_contract_ids.mapped('initial_direct_cost') )
+            for ins in contract.depreciation_move_ids.sorted(
+                    key=lambda m: m.date):
+                initial_direct_cost = sum(
+                    ins.asset_id.leasee_contract_ids.mapped(
+                        'initial_direct_cost'))
                 period_no = self.get_period_no(ins)
-                leasor_contract = self.env['leasor.contract'].search([('leasee_contract_id', 'in', ins.asset_id.leasee_contract_ids.ids)])
-                other_ins = ins.asset_id.children_ids.depreciation_move_ids.filtered(lambda a: a.date == ins.date)
+                leasor_contract = self.env['leasor.contract'].search([(
+                    'leasee_contract_id',
+                    'in',
+                    ins.asset_id.leasee_contract_ids.ids)])
+                other_ins = ins.asset_id.children_ids.depreciation_move_ids.filtered(
+                    lambda a: a.date == ins.date)
                 rou_increase_decrease = sum(other_ins.mapped('amount_total'))
-                lease_number = ins.asset_id.leasee_contract_ids and ins.asset_id.leasee_contract_ids[-1].name or ins.asset_id.parent_id.leasee_contract_ids[-1].name or ''
+                lease_number = ins.asset_id.leasee_contract_ids and \
+                               ins.asset_id.leasee_contract_ids[-1].name or \
+                               ins.asset_id.parent_id.leasee_contract_ids[
+                                   -1].name or ''
                 if 'Disposal' in ins.ref and ins.asset_id.leasee_contract_ids and ins.asset_id.leasee_contract_ids.state == 'terminated':
-                    prev = ins.search([('id', '!=', ins.id), ('asset_id', '=', ins.asset_id.id), ('date', '<=', ins.date)],order='date desc',limit=1)
+                    prev = ins.search([('id', '!=', ins.id),
+                                       ('asset_id', '=', ins.asset_id.id),
+                                       ('date', '<=', ins.date)],
+                                      order='date desc', limit=1)
                     data.append({
                         'period_no': period_no,
                         'period_start_date': ins.date.strftime(DF),
-                        'depreciation_term': ins.asset_id.method_number - period_no,
-                        'opening_balance':  prev.asset_remaining_value,
+                        'depreciation_term': (
+                                                     ins.asset_id.method_number + 1) - period_no,
+                        'opening_balance': prev.asset_remaining_value,
                         'initial_measurement': 0,
                         # 'impairment': ins.asset_id.book_value,
                         'impairment': 0,
@@ -109,14 +131,15 @@ class RouAssetSchedule(models.TransientModel):
                         # 'adjustment_lease_liability': ins.asset_id.gross_increase_value,
                         'adjustment_lease_liability': 0,
                         'rou_sub_leased': leasor_contract.installment_amount,
-                        'rou_increase_decrease': prev.asset_remaining_value,
+                        'rou_increase_decrease': 0,
                         'loss_leases': 1,
                         'loss_sub_lease': 1,
                         'closing_balance': 0,
                         'period_end_date': 1,
                         'comment': 1,
-                        'posted_gl': True if ins.state == 'posted' else False,
-                        'posting_date': ins.posting_date.strftime(DF) if ins.posting_date else '',
+                        'posted_gl': 'True' if ins.state == 'posted' else 'False',
+                        'posting_date': ins.posting_date.strftime(
+                            DF) if ins.posting_date else '',
                         'posting_doc_no': ins.name,
                         'lease_number': lease_number,
                     })
@@ -124,9 +147,11 @@ class RouAssetSchedule(models.TransientModel):
                     data.append({
                         'period_no': period_no,
                         'period_start_date': ins.date.strftime(DF),
-                        'depreciation_term': ins.asset_id.method_number - period_no,
-                        'opening_balance': (ins.amount_total + ins.asset_remaining_value) if period_no != 1 else 0,
-                        'initial_measurement': (ins.asset_id.original_value - initial_direct_cost) if period_no == 1 else 0,
+                        'depreciation_term': (
+                                                     ins.asset_id.method_number + 1) - period_no,
+                        'opening_balance': (
+                                ins.amount_total + ins.asset_remaining_value),
+                        'initial_measurement': 0,
                         # 'impairment': ins.asset_id.book_value,
                         'impairment': 0,
                         'direct_cost_added': initial_direct_cost if period_no == 1 else 0,
@@ -134,23 +159,132 @@ class RouAssetSchedule(models.TransientModel):
                         # 'adjustment_lease_liability': ins.asset_id.gross_increase_value,
                         'adjustment_lease_liability': 0,
                         'rou_sub_leased': leasor_contract.installment_amount,
-                        'rou_increase_decrease': rou_increase_decrease,
+                        'rou_increase_decrease': 0,
                         'loss_leases': 1,
                         'loss_sub_lease': 1,
                         'closing_balance': ins.asset_remaining_value,
                         'period_end_date': 1,
                         'comment': 1,
-                        'posted_gl': True if ins.state == 'posted' else False,
-                        'posting_date': ins.posting_date.strftime(DF) if ins.posting_date else '',
+                        'posted_gl': 'True' if ins.state == 'posted' else 'False',
+                        'posting_date': ins.posting_date.strftime(
+                            DF) if ins.posting_date else '',
                         'posting_doc_no': ins.name,
                         'lease_number': lease_number,
                     })
+            for children in contract.children_ids:
+                data.append({
+                    'period_no': str(
+                                0) + ' ' + 'GD' if children.original_value < 0 else str(
+                                0) + ' ' + 'GI',
+                    'period_start_date': children.acquisition_date.strftime(DF),
+                    'depreciation_term': children.method_number,
+                    'opening_balance': 0,
+                    'initial_measurement': 0,
+                    # 'impairment': ins.asset_id.book_value,
+                    'impairment': 0,
+                    'direct_cost_added': 0,
+                    'depreciation': 0,
+                    # 'adjustment_lease_liability': ins.asset_id.gross_increase_value,
+                    'adjustment_lease_liability': 0,
+                    'rou_sub_leased': 0,
+                    'rou_increase_decrease': 0,
+                    'loss_leases': 0,
+                    'loss_sub_lease': 0,
+                    'closing_balance': children.original_value,
+                    'period_end_date': 0,
+                    'comment': 0,
+                    'posted_gl': 'True',
+                    'posting_date': 0,
+                    'posting_doc_no': children.name,
+                    'lease_number': contract.name,
+                })
+                for ins in children.depreciation_move_ids.sorted(
+                        key=lambda m: m.date):
+                    initial_direct_cost = sum(
+                        ins.asset_id.leasee_contract_ids.mapped(
+                            'initial_direct_cost'))
+                    period_no = self.get_period_no(ins)
+                    leasor_contract = self.env['leasor.contract'].search([(
+                        'leasee_contract_id',
+                        'in',
+                        ins.asset_id.leasee_contract_ids.ids)])
+                    other_ins = ins.asset_id.children_ids.depreciation_move_ids.filtered(
+                        lambda a: a.date == ins.date)
+                    rou_increase_decrease = sum(
+                        other_ins.mapped('amount_total'))
+                    lease_number = ins.asset_id.leasee_contract_ids and \
+                                   ins.asset_id.leasee_contract_ids[-1].name or \
+                                   ins.asset_id.parent_id.leasee_contract_ids[
+                                       -1].name or ''
+                    if 'Disposal' in ins.ref and ins.asset_id.leasee_contract_ids and ins.asset_id.leasee_contract_ids.state == 'terminated':
+                        prev = ins.search([('id', '!=', ins.id),
+                                           ('asset_id', '=', ins.asset_id.id),
+                                           ('date', '<=', ins.date)],
+                                          order='date desc', limit=1)
+                        data.append({
+                            'period_no': str(
+                                period_no) + ' ' + 'GD' if children.original_value < 0 else str(
+                                period_no) + ' ' + 'GI',
+                            'period_start_date': ins.date.strftime(DF),
+                            'depreciation_term': (
+                                                         ins.asset_id.method_number + 1) - period_no,
+                            'opening_balance': 0,
+                            'initial_measurement': 0,
+                            # 'impairment': ins.asset_id.book_value,
+                            'impairment': 0,
+                            'direct_cost_added': 0,
+                            'depreciation': 0,
+                            # 'adjustment_lease_liability': ins.asset_id.gross_increase_value,
+                            'adjustment_lease_liability': 0,
+                            'rou_sub_leased': leasor_contract.installment_amount,
+                            'rou_increase_decrease': 0,
+                            'loss_leases': 1,
+                            'loss_sub_lease': 1,
+                            'closing_balance': prev.asset_remaining_value,
+                            'period_end_date': 1,
+                            'comment': 1,
+                            'posted_gl': 'True' if ins.state == 'posted' else 'False',
+                            'posting_date': ins.posting_date.strftime(
+                                DF) if ins.posting_date else '',
+                            'posting_doc_no': ins.name,
+                            'lease_number': lease_number,
+                        })
+                    else:
+                        data.append({
+                            'period_no': str(
+                                period_no) + ' ' + 'GD' if children.original_value < 0 else str(
+                                period_no) + ' ' + 'GI',
+                            'period_start_date': ins.date.strftime(DF),
+                            'depreciation_term': (
+                                                         ins.asset_id.method_number + 1) - period_no,
+                            'opening_balance': (
+                                    ins.amount_total + ins.asset_remaining_value),
+                            'initial_measurement': 0,
+                            # 'impairment': ins.asset_id.book_value,
+                            'impairment': 0,
+                            'direct_cost_added': initial_direct_cost if period_no == 1 else 0,
+                            'depreciation': ins.amount_total,
+                            # 'adjustment_lease_liability': ins.asset_id.gross_increase_value,
+                            'adjustment_lease_liability': 0,
+                            'rou_sub_leased': leasor_contract.installment_amount,
+                            'rou_increase_decrease': 0,
+                            'loss_leases': 1,
+                            'loss_sub_lease': 1,
+                            'closing_balance': ins.asset_remaining_value,
+                            'period_end_date': 1,
+                            'comment': 1,
+                            'posted_gl': 'True' if ins.state == 'posted' else 'False',
+                            'posting_date': ins.posting_date.strftime(
+                                DF) if ins.posting_date else '',
+                            'posting_doc_no': ins.name,
+                            'lease_number': lease_number,
+                        })
         return data
 
     def get_period_no(self, move):
         asset_moves = move.asset_id.depreciation_move_ids
         i = 0
-        for m in asset_moves.sorted(key=lambda m : m.date):
+        for m in asset_moves.sorted(key=lambda m: m.date):
             i += 1
             if m == move:
                 return i
@@ -225,7 +359,8 @@ class RouAssetSchedule(models.TransientModel):
         STYLE_LINE_Data.num_format_str = '#,##0.00_);(#,##0.00)'
 
         if report_data:
-            self.add_xlsx_sheet(report_data, workbook, STYLE_LINE_Data, header_format)
+            self.add_xlsx_sheet(report_data, workbook, STYLE_LINE_Data,
+                                header_format)
 
         self.excel_sheet_name = 'RoU Asset Schedule'
         workbook.close()
@@ -235,11 +370,13 @@ class RouAssetSchedule(models.TransientModel):
         return {
             'type': 'ir.actions.act_url',
             'name': 'RoU Asset Schedule',
-            'url': '/web/content/%s/%s/excel_sheet/RoU Asset Schedule.xlsx?download=true' % (self._name, self.id),
+            'url': '/web/content/%s/%s/excel_sheet/RoU Asset Schedule.xlsx?download=true' % (
+                self._name, self.id),
             'target': 'self'
         }
 
-    def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data, header_format):
+    def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data,
+                       header_format):
         self.ensure_one()
         worksheet = workbook.add_worksheet(_('RoU Asset Schedule'))
         lang = self.env.user.lang
@@ -266,7 +403,8 @@ class RouAssetSchedule(models.TransientModel):
         col += 1
         worksheet.write(row, col, _('Depreciation (-)'), header_format)
         col += 1
-        worksheet.write(row, col, _('Adjustment of Lease Liability (+)'), header_format)
+        worksheet.write(row, col, _('Adjustment of Lease Liability (+)'),
+                        header_format)
         col += 1
         worksheet.write(row, col, _('ROU Sub-Leased'), header_format)
         col += 1
@@ -295,25 +433,31 @@ class RouAssetSchedule(models.TransientModel):
             col += 1
             worksheet.write(row, col, line['period_no'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['period_start_date'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['period_start_date'],
+                            STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['depreciation_term'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['depreciation_term'],
+                            STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['opening_balance'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['initial_measurement'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['initial_measurement'],
+                            STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['impairment'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['direct_cost_added'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['direct_cost_added'],
+                            STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['depreciation'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['adjustment_lease_liability'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['adjustment_lease_liability'],
+                            STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['rou_sub_leased'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['rou_increase_decrease'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['rou_increase_decrease'],
+                            STYLE_LINE_Data)
             # col += 1
             # worksheet.write(row, col, line['loss_leases'], STYLE_LINE_Data)
             # col += 1
@@ -330,6 +474,3 @@ class RouAssetSchedule(models.TransientModel):
             worksheet.write(row, col, line['posting_date'], STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['posting_doc_no'], STYLE_LINE_Data)
-
-
-
