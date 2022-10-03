@@ -68,73 +68,130 @@ class LeaseLiabilitySchedule(models.TransientModel):
                 ('leasee_contract_id.vendor_id', 'in', self.partner_ids.ids))
         installments = self.env['leasee.installment'].search(domain,
                                                              order='leasee_contract_id,date,period')
-        for installment in installments:
-            contract = installment.leasee_contract_id
-            first_period = 0
-            period_no = installment.get_period_order()
-            opening_balance = installment.remaining_lease_liability - installment.subsequent_amount + installment.amount
-            closing_balance = installment.remaining_lease_liability
-            # closing_balance = opening_balance + installment.subsequent_amount - installment.amount
-            if installment.leasee_contract_id.payment_frequency_type == 'months':
-                delta = relativedelta(months=contract.payment_frequency)
-            else:
-                delta = relativedelta(years=contract.payment_frequency)
-            start_date = contract.commencement_date + (
-                period_no - 1 if period_no else 0) * delta
-            end_date = contract.commencement_date + (
-                    period_no or 1) * delta + relativedelta(days=-1)
-            previous_installment = contract.installment_ids[1:].filtered(
-                lambda i: i.period < installment.period)[-1:]
-            reassessment = 0
-            if previous_installment:
-                print('previous_installment', previous_installment)
-                reassessment = opening_balance - previous_installment.remaining_lease_liability
-                opening_balance = opening_balance - reassessment
-            reasses = 0
-            if round(installment.interest_amount, 0) > round(
-                    installment.subsequent_amount, 0):
-                reasses = installment.leasee_contract_id.asset_id.gross_increase_value
-            opening_balance_lcy = self.env.company.currency_id._convert(
-                opening_balance,
-                installment.leasee_contract_id.leasee_currency_id,
-                self.env.company,
-                installment.date) if period_no != first_period else 0
-            initial_measurement = opening_balance if period_no == first_period else 0
-            interest = installment.interest_amount
-            remeasuring_lcy = round(reasses, 0)
-            payment = installment.amount
-
-            data.append({
-                'period_no': period_no,
-                'lease_no': installment.leasee_contract_id.name,
-                'period_start_date': start_date.strftime(DF),
-                'opening_balance': opening_balance if period_no != first_period else 0,
-                'opening_balance_lcy': opening_balance_lcy,
-                'initial_measurement': initial_measurement,
-                'interest': interest,
-                'interest_lcy': self.env.company.currency_id._convert(
-                    installment.interest_amount,
-                    installment.leasee_contract_id.leasee_currency_id,
-                    self.env.company,
-                    installment.date),
-                'payment': payment,
-                'remeasuring_lcy': remeasuring_lcy,
-                'closing_balance': closing_balance,
-                'closing_balance_lcy': self.env.company.currency_id._convert(
-                    closing_balance,
-                    installment.leasee_contract_id.leasee_currency_id,
-                    self.env.company,
-                    installment.date),
-                'period_end_date': end_date.strftime(DF),
-                'posted_to_gl': True if installment.installment_invoice_id.state == 'posted' else False,
-                'closing_new': (
-                                           opening_balance_lcy + initial_measurement + interest + remeasuring_lcy) - payment
-            })
-        print('data[0]', data[0]['period_no'])
-        count = 0
-        for i in range(1 , len(data)):
-            data[i]['opening_balance'] = data[count]['closing_new']
-            count += 1
+        period_closing = 0
+        for contract1 in installments.mapped('leasee_contract_id'):
+            period_contract = 0
+            for installment in installments:
+                if installment.id in contract1.mapped('installment_ids').ids:
+                    contract = installment.leasee_contract_id
+                    first_period = 0
+                    period_no = installment.get_period_order()
+                    opening_balance = installment.remaining_lease_liability - installment.subsequent_amount + installment.amount
+                    closing_balance = installment.remaining_lease_liability
+                    # closing_balance = opening_balance + installment.subsequent_amount - installment.amount
+                    if installment.leasee_contract_id.payment_frequency_type == 'months':
+                        delta = relativedelta(months=contract.payment_frequency)
+                    else:
+                        delta = relativedelta(years=contract.payment_frequency)
+                    start_date = contract.commencement_date + (
+                        period_no - 1 if period_no else 0) * delta
+                    end_date = contract.commencement_date + (
+                            period_no or 1) * delta + relativedelta(days=-1)
+                    previous_installment = contract.installment_ids[
+                                           1:].filtered(
+                        lambda i: i.period < installment.period)[-1:]
+                    reassessment = 0
+                    if previous_installment:
+                        reassessment = opening_balance - previous_installment.remaining_lease_liability
+                        opening_balance = opening_balance - reassessment
+                    reasses = 0
+                    if round(installment.interest_amount, 0) > round(
+                            installment.subsequent_amount, 0):
+                        reasses = installment.leasee_contract_id.asset_id.gross_increase_value
+                    opening_balance_lcy = self.env.company.currency_id._convert(
+                        opening_balance,
+                        installment.leasee_contract_id.leasee_currency_id,
+                        self.env.company,
+                        installment.date) if period_no != first_period else 0
+                    initial_measurement = opening_balance if period_no == first_period else 0
+                    interest = installment.interest_amount
+                    remeasuring_lcy = round(reasses, 0)
+                    payment = installment.amount
+                    if installment.leasee_contract_id.termination_date:
+                        if installment.date <= installment.leasee_contract_id.termination_date:
+                            data.append({
+                                'period_no': period_no,
+                                'lease_no': installment.leasee_contract_id.name,
+                                'period_start_date': start_date.strftime(DF),
+                                'opening_balance': opening_balance if period_no != first_period else 0,
+                                'opening_balance_lcy': opening_balance_lcy,
+                                'initial_measurement': initial_measurement,
+                                'interest': interest,
+                                'interest_lcy': self.env.company.currency_id._convert(
+                                    installment.interest_amount,
+                                    installment.leasee_contract_id.leasee_currency_id,
+                                    self.env.company,
+                                    installment.date),
+                                'payment': payment,
+                                'remeasuring_lcy': remeasuring_lcy,
+                                'closing_balance': closing_balance,
+                                'closing_balance_lcy': self.env.company.currency_id._convert(
+                                    closing_balance,
+                                    installment.leasee_contract_id.leasee_currency_id,
+                                    self.env.company,
+                                    installment.date),
+                                'period_end_date': end_date.strftime(DF),
+                                'posted_to_gl': True if installment.installment_invoice_id.state == 'posted' else False,
+                                'closing_new': (
+                                                       opening_balance_lcy + initial_measurement + interest + remeasuring_lcy) - payment
+                            })
+                            period_contract = period_no
+                            period_closing = (
+                                                       opening_balance_lcy + initial_measurement + interest + remeasuring_lcy) - payment
+                    else:
+                        data.append({
+                            'period_no': period_no,
+                            'lease_no': installment.leasee_contract_id.name,
+                            'period_start_date': start_date.strftime(DF),
+                            'opening_balance': opening_balance if period_no != first_period else 0,
+                            'opening_balance_lcy': opening_balance_lcy,
+                            'initial_measurement': initial_measurement,
+                            'interest': interest,
+                            'interest_lcy': self.env.company.currency_id._convert(
+                                installment.interest_amount,
+                                installment.leasee_contract_id.leasee_currency_id,
+                                self.env.company,
+                                installment.date),
+                            'payment': payment,
+                            'remeasuring_lcy': remeasuring_lcy,
+                            'closing_balance': closing_balance,
+                            'closing_balance_lcy': self.env.company.currency_id._convert(
+                                closing_balance,
+                                installment.leasee_contract_id.leasee_currency_id,
+                                self.env.company,
+                                installment.date),
+                            'period_end_date': end_date.strftime(DF),
+                            'posted_to_gl': True if installment.installment_invoice_id.state == 'posted' else False,
+                            'closing_new': (
+                                                   opening_balance_lcy + initial_measurement + interest + remeasuring_lcy) - payment
+                        })
+            if contract1.termination_date:
+                terminated_move = self.env['account.move'].search(
+                    [('leasee_contract_id', '=', contract1.id),
+                     ('ref', 'ilike', 'Disposal')])
+                abc = terminated_move.line_ids.filtered(lambda x: x.account_id.id in [contract1.lease_liability_account_id.id, contract1.long_lease_liability_account_id.id])
+                data.append({
+                    'period_no': period_contract + 1,
+                    'lease_no': contract1.name,
+                    'period_start_date': contract1.termination_date.strftime(
+                        DF),
+                    'opening_balance': 0,
+                    'opening_balance_lcy': 0,
+                    'initial_measurement': 0,
+                    'interest': 0,
+                    'interest_lcy': abs(period_closing - sum(abc.mapped('debit'))),
+                    'payment': 0,
+                    'remeasuring_lcy': -abs(sum(abc.mapped('debit'))),
+                    'closing_balance': 0,
+                    'closing_balance_lcy': 0,
+                    'period_end_date': 0,
+                    'posted_to_gl': '',
+                    'closing_new': 0
+                })
+            count = 0
+            for i in range(1, len(data)):
+                data[i]['opening_balance'] = data[count]['closing_new']
+                count += 1
         return data
 
     def print_report_xlsx(self):

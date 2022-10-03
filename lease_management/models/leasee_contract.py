@@ -61,6 +61,7 @@ class LeaseeContract(models.Model):
                                                   required=True, tracking=True)
     terminate_month_number = fields.Integer(string="Terminate At Month Number",
                                             default=0, required=False, )
+    termination_date = fields.Date(string="Terminated Date")
     terminate_fine = fields.Float(string="", default=0.0, required=False, )
     type_terminate = fields.Selection(string="Percentage or Amount",
                                       default="amount",
