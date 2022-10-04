@@ -378,7 +378,7 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
             total = sum(lease_anchor_tenant.mapped('debit')) - sum(
                 lease_anchor_tenant.mapped('credit'))
             prof_rep.update({
-                'lease_anchor_tenant': abs(total),
+                'lease_anchor_tenant': total,
             })
 
             lease_colo_tenant = projects.filtered(
@@ -386,7 +386,7 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
             total = sum(lease_colo_tenant.mapped('debit')) - sum(
                 lease_colo_tenant.mapped('credit'))
             prof_rep.update({
-                'lease_colo_tenant': abs(total),
+                'lease_colo_tenant': total,
             })
 
             additional_space_revenue = projects.filtered(
@@ -395,7 +395,7 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
             total = sum(additional_space_revenue.mapped('debit')) - sum(
                 additional_space_revenue.mapped('credit'))
             prof_rep.update({
-                'additional_space_revenue': abs(total),
+                'additional_space_revenue': total,
             })
 
             bts_revenue = projects.filtered(
@@ -403,7 +403,7 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
             total = sum(bts_revenue.mapped('debit')) - sum(
                 bts_revenue.mapped('credit'))
             prof_rep.update({
-                'bts_revenue': abs(total),
+                'bts_revenue': total,
             })
 
             active_sharing_fees = projects.filtered(
@@ -411,7 +411,7 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
             total = sum(active_sharing_fees.mapped('debit')) - sum(
                 active_sharing_fees.mapped('credit'))
             prof_rep.update({
-                'active_sharing_fees': abs(total),
+                'active_sharing_fees': total,
             })
 
             discount = projects.filtered(
@@ -419,7 +419,7 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
             total = sum(discount.mapped('debit')) - sum(
                 discount.mapped('credit'))
             prof_rep.update({
-                'discount': abs(total),
+                'discount': total,
             })
 
             discount = projects.filtered(
@@ -427,7 +427,7 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
             total = sum(discount.mapped('debit')) - sum(
                 discount.mapped('credit'))
             prof_rep.update({
-                'discount': abs(total),
+                'discount': total,
             })
 
             total_revenue = prof_rep['lease_anchor_tenant'] + prof_rep[
@@ -444,7 +444,7 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
             total = sum(rou_depreciation.mapped('debit')) - sum(
                 rou_depreciation.mapped('credit'))
             prof_rep.update({
-                'rou_depreciation': abs(total),
+                'rou_depreciation': total,
             })
 
             fa_depreciation = projects.filtered(
@@ -452,7 +452,7 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
             total = sum(fa_depreciation.mapped('debit')) - sum(
                 fa_depreciation.mapped('credit'))
             prof_rep.update({
-                'fa_depreciation': abs(total),
+                'fa_depreciation': total,
             })
 
             lease_finance_cost = projects.filtered(
@@ -460,7 +460,7 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
             total = sum(lease_finance_cost.mapped('debit')) - sum(
                 lease_finance_cost.mapped('credit'))
             prof_rep.update({
-                'lease_finance_cost': abs(total),
+                'lease_finance_cost': total,
             })
 
             site_maintenance = projects.filtered(
@@ -468,7 +468,7 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
             total = sum(site_maintenance.mapped('debit')) - sum(
                 site_maintenance.mapped('credit'))
             prof_rep.update({
-                'site_maintenance': abs(total),
+                'site_maintenance': total,
             })
 
             site_rent = projects.filtered(
@@ -476,7 +476,7 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
             total = sum(site_rent.mapped('debit')) - sum(
                 site_rent.mapped('credit'))
             prof_rep.update({
-                'site_rent': abs(total),
+                'site_rent': total,
             })
 
             security = projects.filtered(
@@ -484,7 +484,7 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
             total = sum(security.mapped('debit')) - sum(
                 security.mapped('credit'))
             prof_rep.update({
-                'security': abs(total),
+                'security': total,
             })
 
             service_level_credit = projects.filtered(
@@ -492,7 +492,7 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
             total = sum(service_level_credit.mapped('debit')) - sum(
                 service_level_credit.mapped('credit'))
             prof_rep.update({
-                'service_level_credit': abs(total),
+                'service_level_credit': total,
             })
 
             total_cost = prof_rep['rou_depreciation'] + prof_rep[
