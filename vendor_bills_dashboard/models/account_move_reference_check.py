@@ -1,4 +1,4 @@
-from odoo import models, api
+from odoo import models, api, fields
 from odoo.exceptions import ValidationError
 
 
@@ -7,6 +7,12 @@ class AccountMoveReferenceInherit(models.Model):
 
     @api.constrains('payment_reference')
     def payment_reference_check(self):
+        journal = self.env['account.journal'].search([('name', '=',
+                                                       'Vendor Bills')])
+        if self.journal_id.id == journal.id:
+            if not self.payment_reference:
+                raise ValidationError(
+                    'please provide a Invoice no / payment reference for Vendor Bill')
         if self.move_type == 'out_invoice':
             moves = self.env['account.move'].search([
                 ('partner_id', '=',
