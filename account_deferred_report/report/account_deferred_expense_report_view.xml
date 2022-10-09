@@ -16,7 +16,7 @@
         </template>
 
         <record id="action_account_report_deferred_expense" model="ir.actions.client">
-            <field name="name">Depreciation Schedule</field>
+            <field name="name">Deferred Expense</field>
             <field name="tag">account_report</field>
             <field name="context" eval="{'model': 'account.deferred.report'}" />
         </record>
