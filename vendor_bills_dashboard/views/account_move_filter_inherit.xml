@@ -17,7 +17,7 @@
         <field name="arch" type="xml">
             <field name="account_analytic_id" position="attributes">
                 <attribute name="attrs">{'readonly': [('state', 'not in',
-                    ['mode', 'draft', 'open'])]}</attribute>
+                    ['model', 'draft', 'open'])]}</attribute>
             </field>
         </field>
     </record>
