@@ -1,4 +1,4 @@
-from odoo import models, api
+from odoo import models, api, fields
 from odoo.exceptions import ValidationError
 
 
@@ -91,3 +91,25 @@ class AccountMoveReferenceInherit(models.Model):
                 if move:
                     raise ValidationError(
                         'The Payment reference already exists in ' + move.name)
+
+    def request_approval_button(self):
+        # inherit of the function from account.move to check the validation of payment reference
+        res = super(AccountMoveReferenceInherit, self).request_approval_button()
+        journal = self.env['account.journal'].search([('name', '=',
+                                                       'Vendor Bills')])
+        if self.journal_id.id == journal.id:
+            if not self.payment_reference:
+                raise ValidationError(
+                    'please provide a Invoice no / payment reference for Vendor Bill')
+        return res
+
+    def action_post(self):
+        # inherit of the function from account.move to check the validation of payment reference
+        res = super(AccountMoveReferenceInherit, self).action_post()
+        journal = self.env['account.journal'].search([('name', '=',
+                                                       'Vendor Bills')])
+        if self.journal_id.id == journal.id:
+            if not self.payment_reference:
+                raise ValidationError(
+                    'please provide a Invoice no / payment reference for Vendor Bill')
+        return res

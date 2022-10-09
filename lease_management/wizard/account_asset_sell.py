@@ -14,4 +14,9 @@ class NameModel(models.TransientModel):
     contract_end_date = fields.Date(required=False,)
 
     def do_action(self):
+        print(self._context)
+        if self._context['active_model'] == 'leasee.contract':
+            leasee_contract = self.env['leasee.contract'].browse(int(self._context['active_id']))
+            print('leasee_contract', leasee_contract)
+            leasee_contract.termination_date = self.contract_end_date
         return super(NameModel, self.with_context(disposal_date=self.contract_end_date)).do_action()

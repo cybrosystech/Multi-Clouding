@@ -61,6 +61,7 @@ class LeaseeContract(models.Model):
                                                   required=True, tracking=True)
     terminate_month_number = fields.Integer(string="Terminate At Month Number",
                                             default=0, required=False, )
+    termination_date = fields.Date(string="Terminated Date")
     terminate_fine = fields.Float(string="", default=0.0, required=False, )
     type_terminate = fields.Selection(string="Percentage or Amount",
                                       default="amount",
@@ -561,19 +562,21 @@ class LeaseeContract(models.Model):
                                                       i / installments_count),
                                                   i,
                                                   increasement_frequency)
-                    if i == increasement_frequency:
-                        present_value = round(amount, 5)
-                    if increasement_frequency > 1:
+                    if increasement_frequency > 1 and rec.increasement_rate > 0:
                         if i == increasement_frequency:
-                            if rec.payment_frequency_type == 'months' and \
-                                    monthly_freq[
-                                        '' + str(rec.payment_frequency)]:
-                                increasement_frequency += rec.increasement_frequency * \
-                                                          monthly_freq['' + str(
-                                                              rec.payment_frequency)]
-                            else:
-                                increasement_frequency += rec.increasement_frequency
+                            present_value = round(amount, 5)
+                        if increasement_frequency > 1:
+                            if i == increasement_frequency:
+                                if rec.payment_frequency_type == 'months' and \
+                                        monthly_freq[
+                                            '' + str(rec.payment_frequency)]:
+                                    increasement_frequency += rec.increasement_frequency * \
+                                                              monthly_freq['' + str(
+                                                                  rec.payment_frequency)]
+                                else:
+                                    increasement_frequency += rec.increasement_frequency
                     increased_installments.append(round(amount, 5))
+
 
                 remaining_advanced = rec.initial_payment_value
                 if rec.incentives_received_type == 'rent_free':
@@ -998,7 +1001,6 @@ class LeaseeContract(models.Model):
             return i
 
     def create_beginning_installments(self, remaining_lease_liability):
-        # pr
         monthly_freq = {'1': 12, '3': 4, '6': 2}
         start = self.commencement_date
         # remaining_lease_liability = self.lease_liability - self.incentives_received
@@ -1897,7 +1899,7 @@ class LeaseeContract(models.Model):
             if amount:
                 contract.create_installment_single_entry(installment, amount)
 
-    # Reassessment 
+    # Reassessment
     @api.model
     def create_reassessment_move(self, contract, amount, reassessment_date):
         rou_account = contract.asset_model_id.account_asset_id
