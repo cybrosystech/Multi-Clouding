@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<templates>
+
+    <t t-name="cash_flow_report.buttons">
+        <t t-foreach="buttons" t-as="button">
+            <button type="button" class="btn btn-primary" t-att-action="button.action"><t t-esc="button.name"/></button>
+        </t>
+    </t>
+
+</templates>

@@ -1,10 +1,14 @@
-from odoo import models, fields
+import json
+import io
+
+import xlsxwriter
+
+from odoo import models, fields, _
 from odoo.tools import date_utils, datetime
 
 
 class CashFlowStatement(models.Model):
     _name = 'cash.flow.statement'
-
 
     def _get_templates(self):
         return {
@@ -66,6 +70,7 @@ class CashFlowStatement(models.Model):
                 self._get_templates().get('cash_flow_search_view',
                                           'cash_flow_statement_report.cash_flow_search_view'),
                 values={'options': options}),
+            'buttons': self.get_button_cashflow()
         }
         return info
 
@@ -124,7 +129,8 @@ class CashFlowStatement(models.Model):
                                                     and journal_item.date >= %(from_date)s 
                                                     and journal_item.date <= %(to_date)s
                                                     and {states_args}
-                                                    '''.format(states_args=states_args),
+                                                    '''.format(
+            states_args=states_args),
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'account_code': '111110',
@@ -155,7 +161,8 @@ class CashFlowStatement(models.Model):
         movement_trade_sum = movement_trade_debit - movement_trade_credit
 
         movement_trade_account_sum = self.get_movement_trade_account_sum(query,
-                                                                         options, states_args)
+                                                                         options,
+                                                                         states_args)
 
         movement_trade_dict = {
             'id': 'movement_trade',
@@ -177,7 +184,8 @@ class CashFlowStatement(models.Model):
                                                 and journal_item.date >= %(from_date)s 
                                                 and journal_item.date <= %(to_date)s
                                                 and {states_args}
-                                                '''.format(states_args=states_args),
+                                                '''.format(
+            states_args=states_args),
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '114101', 'code_end': '114999',
@@ -201,7 +209,8 @@ class CashFlowStatement(models.Model):
         }
         return movement_related_dict
 
-    def get_movement_trade_payable_account_sum(self, query, options, states_args):
+    def get_movement_trade_payable_account_sum(self, query, options,
+                                               states_args):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
                                         and journal_item.company_id in (%(company_ids)s)
                                         and journal_item.date >= %(from_date)s 
@@ -222,7 +231,8 @@ class CashFlowStatement(models.Model):
 
         return movement_trade_payable_account_debit - movement_trade_payable_account_credit
 
-    def get_movement_trade_payable_account1_sum(self, query, options, states_args):
+    def get_movement_trade_payable_account1_sum(self, query, options,
+                                                states_args):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
                                         and journal_item.company_id in (%(company_ids)s)
                                         and journal_item.date >= %(from_date)s 
@@ -243,7 +253,8 @@ class CashFlowStatement(models.Model):
 
         return movement_trade_payable_account1_debit - movement_trade_payable_account1_credit
 
-    def get_movement_trade_payable_account2_sum(self, query, options, states_args):
+    def get_movement_trade_payable_account2_sum(self, query, options,
+                                                states_args):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
                                         and journal_item.company_id in (%(company_ids)s)
                                         and journal_item.date >= %(from_date)s 
@@ -363,7 +374,8 @@ class CashFlowStatement(models.Model):
         adjustment_list.append(amortisation_dict)
 
         amortisation_right_dict = self.get_amortisation_right_dict(query,
-                                                                   options, states_args)
+                                                                   options,
+                                                                   states_args)
         adjustment_list.append(amortisation_right_dict)
 
         self.env.cr.execute(query + '''where account.code = %(account_code)s
@@ -430,7 +442,8 @@ class CashFlowStatement(models.Model):
                                                         and journal_item.date >= %(from_date)s 
                                                         and journal_item.date <= %(to_date)s
                                                         and {states_args}
-                                                        '''.format(states_args=states_args),
+                                                        '''.format(
+            states_args=states_args),
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '212101', 'code_end': '212999',
@@ -460,7 +473,8 @@ class CashFlowStatement(models.Model):
                             from account_move_line as journal_item
                             left join account_account as account on journal_item.account_id = account.id
                             '''
-        movement_trade_dict = self.get_movement_trade_dict(query, options, states_args)
+        movement_trade_dict = self.get_movement_trade_dict(query, options,
+                                                           states_args)
 
         movement_list.append(movement_trade_dict)
 
@@ -485,7 +499,8 @@ class CashFlowStatement(models.Model):
                                                         and journal_item.date >= %(from_date)s 
                                                         and journal_item.date <= %(to_date)s
                                                         and {states_args}
-                                                        '''.format(states_args=states_args),
+                                                        '''.format(
+            states_args=states_args),
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '121101', 'code_end': '121199',
@@ -503,7 +518,8 @@ class CashFlowStatement(models.Model):
                                                 and journal_item.date >= %(from_date)s 
                                                 and journal_item.date <= %(to_date)s
                                                 and {states_args}
-                                                '''.format(states_args=states_args),
+                                                '''.format(
+            states_args=states_args),
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '121301', 'code_end': '121399',
@@ -515,7 +531,8 @@ class CashFlowStatement(models.Model):
             'debit'] else 0
         purchase_asset_sum = purchase_asset_debit - purchase_asset_credit
         purchase_asset_account_sum = self.get_purchase_asset_account_sum(query,
-                                                                         options, states_args)
+                                                                         options,
+                                                                         states_args)
         purchase_asset_dict = {
             'id': 'purchase_asset',
             'name': 'Purchase of fixed assets',
@@ -725,7 +742,8 @@ class CashFlowStatement(models.Model):
                                                 and journal_item.company_id = %(company_ids)s
                                                 and journal_item.date <= %(from_date)s 
                                                 and {states_args}
-                                                '''.format(states_args=states_args),
+                                                '''.format(
+            states_args=states_args),
                             {'from_date': options['date']['date_from'],
                              'code_start': '111111', 'code_end': '111299',
                              'company_ids': self.env.company.id})
@@ -787,7 +805,7 @@ class CashFlowStatement(models.Model):
                 'name': 'Cash flows from operating activities',
                 'level': 1,
                 'class': 'cash_flow_line_main_head',
-                # 'columns': [{'name': '', 'class': 'number'}]
+                'columns': [{'name': '', 'class': 'number'}]
             },
             {
                 'id': 'loss_for_the_period_1',
@@ -803,16 +821,16 @@ class CashFlowStatement(models.Model):
                 'name': 'Adjustments for :',
                 'level': 3,
                 'class': 'cash_flow_line_sub_head',
-                # 'columns': [
-                #     {'name': '', 'class': 'number'}]
+                'columns': [
+                    {'name': '', 'class': 'number'}]
             },
             {
                 'id': 'movement_1',
                 'name': 'Movement in working capital',
                 'level': 3,
                 'class': 'cash_flow_line_sub_head',
-                # 'columns': [
-                #     {'name': '', 'class': 'number'}]
+                'columns': [
+                    {'name': '', 'class': 'number'}]
             },
             {
                 'id': 'activities',
@@ -827,8 +845,8 @@ class CashFlowStatement(models.Model):
                 'name': 'Cash flows from investing activities',
                 'level': 0,
                 'class': 'cash_flow_line_sub_head',
-                # 'columns': [
-                #     {'name': '', 'class': 'number'}]
+                'columns': [
+                    {'name': '', 'class': 'number'}]
             },
             {
                 'id': 'net_investing_activities',
@@ -843,8 +861,8 @@ class CashFlowStatement(models.Model):
                 'name': 'Cash flows from financing activities',
                 'level': 0,
                 'class': 'cash_flow_line_sub_head',
-                # 'columns': [
-                #     {'name': '', 'class': 'number'}]
+                'columns': [
+                    {'name': '', 'class': 'number'}]
             },
 
             {
@@ -949,6 +967,13 @@ class CashFlowStatement(models.Model):
                 'name': year
             }
 
+    def get_button_cashflow(self):
+        return [
+            {'name': _('Export (XLSX)'), 'sequence': 2,
+             'action': 'print_xlsx_cash',
+             'file_export_type': _('XLSX')},
+        ]
+
     def get_html_content(self, options):
         templates = self._get_templates()
         template = templates['main_template']
@@ -959,3 +984,69 @@ class CashFlowStatement(models.Model):
                            'currency_symbol': self.env.company.currency_id.symbol}
         html = self.env.ref(template)._render(values)
         return html
+
+    def print_xlsx_cash(self, options, params):
+        return {
+            'type': 'ir.actions.report',
+            'data': {'model': self.env.context.get('model'),
+                     'options': json.dumps(options,
+                                           default=date_utils.json_default),
+                     'output_format': 'xlsx',
+                     'financial_id': self.env.context.get('id'),
+                     'allowed_company_ids': self.env.context.get(
+                         'allowed_company_ids'),
+                     },
+            'report_type': 'xlsx'
+        }
+
+    def get_xlsx(self, options, response=None):
+        lines = self.get_cash_flow_lines(options)
+        header = self.get_cash_flow_header(options)
+
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+
+        sheet = workbook.add_worksheet()
+        sheet.set_column(0, 0, 50)
+        main_head = workbook.add_format(
+            {'font_size': 13, 'align': 'center', 'border': 2})
+
+        level_0_style = workbook.add_format(
+            {'font_name': 'Arial', 'bold': True, 'font_size': 13, 'bottom': 6,
+             'font_color': '#120e0d'})
+        head1 = workbook.add_format(
+            {'font_name': 'Arial', 'font_size': 12, 'font_color': '#666666', 'indent': 2})
+
+        head_col = workbook.add_format(
+            {'font_name': 'Arial', 'font_size': 12, 'font_color': '#666666'})
+
+        sheet.write(0, 1, header['name'], main_head)
+        level_1_style = workbook.add_format(
+            {'font_name': 'Arial', 'bold': True, 'font_size': 13, 'bottom': 1,
+             'font_color': '#666666', 'indent': 1})
+
+        level_1_style_col = workbook.add_format(
+            {'font_name': 'Arial', 'bold': True, 'font_size': 13, 'bottom': 1,
+             'font_color': '#666666'})
+
+        row_num = 1
+        col_num = 0
+        for line in lines:
+            head = head1
+            head_col1 = head_col
+            if line['level'] == 1:
+                head = level_0_style
+                head_col1 = level_0_style
+            elif line['level'] == 3 or line['level'] == 0:
+                head = level_1_style
+                head_col1 = level_1_style_col
+            abc = col_num
+            sheet.write(row_num, abc, line['name'], head)
+            if line['columns']:
+                sheet.write(row_num, abc + 1, line['columns'][0]['name'], head_col1)
+            row_num += 1
+
+        workbook.close()
+        output.seek(0)
+        response.stream.write(output.read())
+        output.close()

@@ -5,13 +5,15 @@ var AbstractAction = require('web.AbstractAction');
 var core = require('web.core');
 var Context = require('web.Context');
 var session = require('web.session');
+var QWeb = core.qweb;
 
 var cashFlowReportWidget = AbstractAction.extend({
     hasControlPanel: true,
 
     events: {
         'click .js_cashflow_report_date_filter': 'filter_click',
-        'click .js_cashflow_report_journal_filter': 'posted_click'
+        'click .js_cashflow_report_journal_filter': 'posted_click',
+        'click [action]': 'trigger_action',
     },
 
     init: function(parent, action) {
@@ -47,16 +49,22 @@ var cashFlowReportWidget = AbstractAction.extend({
         this.renderButtons();
         this.controlPanelProps.cp_content = {
             $searchview_buttons: this.$searchview_buttons,
+            $buttons: this.$buttons,
 
         };
         await this._super(...arguments);
         this.render_template();
     },
     parse_reports_informations: function(values) {
+        this.buttons = values.buttons;
         this.$searchview_buttons = $(values.searchview_html);
         this.main_html = values.main_html;
         this.report_options = values.options;
         this.render_options();
+    },
+
+    renderButtons: function(){
+        this.$buttons = $(QWeb.render("cash_flow_report.buttons", {buttons: this.buttons}));
     },
 
     render_options: function(values) {
@@ -69,14 +77,12 @@ var cashFlowReportWidget = AbstractAction.extend({
     filter_click: function(e) {
         var date_filter = e.target.attributes['data-filter'].value;
         this.report_options['date_filter'] = date_filter;
-        console.log('event', this.report_options)
         this.render_values()
     },
 
     posted_click: function(e) {
         var journal_filter = e.target.attributes['data-filter'].value;
         this.report_options['entry'] = journal_filter;
-        console.log('event', this.report_options)
         this.render_values()
     },
 
@@ -91,6 +97,27 @@ var cashFlowReportWidget = AbstractAction.extend({
             },
         };
         return this.updateControlPanel(status);
+    },
+
+    trigger_action: function(e) {
+        e.stopPropagation();
+        var self = this;
+        var action = $(e.target).attr('action');
+        var id = $(e.target).parents('td').data('id');
+        var params = $(e.target).data();
+        var context = new Context(this.odoo_context, params.actionContext || {}, {active_id: id});
+        if (action) {
+            return this._rpc({
+                    model: this.report_model,
+                    method: action,
+                    args: [this.financial_id, this.report_options, params],
+                    context: context.eval(),
+                })
+                .then(function(result){
+                    return self.do_action(result);
+                });
+        }
+
     },
 
     render_values: function() {
