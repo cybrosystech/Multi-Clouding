@@ -1,0 +1,80 @@
+<odoo>
+    <template id="cash_flow_search_view">
+        <div class="btn-group o_dropdown">
+            <t t-call="cash_flow_statement_report.cash_flow_search_template_date_filter"/>
+        </div>
+        <div class="btn-group o_dropdown">
+            <t t-call="cash_flow_statement_report.cashflow_report_posted_filter"/>
+        </div>
+    </template>
+
+    <template id="html_content_view">
+        <div class='o_account_reports_body'>
+            <div class="o_account_reports_page o_account_reports_no_print">
+                <div class="table-responsive">
+                    <table class="o_account_reports_table table-hover">
+                        <th>
+
+                        </th>
+                        <th>
+                            <span><t t-esc="lines['header']['name']"/></span>
+                        </th>
+                        <tbody>
+                            <t t-if="lines.get('lines')">
+                                <t t-call="{{model._get_templates()['line_template']}}"/>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="line_template_cash_flow">
+        <t t-foreach="lines['lines']" t-as="line">
+            <t t-set="tdclass" t-value=""/>
+            <t t-set="spanclass" t-value=""/>
+            <t t-if="line['level'] == 1">
+                <t t-set="tdclass" t-value="'cash_flow_line_main_head_td'"/>
+            </t>
+            <t t-if="line['level'] == 2">
+                <t t-set="spanclass" t-value="'cash_flow_line_val_span'"/>
+            </t>
+            <t t-if="line['level'] == 3">
+                <t t-set="tdclass" t-value="'cash_flow_line_sub_td'"/>
+                <t t-set="spanclass" t-value="'cash_flow_line_sub_head_span'"/>
+            </t>
+            <t t-if="line['level'] == 0">
+                <t t-set="tdclass" t-value="'cash_flow_line_sub_td'"/>
+                <t t-set="spanclass" t-value="'cash_flow_line_sub_span'"/>
+            </t>
+            <tr t-att-class="line['class']">
+                <td t-attf-class="#{tdclass}">
+                    <span t-attf-class="#{spanclass}"><t t-esc="line['name']"/></span>
+                </td>
+                <t t-foreach="line.get('columns')" t-as="cell">
+                    <td t-attf-class="#{tdclass}">
+                        <t t-if="cell['name']">
+                            <t t-esc="lines['currency_symbol']"/>
+                            <t t-esc="'{:20,.2f}'.format(cell['name'])"/>
+                        </t>
+                        <t t-else="">
+                            <t t-esc="lines['currency_symbol']"/>
+                            <t t-esc="cell['name']"/>
+                        </t>
+                    </td>
+                </t>
+            </tr>
+        </t>
+    </template>
+
+    <record id="action_cash_flow_statement" model="ir.actions.client">
+        <field name="name">TASC Cash Flow Report</field>
+        <field name="tag">cash_flow</field>
+        <field name="context" eval="{'model': 'cash.flow.statement'}"/>
+    </record>
+
+    <menuitem id="menu_action_cash_flow_statement" name="TASC Cash Flow Report"
+                  action="action_cash_flow_statement"
+                  parent="account.account_reports_management_menu"/>
+</odoo>

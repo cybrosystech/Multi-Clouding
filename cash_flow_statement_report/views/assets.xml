@@ -1,0 +1,11 @@
+<odoo>
+    <data>
+        <!-- Account Financial Report Assets -->
+        <template id="cash_flow_reports_backend" inherit_id="web.assets_backend" active="True">
+            <xpath expr="." position="inside">
+                <script type="text/javascript" src="/cash_flow_statement_report/static/src/js/cash_flow_report.js"></script>
+                <link rel="stylesheet" type="text/scss" href="/cash_flow_statement_report/static/src/scss/cash_flow_report.scss"/>
+            </xpath>
+        </template>
+    </data>
+</odoo>
