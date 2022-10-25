@@ -1,0 +1,52 @@
+<odoo>
+    <data>
+        <record model="ir.cron" id="account_move_activate_action">
+            <field name="name">Account Move Active</field>
+            <field name="model_id" ref="model_account_move"/>
+            <field name="state">code</field>
+            <field name="active">False</field>
+            <field name="code">model.active_journal_entry(date="2022-12-31", limit="500")</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+        </record>
+
+        <record model="ir.cron" id="account_move_activate_cron_update">
+            <field name="name">Cron update action active</field>
+            <field name="model_id" ref="model_account_move"/>
+            <field name="state">code</field>
+            <field name="active">False</field>
+            <field name="code">model.active_journal_cron_update()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+        </record>
+
+        <record model="ir.cron" id="account_move_deactivate_action">
+            <field name="name">Account Move Active False</field>
+            <field name="model_id" ref="model_account_move"/>
+            <field name="state">code</field>
+            <field name="active">False</field>
+            <field name="code">model.deactivate_journal_entry(date="2022-12-31", limit="500")</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+        </record>
+
+        <record model="ir.cron" id="account_move_deactivate_cron_update">
+            <field name="name">Cron update action active False</field>
+            <field name="model_id" ref="model_account_move"/>
+            <field name="state">code</field>
+            <field name="active">False</field>
+            <field name="code">model.active_journal_cron_update_false()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+        </record>
+
+    </data>
+</odoo>
