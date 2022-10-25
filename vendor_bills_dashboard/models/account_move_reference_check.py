@@ -97,11 +97,12 @@ class AccountMoveReferenceInherit(models.Model):
         res = super(AccountMoveReferenceInherit, self).request_approval_button()
         journal = self.env['account.journal'].search([('name', '=',
                                                        'Vendor Bills')])
-        if self.journal_id.id == journal.id:
-            if not self.payment_reference:
-                raise ValidationError(
-                    'please provide a Invoice no / payment reference for Vendor Bill')
-        return res
+        for rec in journal:
+            if self.journal_id.id == rec.id:
+                if not self.payment_reference:
+                    raise ValidationError(
+                        'please provide a Invoice no / payment reference for Vendor Bill')
+            return res
 
     def action_post(self):
         # inherit of the function from account.move to check the validation of payment reference
