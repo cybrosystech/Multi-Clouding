@@ -59,7 +59,30 @@
             <field name="doall" eval="False"/>
         </record>
 
-         <record model="ir.cron" id="leasee_action_expired">
+        <record model="ir.cron" id="action_draft_non_leasee_asset_posting">
+            <field name="name">non Leasee Asset Entry Posting</field>
+            <field name="model_id" ref="model_account_asset"/>
+            <field name="state">code</field>
+            <field name="code">model.non_leasee_asset_entry_post(50)</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+        </record>
+
+        <record model="ir.cron" id="action_update_non_leasee_asset_cron">
+            <field name="name">Non Leasee Asset Cron Update</field>
+            <field name="model_id" ref="model_account_asset"/>
+            <field name="state">code</field>
+            <field name="code">model.update_non_leasee_asset_cron()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+        </record>
+
+
+        <record model="ir.cron" id="leasee_action_expired">
             <field name="name">Leasee Contract Expired</field>
             <field name="model_id" ref="model_leasee_contract"/>
             <field name="state">code</field>
