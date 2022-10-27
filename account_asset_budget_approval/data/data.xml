@@ -1,0 +1,37 @@
+<odoo>
+    <record id="email_template_send_mail_approval_asset_acc" model="mail.template">
+        <field name="name">Multi Level Invoice Approval Mail Template</field>
+        <field name="subject">Asset Approval</field>
+        <field name="model_id" ref="account_asset.model_account_asset"/>
+        <field name="auto_delete" eval="True"/>
+        <field name="body_html" type="html">
+            <meta itemprop="name" content="Notification Email"/>
+            <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td class="content-block">
+                        <h3 style="margin: 0;">Pending approval</h3>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="content-block">
+                        Hello ${ctx['name']},
+                    </td>
+                </tr>
+                <tr>
+                    <td class="content-block">
+                        ${object.name} requires your approval.
+                        Please follow the link below to open the item.
+                    </td>
+                </tr>
+                <tr>
+                    <td class="content-block" itemprop="handler"
+                        itemtype="http://schema.org/HttpActionHandler">
+                        <a href="/web?#id=${object.id}&amp;view_type=form&amp;model=account.asset&amp;action="
+                           class="btn-basic" itemprop="url">Open
+                        </a>
+                    </td>
+                </tr>
+            </table>
+        </field>
+    </record>
+</odoo>
