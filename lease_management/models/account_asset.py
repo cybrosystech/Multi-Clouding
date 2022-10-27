@@ -354,3 +354,35 @@ class AccountAsset(models.Model):
             'nextcall': date + timedelta(seconds=30)
         })
         LOGGER.info('Leasee Contract Entry Posting updated')
+
+    def non_leasee_asset_entry_post(self, limits):
+        assets = self.env['account.asset'].search([('name', 'not like', 'Leasee'),
+                                                   ('state', '=', 'draft')],
+                                                  limit=limits)
+        asset_count = 0
+        for rec in assets:
+            rec.validate()
+            asset_count += 1
+        asset = self.env['account.asset'].search([('name', 'not like', 'Leasee'),
+                                                  ('state', '=', 'draft')])
+        if len(asset) > 0 and asset_count == limits:
+            LOGGER.info(str(limits) + ' Asset Entries activated')
+            date = fields.Datetime.now()
+            schedule = self.env.ref(
+                'lease_management.action_update_non_leasee_asset_cron')
+            schedule.update({
+                'nextcall': date + timedelta(seconds=30)
+            })
+            LOGGER.info('Non leasee Asset Cron Update')
+            message = '10 records has been updated'
+            channel = self.env.ref('mail.channel_all_employees')
+            channel.sudo().message_post(body=message)
+
+    def update_non_leasee_asset_cron(self):
+        date = fields.Datetime.now()
+        schedule = self.env.ref(
+            'lease_management.action_draft_non_leasee_asset_posting')
+        schedule.update({
+            'nextcall': date + timedelta(seconds=30)
+        })
+        LOGGER.info('Non Leasee Contract Entry Posting updated')

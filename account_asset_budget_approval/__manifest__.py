@@ -14,6 +14,7 @@
         [
             'security/ir.model.access.csv',
             'security/budget_asset_check.xml',
+            'data/data.xml',
             'views/in_out_assets_budget.xml',
             'views/account_asset_view_inherit.xml',
         ]

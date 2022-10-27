@@ -47,6 +47,16 @@ class AccountAssetBudget(models.Model):
         else:
             self.asset_approve_bool = False
 
+    def send_asset_user_notification(self, user_ids):
+        for user in user_ids:
+            print(user.partner_id)
+            email_template_id = self.env.ref('account_asset_budget_approval.email_template_send_mail_approval_asset_acc')
+            if email_template_id:
+                email_template_id.sudo().write({'email_to': user.email})
+                email_template_id.with_context(name=user.name).sudo().send_mail(
+                    res_id=self.id,
+                    force_send=True)
+
     def request_approval_asset(self):
         approval_ids = self.env['budget.asset.check.in.out'].search(
             [('active', '=', True),
@@ -69,6 +79,7 @@ class AccountAssetBudget(models.Model):
 
         if approval:
             self.state = 'to_approve'
+            self.send_asset_user_notification(sorted_approval[0].user_ids)
 
     def asset_approve(self):
         self.life_cycle_id.is_approved = True

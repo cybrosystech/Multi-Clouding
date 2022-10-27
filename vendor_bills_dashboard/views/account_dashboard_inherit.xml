@@ -37,24 +37,45 @@
             </xpath>
             <xpath expr="//t[@id='account.JournalBodySalePurchase']//div[hasclass('o_kanban_primary_right')]//div[@t-if='dashboard.number_waiting']"
                    position="replace">
-                        <div class="row" t-if="dashboard.number_waiting">
-                            <div class="col overflow-hidden text-left">
-                                <a type="object" t-if="journal_type == 'sale'" name="open_action"
-                                context="{'search_default_unpaid':1, 'search_default_posted':1, 'search_default_partial': 1}" id="account_dashboard_sale_pay_link">
-                                    <t t-esc="dashboard.number_waiting"/> Unpaid Invoices
-                                </a>
+                <div class="row" t-if="dashboard.number_waiting">
+                    <div class="col overflow-hidden text-left">
+                        <a type="object" t-if="journal_type == 'sale'"
+                           name="open_action"
+                           context="{'search_default_unpaid':1, 'search_default_posted':1, 'search_default_partial': 1}"
+                           id="account_dashboard_sale_pay_link">
+                            <t t-esc="dashboard.number_waiting"/>
+                            Unpaid Invoices
+                        </a>
 
-                                <a type="object" t-if="journal_type == 'purchase'" name="open_action"
-                                context="{'search_default_unpaid':1, 'search_default_posted':1, 'search_default_partial':1}" id="account_dashboard_purchase_pay_link">
-                                    <t t-esc="dashboard.number_waiting"/> Bills to Pay
-                                </a>
-                            </div>
-                            <div class="col-auto text-right">
-                                <span><t t-esc="dashboard.sum_waiting"/></span>
-                            </div>
-                        </div>
+                        <a type="object" t-if="journal_type == 'purchase'"
+                           name="open_action"
+                           context="{'search_default_unpaid':1, 'search_default_posted':1, 'search_default_partial':1}"
+                           id="account_dashboard_purchase_pay_link">
+                            <t t-esc="dashboard.number_waiting"/>
+                            Bills to Pay
+                        </a>
+                    </div>
+                    <div class="col-auto text-right">
+                        <span>
+                            <t t-esc="dashboard.sum_waiting"/>
+                        </span>
+                    </div>
+                </div>
+            </xpath>
+            <xpath expr="//t[@t-name='JournalMiscelaneous']//div[hasclass('o_kanban_primary_right')]"
+                   position="inside">
+                <div class="row" >
+                    <div class="col overflow-hidden text-left">
+                        <a type="object" name="open_journal_entry_to_approve"
+                           context="{'search_default_to_approve': 1}">
+                            <span title="Journals to approve">
+                                <t t-esc="dashboard.journals_to_approve"/>
+                                Journals to approve
+                            </span>
+                        </a>
+                    </div>
+                </div>
             </xpath>
         </field>
     </record>
-
 </odoo>
