@@ -78,7 +78,7 @@ class AccountAssetBudget(models.Model):
         self.asset_approval_cycle_ids = [(6, 0, approval_cycle_ids)]
 
         if approval:
-            # self.state = 'to_approve'
+            self.state = 'to_approve'
             self.send_asset_user_notification(sorted_approval[0].user_ids)
 
     def asset_approve(self):
