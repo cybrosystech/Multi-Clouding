@@ -109,8 +109,9 @@ class AccountMoveReferenceInherit(models.Model):
         res = super(AccountMoveReferenceInherit, self).action_post()
         journal = self.env['account.journal'].search([('name', '=',
                                                        'Vendor Bills')])
-        if self.journal_id.id == journal.id:
-            if not self.payment_reference:
-                raise ValidationError(
-                    'please provide a Invoice no / payment reference for Vendor Bill')
+        for rec in journal:
+            if self.journal_id.id == rec.id:
+                if not self.payment_reference:
+                    raise ValidationError(
+                        'please provide a Invoice no / payment reference for Vendor Bill')
         return res
