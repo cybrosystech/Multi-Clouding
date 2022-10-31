@@ -14,18 +14,26 @@ class AccountMove(models.Model):
     _inherit = 'account.move'
     # /////////// Start of Approval Cycle According To In Budget or Out Budget in Po Configuration //////////////
 
-    budget_collect_ids = fields.One2many(comodel_name="budget.collect", inverse_name="move_id", string="",
+    budget_collect_ids = fields.One2many(comodel_name="budget.collect",
+                                         inverse_name="move_id", string="",
                                          required=False, )
-    purchase_approval_cycle_ids = fields.One2many(comodel_name="purchase.approval.cycle", inverse_name="move_id",
-                                                  string="", required=False, )
+    purchase_approval_cycle_ids = fields.One2many(
+        comodel_name="purchase.approval.cycle", inverse_name="move_id",
+        string="", required=False, )
     out_budget = fields.Boolean(string="Out Budget", compute="check_out_budget")
-    show_approve_button = fields.Boolean(string="", compute='check_show_approve_button')
-    show_request_approve_button = fields.Boolean(string="",copy=False )
-    is_from_purchase = fields.Boolean(string="",compute='check_if_from_purchase'  )
-    is_from_sales = fields.Boolean(string="",compute='check_if_from_sales'  )
-    show_confirm_button = fields.Boolean(string="",compute='check_show_confirm_and_post_buttons' )
-    show_post_button = fields.Boolean(string="",compute='check_show_confirm_and_post_buttons' )
-    state = fields.Selection(selection_add=[('to_approve', 'To Approve'),('posted',), ], ondelete={'to_approve': 'set default','draft': 'set default',})
+    show_approve_button = fields.Boolean(string="",
+                                         compute='check_show_approve_button')
+    show_request_approve_button = fields.Boolean(string="", copy=False)
+    is_from_purchase = fields.Boolean(string="",
+                                      compute='check_if_from_purchase')
+    is_from_sales = fields.Boolean(string="", compute='check_if_from_sales')
+    show_confirm_button = fields.Boolean(string="",
+                                         compute='check_show_confirm_and_post_buttons')
+    show_post_button = fields.Boolean(string="",
+                                      compute='check_show_confirm_and_post_buttons')
+    state = fields.Selection(
+        selection_add=[('to_approve', 'To Approve'), ('posted',), ],
+        ondelete={'to_approve': 'set default', 'draft': 'set default', })
 
     def button_cancel(self):
         res = super(AccountMove, self).button_cancel()
@@ -60,16 +68,17 @@ class AccountMove(models.Model):
                 draft_name += ' (* %s)' % str(self.id)
             else:
                 draft_name += ' ' + self.name
-        return (draft_name or self.name) + (show_ref and self.ref and ' (%s%s)' % (self.ref[:50], '...' if len(self.ref) > 50 else '') or '')
-
-
+        return (draft_name or self.name) + (
+                    show_ref and self.ref and ' (%s%s)' % (
+            self.ref[:50], '...' if len(self.ref) > 50 else '') or '')
 
     @api.depends()
     def check_show_confirm_and_post_buttons(self):
         self.show_post_button = False
         self.show_confirm_button = False
-        if self.state not in ['draft','to_approve'] or self.auto_post or self.move_type != 'entry':
-            if self.is_from_purchase or self.is_from_sales :
+        if self.state not in ['draft',
+                              'to_approve'] or self.auto_post or self.move_type != 'entry':
+            if self.is_from_purchase or self.is_from_sales:
                 self.show_post_button = True
             elif not self.is_from_purchase and not self.is_from_sales:
                 if not self.purchase_approval_cycle_ids:
@@ -78,7 +87,8 @@ class AccountMove(models.Model):
                     self.show_post_button = False
             else:
                 self.show_post_button = False
-        elif self.state not in ['draft','to_approve'] or self.auto_post == True or self.move_type == 'entry':
+        elif self.state not in ['draft',
+                                'to_approve'] or self.auto_post == True or self.move_type == 'entry':
             if self.is_from_purchase or self.is_from_sales:
                 self.show_confirm_button = True
             else:
@@ -87,7 +97,7 @@ class AccountMove(models.Model):
     @api.depends()
     def check_if_from_purchase(self):
         self.is_from_purchase = False
-        purchased = self.invoice_line_ids.filtered(lambda x:x.purchase_line_id)
+        purchased = self.invoice_line_ids.filtered(lambda x: x.purchase_line_id)
         if purchased:
             self.is_from_purchase = True
 
@@ -101,7 +111,8 @@ class AccountMove(models.Model):
     @api.depends()
     def check_show_approve_button(self):
         self.show_approve_button = False
-        current_approve = self.purchase_approval_cycle_ids.filtered(lambda x: x.is_approved).mapped('approval_seq')
+        current_approve = self.purchase_approval_cycle_ids.filtered(
+            lambda x: x.is_approved).mapped('approval_seq')
 
         last_approval = max(current_approve) if current_approve else 0
         check_last_approval_is_approved = self.purchase_approval_cycle_ids.filtered(
@@ -121,7 +132,8 @@ class AccountMove(models.Model):
     def check_out_budget(self):
         self.out_budget = False
         if not self.is_from_purchase and not self.is_from_sales:
-            out_budget = self.budget_collect_ids.filtered(lambda x: x.difference_amount > 0)
+            out_budget = self.budget_collect_ids.filtered(
+                lambda x: x.difference_amount > 0)
             if out_budget:
                 self.out_budget = True
 
@@ -146,17 +158,25 @@ class AccountMove(models.Model):
             reseiver = us.partner_id
             if reseiver:
                 for move in self:
-                    email_template_id = self.env.ref('analytic_account_types.email_template_send_mail_approval_account')
+                    email_template_id = self.env.ref(
+                        'analytic_account_types.email_template_send_mail_approval_account')
                     ctx = self._context.copy()
                     ctx.update({'name': us.name})
                     if email_template_id:
-                        email_template_id.with_context(ctx).send_mail(self.id, force_send=True, email_values={'email_to': us.email, 'model': None, 'res_id': None})
+                        email_template_id.with_context(ctx).send_mail(self.id,
+                                                                      force_send=True,
+                                                                      email_values={
+                                                                          'email_to': us.email,
+                                                                          'model': None,
+                                                                          'res_id': None})
 
     def request_approval_button(self):
         self.get_budgets_in_out_budget_tab()
         if self.out_budget and not self.purchase_approval_cycle_ids:
             out_budget_list = []
-            out_budget = self.env['budget.in.out.check.invoice'].search([('type', '=', 'out_budget'), ('company_id','=', self.env.company.id)], limit=1)
+            out_budget = self.env['budget.in.out.check.invoice'].search(
+                [('type', '=', 'out_budget'),
+                 ('company_id', '=', self.env.company.id)], limit=1)
             max_value = max(self.budget_collect_ids.mapped('demand_amount'))
             for rec in out_budget.budget_line_ids:
                 if max_value >= rec.from_amount:
@@ -168,9 +188,12 @@ class AccountMove(models.Model):
             self.write({'purchase_approval_cycle_ids': out_budget_list})
         if not self.out_budget and not self.purchase_approval_cycle_ids:
             in_budget_list = []
-            in_budget = self.env['budget.in.out.check.invoice'].search([('type', '=', 'in_budget'), ('company_id','=', self.env.company.id)], limit=1)
-            if self.move_type == 'entry':
-                max_value = max(self.line_ids.mapped('local_subtotal'))  # Old Field is debit
+            in_budget = self.env['budget.in.out.check.invoice'].search(
+                [('type', '=', 'in_budget'),
+                 ('company_id', '=', self.env.company.id)], limit=1)
+            if self.move_type == 'endef request_approval_buttontry':
+                max_value = max(self.line_ids.mapped(
+                    'local_subtotal'))  # Old Field is debit
             else:
                 max_value = sum(self.invoice_line_ids.mapped('local_subtotal'))
             for rec in in_budget.budget_line_ids:
@@ -183,7 +206,8 @@ class AccountMove(models.Model):
             self.write({'purchase_approval_cycle_ids': in_budget_list})
         self.show_request_approve_button = True
         if self.purchase_approval_cycle_ids:
-            min_seq_approval = min(self.purchase_approval_cycle_ids.mapped('approval_seq'))
+            min_seq_approval = min(
+                self.purchase_approval_cycle_ids.mapped('approval_seq'))
             notification_to_user = self.purchase_approval_cycle_ids.filtered(
                 lambda x: x.approval_seq == int(min_seq_approval))
             user = notification_to_user.user_approve_ids
@@ -191,8 +215,10 @@ class AccountMove(models.Model):
             self.send_user_notification(user)
 
     def button_approve_purchase_cycle(self):
-        max_seq_approval = max(self.purchase_approval_cycle_ids.mapped('approval_seq'))
-        last_approval = self.purchase_approval_cycle_ids.filtered(lambda x: x.approval_seq == int(max_seq_approval))
+        max_seq_approval = max(
+            self.purchase_approval_cycle_ids.mapped('approval_seq'))
+        last_approval = self.purchase_approval_cycle_ids.filtered(
+            lambda x: x.approval_seq == int(max_seq_approval))
         last_approval_user = last_approval
         for line in self.purchase_approval_cycle_ids:
             if not line.is_approved:
@@ -208,69 +234,139 @@ class AccountMove(models.Model):
 
     # /////////// End of Approval Cycle According To In Budget or Out Budget in Po Configuration //////////////
 
-
     def _auto_create_asset(self):
         create_list = []
         invoice_list = []
         auto_validate = []
         for move in self:
-            if not move.is_invoice():
-                continue
+            if not move.move_type == 'entry':
+                if not move.is_invoice():
+                    continue
 
-            for move_line in move.line_ids.filtered(lambda line: not (move.move_type in (
-            'out_invoice', 'out_refund') and line.account_id.user_type_id.internal_group == 'asset')):
-                if (
-                        move_line.account_id
-                        and (move_line.account_id.can_create_asset)
-                        and move_line.account_id.create_asset != "no"
-                        and not move.reversed_entry_id
-                        and not (move_line.currency_id or move.currency_id).is_zero(move_line.price_total)
-                        and not move_line.asset_ids
-                ):
-                    if not move_line.name:
-                        raise UserError(
-                            _('Journal Items of {account} should have a label in order to generate an asset').format(
-                                account=move_line.account_id.display_name))
-                    amount_total = amount_left = move_line.debit + move_line.credit
-                    unit_uom = self.env.ref('uom.product_uom_unit')
-                    if move_line.account_id.multiple_assets_per_line and ((
-                                                                                  move_line.product_uom_id and move_line.product_uom_id.category_id.id == unit_uom.category_id.id) or not move_line.product_uom_id):
-                        units_quantity = move_line.product_uom_id._compute_quantity(move_line.quantity, unit_uom, False)
-                    else:
-                        units_quantity = 1
-                    while units_quantity > 0:
-                        if units_quantity > 1:
-                            original_value = float_round(amount_left / units_quantity,
-                                                         precision_rounding=move_line.company_currency_id.rounding)
-                            amount_left = float_round(amount_left - original_value,
-                                                      precision_rounding=move_line.company_currency_id.rounding)
+                for move_line in move.line_ids.filtered(
+                        lambda line: not (move.move_type in (
+                                'out_invoice',
+                                'out_refund') and line.account_id.user_type_id.internal_group == 'asset')):
+                    if (
+                            move_line.account_id
+                            and (move_line.account_id.can_create_asset)
+                            and move_line.account_id.create_asset != "no"
+                            and not move.reversed_entry_id
+                            and not (
+                            move_line.currency_id or move.currency_id).is_zero(
+                        move_line.price_total)
+                            and not move_line.asset_ids
+                    ):
+                        if not move_line.name:
+                            raise UserError(
+                                _('Journal Items of {account} should have a label in order to generate an asset').format(
+                                    account=move_line.account_id.display_name))
+                        amount_total = amount_left = move_line.debit + move_line.credit
+                        unit_uom = self.env.ref('uom.product_uom_unit')
+                        if move_line.account_id.multiple_assets_per_line and ((
+                                                                                      move_line.product_uom_id and move_line.product_uom_id.category_id.id == unit_uom.category_id.id) or not move_line.product_uom_id):
+                            units_quantity = move_line.product_uom_id._compute_quantity(
+                                move_line.quantity, unit_uom, False)
                         else:
-                            original_value = amount_left
-                        vals = {
-                            'name': move_line.name,
-                            'company_id': move_line.company_id.id,
-                            'currency_id': move_line.company_currency_id.id,
-                            'account_analytic_id': move_line.analytic_account_id.id,
-                            'project_site_id': move_line.project_site_id.id,
-                            'type_id': move_line.type_id.id,
-                            'location_id': move_line.location_id.id,
-                            'analytic_tag_ids': [(6, False, move_line.analytic_tag_ids.ids)],
-                            'original_move_line_ids': [(6, False, move_line.ids)],
-                            'state': 'draft',
-                            'original_value': original_value,
-                        }
-                        model_id = move_line.account_id.asset_model
-                        if model_id:
-                            vals.update({
-                                'model_id': model_id.id,
-                            })
-                        auto_validate.append(move_line.account_id.create_asset == 'validate')
-                        invoice_list.append(move)
-                        create_list.append(vals)
-                        units_quantity -= 1
+                            units_quantity = 1
+                        while units_quantity > 0:
+                            if units_quantity > 1:
+                                original_value = float_round(
+                                    amount_left / units_quantity,
+                                    precision_rounding=move_line.company_currency_id.rounding)
+                                amount_left = float_round(
+                                    amount_left - original_value,
+                                    precision_rounding=move_line.company_currency_id.rounding)
+                            else:
+                                original_value = amount_left
+                            vals = {
+                                'name': move_line.name,
+                                'company_id': move_line.company_id.id,
+                                'currency_id': move_line.company_currency_id.id,
+                                'account_analytic_id': move_line.analytic_account_id.id,
+                                'project_site_id': move_line.project_site_id.id,
+                                'type_id': move_line.type_id.id,
+                                'location_id': move_line.location_id.id,
+                                'analytic_tag_ids': [
+                                    (6, False, move_line.analytic_tag_ids.ids)],
+                                'original_move_line_ids': [
+                                    (6, False, move_line.ids)],
+                                'state': 'draft',
+                                'original_value': original_value,
+                            }
+                            model_id = move_line.account_id.asset_model
+                            if model_id:
+                                vals.update({
+                                    'model_id': model_id.id,
+                                })
+                            auto_validate.append(
+                                move_line.account_id.create_asset == 'validate')
+                            invoice_list.append(move)
+                            create_list.append(vals)
+                            units_quantity -= 1
+            else:
+                for move_line in move.line_ids.filtered(
+                        lambda line: not (move.move_type in (
+                                'out_invoice',
+                                'out_refund') and line.account_id.user_type_id.internal_group == 'asset')):
+                    if (
+                            move_line.account_id
+                            and (move_line.account_id.can_create_asset)
+                            and move_line.account_id.create_asset != "no"
+                            and not move.reversed_entry_id
+                            and not move_line.asset_ids
+                    ):
+                        if not move_line.name:
+                            raise UserError(
+                                _('Journal Items of {account} should have a label in order to generate an asset').format(
+                                    account=move_line.account_id.display_name))
+                        amount_total = amount_left = move_line.debit + move_line.credit
+                        unit_uom = self.env.ref('uom.product_uom_unit')
+                        if move_line.account_id.multiple_assets_per_line and ((
+                                                                                      move_line.product_uom_id and move_line.product_uom_id.category_id.id == unit_uom.category_id.id) or not move_line.product_uom_id):
+                            units_quantity = move_line.product_uom_id._compute_quantity(
+                                move_line.quantity, unit_uom, False)
+                        else:
+                            units_quantity = 1
+                        while units_quantity > 0:
+                            if units_quantity > 1:
+                                original_value = float_round(
+                                    amount_left / units_quantity,
+                                    precision_rounding=move_line.company_currency_id.rounding)
+                                amount_left = float_round(
+                                    amount_left - original_value,
+                                    precision_rounding=move_line.company_currency_id.rounding)
+                            else:
+                                original_value = amount_left
+                            vals = {
+                                'name': move_line.name,
+                                'company_id': move_line.company_id.id,
+                                'currency_id': move_line.company_currency_id.id,
+                                'account_analytic_id': move_line.analytic_account_id.id,
+                                'project_site_id': move_line.project_site_id.id,
+                                'type_id': move_line.type_id.id,
+                                'location_id': move_line.location_id.id,
+                                'analytic_tag_ids': [
+                                    (6, False, move_line.analytic_tag_ids.ids)],
+                                'original_move_line_ids': [
+                                    (6, False, move_line.ids)],
+                                'state': 'draft',
+                                'original_value': original_value,
+                            }
+                            model_id = move_line.account_id.asset_model
+                            if model_id:
+                                vals.update({
+                                    'model_id': model_id.id,
+                                })
+                            auto_validate.append(
+                                move_line.account_id.create_asset == 'validate')
+                            invoice_list.append(move)
+                            create_list.append(vals)
+                            units_quantity -= 1
 
         assets = self.env['account.asset'].create(create_list)
-        for asset, vals, invoice, validate in zip(assets, create_list, invoice_list, auto_validate):
+        for asset, vals, invoice, validate in zip(assets, create_list,
+                                                  invoice_list, auto_validate):
             if 'model_id' in vals:
                 asset._onchange_model_id()
                 if validate:
@@ -282,15 +378,19 @@ class AccountMove(models.Model):
                     'expense': _('Deferred expense'),
                 }[asset.asset_type]
                 msg = _('%s created from invoice') % (asset_name)
-                msg += ': <a href=# data-oe-model=account.move data-oe-id=%d>%s</a>' % (invoice.id, invoice.name)
+                msg += ': <a href=# data-oe-model=account.move data-oe-id=%d>%s</a>' % (
+                invoice.id, invoice.name)
                 asset.message_post(body=msg)
         return assets
 
     @api.model
     def _prepare_move_for_asset_depreciation(self, vals):
-        missing_fields = set(['asset_id', 'move_ref', 'amount', 'asset_remaining_value', 'asset_depreciated_value']) - set(vals)
+        missing_fields = set(
+            ['asset_id', 'move_ref', 'amount', 'asset_remaining_value',
+             'asset_depreciated_value']) - set(vals)
         if missing_fields:
-            raise UserError(_('Some fields are missing {}').format(', '.join(missing_fields)))
+            raise UserError(_('Some fields are missing {}').format(
+                ', '.join(missing_fields)))
         asset = vals['asset_id']
         account_analytic_id = asset.account_analytic_id
         project_site_id = asset.project_site_id
@@ -301,7 +401,8 @@ class AccountMove(models.Model):
         company_currency = asset.company_id.currency_id
         current_currency = asset.currency_id
         prec = company_currency.decimal_places
-        amount = current_currency._convert(vals['amount'], company_currency, asset.company_id, depreciation_date)
+        amount = current_currency._convert(vals['amount'], company_currency,
+                                           asset.company_id, depreciation_date)
         # Keep the partner on the original invoice if there is only one
         partner = asset.original_move_line_ids.mapped('partner_id')
         partner = partner[:1] if len(partner) <= 1 else self.env['res.partner']
@@ -309,13 +410,16 @@ class AccountMove(models.Model):
             'name': asset.name,
             'partner_id': partner.id,
             'account_id': asset.account_depreciation_id.id,
-            'debit': 0.0 if float_compare(amount, 0.0, precision_digits=prec) > 0 else -amount,
-            'credit': amount if float_compare(amount, 0.0, precision_digits=prec) > 0 else 0.0,
+            'debit': 0.0 if float_compare(amount, 0.0,
+                                          precision_digits=prec) > 0 else -amount,
+            'credit': amount if float_compare(amount, 0.0,
+                                              precision_digits=prec) > 0 else 0.0,
             'analytic_account_id': account_analytic_id.id if account_analytic_id else False,
             'project_site_id': project_site_id.id if project_site_id else False,
             'type_id': type_id.id if type_id else False,
             'location_id': location_id.id if location_id else False,
-            'analytic_tag_ids': [(6, 0, analytic_tag_ids.ids)] if asset.asset_type == 'sale' else False,
+            'analytic_tag_ids': [(6, 0,
+                                  analytic_tag_ids.ids)] if asset.asset_type == 'sale' else False,
             'currency_id': current_currency.id,
             'amount_currency': -vals['amount'],
         }
@@ -323,14 +427,17 @@ class AccountMove(models.Model):
             'name': asset.name,
             'partner_id': partner.id,
             'account_id': asset.account_depreciation_expense_id.id,
-            'credit': 0.0 if float_compare(amount, 0.0, precision_digits=prec) > 0 else -amount,
-            'debit': amount if float_compare(amount, 0.0, precision_digits=prec) > 0 else 0.0,
+            'credit': 0.0 if float_compare(amount, 0.0,
+                                           precision_digits=prec) > 0 else -amount,
+            'debit': amount if float_compare(amount, 0.0,
+                                             precision_digits=prec) > 0 else 0.0,
             'analytic_account_id': account_analytic_id.id if account_analytic_id else False,
             'project_site_id': project_site_id.id if project_site_id else False,
             'type_id': type_id.id if type_id else False,
             'location_id': location_id.id if location_id else False,
-            'analytic_tag_ids': [(6, 0, analytic_tag_ids.ids)] if asset.asset_type in (
-            'purchase', 'expense') else False,
+            'analytic_tag_ids': [
+                (6, 0, analytic_tag_ids.ids)] if asset.asset_type in (
+                'purchase', 'expense') else False,
             'currency_id': current_currency.id,
             'amount_currency': vals['amount'],
         }
@@ -355,32 +462,44 @@ class AccountMove(models.Model):
 class AccountMoveLine(models.Model):
     _inherit = 'account.move.line'
 
-    project_site_id = fields.Many2one(comodel_name="account.analytic.account", string="Project/Site",domain=[('analytic_account_type','=','project_site')], required=False, )
-    type_id = fields.Many2one(comodel_name="account.analytic.account", string="Type",domain=[('analytic_account_type','=','type')], required=False, )
-    location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location",domain=[('analytic_account_type','=','location')], required=False, )
+    project_site_id = fields.Many2one(comodel_name="account.analytic.account",
+                                      string="Project/Site", domain=[
+            ('analytic_account_type', '=', 'project_site')], required=False, )
+    type_id = fields.Many2one(comodel_name="account.analytic.account",
+                              string="Type",
+                              domain=[('analytic_account_type', '=', 'type')],
+                              required=False, )
+    location_id = fields.Many2one(comodel_name="account.analytic.account",
+                                  string="Location", domain=[
+            ('analytic_account_type', '=', 'location')], required=False, )
     analytic_account_id = fields.Many2one(string='Cost Center')
-    budget_id = fields.Many2one(comodel_name="crossovered.budget", string="Budget", required=False, )
-    budget_line_id = fields.Many2one(comodel_name="crossovered.budget.lines", string="Budget Line", required=False, )
+    budget_id = fields.Many2one(comodel_name="crossovered.budget",
+                                string="Budget", required=False, )
+    budget_line_id = fields.Many2one(comodel_name="crossovered.budget.lines",
+                                     string="Budget Line", required=False, )
 
-    remaining_amount = fields.Float(string="Remaining Amount", required=False,compute='get_budget_remaining_amount' )
+    remaining_amount = fields.Float(string="Remaining Amount", required=False,
+                                    compute='get_budget_remaining_amount')
     local_subtotal = fields.Float(compute='compute_local_subtotal', store=True)
 
     @api.onchange('budget_id')
     def onchange_budget_id(self):
-        return {'domain': {'budget_line_id': [('crossovered_budget_id', '=', self.budget_id.id)]}}
+        return {'domain': {'budget_line_id': [
+            ('crossovered_budget_id', '=', self.budget_id.id)]}}
 
     @api.depends('price_subtotal')
     def compute_local_subtotal(self):
         for rec in self:
             if rec.move_id and rec.price_subtotal and rec.move_id.invoice_date:
-                rec.local_subtotal = rec.move_id.currency_id._convert(rec.price_subtotal,
-                                                                       rec.move_id.company_id.currency_id,
-                                                                       rec.move_id.company_id,
-                                                                       rec.move_id.invoice_date if rec.move_id.invoice_date else rec.move_id.create_date.date())
+                rec.local_subtotal = rec.move_id.currency_id._convert(
+                    rec.price_subtotal,
+                    rec.move_id.company_id.currency_id,
+                    rec.move_id.company_id,
+                    rec.move_id.invoice_date if rec.move_id.invoice_date else rec.move_id.create_date.date())
             else:
                 rec.local_subtotal = 0
 
-    @api.depends('budget_id','purchase_line_id')
+    @api.depends('budget_id', 'purchase_line_id')
     def get_budget_remaining_amount(self):
         for rec in self:
             rec.remaining_amount = 0.0
@@ -390,7 +509,6 @@ class AccountMoveLine(models.Model):
                 rec.remaining_amount = rec.sale_line_ids[0].remaining_amount
             else:
                 rec.remaining_amount = rec.budget_line_id.remaining_amount
-
 
     @api.onchange('project_site_id')
     def get_location_and_types(self):

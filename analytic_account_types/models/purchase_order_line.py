@@ -122,10 +122,8 @@ class PurchaseOrder(models.Model):
                 notification_to_user = self.purchase_approval_cycle_ids.filtered(
                     lambda x: x.approval_seq == int(line.approval_seq + 1))
                 if notification_to_user:
-                    print(notification_to_user,'notification_to_user')
                     user = notification_to_user.user_approve_ids
                     self.send_user_notification(user)
-                print(line,'line',last_approval_id,'last_approval_id')
                 if line == last_approval_id:
                     self.button_confirm()
                 break
