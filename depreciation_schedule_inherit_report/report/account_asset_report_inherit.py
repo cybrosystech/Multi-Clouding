@@ -257,7 +257,7 @@ class asset_report_inherit(models.AbstractModel):
                 INSERT INTO temp_account_move SELECT move.*
                 FROM ONLY account_move move
                 LEFT JOIN ONLY account_move reversal ON reversal.reversed_entry_id = move.id
-                WHERE reversal.id IS NULL AND move.asset_id IS NOT NULL AND move.company_id in (1);
+                WHERE reversal.id IS NULL AND move.asset_id IS NOT NULL AND move.company_id in %(company_ids)s;
 
                 SELECT asset.id as asset_id,
                        asset.parent_id as parent_id,
@@ -281,7 +281,7 @@ class asset_report_inherit(models.AbstractModel):
                        account.name as account_name,
                        account.id as account_id,
                        account.company_id as company_id,
-					   analytic.name as analytic_colocation,
+                       analytic.name as analytic_colocation,
                        COALESCE(first_move.asset_depreciated_value, move_before.asset_depreciated_value, 0.0) as depreciated_start,
                        COALESCE(first_move.asset_remaining_value, move_before.asset_remaining_value, 0.0) as remaining_start,
                        COALESCE(last_move.asset_depreciated_value, move_before.asset_depreciated_value, 0.0) as depreciated_end,
@@ -289,10 +289,10 @@ class asset_report_inherit(models.AbstractModel):
                        COALESCE(first_move.amount_total, 0.0) as depreciation,
                        COALESCE(first_move.id, move_before.id) as first_move_id,
                        COALESCE(last_move.id, move_before.id) as last_move_id,
-					   COALESCE(total_move.a_count) as total_move_count
+                       COALESCE(total_move.a_count) as total_move_count
                 FROM account_asset as asset
                 LEFT JOIN account_account as account ON asset.account_asset_id = account.id
-				LEFT JOIN account_analytic_account as analytic on asset.co_location = analytic.id
+                LEFT JOIN account_analytic_account as analytic on asset.co_location = analytic.id
                 LEFT JOIN (
                     SELECT
                         COUNT(*) as count,
@@ -310,16 +310,9 @@ class asset_report_inherit(models.AbstractModel):
                         amount_total,
                         asset_id
                     FROM temp_account_move m
-                    WHERE date >='2022-01-01' AND date <= '2022-12-31'
+                    WHERE date >= %(date_from)s AND date <= %(date_to)s {where_account_move}
                     ORDER BY asset_id, date, id DESC
                 ) first_move ON first_move.asset_id = asset.id
-				LEFT OUTER JOIN (
-					SELECT COUNT(*) as a_count,
-					asset_id
-					from temp_account_move z
-					where date > '2022-12-31'
-					GROUP BY asset_id
-				) total_move on total_move.asset_id = asset.id
 
                 LEFT OUTER JOIN (
                     SELECT DISTINCT ON (asset_id)
@@ -329,9 +322,16 @@ class asset_report_inherit(models.AbstractModel):
                         amount_total,
                         asset_id
                     FROM temp_account_move m
-                    WHERE date >='2022-01-01' AND date <= '2022-12-31'
+                    WHERE date >= %(date_from)s AND date <= %(date_to)s {where_account_move}
                     ORDER BY asset_id, date DESC, id DESC
                 ) last_move ON last_move.asset_id = asset.id
+                LEFT OUTER JOIN (
+			SELECT COUNT(*) as a_count,
+			asset_id
+			from temp_account_move z
+			where date > %(date_to)s
+			GROUP BY asset_id
+		) total_move on total_move.asset_id = asset.id
 
                 LEFT OUTER JOIN (
                     SELECT DISTINCT ON (asset_id)
@@ -341,16 +341,17 @@ class asset_report_inherit(models.AbstractModel):
                         amount_total,
                         asset_id
                     FROM temp_account_move m
-                    WHERE date >='2022-01-01' AND date <= '2022-12-31'
+                    WHERE date <= %(date_from)s {where_account_move}
                     ORDER BY asset_id, date DESC, id DESC
                 ) move_before ON move_before.asset_id = asset.id
 
-                WHERE asset.company_id in (1)
-                AND asset.acquisition_date <= '2022-12-31'
-                AND (asset.disposal_date >= '2022-01-01' OR asset.disposal_date IS NULL)
+                WHERE asset.company_id in %(company_ids)s
+                AND asset.acquisition_date <= %(date_to)s
+                AND (asset.disposal_date >= %(date_from)s OR asset.disposal_date IS NULL)
                 AND asset.state not in ('model', 'draft')
                 AND asset.asset_type = 'purchase'
                 AND asset.active = 't'
+
                 ORDER BY account.code, asset.acquisition_date;
             """.format(where_account_move=where_account_move)
 

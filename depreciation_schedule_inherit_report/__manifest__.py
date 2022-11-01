@@ -11,7 +11,5 @@
     'depends': ['account_asset'],
 
     'data':
-        [
-            # 'views/generic_tax_report_inherit.xml',
-        ]
+        []
 }
