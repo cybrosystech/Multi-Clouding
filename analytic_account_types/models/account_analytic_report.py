@@ -84,7 +84,6 @@ class analytic_report(models.AbstractModel):
 
     @api.model
     def _get_lines(self, options, line_id=None):
-        print('pppppppppppppppppp')
         AccountAnalyticGroup = self.env['account.analytic.group']
         lines = []
         parent_group = AccountAnalyticGroup
@@ -103,31 +102,25 @@ class analytic_report(models.AbstractModel):
         analytic_tag_ids = []
         analytic_ids =  []
         if options['analytic_accounts']:
-            print('111111111111111')
             analytic_account_ids = [int(id) for id in options['analytic_accounts']]
             analytic_entries_domain += [('account_id', 'in', analytic_account_ids)]
             analytic_ids +=analytic_account_ids
         if options['project_site_ids']:
-            print('22222222222222222222')
             analytic_account_ids = [int(id) for id in options['project_site_ids']]
             analytic_entries_domain += [('project_site_id', 'in', analytic_account_ids)]
             analytic_ids +=analytic_account_ids
         if options['type_ids']:
-            print('333333333333333')
             analytic_account_ids = [int(id) for id in options['type_ids']]
             analytic_entries_domain += [('type_id', 'in', analytic_account_ids)]
             analytic_ids +=analytic_account_ids
         if options['location_ids']:
-            print('444444444444444444444')
             analytic_account_ids = [int(id) for id in options['location_ids']]
             analytic_entries_domain += [('location_id', 'in', analytic_account_ids)]
             analytic_ids +=analytic_account_ids
         if analytic_ids:
-            print(analytic_ids,'ooooooooooooooooooooo')
             analytic_account_domain += [('id', 'in', analytic_ids)]
 
         if options.get('analytic_tags'):
-            print('6666666666666666666666')
             analytic_tag_ids = [int(id) for id in options['analytic_tags']]
             analytic_entries_domain += [('tag_ids', 'in', analytic_tag_ids)]
             AccountAnalyticAccount = AccountAnalyticAccount.with_context(tag_ids=analytic_tag_ids)

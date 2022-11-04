@@ -4,6 +4,10 @@
         <field name="model">account.asset</field>
         <field name="inherit_id" ref="account_asset.view_account_asset_form"/>
         <field name="arch" type="xml">
+<!--        <Replaced the button pause depreciation to remove the attribute condition for invisible at asset type>        -->
+            <button name="action_asset_pause" position="replace">
+                <button name="action_asset_pause" string="Pause Depreciation" type="object" attrs="{'invisible': [('state', '!=', 'open')]}"/>
+            </button>
             <field name="original_value" position="after">
                 <field name="request_approval_bool" invisible="1"/>
                 <field name="asset_approve_bool" invisible="1"/>

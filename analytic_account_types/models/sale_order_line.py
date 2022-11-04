@@ -173,7 +173,6 @@ class SalesOrderLine(models.Model):
             order_lines_without_inv = sum(
                 self.env['sale.order.line'].search([('order_id.state', '=', 'sale')]).filtered(
                     lambda x: not x.order_id.invoice_ids and x.budget_id == self.budget_id).mapped('price_subtotal'))
-            print('order_lines_without_inv', order_lines_without_inv)
             sales_with_inv = self.env['sale.order'].search([('state', '=', 'sale')]).filtered(lambda x: x.invoice_ids)
             invoices_budget = 0.0
             for order in sales_with_inv:
@@ -181,7 +180,6 @@ class SalesOrderLine(models.Model):
                     if inv.state == 'draft':
                         for line in inv.invoice_line_ids.filtered(lambda x: x.budget_id == self.budget_id):
                             invoices_budget += line.price_subtotal
-            print(invoices_budget, 'invoices_budget')
 
             rec.remaining_amount = 0.0
             rec.remaining_amount = rec.budget_line_id.remaining_amount - order_lines_without_inv - invoices_budget

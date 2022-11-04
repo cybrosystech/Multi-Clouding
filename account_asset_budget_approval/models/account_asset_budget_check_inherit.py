@@ -49,7 +49,6 @@ class AccountAssetBudget(models.Model):
 
     def send_asset_user_notification(self, user_ids):
         for user in user_ids:
-            print(user.partner_id)
             email_template_id = self.env.ref('account_asset_budget_approval.email_template_send_mail_approval_asset_acc')
             if email_template_id:
                 email_template_id.sudo().write({'email_to': user.email})
