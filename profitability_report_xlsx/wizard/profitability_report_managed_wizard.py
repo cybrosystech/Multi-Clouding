@@ -316,7 +316,6 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
             'security_ids': self.security.ids,
             'security_code': self.security.code,
             'service_level_credit_ids': self.service_level_credits.ids,
-            'service_level_credit_code': self.service_level_credits.code,
             'from': from_date if from_date else self.from_date,
             'to': to_date if to_date else self.to_date,
             'company_id': self.env.company.id,
