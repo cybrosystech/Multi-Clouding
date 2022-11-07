@@ -333,7 +333,7 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
             'report_type': 'xlsx'
         }
 
-    def get_xlsx_report(self, data, response):
+    def get_xlsx(self, data, response):
         total_site = 0
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
