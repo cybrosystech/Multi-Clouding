@@ -9,7 +9,7 @@ class XLSXReportController(http.Controller):
 
     @http.route('/xlsx_reports', type='http', auth='user', methods=['POST'],
                 csrf=False)
-    def get_report_xlsx(self, model, options, output_format, token,
+    def get_report_xlsx(self, model, options, output_format, token, report_name,
                         **kw):
         user = request.session.uid
         report_obj = request.env[model].with_user(user)
@@ -21,7 +21,7 @@ class XLSXReportController(http.Controller):
                     headers=[
                         ('Content-Type', 'application/vnd.ms-excel'),
                         ('Content-Disposition',
-                         content_disposition('Tasc Cash Flow Report' + '.xlsx'))
+                         content_disposition(report_name + '.xlsx'))
                     ]
                 )
                 report_obj.get_xlsx(options, response)

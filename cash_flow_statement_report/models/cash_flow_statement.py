@@ -995,6 +995,7 @@ class CashFlowStatement(models.Model):
                      'financial_id': self.env.context.get('id'),
                      'allowed_company_ids': self.env.context.get(
                          'allowed_company_ids'),
+                     'report_name': 'Tasc Cash Flow Report',
                      },
             'report_type': 'xlsx'
         }
