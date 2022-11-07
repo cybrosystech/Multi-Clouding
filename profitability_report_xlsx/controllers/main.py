@@ -7,7 +7,7 @@ from odoo.addons.web.controllers.main import _serialize_exception
 
 class XLSXReportController(http.Controller):
 
-    @http.route('/xlsx_reports', type='http', auth='user', methods=['POST'],
+    @http.route('/xlsx_reports_profitability', type='http', auth='user', methods=['POST'],
                 csrf=False)
     def get_report_xlsx(self, model, options, output_format, token, report_name,
                         **kw):
