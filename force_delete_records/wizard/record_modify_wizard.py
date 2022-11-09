@@ -1,5 +1,3 @@
-from numpy.random._examples.cffi.extending import state
-
 from odoo import models, fields, api
 
 
