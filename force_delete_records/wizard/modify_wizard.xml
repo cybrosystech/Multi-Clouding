@@ -11,6 +11,7 @@
                     </group>
                     <group>
                         <field name="records"/>
+                        <field name="limit"/>
                     </group>
                 </group>
                 <footer>
