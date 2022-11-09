@@ -1,0 +1,40 @@
+<odoo>
+    <record id="view_record_unlink_form" model="ir.ui.view">
+        <field name="name">unlink.wizard.view.form</field>
+        <field name="model">unlink.records.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <group>
+                        <field name="company_id"/>
+                        <field name="state"/>
+                    </group>
+                    <group>
+                        <field name="records"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="delete_records" string="Delete"
+                            type="object" default_focus="1"
+                            class="oe_highlight"/>
+                    <button string="Cancel" class="btn btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="unlink_records_action" model="ir.actions.act_window">
+        <field name="name">Unlink</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">unlink.records.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_record_unlink_form"/>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_unlink" name="Delete" parent="base.menu_custom"/>
+    <menuitem id="menu_unlink_record_act" action="unlink_records_action"
+              parent="force_delete_records.menu_unlink"/>
+
+</odoo>
