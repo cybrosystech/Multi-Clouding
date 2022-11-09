@@ -13,7 +13,7 @@ class ModelRecordUnlink(models.Model):
 
     @api.onchange('company_id', 'state')
     def _onchange_compute_assets(self):
-        domain = []
+        domain = [('asset_type', '=', 'purchase')]
         if self.company_id:
             domain += [('company_id', '=', self.company_id.id)]
         if self.state:
@@ -24,11 +24,12 @@ class ModelRecordUnlink(models.Model):
         self.records = len(assets)
 
     def delete_records(self):
-        domain = []
+        domain = [('asset_type', '=', 'purchase')]
         if self.company_id:
             domain += [('company_id', '=', self.company_id.id)]
         if self.state:
             domain += [('state', '=', self.state)]
+        print(domain)
         assets = self.env['account.asset'].search(domain, limit=self.limit)
         for rec in assets:
             for journal in rec.depreciation_move_ids:
