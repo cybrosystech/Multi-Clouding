@@ -11,7 +11,6 @@ class XLSXReportController(http.Controller):
                 csrf=False)
     def get_report_xlsx(self, model, options, output_format, token, report_name,
                         **kw):
-        print('kkkkkkkkkkkkk')
         uid = request.session.uid
         report_obj = request.env[model].with_user(uid)
         options = json.loads(options)
