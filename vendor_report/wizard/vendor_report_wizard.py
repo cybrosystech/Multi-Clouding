@@ -58,7 +58,7 @@ class VendorReportWizard(models.TransientModel):
             'report_type': 'xlsx'
         }
 
-    def get_xlsx_report(self, data, response):
+    def get_xlsx(self, data, response):
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
         date_from = ''
