@@ -40,7 +40,7 @@ NewStatementModel.StatementModel.include({
             'project_site_id':this._formatNameGet(values.project_site_id),
             'location_id':this._formatNameGet(values.location_id),
             'type_id':this._formatNameGet(values.type_id),
-            'analytic_tag_ids': this._formatMany2ManyTags(values.analytic_tag_ids || []),
+            'analytic_tag_ids': values.analytic_tag_ids || [],
             'journal_id': this._formatNameGet(values.journal_id),
             'tax_ids': this._formatMany2ManyTagsTax(values.tax_ids || []),
             'tax_tag_ids': this._formatMany2ManyTagsTax(values.tax_tag_ids || []),
