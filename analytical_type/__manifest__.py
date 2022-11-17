@@ -9,7 +9,7 @@
     'category': 'Accounting',
     'version': '14.0.1.0.0',
     'depends': [
-        'account',
+        'account', 'account_accountant'
     ],
     'data': [
         'view/assets_backend.xml',
