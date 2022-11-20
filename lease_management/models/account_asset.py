@@ -235,10 +235,10 @@ class AccountAsset(models.Model):
         end_move.auto_post = False
         end_move.action_post()
 
-    def set_to_close(self, invoice_line_id, date=None):
+    def set_to_close(self, invoice_line_id,partial, date=None):
         if self.env.context.get('disposal_date'):
             date = self.env.context.get('disposal_date')
-        return super(AccountAsset, self).set_to_close(invoice_line_id, date)
+        return super(AccountAsset, self).set_to_close(invoice_line_id, partial, date)
 
     def _recompute_board(self, depreciation_number, starting_sequence,
                          amount_to_depreciate, depreciation_date,

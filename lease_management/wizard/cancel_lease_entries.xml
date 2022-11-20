@@ -10,6 +10,8 @@
                     <sheet>
                         <group>
                             <field name="date"/>
+                            <field name="asset_journal_include" widget="radio"/>
+                            <field name="leasee_contract_id" widget="many2many_tags"/>
                         </group>
                     </sheet>
                     <footer>
