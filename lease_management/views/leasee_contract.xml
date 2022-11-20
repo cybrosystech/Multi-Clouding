@@ -71,6 +71,8 @@
                                 <field name="rou_value" />
                                 <!--                                <field name="registered_paymen" />-->
                                 <field name="estimated_cost_dismantling" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="original_rou" readonly="1"/>
+                                <field name="original_ll" readonly="1"/>
                             </group>
                             <group>
                                 <field name="leasee_currency_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>

@@ -211,6 +211,9 @@ class LeaseeContract(models.Model):
                                        inverse_name="leasee_contract_id",
                                        string="", required=False, copy=True,
                                        tracking=True)
+    original_rou = fields.Float('Original ROU')
+    original_ll = fields.Float('Original LL')
+
 
     @api.depends('commencement_date', 'lease_contract_period')
     def compute_estimated_ending_date(self):
@@ -440,6 +443,8 @@ class LeaseeContract(models.Model):
                 contract.leasee_action_generate_installments_entries()
                 contract.leasee_action_generate_interest_entries(
                     contract.commencement_date)
+                contract.original_rou = contract.rou_value
+                contract.original_ll = contract.lease_liability
 
     def check_leasor(self):
         percentage = 0
