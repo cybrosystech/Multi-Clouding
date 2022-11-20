@@ -305,64 +305,66 @@ class AccountMove(models.Model):
                             create_list.append(vals)
                             units_quantity -= 1
             else:
-                for move_line in move.line_ids.filtered(
-                        lambda line: not (move.move_type in (
-                                'out_invoice',
-                                'out_refund') and line.account_id.user_type_id.internal_group == 'asset')):
-                    if (
-                            move_line.account_id
-                            and (move_line.account_id.can_create_asset)
-                            and move_line.account_id.create_asset != "no"
-                            and not move.reversed_entry_id
-                            and not move_line.asset_ids
-                    ):
-                        if not move_line.name:
-                            raise UserError(
-                                _('Journal Items of {account} should have a label in order to generate an asset').format(
-                                    account=move_line.account_id.display_name))
-                        amount_total = amount_left = move_line.debit + move_line.credit
-                        unit_uom = self.env.ref('uom.product_uom_unit')
-                        if move_line.account_id.multiple_assets_per_line and ((
-                                                                                      move_line.product_uom_id and move_line.product_uom_id.category_id.id == unit_uom.category_id.id) or not move_line.product_uom_id):
-                            units_quantity = move_line.product_uom_id._compute_quantity(
-                                move_line.quantity, unit_uom, False)
-                        else:
-                            units_quantity = 1
-                        while units_quantity > 0:
-                            if units_quantity > 1:
-                                original_value = float_round(
-                                    amount_left / units_quantity,
-                                    precision_rounding=move_line.company_currency_id.rounding)
-                                amount_left = float_round(
-                                    amount_left - original_value,
-                                    precision_rounding=move_line.company_currency_id.rounding)
+                # to create asset based on the account configured in move lines and restricted if there already asset ex
+                if not move.asset_id:
+                    for move_line in move.line_ids.filtered(
+                            lambda line: not (move.move_type in (
+                                    'out_invoice',
+                                    'out_refund') and line.account_id.user_type_id.internal_group == 'asset')):
+                        if (
+                                move_line.account_id
+                                and (move_line.account_id.can_create_asset)
+                                and move_line.account_id.create_asset != "no"
+                                and not move.reversed_entry_id
+                                and not move_line.asset_ids
+                        ):
+                            if not move_line.name:
+                                raise UserError(
+                                    _('Journal Items of {account} should have a label in order to generate an asset').format(
+                                        account=move_line.account_id.display_name))
+                            amount_total = amount_left = move_line.debit + move_line.credit
+                            unit_uom = self.env.ref('uom.product_uom_unit')
+                            if move_line.account_id.multiple_assets_per_line and ((
+                                                                                          move_line.product_uom_id and move_line.product_uom_id.category_id.id == unit_uom.category_id.id) or not move_line.product_uom_id):
+                                units_quantity = move_line.product_uom_id._compute_quantity(
+                                    move_line.quantity, unit_uom, False)
                             else:
-                                original_value = amount_left
-                            vals = {
-                                'name': move_line.name,
-                                'company_id': move_line.company_id.id,
-                                'currency_id': move_line.company_currency_id.id,
-                                'account_analytic_id': move_line.analytic_account_id.id,
-                                'project_site_id': move_line.project_site_id.id,
-                                'type_id': move_line.type_id.id,
-                                'location_id': move_line.location_id.id,
-                                'analytic_tag_ids': [
-                                    (6, False, move_line.analytic_tag_ids.ids)],
-                                'original_move_line_ids': [
-                                    (6, False, move_line.ids)],
-                                'state': 'draft',
-                                'original_value': original_value,
-                            }
-                            model_id = move_line.account_id.asset_model
-                            if model_id:
-                                vals.update({
-                                    'model_id': model_id.id,
-                                })
-                            auto_validate.append(
-                                move_line.account_id.create_asset == 'validate')
-                            invoice_list.append(move)
-                            create_list.append(vals)
-                            units_quantity -= 1
+                                units_quantity = 1
+                            while units_quantity > 0:
+                                if units_quantity > 1:
+                                    original_value = float_round(
+                                        amount_left / units_quantity,
+                                        precision_rounding=move_line.company_currency_id.rounding)
+                                    amount_left = float_round(
+                                        amount_left - original_value,
+                                        precision_rounding=move_line.company_currency_id.rounding)
+                                else:
+                                    original_value = amount_left
+                                vals = {
+                                    'name': move_line.name,
+                                    'company_id': move_line.company_id.id,
+                                    'currency_id': move_line.company_currency_id.id,
+                                    'account_analytic_id': move_line.analytic_account_id.id,
+                                    'project_site_id': move_line.project_site_id.id,
+                                    'type_id': move_line.type_id.id,
+                                    'location_id': move_line.location_id.id,
+                                    'analytic_tag_ids': [
+                                        (6, False, move_line.analytic_tag_ids.ids)],
+                                    'original_move_line_ids': [
+                                        (6, False, move_line.ids)],
+                                    'state': 'draft',
+                                    'original_value': original_value,
+                                }
+                                model_id = move_line.account_id.asset_model
+                                if model_id:
+                                    vals.update({
+                                        'model_id': model_id.id,
+                                    })
+                                auto_validate.append(
+                                    move_line.account_id.create_asset == 'validate')
+                                invoice_list.append(move)
+                                create_list.append(vals)
+                                units_quantity -= 1
 
         assets = self.env['account.asset'].create(create_list)
         for asset, vals, invoice, validate in zip(assets, create_list,
