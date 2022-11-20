@@ -14,8 +14,7 @@ var NewStatementModel = require('account.ReconciliationModel');
 
 NewStatementModel.StatementModel.include({
     avoidCreate: false,
-    quickCreateFields: ['account_id', 'amount', 'analytic_account_id','project_site_id','location_id',
-    'type_id', 'name', 'tax_ids', 'force_tax_included', 'analytic_tag_ids', 'to_check'],
+    quickCreateFields: ['account_id', 'amount', 'analytic_account_id', 'name', 'tax_ids', 'force_tax_included', 'analytic_tag_ids', 'to_check'],
 
     // overridden in ManualModel
     modes: ['create', 'match_rp', 'match_other'],
@@ -37,10 +36,7 @@ NewStatementModel.StatementModel.include({
             'account_id': account,
             'account_code': account ? this.accounts[account.id] : '',
             'analytic_account_id': this._formatNameGet(values.analytic_account_id),
-            'project_site_id':this._formatNameGet(values.project_site_id),
-            'location_id':this._formatNameGet(values.location_id),
-            'type_id':this._formatNameGet(values.type_id),
-            'analytic_tag_ids': values.analytic_tag_ids || [],
+            'analytic_tag_ids': this._formatMany2ManyTags(values.analytic_tag_ids || []),
             'journal_id': this._formatNameGet(values.journal_id),
             'tax_ids': this._formatMany2ManyTagsTax(values.tax_ids || []),
             'tax_tag_ids': this._formatMany2ManyTagsTax(values.tax_tag_ids || []),
@@ -90,9 +86,6 @@ NewStatementModel.StatementModel.include({
             }
         }
         if (prop.analytic_account_id) result.analytic_account_id = prop.analytic_account_id.id;
-        if (prop.project_site_id) result.project_site_id = prop.project_site_id.id;
-        if (prop.location_id) result.location_id = prop.location_id.id;
-        if (prop.type_id) result.type_id = prop.type_id.id;
         if (prop.tax_ids && prop.tax_ids.length) result.tax_ids = [[6, null, _.pluck(prop.tax_ids, 'id')]];
         if (prop.tax_tag_ids && prop.tax_tag_ids.length) result.tax_tag_ids = [[6, null, _.pluck(prop.tax_tag_ids, 'id')]];
         if (prop.tax_repartition_line_id) result.tax_repartition_line_id = prop.tax_repartition_line_id;

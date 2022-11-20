@@ -65,21 +65,6 @@ NewLineRenderer.LineRenderer.include({
             type: 'many2one',
             name: 'analytic_account_id',
             domain: ["|", ['company_id', '=', state.st_line.company_id], ['company_id', '=', false], ['analytic_account_type', '=', 'cost_center']],
-        }, {
-            relation: 'account.analytic.account',
-            type: 'many2one',
-            name: 'project_site_id',
-            domain: ["|","&", ['company_id', '=', state.st_line.company_id],['company_id', '=', false], ['analytic_account_type', '=', 'project_site']],
-        },{
-            relation: 'account.analytic.account',
-            type: 'many2one',
-            name: 'location_id',
-            domain: ["|","&", ['company_id', '=', state.st_line.company_id],['company_id', '=', false], ['analytic_account_type', '=', 'location']],
-        },{
-            relation: 'account.analytic.account',
-            type: 'many2one',
-            name: 'type_id',
-            domain: ["|","&",['company_id', '=', state.st_line.company_id],['company_id', '=', false], ['analytic_account_type', '=', 'type']],
         },{
             relation: 'account.analytic.tag',
             type: 'many2many',
@@ -122,15 +107,6 @@ NewLineRenderer.LineRenderer.include({
             self.fields.analytic_account_id = new relational_fields.FieldMany2One(self,
                 'analytic_account_id', record, {mode: 'edit'});
 
-            self.fields.project_site_id = new relational_fields.FieldMany2One(self,
-                'project_site_id', record, {mode: 'edit'});
-
-            self.fields.location_id = new relational_fields.FieldMany2One(self,
-                'location_id', record, {mode: 'edit'});
-
-            self.fields.type_id = new relational_fields.FieldMany2One(self,
-                'type_id', record, {mode: 'edit'});
-
             self.fields.analytic_tag_ids = new relational_fields.FieldMany2ManyTags(self,
                 'analytic_tag_ids', record, {mode: 'edit'});
 
@@ -155,9 +131,6 @@ NewLineRenderer.LineRenderer.include({
             self.fields.journal_id.appendTo($create.find('.create_journal_id .o_td_field'));
             self.fields.tax_ids.appendTo($create.find('.create_tax_id .o_td_field'));
             self.fields.analytic_account_id.appendTo($create.find('.create_analytic_account_id .o_td_field'));
-            self.fields.project_site_id.appendTo($create.find('.create_project_site_id .o_td_field'));
-            self.fields.location_id.appendTo($create.find('.create_location_id .o_td_field'));
-            self.fields.type_id.appendTo($create.find('.create_type_id .o_td_field'));
             self.fields.analytic_tag_ids.appendTo($create.find('.create_analytic_tag_ids .o_td_field'));
             self.fields.force_tax_included.appendTo($create.find('.create_force_tax_included .o_td_field'));
             self.fields.name.appendTo($create.find('.create_label .o_td_field'))
