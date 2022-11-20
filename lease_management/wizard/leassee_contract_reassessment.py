@@ -244,6 +244,7 @@ class Reassessment(models.TransientModel):
             new_invoice = invoice.new(invoice._convert_to_write(invoice._cache))
             line_values = {
                 'product_id': invoice_line.product_id.id,
+                'currency_id': invoice_line.currency_id.id,
                 'account_id': invoice_line.account_id.id,
                 'analytic_account_id': invoice_line.analytic_account_id.id,
                 'project_site_id': invoice_line.project_site_id.id,

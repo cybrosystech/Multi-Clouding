@@ -1478,8 +1478,7 @@ class LeaseeContract(models.Model):
             'project_site_id': contract.project_site_id.id,
             'type_id': contract.type_id.id,
             'location_id': contract.location_id.id,
-            'tax_ids': [(4, tax_id) for tax_id in
-                        contract.installment_product_id.taxes_id.ids],
+            'tax_ids': [(4, tax_id) for tax_id in contract.installment_product_id.supplier_taxes_id.ids],
         })]
         invoice = self.env['account.move'].create({
             'partner_id': partner.id,
@@ -2004,6 +2003,7 @@ class LeaseeContract(models.Model):
             line_values = {
                 'product_id': invoice_line.product_id.id,
                 'account_id': invoice_line.account_id.id,
+                'currency_id': invoice_line.currency_id.id,
                 'analytic_account_id': invoice_line.analytic_account_id.id,
                 'project_site_id': invoice_line.project_site_id.id,
                 'type_id': invoice_line.type_id.id,
