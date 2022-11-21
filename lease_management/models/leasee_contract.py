@@ -225,6 +225,30 @@ class LeaseeContract(models.Model):
                 rec.estimated_ending_date = rec.commencement_date + relativedelta(
                     months=rec.lease_contract_period, days=-1)
 
+    @api.onchange('analytic_account_id', 'project_site_id', 'type_id',
+                  'location_id')
+    def onchange_analytical_account(self):
+        print('heeeeeeee', self._origin)
+        account_move_lines = self.env['account.move'].search(
+            [('leasee_contract_id', '=', self._origin.id), ('state', '=', 'draft')]).mapped(lambda x: x.line_ids)
+        # print(len(account_moves), account_moves)
+        if account_move_lines:
+            for rec in account_move_lines:
+                rec.update({
+                    'analytic_account_id': self.analytic_account_id.id,
+                    'project_site_id': self.project_site_id.id,
+                    'type_id': self.type_id.id,
+                    'location_id': self.location_id.id
+                })
+        if self.asset_id:
+            self.asset_id.update({
+                'account_analytic_id': self.analytic_account_id.id,
+                'project_site_id': self.project_site_id.id,
+                'type_id': self.type_id.id,
+                'location_id': self.location_id.id
+            })
+
+
     @api.onchange('project_site_id')
     def get_location_and_types(self):
         for rec in self:

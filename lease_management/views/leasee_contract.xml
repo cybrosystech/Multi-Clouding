@@ -123,10 +123,10 @@
                                         <field name="interest_expense_account_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                                         <field name="initial_journal_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
                                         <field name="installment_journal_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="analytic_account_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="project_site_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="type_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="location_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="analytic_account_id" attrs="{'readonly': [('state', 'not in', ['draft', 'active'])]}"/>
+                                        <field name="project_site_id" attrs="{'readonly': [('state', 'not in', ['draft', 'active'])]}"/>
+                                        <field name="type_id" attrs="{'readonly': [('state', 'not in', ['draft', 'active'])]}"/>
+                                        <field name="location_id" attrs="{'readonly': [('state', 'not in', ['draft', 'active'])]}"/>
                                     </group>
                                     <group>
                                         <field name="terminate_product_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
