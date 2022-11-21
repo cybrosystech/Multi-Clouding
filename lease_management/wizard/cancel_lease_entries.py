@@ -66,6 +66,7 @@ class CancelLeaseEntries(models.TransientModel):
             payments.action_cancel()
             for lease in self.leasee_contract_id:
                 display_message = 'Journal Entries for the: ' + lease.name + '<br/>' \
-                                                                                'Has been cancelled by: ' + \
-                                  str(self.env.user.name) + '  prior to the date:'+ str(self.date)
+                                                                             'Has been cancelled by: ' + \
+                                  str(self.env.user.name) + 'till date:' + str(
+                    self.date)
                 lease.message_post(body=display_message)
