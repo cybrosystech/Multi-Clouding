@@ -470,6 +470,8 @@ class LeaseeContract(models.Model):
                     contract.commencement_date)
                 contract.original_rou = contract.rou_value
                 contract.original_ll = contract.lease_liability
+                if self.payment_ids:
+                    contract.original_ll = contract.lease_liability + sum(self.payment_ids.mapped(lambda x: x.amount))
 
     def check_leasor(self):
         percentage = 0
