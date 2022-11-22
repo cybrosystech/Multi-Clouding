@@ -1,0 +1,15 @@
+<odoo>
+
+    <record id="asset_sell_partial_view" model="ir.ui.view">
+        <field name="name">wizard.view.partial.sell.assets.form</field>
+        <field name="model">account.asset.sell</field>
+        <field name="inherit_id" ref="account_asset.asset_sell_form"/>
+        <field name="arch" type="xml">
+            <field name="action" position="after">
+                <field name="partial_bool" attrs="{'invisible': [('action', '=', 'dispose')]}"/>
+                <field name="partial_amount" attrs="{'invisible': [('partial_bool', '=', False)]}"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>
