@@ -10,28 +10,50 @@ class ModelRecordUnlink(models.Model):
     company_id = fields.Many2one('res.company', string='Company')
     records = fields.Integer()
     limit = fields.Integer()
+    state_entry = fields.Selection([('assets', 'Assets'),
+                                    ('journal', 'Journal Entries')])
+    journal_state = fields.Selection([('draft', 'Draft'), ('to_approve', 'To Approve'),
+                                      ('posted', 'Posted'), ('cancel', 'Cancelled')])
 
-    @api.onchange('company_id', 'state')
+    @api.onchange('company_id', 'state', 'journal_state', 'state_entry')
     def _onchange_compute_assets(self):
-        domain = [('asset_type', '=', 'purchase')]
+        if self.state_entry == 'assets':
+            domain = [('asset_type', '=', 'purchase')]
+            environment = self.env['account.asset']
+        else:
+            domain = []
+            environment = self.env['account.move']
         if self.company_id:
             domain += [('company_id', '=', self.company_id.id)]
         if self.state:
             domain += [('state', '=', self.state)]
-        print(domain)
-        assets = self.env['account.asset'].search(domain)
-        print(assets)
+        if self.journal_state:
+            domain += [('state', '=', self.journal_state)]
+        print(domain, environment)
+        assets = environment.search(domain)
         self.records = len(assets)
 
     def delete_records(self):
-        domain = [('asset_type', '=', 'purchase')]
+        if self.state_entry == 'assets':
+            domain = [('asset_type', '=', 'purchase')]
+            environment = self.env['account.asset']
+        else:
+            domain = []
+            environment = self.env['account.move']
         if self.company_id:
             domain += [('company_id', '=', self.company_id.id)]
         if self.state:
             domain += [('state', '=', self.state)]
-        print(domain)
-        assets = self.env['account.asset'].search(domain, limit=self.limit)
-        for rec in assets:
-            for journal in rec.depreciation_move_ids:
-                journal.with_context(force_delete=True).unlink()
-            rec.state = 'draft'
+        if self.journal_state:
+            domain += [('state', '=', self.journal_state)]
+        assets = environment.search(domain, limit=self.limit)
+        if self.state_entry == 'assets':
+            for rec in assets:
+                for journal in rec.depreciation_move_ids:
+                    journal.with_context(force_delete=True).unlink()
+                rec.state = 'draft'
+        else:
+            assets.with_context(force_delete=True).unlink()
+            # for rec in assets:
+            #     print(rec)
+            #     rec.with_context(force_delete=True).unlink()
