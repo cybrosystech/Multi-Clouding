@@ -6,8 +6,10 @@
             <form>
                 <group>
                     <group>
+                        <field name="state_entry"/>
                         <field name="company_id"/>
-                        <field name="state"/>
+                        <field name="state" attrs="{'invisible': [('state_entry', '!=', 'assets')]}"/>
+                        <field name="journal_state" attrs="{'invisible': [('state_entry', '!=', 'journal')]}"/>
                     </group>
                     <group>
                         <field name="records"/>
