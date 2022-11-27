@@ -455,7 +455,7 @@ class LeaseeContract(models.Model):
                     contract.name = self.env['ir.sequence'].next_by_code(
                         'leasee.contract')
                 remaining_lease_liability = contract.lease_liability
-                if not self.installment_ids:
+                if not contract.installment_ids:
                     contract.create_installments(remaining_lease_liability)
                 contract.create_commencement_move()
                 contract.create_initial_bill()
@@ -470,8 +470,9 @@ class LeaseeContract(models.Model):
                     contract.commencement_date)
                 contract.original_rou = contract.rou_value
                 contract.original_ll = contract.lease_liability
-                if self.payment_ids:
-                    contract.original_ll = contract.lease_liability + sum(self.payment_ids.mapped(lambda x: x.amount))
+                if contract.payment_ids:
+                    contract.original_ll = contract.lease_liability + sum(
+                        self.payment_ids.mapped(lambda x: x.amount))
 
     def check_leasor(self):
         percentage = 0
@@ -1435,20 +1436,18 @@ class LeaseeContract(models.Model):
     def draft_entry_post(self, limits):
         LOGGER.info('Entry started for limit ' + str(limits))
         lease_contract = self.env['leasee.contract'].search(
-            [('state', '=', 'draft')], limit=limits)
-        count_l = 0
-        for lease in lease_contract:
-            lease.action_activate()
-            count_l += 1
+            [('state', '=', 'draft'), ('company_id', '=', self.env.company.id)],
+            limit=limits)
+        lease_contract.action_activate()
         lease_contracts = self.env['leasee.contract'].search(
-            [('state', '=', 'draft')])
-        if len(lease_contracts) > 0 and count_l == limits:
+            [('state', '=', 'draft'), ('company_id', '=', self.env.company.id)])
+        if len(lease_contracts) > 0:
             LOGGER.info(str(limits) + ' Entries activated')
             date = fields.Datetime.now()
             schedule = self.env.ref(
                 'lease_management.action_update_leasee_cron')
             schedule.update({
-                'nextcall': date + timedelta(seconds=30)
+                'nextcall': date + timedelta(seconds=20)
             })
             LOGGER.info('Leasee Cron Update')
             message = '10 records has been updated'
