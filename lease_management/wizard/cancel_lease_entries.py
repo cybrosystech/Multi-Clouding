@@ -59,7 +59,12 @@ class CancelLeaseEntries(models.TransientModel):
                 asset_account_moves = self.leasee_contract_id.mapped(
                     lambda x: x.asset_id.depreciation_move_ids.filtered(
                         lambda m: m.date <= self.date))
+                new_asset_moves = self.leasee_contract_id.mapped(
+                    lambda x: x.asset_id.children_ids.mapped(
+                        lambda x: x.depreciation_move_ids.filtered(
+                            lambda m: m.date <= self.date)))
                 asset_account_moves.button_cancel()
+                new_asset_moves.button_cancel()
             account_moves.button_cancel()
             payments = self.leasee_contract_id.mapped(
                 lambda x: x.payment_ids.filtered(lambda m: m.date <= self.date))
