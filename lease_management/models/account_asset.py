@@ -34,7 +34,6 @@ class AccountAsset(models.Model):
                 'asset_id': self.id,
                 'from_leasee_contract': True,
                 'action': 'dispose',
-                'leasee_asset_bool': True
             })
             return {
                 'name': _('Sell Asset'),
