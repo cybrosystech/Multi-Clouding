@@ -9,4 +9,8 @@
             </field>
         </field>
     </record>
+
+    <record id="account.ir_cron_auto_post_draft_entry" model="ir.cron">
+        <field name="code">model._autopost_draft_entries(exclude_journal='IFRS')</field>
+    </record>
 </odoo>
