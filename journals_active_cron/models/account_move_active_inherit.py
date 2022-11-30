@@ -104,3 +104,18 @@ class AccountMoveInheritActive(models.Model):
             self.browse(ids)._post()
             if not self.env.registry.in_test_mode():
                 self._cr.commit()
+
+    @api.model
+    def _autopost_draft_ifrs_entries(self):
+        """This method is called from a cron job for posting jornal
+        entries that contain journal type IFRS"""
+        records = self.search([
+            ('state', '=', 'draft'),
+            ('date', '<=', fields.Date.context_today(self)),
+            ('auto_post', '=', True),
+            ('journal_id.name', 'ilike', 'IFRS')
+        ])
+        for ids in self._cr.split_for_in_conditions(records.ids, size=1000):
+            self.browse(ids)._post()
+            if not self.env.registry.in_test_mode():
+                self._cr.commit()
