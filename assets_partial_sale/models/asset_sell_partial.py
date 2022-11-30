@@ -7,7 +7,6 @@ class AssetSellPartial(models.TransientModel):
 
     partial_bool = fields.Boolean('Partial')
     partial_amount = fields.Float('amount')
-    leasee_asset_bool = fields.Boolean('leasee contract', default=False)
 
     def do_action(self):
         self.ensure_one()

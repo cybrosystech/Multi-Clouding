@@ -6,9 +6,8 @@
         <field name="inherit_id" ref="account_asset.asset_sell_form"/>
         <field name="arch" type="xml">
             <field name="action" position="after">
-                <field name="leasee_asset_bool" invisible="1"/>
-                <field name="partial_bool" attrs="{'invisible': [('leasee_asset_bool', '=', True)]}" />
-                <field name="partial_amount" attrs="{'invisible': [('partial_bool', '=', False), ('leasee_asset_bool', '=', True)]}"/>
+                <field name="partial_bool" attrs="{'invisible': [('action', '=', 'dispose')]}"/>
+                <field name="partial_amount" attrs="{'invisible': [('partial_bool', '=', False)]}"/>
             </field>
         </field>
     </record>
