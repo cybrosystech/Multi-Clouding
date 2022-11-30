@@ -81,41 +81,41 @@ class AccountMoveInheritActive(models.Model):
         })
         LOGGER.info('Account Move Active False updated')
 
-    @api.model
-    def _autopost_draft_entries(self, exclude_journal):
-        ''' This method is called from a cron job.
-        It is used to post entries such as those created by the module
-        account_asset.
-        '''
-        if exclude_journal != '':
-            records = self.search([
-                ('state', '=', 'draft'),
-                ('date', '<=', fields.Date.context_today(self)),
-                ('auto_post', '=', True),
-                ('journal_id.name', 'not ilike', exclude_journal)
-            ])
-        else:
-            records = self.search([
-                ('state', '=', 'draft'),
-                ('date', '<=', fields.Date.context_today(self)),
-                ('auto_post', '=', True)
-            ])
-        for ids in self._cr.split_for_in_conditions(records.ids, size=1000):
-            self.browse(ids)._post()
-            if not self.env.registry.in_test_mode():
-                self._cr.commit()
-
-    @api.model
-    def _autopost_draft_ifrs_entries(self):
-        """This method is called from a cron job for posting jornal
-        entries that contain journal type IFRS"""
-        records = self.search([
-            ('state', '=', 'draft'),
-            ('date', '<=', fields.Date.context_today(self)),
-            ('auto_post', '=', True),
-            ('journal_id.name', 'ilike', 'IFRS')
-        ])
-        for ids in self._cr.split_for_in_conditions(records.ids, size=1000):
-            self.browse(ids)._post()
-            if not self.env.registry.in_test_mode():
-                self._cr.commit()
+    # @api.model
+    # def _autopost_draft_entries(self, exclude_journal):
+    #     ''' This method is called from a cron job.
+    #     It is used to post entries such as those created by the module
+    #     account_asset.
+    #     '''
+    #     if exclude_journal != '':
+    #         records = self.search([
+    #             ('state', '=', 'draft'),
+    #             ('date', '<=', fields.Date.context_today(self)),
+    #             ('auto_post', '=', True),
+    #             ('journal_id.name', 'not ilike', exclude_journal)
+    #         ])
+    #     else:
+    #         records = self.search([
+    #             ('state', '=', 'draft'),
+    #             ('date', '<=', fields.Date.context_today(self)),
+    #             ('auto_post', '=', True)
+    #         ])
+    #     for ids in self._cr.split_for_in_conditions(records.ids, size=1000):
+    #         self.browse(ids)._post()
+    #         if not self.env.registry.in_test_mode():
+    #             self._cr.commit()
+    #
+    # @api.model
+    # def _autopost_draft_ifrs_entries(self):
+    #     """This method is called from a cron job for posting jornal
+    #     entries that contain journal type IFRS"""
+    #     records = self.search([
+    #         ('state', '=', 'draft'),
+    #         ('date', '<=', fields.Date.context_today(self)),
+    #         ('auto_post', '=', True),
+    #         ('journal_id.name', 'ilike', 'IFRS')
+    #     ])
+    #     for ids in self._cr.split_for_in_conditions(records.ids, size=1000):
+    #         self.browse(ids)._post()
+    #         if not self.env.registry.in_test_mode():
+    #             self._cr.commit()
