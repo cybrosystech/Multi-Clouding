@@ -53,20 +53,28 @@ class APRecon(models.TransientModel):
         domain = [('move_type', '=', 'in_invoice'),('leasee_contract_id', '!=', False)]
 
         vendor_bills = self.env['account.move'].search(domain).filtered(lambda bill: bill.invoice_date <= self.date_to and bill.invoice_date >= self.date_from)
-        for bill in vendor_bills:
-            leasee_installment_id = self.env['leasee.installment'].search([('installment_invoice_id', '=', bill.id)],limit=1)
-            if leasee_installment_id:
-                data.append({
-                    'description': bill.display_name,
-                    'month': bill.invoice_date.strftime(DF) if bill.invoice_date else '',
-                    'due_date': bill.invoice_date_due.strftime(DF) if bill.invoice_date_due else '',
-                    'leasor_name': bill.partner_id.name,
-                    'lease_no': bill.leasee_contract_id.name,
-                    'lease_payment_amount': bill.amount_untaxed,
-                    'interest_paid': leasee_installment_id.subsequent_amount,
-                    'principal_paid': bill.amount_untaxed - leasee_installment_id.subsequent_amount,
-                    'operating_exp_paid': bill.payment_state,
-                })
+        lease_contracts = vendor_bills.mapped('leasee_contract_id')
+        for contract in lease_contracts:
+            leasee_installment_id = contract.installment_ids.filtered(lambda x: x.installment_invoice_id.id in vendor_bills.mapped('id'))
+            for bill in contract.account_move_ids:
+                if bill.id in vendor_bills.mapped('id'):
+                    interest_paid_amount = 0
+                    if leasee_installment_id.leasee_contract_id.installment_amount != 0:
+                        interest_paid_amount = (leasee_installment_id.subsequent_amount) * bill.amount_untaxed / leasee_installment_id.leasee_contract_id.installment_amount
+                    data.append({
+                        'description': bill.display_name,
+                        'month': bill.invoice_date.strftime(
+                            DF) if bill.invoice_date else '',
+                        'due_date': bill.invoice_date_due.strftime(
+                            DF) if bill.invoice_date_due else '',
+                        'leasor_name': bill.partner_id.name,
+                        'lease_no': bill.leasee_contract_id.name,
+                        'lease_payment_amount': bill.amount_untaxed,
+                        'interest_paid': interest_paid_amount,
+                        'principal_paid': bill.amount_untaxed - interest_paid_amount,
+                        'operating_exp_paid': bill.payment_state,
+                        'bill_status': bill.state,
+                    })
         return data
 
     def print_report_xlsx(self):
@@ -183,6 +191,8 @@ class APRecon(models.TransientModel):
         worksheet.write(row, col, _('CF Principal Paid (LCY)'), header_format)
         col += 1
         worksheet.write(row, col, _('CF Operating Exp. Paid (LCY)'), header_format)
+        col += 1
+        worksheet.write(row, col, _('Bill Status'), header_format)
 
         for line in report_data:
             col = 0
@@ -204,6 +214,8 @@ class APRecon(models.TransientModel):
             worksheet.write(row, col, line['principal_paid'], STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['operating_exp_paid'], STYLE_LINE_Data)
+            col += 1
+            worksheet.write(row, col, line['bill_status'], STYLE_LINE_Data)
 
 
 

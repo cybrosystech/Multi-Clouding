@@ -192,7 +192,7 @@ class GeneralLedgerPostingWizard(models.TransientModel):
         col = 0
         worksheet.write(row, col, _('Posting Date'), header_format)
         col += 1
-        worksheet.write(row, col, _('Invoice Date'), header_format)
+        worksheet.write(row, col, _('Accounting Date'), header_format)
         col += 1
         worksheet.write(row, col, _('Document No.'), header_format)
         col += 1
