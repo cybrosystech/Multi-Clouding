@@ -59,8 +59,9 @@ class APRecon(models.TransientModel):
             for bill in contract.account_move_ids:
                 if bill.id in vendor_bills.mapped('id'):
                     interest_paid_amount = 0
-                    if leasee_installment_id[0].leasee_contract_id.installment_amount != 0:
-                        interest_paid_amount = (leasee_installment_id[0].subsequent_amount) * bill.amount_untaxed / leasee_installment_id[0].leasee_contract_id.installment_amount
+                    if leasee_installment_id:
+                        if leasee_installment_id[0].leasee_contract_id.installment_amount != 0:
+                            interest_paid_amount = (leasee_installment_id[0].subsequent_amount) * bill.amount_untaxed / leasee_installment_id[0].leasee_contract_id.installment_amount
                     data.append({
                         'description': bill.display_name,
                         'month': bill.invoice_date.strftime(
