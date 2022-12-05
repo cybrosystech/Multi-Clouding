@@ -82,7 +82,7 @@ class ChangeLeasorWizard(models.TransientModel):
 
     def action_apply(self):
         self.check_leasor()
-        self.check_date()
+        # self.check_date()
         contract = self.leasee_contract_id
         if self.leasor_type != contract.leasor_type:
             contract.leasor_type = self.leasor_type
