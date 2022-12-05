@@ -70,7 +70,8 @@ class GeneralLedgerPostingWizard(models.TransientModel):
         for line in journal_items:
             data.append({
                 'posting_date': line.move_id.posting_date.strftime(date_format) if line.move_id.posting_date else '',
-                'inv_date': line.move_id.date.strftime(date_format) if line.move_id.date else '',
+                'acc_date': line.move_id.date.strftime(date_format) if line.move_id.date else '',
+                'inv_date': line.move_id.invoice_date.strftime(date_format) if line.move_id.invoice_date else line.move_id.date.strftime(date_format),
                 'document_no': line.move_id.name,
                 'account_number': line.account_id.code,
                 'account_name': line.account_id.name,
@@ -194,6 +195,8 @@ class GeneralLedgerPostingWizard(models.TransientModel):
         col += 1
         worksheet.write(row, col, _('Accounting Date'), header_format)
         col += 1
+        worksheet.write(row, col, _('Invoice Date'), header_format)
+        col += 1
         worksheet.write(row, col, _('Document No.'), header_format)
         col += 1
         worksheet.write(row, col, _('G/L Account No.'), header_format)
@@ -235,6 +238,8 @@ class GeneralLedgerPostingWizard(models.TransientModel):
             col = 0
             row += 1
             worksheet.write(row, col, line['posting_date'], STYLE_LINE_Data)
+            col += 1
+            worksheet.write(row, col, line['acc_date'], STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['inv_date'], STYLE_LINE_Data)
             col += 1
