@@ -1352,6 +1352,8 @@ class LeaseeContract(models.Model):
         # return view_form
 
     def get_interest_amount_termination_amount(self, termination_date):
+        if not self.installment_ids.filtered(lambda i: i.date > termination_date):
+            return 0
         current_installment = \
             self.installment_ids.filtered(lambda i: i.date > termination_date)[
                 0]
