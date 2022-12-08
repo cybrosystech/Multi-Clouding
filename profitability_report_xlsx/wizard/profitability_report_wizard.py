@@ -63,10 +63,10 @@ class ProfitabilityReportWizard(models.TransientModel):
         if profitability.site_maintenance:
             return profitability.site_maintenance
 
-    def default_site_maintenance_lim(self):
-        profitability = self.env['profitability.report.owned'].search([])
-        if profitability.site_maintenance_lim:
-            return profitability.site_maintenance_lim
+    # def default_site_maintenance_lim(self):
+    #     profitability = self.env['profitability.report.owned'].search([])
+    #     if profitability.site_maintenance_lim:
+    #         return profitability.site_maintenance_lim
 
     def default_insurance(self):
         profitability = self.env['profitability.report.owned'].search([])
@@ -131,6 +131,8 @@ class ProfitabilityReportWizard(models.TransientModel):
     def default_analytic_account_group(self):
         group = self.env['account.analytic.group'].search(
             [('name', 'ilike', 'owned')])
+        if not group:
+            raise UserError("Please configure analytic group account for Owned")
         return group
 
     service_revenue = fields.Many2many('account.account', 'service_revenue_rel',
@@ -156,9 +158,9 @@ class ProfitabilityReportWizard(models.TransientModel):
                                 default=default_discount)
     site_maintenance = fields.Many2many('account.account', 'site_maintenance',
                                         default=default_site_maintenance)
-    site_maintenance_lim = fields.Many2many('account.account',
-                                            'site_maintenance_lim',
-                                            default=default_site_maintenance_lim)
+    # site_maintenance_lim = fields.Many2many('account.account',
+    #                                         'site_maintenance_lim',
+    #                                         default=default_site_maintenance_lim)
     insurance = fields.Many2many('account.account', 'insurance',
                                  string="Insurance", default=default_insurance)
     energy_cost = fields.Many2many('account.account', 'energy_cost',
@@ -258,10 +260,10 @@ class ProfitabilityReportWizard(models.TransientModel):
         if self.from_date and self.to_date:
             if self.from_date > self.to_date:
                 raise UserError("Start date should be less than end date")
-        if self.site_maintenance and self.site_maintenance_lim:
-            if not self.site_maintenance.code < self.site_maintenance_lim.code:
-                raise UserError("Please set the limit of site maintenance "
-                                "correctly")
+        # if self.site_maintenance and self.site_maintenance_lim:
+        #     if not self.site_maintenance.code < self.site_maintenance_lim.code:
+        #         raise UserError("Please set the limit of site maintenance "
+        #                         "correctly")
         if self.fa_depreciation and self.fa_depreciation_lim:
             if not self.fa_depreciation.code < self.fa_depreciation_lim.code:
                 raise UserError("Please set the limit of Fa depreciation "
@@ -276,7 +278,7 @@ class ProfitabilityReportWizard(models.TransientModel):
                 'active_sharing_fees': self.active_sharing_fees,
                 'discount': self.discount,
                 'site_maintenance': self.site_maintenance,
-                'site_maintenance_lim': self.site_maintenance_lim,
+                # 'site_maintenance_lim': self.site_maintenance_lim,
                 'insurance': self.insurance,
                 'energy_cost': self.energy_cost,
                 'security': self.security,
@@ -294,7 +296,7 @@ class ProfitabilityReportWizard(models.TransientModel):
             'active_sharing_fees': self.active_sharing_fees,
             'discount': self.discount,
             'site_maintenance': self.site_maintenance,
-            'site_maintenance_lim': self.site_maintenance_lim,
+            # 'site_maintenance_lim': self.site_maintenance_lim,
             'insurance': self.insurance,
             'energy_cost': self.energy_cost,
             'security': self.security,
@@ -313,8 +315,8 @@ class ProfitabilityReportWizard(models.TransientModel):
             'pass_through_energy_ids': self.pass_through_energy.ids,
             'active_sharing_fees_ids': self.active_sharing_fees.ids,
             'discount_ids': self.discount.ids,
-            'site_maintenance_code': self.site_maintenance.code,
-            'site_maintenance_lim_code': self.site_maintenance_lim.code,
+            'site_maintenance_ids': self.site_maintenance.ids,
+            # 'site_maintenance_lim_code': self.site_maintenance_lim.code,
             'insurance_ids': self.insurance.ids,
             'energy_cost_ids': self.energy_cost.ids,
             'security_ids': self.security.ids,
@@ -359,15 +361,15 @@ class ProfitabilityReportWizard(models.TransientModel):
         cr.execute(query)
         project_site = cr.dictfetchall()
 
-        if data['site_maintenance_code'] and data['site_maintenance_lim_code']:
-            query2 = '''
-                    select id from account_account as account
-                    where account.code BETWEEN \'''' + data['site_maintenance_code'] + '\' and \'' + data['site_maintenance_lim_code'] + "\'"
-
-            cr = self._cr
-            cr.execute(query2)
-            account_ids1 = cr.dictfetchall()
-            account_ids = [dic['id'] for dic in account_ids1]
+        # if data['site_maintenance_code'] and data['site_maintenance_lim_code']:
+        #     query2 = '''
+        #             select id from account_account as account
+        #             where account.code BETWEEN \'''' + data['site_maintenance_code'] + '\' and \'' + data['site_maintenance_lim_code'] + "\'"
+        #
+        #     cr = self._cr
+        #     cr.execute(query2)
+        #     account_ids1 = cr.dictfetchall()
+        #     account_ids = [dic['id'] for dic in account_ids1]
 
         if data['fa_depreciation_code'] and data['fa_depreciation_lim_code']:
             query3 = '''
@@ -449,7 +451,7 @@ class ProfitabilityReportWizard(models.TransientModel):
             })
 
             site_maintenance = projects.filtered(
-                lambda x: x.account_id.id in account_ids if account_ids else None)
+                lambda x: x.account_id.id in data['site_maintenance_ids'])
             total = sum(site_maintenance.mapped('debit')) - sum(
                 site_maintenance.mapped('credit'))
             prof_rep.update({

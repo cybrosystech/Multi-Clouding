@@ -34,8 +34,8 @@ class ProfitabilityReportManaged(models.Model):
     site_maintenance_managed = fields.Many2many('account.account',
                                                 'site_maintenances_managed')
 
-    site_maintenance_managed_lim = fields.Many2many('account.account',
-                                                    'site_maintenance_managed_lims')
+    # site_maintenance_managed_lim = fields.Many2many('account.account',
+    #                                                 'site_maintenance_managed_lims')
 
     site_rent = fields.Many2many('account.account',
                                  'site_rent_managed_rels')

@@ -12,7 +12,7 @@
                     <field name="from_leasee_contract" invisible="1"/>
                 </xpath>
                 <xpath expr="//field[@name='action']" position="after">
-                    <field name="contract_end_date" attrs="{'invisible':[('from_leasee_contract', '!=', True)], 'required':[('from_leasee_contract', '=', True)]}"/>
+                    <field name="contract_end_date" attrs="{'required':[('from_leasee_contract', '=', True)]}"/>
                 </xpath>
                 <xpath expr="//field[@name='action']" position="attributes">
                     <attribute name="attrs">{'readonly':[('from_leasee_contract','=',True)]}</attribute>

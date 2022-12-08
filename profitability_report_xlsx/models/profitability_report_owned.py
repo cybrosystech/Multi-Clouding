@@ -22,8 +22,8 @@ class ProfitabilityReportOwned(models.Model):
                                 string='Discount')
     site_maintenance = fields.Many2many('account.account',
                                         'site_owned_maintenance')
-    site_maintenance_lim = fields.Many2many('account.account',
-                                            'site_maintenance_owned_lim')
+    # site_maintenance_lim = fields.Many2many('account.account',
+    #                                         'site_maintenance_owned_lim')
     insurance = fields.Many2many('account.account', 'insurance_owned_',
                                  string="Insurance")
     energy_cost = fields.Many2many('account.account', 'energy_owned_cost',

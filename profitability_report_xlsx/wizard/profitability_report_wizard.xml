@@ -20,12 +20,13 @@
                     </group>
                 </group>
                 <group>
-                    <label for="site_maintenance" string="Site Maintenance"/>
-                    <div>
-                        <field name="site_maintenance" class="oe_inline" widget="many2many_tags"/>
-                        <span>To</span>
-                        <field name="site_maintenance_lim" class="oe_inline" widget="many2many_tags"/>
-                    </div>
+                    <field name="site_maintenance" class="oe_inline" widget="many2many_tags"/>
+<!--                    <label for="site_maintenance" string="Site Maintenance"/>-->
+<!--                    <div>-->
+<!--                        <field name="site_maintenance" class="oe_inline" widget="many2many_tags"/>-->
+<!--                        <span>To</span>-->
+<!--                        <field name="site_maintenance_lim" class="oe_inline" widget="many2many_tags"/>-->
+<!--                    </div>-->
                 </group>
                 <group>
                     <group>
