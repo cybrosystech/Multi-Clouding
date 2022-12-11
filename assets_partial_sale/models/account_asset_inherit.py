@@ -81,7 +81,7 @@ class AccountAssetPartialInherit(models.Model):
                 initial_account = asset.original_move_line_ids.account_id if len(
                     asset.original_move_line_ids.account_id) == 1 else asset.account_asset_id
                 depreciation_moves = asset.depreciation_move_ids.filtered(
-                    lambda r: r.state == 'posted' and not (
+                    lambda r: r.state in ['posted', 'cancel'] and not (
                             r.reversal_move_id and r.reversal_move_id[
                         0].state == 'posted'))
                 depreciated_amount = copysign(
