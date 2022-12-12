@@ -168,7 +168,7 @@ class AssetModify(models.TransientModel):
                 'type_id': self.asset_id.type_id.id,
                 'location_id': self.asset_id.location_id.id,
             })
-            asset_increase.validate()
+            asset_increase.with_context(ignore_prorata=False).validate()
             asset_increase.write({'parent_id': self.asset_id.id})
 
             return {'type': 'ir.actions.act_window_close'}
