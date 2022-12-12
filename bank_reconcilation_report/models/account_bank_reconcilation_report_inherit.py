@@ -23,7 +23,7 @@ class AccountBankReconciliationReportInherit(models.AbstractModel):
 
         last_statement_domain = [('date', '<=', options['date']['date_to'])]
         if not options['all_entries']:
-            last_statement_domain.append(('move_id.state', '=', 'posted'))
+            last_statement_domain.append(('state', 'in', ['posted', 'confirm']))
         last_statement = journal._get_last_bank_statement(
             domain=last_statement_domain)
 
