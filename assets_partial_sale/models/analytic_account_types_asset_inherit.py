@@ -71,7 +71,7 @@ def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial,
                 asset.original_move_line_ids.account_id) == 1 else asset.account_asset_id
             depreciated_amount = copysign(
                 sum(asset.depreciation_move_ids.filtered(
-                    lambda r: r.state == 'posted').mapped('amount_total')),
+                    lambda r: r.state in ['posted', 'cancel']).mapped('amount_total')),
                 -initial_amount)
             depreciation_account = asset.account_depreciation_id
             invoice_amount = copysign(invoice_line_id.price_subtotal,
