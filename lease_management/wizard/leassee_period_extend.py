@@ -152,7 +152,7 @@ class LeaseePeriodExtend(models.TransientModel):
         self.env['asset.modify'].create({
             'name': "Extend Leasee Contract",
             # 'date': asset.acquisition_date,
-            'date': contract.estimated_ending_date,
+            'date': contract.estimated_ending_date + relativedelta(days=1),
             'method_number': new_period,
             'asset_id': asset.id,
             'value_residual': new_value,
