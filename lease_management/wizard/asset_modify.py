@@ -150,6 +150,8 @@ class AssetModify(models.TransientModel):
                 'company_id': self.asset_id.company_id.id,
                 'asset_type': self.asset_id.asset_type,
                 'method': self.asset_id.method,
+                'prorata': self.asset_id.prorata,
+                'prorata_date': self.date if self.asset_id.prorata else None,
                 'method_number': self.method_number,
                 'method_period': self.method_period,
                 'acquisition_date': self.date,
@@ -166,7 +168,7 @@ class AssetModify(models.TransientModel):
                 'type_id': self.asset_id.type_id.id,
                 'location_id': self.asset_id.location_id.id,
             })
-            asset_increase.validate()
+            asset_increase.with_context(ignore_prorata=False).validate()
             asset_increase.write({'parent_id': self.asset_id.id})
 
             return {'type': 'ir.actions.act_window_close'}

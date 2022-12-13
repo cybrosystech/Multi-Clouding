@@ -45,8 +45,8 @@ class LeaseePeriodExtend(models.TransientModel):
         # installment_amount = last_installment.amount * (1 + contract.increasement_rate / 100)
         new_contract = contract.copy({
             'name': contract.name,
-            'inception_date': contract.estimated_ending_date,
-            'commencement_date': contract.estimated_ending_date,
+            'inception_date': contract.estimated_ending_date + relativedelta(days=1),
+            'commencement_date': contract.estimated_ending_date + relativedelta(days=1),
             'installment_amount': self.installment_amount,
             'lease_contract_period': self.new_contract_period,
             'parent_id': contract.id,
@@ -152,7 +152,7 @@ class LeaseePeriodExtend(models.TransientModel):
         self.env['asset.modify'].create({
             'name': "Extend Leasee Contract",
             # 'date': asset.acquisition_date,
-            'date': contract.estimated_ending_date,
+            'date': contract.estimated_ending_date + relativedelta(days=1),
             'method_number': new_period,
             'asset_id': asset.id,
             'value_residual': new_value,
