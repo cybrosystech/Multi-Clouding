@@ -8,6 +8,9 @@ from odoo.addons.lease_management.models.account_asset import AccountAsset
 class AccountAssetPartialInherit(models.Model):
     _inherit = 'account.asset'
 
+    invoice_id = fields.Many2one('account.move', string="Customer Invoice", help="The disposal invoice is needed in order to generate the closing journal entry.", domain="[('move_type', 'in', ['out_invoice','in_refund']), ('state', '=', 'posted')]")
+
+
     def set_to_close(self, invoice_line_id, partial, partial_amount, date=None):
         self.ensure_one()
         disposal_date = date or fields.Date.today()
