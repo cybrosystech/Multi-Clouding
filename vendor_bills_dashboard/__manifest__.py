@@ -7,7 +7,7 @@
     'author': "",
     'website': "",
     'category': 'Accounting',
-    'version': '14.0.1.0.0',
+    'version': '14.0.1.1.0',
     'depends': ['account', 'account_analytic_parent', 'approve_status'],
 
     'data':
