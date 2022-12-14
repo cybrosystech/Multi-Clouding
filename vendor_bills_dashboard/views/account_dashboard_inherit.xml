@@ -81,6 +81,96 @@
                         </span>
                     </div>
                 </div>
+                <div class="row" t-if="dashboard.lease_drafts">
+                    <div class="col overflow-hidden text-left">
+                        <a type="object"
+                           name="open_leasee_contract"
+                           context="{'domain':'draft'}"
+                           id="account_dashboard_leasee_draft">
+                            <span title="Leasee Contract draft entries">
+                                <t t-esc="dashboard.lease_drafts"/>
+                                Draft entries
+                            </span>
+                        </a>
+                    </div>
+                    <div class="col-auto text-right">
+                        <span>
+                            <t t-esc="dashboard.lease_drafts_amount"/>
+                        </span>
+                    </div>
+                </div>
+                <div class="row" t-if="dashboard.lease_active">
+                    <div class="col overflow-hidden text-left">
+                        <a type="object"
+                           name="open_leasee_contract"
+                           context="{'domain':'active'}"
+                           id="account_dashboard_leasee_active">
+                            <span title="Leasee Contract active entries">
+                                <t t-esc="dashboard.lease_active"/>
+                                Active entries
+                            </span>
+                        </a>
+                    </div>
+                    <div class="col-auto text-right">
+                        <span>
+                            <t t-esc="dashboard.lease_active_amount"/>
+                        </span>
+                    </div>
+                </div>
+                <div class="row" t-if="dashboard.lease_extended">
+                    <div class="col overflow-hidden text-left">
+                        <a type="object"
+                           name="open_leasee_contract"
+                           context="{'domain':'extended'}"
+                           id="account_dashboard_leasee_extended">
+                            <span title="Leasee Contract extended entries">
+                                <t t-esc="dashboard.lease_extended"/>
+                                Extended entries
+                            </span>
+                        </a>
+                    </div>
+                    <div class="col-auto text-right">
+                        <span>
+                            <t t-esc="dashboard.lease_extended_amount"/>
+                        </span>
+                    </div>
+                </div>
+                <div class="row" t-if="dashboard.lease_expired">
+                    <div class="col overflow-hidden text-left">
+                        <a type="object"
+                           name="open_leasee_contract"
+                           context="{'domain':'expired'}"
+                           id="account_dashboard_leasee_expired">
+                            <span title="Leasee Contract expired entries">
+                                <t t-esc="dashboard.lease_expired"/>
+                                Expired entries
+                            </span>
+                        </a>
+                    </div>
+                    <div class="col-auto text-right">
+                        <span>
+                            <t t-esc="dashboard.lease_expired_amount"/>
+                        </span>
+                    </div>
+                </div>
+                <div class="row" t-if="dashboard.lease_terminated">
+                    <div class="col overflow-hidden text-left">
+                        <a type="object"
+                           name="open_leasee_contract"
+                           context="{'domain':'terminated'}"
+                           id="account_dashboard_leasee_terminated">
+                            <span title="Leasee Contract terminated entries">
+                                <t t-esc="dashboard.lease_terminated"/>
+                                Terminated entries
+                            </span>
+                        </a>
+                    </div>
+                    <div class="col-auto text-right">
+                        <span>
+                            <t t-esc="dashboard.lease_terminated_amount"/>
+                        </span>
+                    </div>
+                </div>
             </xpath>
         </field>
     </record>

@@ -6,6 +6,16 @@ class AccountJournalInherit(models.Model):
 
     def get_journal_dashboard_datas(self):
         res = super(AccountJournalInherit, self).get_journal_dashboard_datas()
+        lease_drafts = ''
+        lease_drafts_amount = ''
+        lease_active = ''
+        lease_active_amount = ''
+        lease_extended = ''
+        lease_extended_amount = ''
+        lease_expired = ''
+        lease_expired_amount = ''
+        lease_terminated = ''
+        lease_terminated_amount = ''
         currency = self.currency_id or self.company_id.currency_id
         (query, query_args) = self._get_to_approve_bills_query()
         (journal_query, journal_query_args) = self.get_journals_to_approve()
@@ -20,11 +30,49 @@ class AccountJournalInherit(models.Model):
         (journal_to_approve,
          journal_sum_to_approve) = self._count_results_and_sum_amounts(
             journal_query_results_to_approve, currency, curr_cache=curr_cache)
+        if self.name.lower().find('ifrs') == 0:
+            (query, query_args) = self.get_lease_contract_draft()
+            self.env.cr.execute(query, query_args)
+            query_results_lease_draft = self.env.cr.dictfetchall()
+            (lease_drafts, lease_drafts_amount) = self._count_results_and_sum_amounts(query_results_lease_draft, currency,curr_cache=curr_cache)
+            (query, query_args) = self.get_lease_contract_active()
+            self.env.cr.execute(query, query_args)
+            query_results_lease_active = self.env.cr.dictfetchall()
+            (lease_active, lease_active_amount) = self._count_results_and_sum_amounts(query_results_lease_active, currency,curr_cache=curr_cache)
+            (query, query_args) = self.get_lease_contract_extended()
+            self.env.cr.execute(query, query_args)
+            query_results_lease_extended = self.env.cr.dictfetchall()
+            (lease_extended,
+             lease_extended_amount) = self._count_results_and_sum_amounts(
+                query_results_lease_extended, currency, curr_cache=curr_cache)
+            (query, query_args) = self.get_lease_contract_expired()
+            self.env.cr.execute(query, query_args)
+            query_results_lease_expired = self.env.cr.dictfetchall()
+            (lease_expired,
+             lease_expired_amount) = self._count_results_and_sum_amounts(
+                query_results_lease_expired, currency, curr_cache=curr_cache)
+            (query, query_args) = self.get_lease_contract_terminated()
+            self.env.cr.execute(query, query_args)
+            query_results_lease_terminated = self.env.cr.dictfetchall()
+            (lease_terminated,
+             lease_terminated_amount) = self._count_results_and_sum_amounts(
+                query_results_lease_terminated, currency, curr_cache=curr_cache)
+
         res.update({
             'number_to_approve': number_to_approve,
             'sum_to_approve': sum_to_approve,
             'journals_to_approve': journal_to_approve,
-            'journal_sum_to_approve': journal_sum_to_approve
+            'journal_sum_to_approve': journal_sum_to_approve,
+            'lease_drafts': lease_drafts,
+            'lease_drafts_amount': lease_drafts_amount,
+            'lease_active':lease_active,
+            'lease_active_amount':lease_active_amount,
+            'lease_extended': lease_extended,
+            'lease_extended_amount': lease_extended_amount,
+            'lease_expired': lease_expired,
+            'lease_expired_amount': lease_expired_amount,
+            'lease_terminated': lease_terminated,
+            'lease_terminated_amount': lease_terminated_amount,
         })
         return res
 
@@ -64,4 +112,54 @@ class AccountJournalInherit(models.Model):
             'search_default_journal_id': self.id,
         })
         action['domain'] = [('state', '=', 'to_approve')]
+        return action
+
+    def get_lease_contract_draft(self):
+        return ('''select lease.original_rou as amount_total,
+                    lease.leasee_currency_id as currency,
+                    lease.company_id
+                from leasee_contract lease
+                WHERE lease.state = 'draft' 
+                and lease.company_id = %(company)s''', {'company': self.env.company.id})
+
+    def get_lease_contract_active(self):
+        return ('''select lease.original_rou as amount_total,
+                            lease.leasee_currency_id as currency,
+                            lease.company_id
+                        from leasee_contract lease
+                        WHERE lease.state = 'active' 
+                        and lease.company_id = %(company)s''',
+                {'company': self.env.company.id})
+
+    def get_lease_contract_extended(self):
+        return ('''select lease.original_rou as amount_total,
+                                    lease.leasee_currency_id as currency,
+                                    lease.company_id
+                                from leasee_contract lease
+                                WHERE lease.state = 'extended' 
+                                and lease.company_id = %(company)s''',
+                {'company': self.env.company.id})
+
+    def get_lease_contract_expired(self):
+        return ('''select lease.original_rou as amount_total,
+                                            lease.leasee_currency_id as currency,
+                                            lease.company_id
+                                        from leasee_contract lease
+                                        WHERE lease.state = 'expired' 
+                                        and lease.company_id = %(company)s''',
+                {'company': self.env.company.id})
+
+    def get_lease_contract_terminated(self):
+        return ('''select lease.original_rou as amount_total,
+                                                    lease.leasee_currency_id as currency,
+                                                    lease.company_id
+                                                from leasee_contract lease
+                                                WHERE lease.state = 'terminated' 
+                                                and lease.company_id = %(company)s''',
+                {'company': self.env.company.id})
+
+    def open_leasee_contract(self):
+        action = self.env["ir.actions.act_window"]._for_xml_id(
+            'lease_management.view_leasee_contract_action')
+        action['domain'] = [('state', '=', self._context['domain'])]
         return action
