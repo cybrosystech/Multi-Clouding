@@ -74,9 +74,9 @@ def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial,
                     lambda r: r.state in ['posted', 'cancel']).mapped('amount_total')),
                 -initial_amount)
             depreciation_account = asset.account_depreciation_id
-            invoice_amount = copysign(invoice_line_id.price_subtotal,
+            invoice_amount = copysign(sum(invoice_line_id.mapped('price_subtotal')),
                                       -initial_amount)
-            invoice_account = invoice_line_id.account_id
+            invoice_account = invoice_line_id[0].account_id
             difference = -initial_amount - depreciated_amount - invoice_amount
             difference_account = asset.company_id.gain_account_id if difference > 0 else asset.company_id.loss_account_id
             line_datas = [(initial_amount, initial_account),

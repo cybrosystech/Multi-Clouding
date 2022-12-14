@@ -88,9 +88,9 @@ class AccountAssetPartialInherit(models.Model):
                     sum(depreciation_moves.mapped('amount_total')),
                     -initial_amount)
                 depreciation_account = asset.account_depreciation_id
-                invoice_amount = copysign(invoice_line_id.price_subtotal,
+                invoice_amount = copysign(sum(invoice_line_id.mapped('price_subtotal')),
                                           -initial_amount)
-                invoice_account = invoice_line_id.account_id
+                invoice_account = invoice_line_id[0].account_id
                 difference = -initial_amount - depreciated_amount - invoice_amount
                 difference_account = asset.company_id.gain_account_id if difference > 0 else asset.company_id.loss_account_id
                 value_residual = asset.value_residual
