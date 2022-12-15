@@ -21,7 +21,7 @@ class AssetSellPartial(models.TransientModel):
         date = invoice_line.move_id.invoice_date
         if self.action == 'dispose':
             date = self.contract_end_date
-        return self.asset_id.set_to_close(invoice_line_id=invoice_line if self.invoice_line_id else self.invoice_id,
+        return self.asset_id.set_to_close(invoice_line_id=invoice_line if self.invoice_line_id or self.action == 'dispose'  else self.invoice_id,
                                           partial=self.partial_bool,
                                           partial_amount=self.partial_amount,
                                           date=date)
