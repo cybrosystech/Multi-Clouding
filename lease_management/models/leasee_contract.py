@@ -128,7 +128,7 @@ class LeaseeContract(models.Model):
 
     account_move_ids = fields.One2many(comodel_name="account.move",
                                        inverse_name="leasee_contract_id",
-                                       string="", required=False, )
+                                       string="", required=False, index=True)
 
     lease_liability_account_id = fields.Many2one(comodel_name="account.account",
                                                  string="Short Lease Liability Account",
@@ -1663,10 +1663,11 @@ class LeaseeContract(models.Model):
         for contract in self:
             delta = contract.payment_frequency * (
                 1 if contract.payment_frequency_type == 'months' else 12)
-            instalments = self.env['leasee.installment'].search([
-                ('leasee_contract_id', '=', contract.id),
-            ]).filtered(lambda i: i.date >= start_date)
-            for i, installment in enumerate(instalments):
+            # instalments = self.env['leasee.installment'].search([
+            #     ('leasee_contract_id', '=', contract.id),
+            # ]).filtered(lambda i: i.date >= start_date)
+            # print('///////', instalments, contract.installment_ids.filtered(lambda i: i.date >= start_date))
+            for i, installment in enumerate(contract.installment_ids.filtered(lambda i: i.date >= start_date)):
                 if installment.subsequent_amount:
                     ins_period = installment.get_period_order()
                     interest_amount = installment.subsequent_amount
