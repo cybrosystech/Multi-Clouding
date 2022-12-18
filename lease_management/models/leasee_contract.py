@@ -91,7 +91,7 @@ class LeaseeContract(models.Model):
                                      string="Asset Model", required=False,
                                      domain=[('asset_type', '=', 'purchase'),
                                              ('state', '=', 'model')])
-    asset_id = fields.Many2one(comodel_name="account.asset", copy=False)
+    asset_id = fields.Many2one(comodel_name="account.asset", copy=False, index=True)
 
     leasee_currency_id = fields.Many2one(comodel_name="res.currency", string="",
                                          required=True, )
@@ -175,7 +175,7 @@ class LeaseeContract(models.Model):
                                   required=False, )
     installment_ids = fields.One2many(comodel_name="leasee.installment",
                                       inverse_name="leasee_contract_id",
-                                      string="", required=False, )
+                                      string="", required=False, index=True)
     expired_notified = fields.Boolean(default=False)
 
     project_site_id = fields.Many2one(comodel_name="account.analytic.account",
@@ -193,10 +193,10 @@ class LeaseeContract(models.Model):
                                            'location')], required=False, )
     prorata = fields.Boolean(default=True, readonly=True)
     parent_id = fields.Many2one(comodel_name="leasee.contract", string="",
-                                required=False, copy=False)
+                                required=False, copy=False, index=True)
     child_ids = fields.One2many(comodel_name="leasee.contract",
                                 inverse_name="parent_id", string="",
-                                required=False, copy=False)
+                                required=False, copy=False, index=True)
 
     incentives_account_id = fields.Many2one(comodel_name="account.account",
                                             string="", required=True, )

@@ -11,7 +11,7 @@ class AccountMove(models.Model):
     _inherit = 'account.move'
 
     leasee_contract_id = fields.Many2one(comodel_name="leasee.contract", index=True)
-    leasee_installment_id = fields.Many2one(comodel_name="leasee.installment", string="", required=False, )
+    leasee_installment_id = fields.Many2one(comodel_name="leasee.installment", string="", required=False, index=True)
     leasor_contract_id = fields.Many2one(comodel_name="leasor.contract", string="", required=False, )
     posting_date = fields.Date()
     is_installment_entry = fields.Boolean(default=False)
