@@ -1567,12 +1567,10 @@ class LeaseeContract(models.Model):
         for contract in self:
             delta = contract.payment_frequency * (
                 1 if contract.payment_frequency_type == 'months' else 12)
-            # instalments = self.env['leasee.installment'].search([
-            #     ('leasee_contract_id', '=', contract.id),
-            # ]).filtered(lambda i: i.date >= start_date)
-            # print('install', instalments, len(instalments))
-            # print('install', , len(contract.installment_ids.filtered(lambda i: i.date >= start_date)))
-            for i, installment in enumerate(contract.installment_ids.filtered(lambda i: i.date >= start_date)):
+            instalments = self.env['leasee.installment'].search([
+                ('leasee_contract_id', '=', contract.id),
+            ]).filtered(lambda i: i.date >= start_date)
+            for i, installment in enumerate(instalments):
                 if installment.subsequent_amount:
                     if not contract.prorata:
                         if contract.payment_method == 'beginning':
