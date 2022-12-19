@@ -1366,15 +1366,23 @@ class LeaseeContract(models.Model):
         return amount
 
     def process_termination(self):
-        leasee_moves = self.env['account.move'].search(
-            [('leasee_contract_id', '=', self.id), ('asset_id', '=', False)])
-        moves_after_terminate = leasee_moves.filtered(
-            lambda m: m.date >= date.today())
-        for move in moves_after_terminate:
-            if move.date > date.today():
-                move.button_draft()
-                move.button_cancel()
-            else:
+        # print('account_move', self.account_move_ids)
+        moves_after_terminate = self.account_move_ids.filtered(lambda s: not s.asset_id and s.date > date.today())
+        moves_today_terminate = self.account_move_ids.filtered(lambda s: not s.asset_id and s.date == date.today())
+        # print('leasee_moves', abc, len(abc))
+        # leasee_moves = self.env['account.move'].search(
+        #     [('leasee_contract_id', '=', self.id), ('asset_id', '=', False)])
+        # moves_after_terminate = leasee_moves.filtered(
+        #     lambda m: m.date >= date.today())
+        print('leasee_moves', moves_after_terminate, len(moves_after_terminate))
+        moves_after_terminate.button_draft()
+        moves_after_terminate.button_cancel()
+        # for move in moves_after_terminate:
+        #     if move.date > date.today():
+        #         move.button_draft()
+        #         move.button_cancel()
+        if moves_today_terminate:
+            for move in moves_today_terminate:
                 accounts = move.line_ids.mapped('account_id')
                 expense_account = self.interest_expense_account_id
                 if expense_account not in accounts:
