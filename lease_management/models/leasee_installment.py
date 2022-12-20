@@ -27,7 +27,7 @@ class LeaseeInstallment(models.Model):
     remaining_lease_liability = fields.Float(digits=(16, 5))
     # installment_move_id = fields.Many2one(comodel_name="account.move", string="", required=False, )
     # interest_move_id = fields.Many2one(comodel_name="account.move", string="", required=False, )
-    interest_move_ids = fields.One2many(comodel_name="account.move", inverse_name="leasee_installment_id", string="", required=False, )
+    interest_move_ids = fields.One2many(comodel_name="account.move", inverse_name="leasee_installment_id", string="", required=False, index=True)
     is_advance = fields.Boolean(default=False)
     is_long_liability = fields.Boolean(compute='compute_is_long_liability')
 
