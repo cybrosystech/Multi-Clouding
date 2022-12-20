@@ -1374,7 +1374,6 @@ class LeaseeContract(models.Model):
         #     [('leasee_contract_id', '=', self.id), ('asset_id', '=', False)])
         # moves_after_terminate = leasee_moves.filtered(
         #     lambda m: m.date >= date.today())
-        print('leasee_moves', moves_after_terminate, len(moves_after_terminate))
         moves_after_terminate.button_draft()
         moves_after_terminate.button_cancel()
         # for move in moves_after_terminate:
@@ -1567,9 +1566,7 @@ class LeaseeContract(models.Model):
         for contract in self:
             delta = contract.payment_frequency * (
                 1 if contract.payment_frequency_type == 'months' else 12)
-            instalments = self.env['leasee.installment'].search([
-                ('leasee_contract_id', '=', contract.id),
-            ]).filtered(lambda i: i.date >= start_date)
+            instalments = contract.installment_ids.filtered(lambda i: i.date >= start_date)
             for i, installment in enumerate(instalments):
                 if installment.subsequent_amount:
                     if not contract.prorata:
@@ -1674,8 +1671,8 @@ class LeaseeContract(models.Model):
             # instalments = self.env['leasee.installment'].search([
             #     ('leasee_contract_id', '=', contract.id),
             # ]).filtered(lambda i: i.date >= start_date)
-            # print('///////', instalments, contract.installment_ids.filtered(lambda i: i.date >= start_date))
-            for i, installment in enumerate(contract.installment_ids.filtered(lambda i: i.date >= start_date)):
+            instalments = contract.installment_ids.filtered(lambda i: i.date >= start_date)
+            for i, installment in enumerate(instalments):
                 if installment.subsequent_amount:
                     ins_period = installment.get_period_order()
                     interest_amount = installment.subsequent_amount
