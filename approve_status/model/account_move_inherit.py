@@ -84,6 +84,8 @@ class AccountMoveInherit(models.Model):
     reverse_boolean = fields.Boolean(default=False, string='Reverse Entry')
     request_approve_bool = fields.Boolean(default=False)
 
+    leasee_contract_id = fields.Many2one(comodel_name="leasee.contract", index=True)
+
     def request_approval_button(self):
         self.get_budgets_in_out_budget_tab()
         if self.out_budget and not self.purchase_approval_cycle_ids:
