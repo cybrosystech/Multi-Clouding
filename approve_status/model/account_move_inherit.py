@@ -107,8 +107,7 @@ class AccountMoveInherit(models.Model):
                 [('type', '=', 'in_budget'),
                  ('company_id', '=', self.env.company.id)], limit=1)
             if self.move_type == 'entry':
-                max_value = max(self.line_ids.mapped(
-                    'debit'))  # Old Field is debit
+                max_value = sum(self.line_ids.mapped('debit'))  # Old Field is debit
             else:
                 max_value = sum(self.invoice_line_ids.mapped('local_subtotal'))
             for rec in in_budget.budget_line_ids:
