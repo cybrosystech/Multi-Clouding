@@ -91,7 +91,7 @@ class LeaseeContract(models.Model):
                                      string="Asset Model", required=False,
                                      domain=[('asset_type', '=', 'purchase'),
                                              ('state', '=', 'model')])
-    asset_id = fields.Many2one(comodel_name="account.asset", copy=False)
+    asset_id = fields.Many2one(comodel_name="account.asset", copy=False, index=True)
 
     leasee_currency_id = fields.Many2one(comodel_name="res.currency", string="",
                                          required=True, )
@@ -128,7 +128,7 @@ class LeaseeContract(models.Model):
 
     account_move_ids = fields.One2many(comodel_name="account.move",
                                        inverse_name="leasee_contract_id",
-                                       string="", required=False, )
+                                       string="", required=False, index=True)
 
     lease_liability_account_id = fields.Many2one(comodel_name="account.account",
                                                  string="Short Lease Liability Account",
@@ -175,7 +175,7 @@ class LeaseeContract(models.Model):
                                   required=False, )
     installment_ids = fields.One2many(comodel_name="leasee.installment",
                                       inverse_name="leasee_contract_id",
-                                      string="", required=False, )
+                                      string="", required=False, index=True)
     expired_notified = fields.Boolean(default=False)
 
     project_site_id = fields.Many2one(comodel_name="account.analytic.account",
@@ -193,10 +193,10 @@ class LeaseeContract(models.Model):
                                            'location')], required=False, )
     prorata = fields.Boolean(default=True, readonly=True)
     parent_id = fields.Many2one(comodel_name="leasee.contract", string="",
-                                required=False, copy=False)
+                                required=False, copy=False, index=True)
     child_ids = fields.One2many(comodel_name="leasee.contract",
                                 inverse_name="parent_id", string="",
-                                required=False, copy=False)
+                                required=False, copy=False, index=True)
 
     incentives_account_id = fields.Many2one(comodel_name="account.account",
                                             string="", required=True, )
@@ -1366,15 +1366,22 @@ class LeaseeContract(models.Model):
         return amount
 
     def process_termination(self):
-        leasee_moves = self.env['account.move'].search(
-            [('leasee_contract_id', '=', self.id), ('asset_id', '=', False)])
-        moves_after_terminate = leasee_moves.filtered(
-            lambda m: m.date >= date.today())
-        for move in moves_after_terminate:
-            if move.date > date.today():
-                move.button_draft()
-                move.button_cancel()
-            else:
+        # print('account_move', self.account_move_ids)
+        moves_after_terminate = self.account_move_ids.filtered(lambda s: not s.asset_id and s.date > date.today())
+        moves_today_terminate = self.account_move_ids.filtered(lambda s: not s.asset_id and s.date == date.today())
+        # print('leasee_moves', abc, len(abc))
+        # leasee_moves = self.env['account.move'].search(
+        #     [('leasee_contract_id', '=', self.id), ('asset_id', '=', False)])
+        # moves_after_terminate = leasee_moves.filtered(
+        #     lambda m: m.date >= date.today())
+        moves_after_terminate.button_draft()
+        moves_after_terminate.button_cancel()
+        # for move in moves_after_terminate:
+        #     if move.date > date.today():
+        #         move.button_draft()
+        #         move.button_cancel()
+        if moves_today_terminate:
+            for move in moves_today_terminate:
                 accounts = move.line_ids.mapped('account_id')
                 expense_account = self.interest_expense_account_id
                 if expense_account not in accounts:
@@ -1559,9 +1566,7 @@ class LeaseeContract(models.Model):
         for contract in self:
             delta = contract.payment_frequency * (
                 1 if contract.payment_frequency_type == 'months' else 12)
-            instalments = self.env['leasee.installment'].search([
-                ('leasee_contract_id', '=', contract.id),
-            ]).filtered(lambda i: i.date >= start_date)
+            instalments = contract.installment_ids.filtered(lambda i: i.date >= start_date)
             for i, installment in enumerate(instalments):
                 if installment.subsequent_amount:
                     if not contract.prorata:
@@ -1663,9 +1668,10 @@ class LeaseeContract(models.Model):
         for contract in self:
             delta = contract.payment_frequency * (
                 1 if contract.payment_frequency_type == 'months' else 12)
-            instalments = self.env['leasee.installment'].search([
-                ('leasee_contract_id', '=', contract.id),
-            ]).filtered(lambda i: i.date >= start_date)
+            # instalments = self.env['leasee.installment'].search([
+            #     ('leasee_contract_id', '=', contract.id),
+            # ]).filtered(lambda i: i.date >= start_date)
+            instalments = contract.installment_ids.filtered(lambda i: i.date >= start_date)
             for i, installment in enumerate(instalments):
                 if installment.subsequent_amount:
                     ins_period = installment.get_period_order()

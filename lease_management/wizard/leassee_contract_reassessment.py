@@ -116,7 +116,7 @@ class Reassessment(models.TransientModel):
         subsequent_amount_data = 0
         contract = self.leasee_contract_id
         self.env['leasee.reassessment.increase'].create({
-            'leasee_contract_id': self.leasee_contract_id.id,
+            'leasee_contract_id': contract.id,
             'installment_amount': self.new_installment_amount,
             'installment_date': self.reassessment_start_Date,
         })
@@ -136,8 +136,9 @@ class Reassessment(models.TransientModel):
         installment_amount = self.new_installment_amount
         for i, installment in enumerate(reassessment_installments):
             installment.amount = installment_amount
-            installment_amount = self.leasee_contract_id.get_future_value(installment_amount,
-                                                                          0, 1, 0, 0)
+            installment_amount = contract.get_future_value(
+                installment_amount,
+                0, 1, 0, 0)
         start = 1 if contract.payment_method == 'end' else 0
         new_lease_liability = sum([contract.get_present_value_modified(installment.amount, contract.interest_rate,
                                                                        i + start, self.reassessment_start_Date,
@@ -236,11 +237,11 @@ class Reassessment(models.TransientModel):
 
     def update_related_journal_items(self, installments_to_modify):
         contract = self.leasee_contract_id
-        delta = contract.payment_frequency * (1 if contract.payment_frequency_type == 'months' else 12)
+        # delta = contract.payment_frequency * (
+        #     1 if contract.payment_frequency_type == 'months' else 12)
         for i, ins in enumerate(installments_to_modify):
             if contract.leasor_type == 'single':
-                invoice = ins.installment_invoice_id
-                self.update_invoice_amount(invoice, ins.amount)
+                self.update_invoice_amount(ins.installment_invoice_id, ins.amount)
             else:
                 for ml in contract.multi_leasor_ids:
                     invoice = contract.account_move_ids.filtered(lambda

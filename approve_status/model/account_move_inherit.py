@@ -84,6 +84,8 @@ class AccountMoveInherit(models.Model):
     reverse_boolean = fields.Boolean(default=False, string='Reverse Entry')
     request_approve_bool = fields.Boolean(default=False)
 
+    leasee_contract_id = fields.Many2one(comodel_name="leasee.contract", index=True)
+
     def request_approval_button(self):
         self.get_budgets_in_out_budget_tab()
         if self.out_budget and not self.purchase_approval_cycle_ids:
@@ -107,8 +109,7 @@ class AccountMoveInherit(models.Model):
                 [('type', '=', 'in_budget'),
                  ('company_id', '=', self.env.company.id)], limit=1)
             if self.move_type == 'entry':
-                max_value = max(self.line_ids.mapped(
-                    'local_subtotal'))  # Old Field is debit
+                max_value = sum(self.line_ids.mapped('debit'))  # Old Field is debit
             else:
                 max_value = sum(self.invoice_line_ids.mapped('local_subtotal'))
             for rec in in_budget.budget_line_ids:
