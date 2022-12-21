@@ -20,6 +20,7 @@
         'views/account_payment.xml',
         'views/leasor_contract.xml',
         'views/account_move.xml',
+        'wizard/asset_modify.xml',
         'reports/general_ledger_posting.xml',
         'reports/ap_recon.xml',
         'reports/lease_liability_schedule.xml',
