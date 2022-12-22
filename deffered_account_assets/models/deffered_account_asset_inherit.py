@@ -100,7 +100,7 @@ class AccountAssetInherit(models.Model):
             -1].date:
             last_depreciation_date = fields.Date.from_string(
                 posted_depreciation_move_ids[-1].date)
-            if last_depreciation_date > depreciation_date:  # in case we unpause the asset
+            if last_depreciation_date >= depreciation_date:  # in case we unpause the asset
                 depreciation_date = last_depreciation_date + relativedelta(
                     months=+int(
                         self.method_period if not self.method_period == 'day' else depreciation_number))

@@ -1,0 +1,12 @@
+<odoo>
+    <record model="ir.ui.view" id="asset_modify_form_inherit">
+        <field name="name">wizard.asset.modify.form.leasee.inherit</field>
+        <field name="model">asset.modify</field>
+        <field name="inherit_id" ref="account_asset.asset_modify_form"/>
+        <field name="arch" type="xml">
+            <field name="date" position="replace">
+                <field name="date" attrs="{'required': [('need_date', '=', True)]}"/>
+            </field>
+        </field>
+    </record>
+</odoo>
