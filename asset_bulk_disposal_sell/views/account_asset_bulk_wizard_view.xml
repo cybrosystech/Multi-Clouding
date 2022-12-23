@@ -12,7 +12,7 @@
                         <field name="action"/>
                         <field name="partial_bool" attrs="{'invisible': [('action', '=', 'dispose')]}"/>
                         <field name="partial_amount" attrs="{'invisible': [('partial_bool', '=', False)]}"/>
-                        <field name="invoice_id" options="{'no_create': True}" attrs="{'invisible': [('action', '!=', 'sell')], 'required': [('action', '=', 'sell')]}"/>
+                        <field name="invoice_id" options="{'no_create': True}" attrs="{'required': [('action', '=', 'sell')]}"/>
                         <field name="invoice_line_id" options="{'no_create': True}" attrs="{'invisible': [('select_invoice_line_id', '=', False)], 'required': [('select_invoice_line_id', '=', True)]}"/>
                         <field name="select_invoice_line_id" invisible="1"/>
                         <field name="gain_account_id" attrs="{'invisible': [('gain_or_loss', '!=', 'gain')], 'required': [('gain_or_loss', '=', 'gain')]}"/>
