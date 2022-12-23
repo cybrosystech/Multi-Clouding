@@ -13,9 +13,9 @@ class AssetBulkWizard(models.TransientModel):
             if record.asset_id.leasee_contract_ids:
                 if not record.contract_end_date:
                     raise UserError('Please provide contract end date '+str(record.asset_id.name))
-            else:
-                if not record.invoice_id:
-                    raise UserError('Please choose a invoice '+str(record.asset_id.name))
+            # else:
+            #     if not record.invoice_id:
+            #         raise UserError('Please choose a invoice '+str(record.asset_id.name))
 
             record.ensure_one()
             invoice_line = self.env[
