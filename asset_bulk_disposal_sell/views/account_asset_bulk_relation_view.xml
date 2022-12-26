@@ -1,0 +1,25 @@
+<odoo>
+    <record model="ir.ui.view" id="asset_sell_bulk_tree_view">
+        <field name="name">wizard.asset.sell.bulk.list</field>
+        <field name="model">asset.sell.disposal.lines</field>
+        <field name="arch" type="xml">
+            <tree string="">
+                <field name="gain_or_loss" invisible="1"/>
+                <field name="company_id" invisible="1"/>
+                <field name="asset_id"/>
+                <field name="action"/>
+                <field name="partial_bool" attrs="{'invisible': [('action', '=', 'dispose')]}"/>
+                <field name="partial_amount" attrs="{'invisible': [('partial_bool', '=', False)]}"/>
+                <field name="invoice_id" options="{'no_create': True}" attrs="{'required': [('action', '=', 'sell')]}"/>
+                <field name="invoice_line_id" options="{'no_create': True}" attrs="{'invisible': [('select_invoice_line_id', '=', False)], 'required': [('select_invoice_line_id', '=', True)]}"/>
+                <field name="select_invoice_line_id" invisible="1"/>
+                <field name="gain_account_id" attrs="{'invisible': [('gain_or_loss', '!=', 'gain')], 'required': [('gain_or_loss', '=', 'gain')]}"/>
+                <field name="loss_account_id" attrs="{'invisible': [('gain_or_loss', '!=', 'loss')], 'required': [('gain_or_loss', '=', 'loss')]}"/>
+                <field name="from_leasee_contract" invisible="1"/>
+                <field name="contract_end_date" attrs="{'required':[('from_leasee_contract', '=', True)]}"/>
+                <field name="asset_bulk_wizard_id" invisible="1"/>
+            </tree>
+        </field>
+    </record>
+
+</odoo>
