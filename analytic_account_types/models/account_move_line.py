@@ -215,23 +215,20 @@ class AccountMove(models.Model):
             self.send_user_notification(user)
 
     def button_approve_purchase_cycle(self):
-        max_seq_approval = max(
-            self.purchase_approval_cycle_ids.mapped('approval_seq'))
+        if not self.purchase_approval_cycle_ids:
+            self.request_approval_button()
+        min_seq_approval = min(
+            self.purchase_approval_cycle_ids.filtered(lambda x: x.is_approved is not True).mapped('approval_seq'))
         last_approval = self.purchase_approval_cycle_ids.filtered(
-            lambda x: x.approval_seq == int(max_seq_approval))
-        last_approval_user = last_approval
-        for line in self.purchase_approval_cycle_ids:
-            if not line.is_approved:
-                line.is_approved = True
-                notification_to_user = self.purchase_approval_cycle_ids.filtered(
-                    lambda x: x.approval_seq == int(line.approval_seq + 1))
-                if notification_to_user:
-                    user = notification_to_user.user_approve_ids
-                    self.send_user_notification(user)
-                if line == last_approval_user:
-                    self.action_post()
-                break
-
+            lambda x: x.approval_seq == int(min_seq_approval))
+        if self.env.user not in last_approval.user_approve_ids:
+            raise UserError('You cannot approve this record'+ ' '+ str(self.name))
+        last_approval.is_approved = True
+        self.send_user_notification(last_approval.user_approve_ids)
+        if not self.purchase_approval_cycle_ids.filtered(lambda x: x.is_approved is False):
+            self.action_post()
+        message = 'Level ' + str(last_approval.approval_seq) + ' Approved by :' +str( self.env.user.name)
+        self.message_post(body=message)
     # /////////// End of Approval Cycle According To In Budget or Out Budget in Po Configuration //////////////
 
     def _auto_create_asset(self):
