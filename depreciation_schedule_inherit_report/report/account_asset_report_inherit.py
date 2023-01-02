@@ -14,7 +14,7 @@ class asset_report_inherit(models.AbstractModel):
         return [
             [
                 {'name': ''},
-                {'name': _('Characteristics'), 'colspan': 6},
+                {'name': _('Characteristics'), 'colspan': 7},
                 {'name': _('Assets'), 'colspan': 4},
                 {'name': _('Depreciation'), 'colspan': 4},
                 {'name': _('Book Value')},
@@ -27,6 +27,7 @@ class asset_report_inherit(models.AbstractModel):
                 {'name': _('Method'), 'class': 'text-center'},
                 {'name': _('Remaining Life'), 'class': 'text-center'},
                 {'name': _('Co Location'), 'class': 'text-center'},
+                {'name': _('Project/Site'), 'class': 'text-center'},
                 {'name': _('Rate'), 'class': 'number', 'title': _(
                     'In percent.<br>For a linear method, the depreciation rate is computed per year.<br>For a declining method, it is the declining factor'),
                  'data-toggle': 'tooltip'},
@@ -188,6 +189,7 @@ class asset_report_inherit(models.AbstractModel):
                          'no_format_name': ''},
                         {'name': al['total_move_count'], 'no_format_name': ''},
                         {'name': al['analytic_colocation'], 'no_format_name': ''},
+                        {'name': al['analytic_project'], 'no_format_name': ''},
                         {'name': asset_depreciation_rate, 'no_format_name': ''},
                         {'name': self.format_value(asset_opening),
                          'no_format_name': asset_opening},  # Assets
@@ -282,6 +284,7 @@ class asset_report_inherit(models.AbstractModel):
                        account.id as account_id,
                        account.company_id as company_id,
                        analytic.name as analytic_colocation,
+                       project_site.name as analytic_project,
                        COALESCE(first_move.asset_depreciated_value, move_before.asset_depreciated_value, 0.0) as depreciated_start,
                        COALESCE(first_move.asset_remaining_value, move_before.asset_remaining_value, 0.0) as remaining_start,
                        COALESCE(last_move.asset_depreciated_value, move_before.asset_depreciated_value, 0.0) as depreciated_end,
@@ -293,6 +296,7 @@ class asset_report_inherit(models.AbstractModel):
                 FROM account_asset as asset
                 LEFT JOIN account_account as account ON asset.account_asset_id = account.id
                 LEFT JOIN account_analytic_account as analytic on asset.co_location = analytic.id
+                LEFT JOIN account_analytic_account as project_site on asset.project_site_id = project_site.id
                 LEFT JOIN (
                     SELECT
                         COUNT(*) as count,
