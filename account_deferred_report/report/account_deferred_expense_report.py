@@ -148,7 +148,7 @@ class assets_report(models.AbstractModel):
                     parent_lines += [al]
             for al in parent_lines:
                 if al['asset_method'] == 'linear' and al['asset_method_number']:  # some assets might have 0 depreciations because they dont lose value
-                    asset_depreciation_rate = ('{:.2f} %').format((100.0 / al['asset_method_number']) * (12 / int(al['asset_method_period'])))
+                    asset_depreciation_rate = ('{:.2f} %').format((100.0 / al['asset_method_number']) * (12 / int(1 if al['asset_method_period'] =='day' else al['asset_method_period'])))
                 elif al['asset_method'] == 'linear':
                     asset_depreciation_rate = ('{:.2f} %').format(0.0)
                 else:
