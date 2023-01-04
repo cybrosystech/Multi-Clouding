@@ -7,7 +7,7 @@
         <field name="arch" type="xml">
             <field name="asset_type" position="after">
                 <group>
-                    <field name="asset_sub_model_id"/>
+                    <field name="asset_sub_model_id" attrs="{'invisible': [('state', '=', 'model')]}"/>
                 </group>
             </field>
         </field>

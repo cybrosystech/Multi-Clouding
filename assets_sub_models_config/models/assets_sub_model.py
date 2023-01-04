@@ -6,4 +6,4 @@ class AssetsSubModel(models.Model):
     _description = ''
 
     name = fields.Char()
-    asset_model_id = fields.Many2one('account.asset', domain=[('asset_type', '=', 'purchase'), ('state', '=', 'model')])
+    asset_model_id = fields.Many2many('account.asset', domain=[('asset_type', '=', 'purchase'), ('state', '=', 'model')])

@@ -21,7 +21,7 @@
                         <field name="name"/>
                     </group>
                     <group>
-                        <field name="asset_model_id"/>
+                        <field name="asset_model_id" widget="many2many_tags"/>
                     </group>
                 </sheet>
             </form>
