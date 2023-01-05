@@ -236,10 +236,8 @@ class assets_report(models.AbstractModel):
                             'Declining')) or _('Dec. then Straight'),
                          'no_format_name': ''},
                         {'name': al['total_move_count'], 'no_format_name': ''},
-                        {'name': al['analytic_colocation'],
-                         'no_format_name': ''},
-                        {'name': al['analytic_project'],
-                         'no_format_name': ''},
+                        {'name': al['analytic_colocation'], 'no_format_name': ''},
+                        {'name': al['analytic_project'], 'no_format_name': ''},
                         {'name': asset_depreciation_rate, 'no_format_name': ''},
                         {'name': self.format_value(asset_opening), 'no_format_name': asset_opening},  # Assets
                         {'name': self.format_value(asset_add), 'no_format_name': asset_add},
@@ -302,104 +300,226 @@ class assets_report(models.AbstractModel):
                             LEFT JOIN ONLY account_move reversal ON reversal.reversed_entry_id = move.id
                             WHERE reversal.id IS NULL AND move.asset_id IS NOT NULL AND move.company_id in %(company_ids)s;
 
-                    SELECT asset.id as asset_id,
-                           asset.parent_id as parent_id,
-                           asset.name as asset_name,
-                           asset.original_value as asset_original_value,
-                           asset.currency_id as asset_currency_id,
-                           COALESCE(asset.first_depreciation_date_import, asset.first_depreciation_date) as asset_date,
-                           asset.already_depreciated_amount_import as import_depreciated,
-                           asset.disposal_date as asset_disposal_date,
-                           asset.acquisition_date as asset_acquisition_date,
-                           asset.method as asset_method,
-                           (
-                               COALESCE(account_move_count.count, 0)
-                               + COALESCE(asset.depreciation_number_import, 0)
-                               - CASE WHEN asset.prorata THEN 1 ELSE 0 END
-                           ) as asset_method_number,
-                           asset.method_period as asset_method_period,
-                           asset.method_progress_factor as asset_method_progress_factor,
-                           asset.state as asset_state,
-                           account.code as account_code,
-                           account.name as account_name,
-                           account.id as account_id,
-                           account.company_id as company_id,
-                           analytic.name as analytic_colocation,
-                           project_site.name as analytic_project,
-                           COALESCE(first_move.asset_depreciated_value, move_before.asset_depreciated_value, 0.0) as depreciated_start,
-                           COALESCE(first_move.asset_remaining_value, move_before.asset_remaining_value, 0.0) as remaining_start,
-                           COALESCE(last_move.asset_depreciated_value, move_before.asset_depreciated_value, 0.0) as depreciated_end,
-                           COALESCE(last_move.asset_remaining_value, move_before.asset_remaining_value, 0.0) as remaining_end,
-                           COALESCE(first_move.amount_total, 0.0) as depreciation,
-                           COALESCE(first_move.id, move_before.id) as first_move_id,
-                           COALESCE(last_move.id, move_before.id) as last_move_id,
-                           COALESCE(total_move.a_count) as total_move_count
-                    FROM account_asset as asset
-                    LEFT JOIN account_account as account ON asset.account_asset_id = account.id
-                    LEFT JOIN account_analytic_account as analytic on asset.co_location = analytic.id
-                    LEFT JOIN account_analytic_account as project_site on asset.project_site_id = project_site.id
-                    LEFT JOIN (
-                        SELECT
-                            COUNT(*) as count,
-                            asset_id
-                        FROM temp_account_move
-                        WHERE asset_value_change != 't'
-                        GROUP BY asset_id
-                    ) account_move_count ON asset.id = account_move_count.asset_id
+                            SELECT asset.id as asset_id,
+                                   asset.parent_id as parent_id,
+                                   asset.name as asset_name,
+                                   asset.original_value as asset_original_value,
+                                   asset.currency_id as asset_currency_id,
+                                   COALESCE(asset.first_depreciation_date_import, asset.first_depreciation_date) as asset_date,
+                                   asset.already_depreciated_amount_import as import_depreciated,
+                                   asset.disposal_date as asset_disposal_date,
+                                   asset.acquisition_date as asset_acquisition_date,
+                                   asset.method as asset_method,
+                                   (
+                                       COALESCE(account_move_count.count, 0)
+                                       + COALESCE(asset.depreciation_number_import, 0)
+                                       - CASE WHEN asset.prorata THEN 1 ELSE 0 END
+                                   ) as asset_method_number,
+                                   asset.method_period as asset_method_period,
+                                   asset.method_progress_factor as asset_method_progress_factor,
+                                   asset.state as asset_state,
+                                   account.code as account_code,
+                                   account.name as account_name,
+                                   account.id as account_id,
+                                   account.company_id as company_id,
+                                   analytic.name as analytic_colocation,
+                                   project_site.name as analytic_project,
+                                   COALESCE(first_move.asset_depreciated_value, move_before.asset_depreciated_value, 0.0) as depreciated_start,
+                                   COALESCE(first_move.asset_remaining_value, move_before.asset_remaining_value, 0.0) as remaining_start,
+                                   COALESCE(last_move.asset_depreciated_value, move_before.asset_depreciated_value, 0.0) as depreciated_end,
+                                   COALESCE(last_move.asset_remaining_value, move_before.asset_remaining_value, 0.0) as remaining_end,
+                                   COALESCE(first_move.amount_total, 0.0) as depreciation,
+                                   COALESCE(first_move.id, move_before.id) as first_move_id,
+                                   COALESCE(last_move.id, move_before.id) as last_move_id,
+                                   COALESCE(total_move.a_count) as total_move_count
+                            FROM account_asset as asset
+                            LEFT JOIN account_account as account ON asset.account_asset_id = account.id
+                            LEFT JOIN account_analytic_account as analytic on asset.co_location = analytic.id
+                            LEFT JOIN account_analytic_account as project_site on asset.project_site_id = project_site.id
+                            LEFT JOIN (
+                                SELECT
+                                    COUNT(*) as count,
+                                    asset_id
+                                FROM temp_account_move
+                                WHERE asset_value_change != 't'
+                                GROUP BY asset_id
+                            ) account_move_count ON asset.id = account_move_count.asset_id
 
-                    LEFT OUTER JOIN (
-                        SELECT DISTINCT ON (asset_id)
-                            id,
-                            asset_depreciated_value,
-                            asset_remaining_value,
-                            amount_total,
-                            asset_id
-                        FROM temp_account_move m
-                        WHERE date >= %(date_from)s AND date <= %(date_to)s {where_account_move}
-                        ORDER BY asset_id, date, id DESC
-                    ) first_move ON first_move.asset_id = asset.id
+                            LEFT OUTER JOIN (
+                                SELECT DISTINCT ON (asset_id)
+                                    id,
+                                    asset_depreciated_value,
+                                    asset_remaining_value,
+                                    amount_total,
+                                    asset_id
+                                FROM temp_account_move m
+                                WHERE date >= %(date_from)s AND date <= %(date_to)s {where_account_move}
+                                ORDER BY asset_id, date, id DESC
+                            ) first_move ON first_move.asset_id = asset.id
 
-                    LEFT OUTER JOIN (
-                        SELECT DISTINCT ON (asset_id)
-                            id,
-                            asset_depreciated_value,
-                            asset_remaining_value,
-                            amount_total,
-                            asset_id
-                        FROM temp_account_move m
-                        WHERE date >= %(date_from)s AND date <= %(date_to)s {where_account_move}
-                        ORDER BY asset_id, date DESC, id DESC
-                    ) last_move ON last_move.asset_id = asset.id
-                    LEFT OUTER JOIN (
-    			SELECT COUNT(*) as a_count,
-    			asset_id
-    			from temp_account_move z
-    			where date > %(date_to)s
-    			GROUP BY asset_id
-    		) total_move on total_move.asset_id = asset.id
+                            LEFT OUTER JOIN (
+                                SELECT DISTINCT ON (asset_id)
+                                    id,
+                                    asset_depreciated_value,
+                                    asset_remaining_value,
+                                    amount_total,
+                                    asset_id
+                                FROM temp_account_move m
+                                WHERE date >= %(date_from)s AND date <= %(date_to)s {where_account_move}
+                                ORDER BY asset_id, date DESC, id DESC
+                            ) last_move ON last_move.asset_id = asset.id
+                            LEFT OUTER JOIN (
+            			SELECT COUNT(*) as a_count,
+            			asset_id
+            			from temp_account_move z
+            			where date > %(date_to)s
+            			GROUP BY asset_id
+            		) total_move on total_move.asset_id = asset.id
 
-                    LEFT OUTER JOIN (
-                        SELECT DISTINCT ON (asset_id)
-                            id,
-                            asset_depreciated_value,
-                            asset_remaining_value,
-                            amount_total,
-                            asset_id
-                        FROM temp_account_move m
-                        WHERE date <= %(date_from)s {where_account_move}
-                        ORDER BY asset_id, date DESC, id DESC
-                    ) move_before ON move_before.asset_id = asset.id
+                            LEFT OUTER JOIN (
+                                SELECT DISTINCT ON (asset_id)
+                                    id,
+                                    asset_depreciated_value,
+                                    asset_remaining_value,
+                                    amount_total,
+                                    asset_id
+                                FROM temp_account_move m
+                                WHERE date <= %(date_from)s {where_account_move}
+                                ORDER BY asset_id, date DESC, id DESC
+                            ) move_before ON move_before.asset_id = asset.id
 
-                    WHERE asset.company_id in %(company_ids)s
-                    AND asset.acquisition_date <= %(date_to)s
-                    AND (asset.disposal_date >= %(date_from)s OR asset.disposal_date IS NULL)
-                    AND asset.state not in ('model', 'draft')
-                    AND asset.asset_type = 'purchase'
-                    AND asset.active = 't'
+                            WHERE asset.company_id in %(company_ids)s
+                            AND asset.acquisition_date <= %(date_to)s
+                            AND (asset.disposal_date >= %(date_from)s OR asset.disposal_date IS NULL)
+                            AND asset.state not in ('model', 'draft')
+                            AND asset.asset_type = 'purchase'
+                            AND asset.active = 't'
 
-                    ORDER BY account.code, asset.acquisition_date;
-                """.format(where_account_move=where_account_move)
+                            ORDER BY asset.name LIMIT %(limit)s OFFSET %(offset)s;
+                        """.format(where_account_move=where_account_move)
+            date_to = options['date']['date_to']
+            date_from = options['date']['date_from']
+            if options.get('multi_company', False):
+                company_ids = tuple(self.env.companies.ids)
+            else:
+                company_ids = tuple(self.env.company.ids)
 
+            self.flush()
+            self.env.cr.execute(sql,
+                                {'date_to': date_to, 'date_from': date_from,
+                                 'company_ids': company_ids,
+                                 'limit': self.env.context['assets_limit'],
+                                 'offset': self.env.context['assets_offset']})
+            results = self.env.cr.dictfetchall()
+            self.env.cr.execute(
+                "DROP TABLE temp_account_move")  # Because tests are run in the same transaction, we need to clean here the SQL INHERITS
+            return results
+        else:
+            sql = """
+                            -- remove all the moves that have been reversed from the search
+                            CREATE TEMPORARY TABLE IF NOT EXISTS temp_account_move () INHERITS (account_move) ON COMMIT DROP;
+                            INSERT INTO temp_account_move SELECT move.*
+                            FROM ONLY account_move move
+                            LEFT JOIN ONLY account_move reversal ON reversal.reversed_entry_id = move.id
+                            WHERE reversal.id IS NULL AND move.asset_id IS NOT NULL AND move.company_id in %(company_ids)s;
+
+                            SELECT asset.id as asset_id,
+                                   asset.parent_id as parent_id,
+                                   asset.name as asset_name,
+                                   asset.original_value as asset_original_value,
+                                   asset.currency_id as asset_currency_id,
+                                   COALESCE(asset.first_depreciation_date_import, asset.first_depreciation_date) as asset_date,
+                                   asset.already_depreciated_amount_import as import_depreciated,
+                                   asset.disposal_date as asset_disposal_date,
+                                   asset.acquisition_date as asset_acquisition_date,
+                                   asset.method as asset_method,
+                                   (
+                                       COALESCE(account_move_count.count, 0)
+                                       + COALESCE(asset.depreciation_number_import, 0)
+                                       - CASE WHEN asset.prorata THEN 1 ELSE 0 END
+                                   ) as asset_method_number,
+                                   asset.method_period as asset_method_period,
+                                   asset.method_progress_factor as asset_method_progress_factor,
+                                   asset.state as asset_state,
+                                   account.code as account_code,
+                                   account.name as account_name,
+                                   account.id as account_id,
+                                   account.company_id as company_id,
+                                   analytic.name as analytic_colocation,
+                                   project_site.name as analytic_project,
+                                   COALESCE(first_move.asset_depreciated_value, move_before.asset_depreciated_value, 0.0) as depreciated_start,
+                                   COALESCE(first_move.asset_remaining_value, move_before.asset_remaining_value, 0.0) as remaining_start,
+                                   COALESCE(last_move.asset_depreciated_value, move_before.asset_depreciated_value, 0.0) as depreciated_end,
+                                   COALESCE(last_move.asset_remaining_value, move_before.asset_remaining_value, 0.0) as remaining_end,
+                                   COALESCE(first_move.amount_total, 0.0) as depreciation,
+                                   COALESCE(first_move.id, move_before.id) as first_move_id,
+                                   COALESCE(last_move.id, move_before.id) as last_move_id,
+                                   COALESCE(total_move.a_count) as total_move_count
+                            FROM account_asset as asset
+                            LEFT JOIN account_account as account ON asset.account_asset_id = account.id
+                            LEFT JOIN account_analytic_account as analytic on asset.co_location = analytic.id
+                            LEFT JOIN account_analytic_account as project_site on asset.project_site_id = project_site.id
+                            LEFT JOIN (
+                                SELECT
+                                    COUNT(*) as count,
+                                    asset_id
+                                FROM temp_account_move
+                                WHERE asset_value_change != 't'
+                                GROUP BY asset_id
+                            ) account_move_count ON asset.id = account_move_count.asset_id
+
+                            LEFT OUTER JOIN (
+                                SELECT DISTINCT ON (asset_id)
+                                    id,
+                                    asset_depreciated_value,
+                                    asset_remaining_value,
+                                    amount_total,
+                                    asset_id
+                                FROM temp_account_move m
+                                WHERE date >= %(date_from)s AND date <= %(date_to)s {where_account_move}
+                                ORDER BY asset_id, date, id DESC
+                            ) first_move ON first_move.asset_id = asset.id
+
+                            LEFT OUTER JOIN (
+                                SELECT DISTINCT ON (asset_id)
+                                    id,
+                                    asset_depreciated_value,
+                                    asset_remaining_value,
+                                    amount_total,
+                                    asset_id
+                                FROM temp_account_move m
+                                WHERE date >= %(date_from)s AND date <= %(date_to)s {where_account_move}
+                                ORDER BY asset_id, date DESC, id DESC
+                            ) last_move ON last_move.asset_id = asset.id
+                            LEFT OUTER JOIN (
+            			SELECT COUNT(*) as a_count,
+            			asset_id
+            			from temp_account_move z
+            			where date > %(date_to)s
+            			GROUP BY asset_id
+            		) total_move on total_move.asset_id = asset.id
+
+                            LEFT OUTER JOIN (
+                                SELECT DISTINCT ON (asset_id)
+                                    id,
+                                    asset_depreciated_value,
+                                    asset_remaining_value,
+                                    amount_total,
+                                    asset_id
+                                FROM temp_account_move m
+                                WHERE date <= %(date_from)s {where_account_move}
+                                ORDER BY asset_id, date DESC, id DESC
+                            ) move_before ON move_before.asset_id = asset.id
+
+                            WHERE asset.company_id in %(company_ids)s
+                            AND asset.acquisition_date <= %(date_to)s
+                            AND (asset.disposal_date >= %(date_from)s OR asset.disposal_date IS NULL)
+                            AND asset.state not in ('model', 'draft')
+                            AND asset.asset_type = 'purchase'
+                            AND asset.active = 't'
+
+                            ORDER BY account.code, asset.acquisition_date;
+                        """.format(where_account_move=where_account_move)
             date_to = options['date']['date_to']
             date_from = options['date']['date_from']
             if options.get('multi_company', False):

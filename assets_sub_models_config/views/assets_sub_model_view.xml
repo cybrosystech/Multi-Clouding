@@ -1,0 +1,46 @@
+<odoo>
+
+    <record model="ir.ui.view" id="view_account_asset_sub_model_tree">
+        <field name="name">assets.sub.model.tree</field>
+        <field name="model">assets.sub.model</field>
+        <field name="arch" type="xml">
+            <tree string="Assets Sub">
+                <field name="name"/>
+                <field name="asset_model_id"/>
+            </tree>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="view_account_asset_sub_model_form">
+        <field name="name">assets.sub.model.form</field>
+        <field name="model">assets.sub.model</field>
+        <field name="arch" type="xml">
+            <form string="Asset Sub">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                    </group>
+                    <group>
+                        <field name="asset_model_id" widget="many2many_tags"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="action_account_asset_sub_model">
+        <field name="name">Asset Sub Models</field>
+        <field name="res_model">assets.sub.model</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                create your first Assets sub model!
+            </p>
+        </field>
+    </record>
+
+    <menuitem parent="account.account_management_menu" sequence="1" id="menu_action_account_asset_sub_model_form" action="action_account_asset_sub_model" groups="account.group_account_manager"/>
+
+
+
+</odoo>
