@@ -6,7 +6,7 @@ _logger = logging.getLogger(__name__)
 class AccountAssetSubModel(models.Model):
     _inherit = 'account.asset'
 
-    asset_sub_model_id = fields.Many2one('assets.sub.model')
+    asset_sub_model_id = fields.Many2one('assets.sub.model', tracking=True)
 
     @api.onchange('model_id')
     def _onchange_model_id(self):
