@@ -372,7 +372,8 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
             projects = self.env['account.move.line'].search(
                 [('project_site_id', '=', i['id']),
                  ('move_id.date', '<=', data['to']),
-                 ('move_id.date', '>=', data['from'])])
+                 ('move_id.date', '>=', data['from']),
+                 ('parent_state', '=', 'posted')])
 
             lease_anchor_tenant = projects.filtered(
                 lambda x: x.account_id.id in data['lease_anchor_tenant_ids'])
