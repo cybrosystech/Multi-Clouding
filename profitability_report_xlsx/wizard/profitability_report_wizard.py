@@ -392,7 +392,8 @@ class ProfitabilityReportWizard(models.TransientModel):
             projects = self.env['account.move.line'].search(
                 [('project_site_id', '=', i['id']),
                  ('move_id.date', '<=', data['to']),
-                 ('move_id.date', '>=', data['from'])])
+                 ('move_id.date', '>=', data['from']),
+                 ('parent_state', '=', 'posted')])
 
             service_revenue = projects.filtered(
                 lambda x: x.account_id.id in data['service_revenue_ids'])
