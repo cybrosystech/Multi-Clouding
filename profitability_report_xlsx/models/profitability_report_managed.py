@@ -55,6 +55,7 @@ class ProfitabilityReportManaged(models.Model):
                                              'service_level_credits_managed_rels')
     json_report_values = fields.Char('Report Values')
     project_index = fields.Char('Project Index')
+    limits_pr = fields.Integer('Limit', default=0)
 
     def profitability_managed_report(self, filter, limit):
         profitability_managed = self.env['profitability.report.managed'].search(
@@ -138,35 +139,30 @@ class ProfitabilityReportManaged(models.Model):
             cr.execute(query)
             project_site = cr.dictfetchall()
             abc = []
-            for i in project_site:
+            for i in project_site[profitability_managed.limits_pr: int(data['limit'])]:
                 u_index = project_index_load['' + i['name']]
+                prof_rep = {}
                 projects = self.env['account.move.line'].search(
                     [('project_site_id', '=', i['id']),
                      ('move_id.date', '<=', data['to']),
                      ('move_id.date', '>=', data['from']),
-                     ('parent_state', '=', 'posted'),
-                     ('profitability_managed_bool', '=', False)],
-                    limit=int(data['limit']))
+                     ('parent_state', '=', 'posted')])
                 abc += projects.ids
                 lease_anchor_tenant = projects.filtered(
                     lambda x: x.account_id.id in data[
                         'lease_anchor_tenant_ids'])
                 total = sum(lease_anchor_tenant.mapped('debit')) - sum(
                     lease_anchor_tenant.mapped('credit'))
-                profitability_managed_report_load[u_index].update({
-                    'lease_anchor_tenant':
-                        profitability_managed_report_load[u_index][
-                            'lease_anchor_tenant'] + total,
+                prof_rep.update({
+                    'lease_anchor_tenant': total,
                 })
 
                 lease_colo_tenant = projects.filtered(
                     lambda x: x.account_id.id in data['lease_colo_tenant_ids'])
                 total = sum(lease_colo_tenant.mapped('debit')) - sum(
                     lease_colo_tenant.mapped('credit'))
-                profitability_managed_report_load[u_index].update({
-                    'lease_colo_tenant':
-                        profitability_managed_report_load[u_index][
-                            'lease_colo_tenant'] + total,
+                prof_rep.update({
+                    'lease_colo_tenant': total,
                 })
 
                 additional_space_revenue = projects.filtered(
@@ -174,19 +170,16 @@ class ProfitabilityReportManaged(models.Model):
                         'additional_space_revenue_ids'])
                 total = sum(additional_space_revenue.mapped('debit')) - sum(
                     additional_space_revenue.mapped('credit'))
-                profitability_managed_report_load[u_index].update({
-                    'additional_space_revenue':
-                        profitability_managed_report_load[u_index][
-                            'additional_space_revenue'] + total,
+                prof_rep.update({
+                    'additional_space_revenue': total,
                 })
 
                 bts_revenue = projects.filtered(
                     lambda x: x.account_id.id in data['bts_revenue_ids'])
                 total = sum(bts_revenue.mapped('debit')) - sum(
                     bts_revenue.mapped('credit'))
-                profitability_managed_report_load[u_index].update({
-                    'bts_revenue': profitability_managed_report_load[u_index][
-                                       'bts_revenue'] + total,
+                prof_rep.update({
+                    'bts_revenue': total,
                 })
 
                 active_sharing_fees = projects.filtered(
@@ -194,34 +187,26 @@ class ProfitabilityReportManaged(models.Model):
                         'active_sharing_fees_ids'])
                 total = sum(active_sharing_fees.mapped('debit')) - sum(
                     active_sharing_fees.mapped('credit'))
-                profitability_managed_report_load[u_index].update({
-                    'active_sharing_fees':
-                        profitability_managed_report_load[u_index][
-                            'active_sharing_fees'] + total,
+                prof_rep.update({
+                    'active_sharing_fees': total,
                 })
 
                 discount = projects.filtered(
                     lambda x: x.account_id.id in data['discount_ids'])
                 total = sum(discount.mapped('debit')) - sum(
                     discount.mapped('credit'))
-                profitability_managed_report_load[u_index].update({
-                    'discount': profitability_managed_report_load[u_index][
-                                    'discount'] + total,
+                prof_rep.update({
+                    'discount': total,
                 })
 
-                total_revenue = profitability_managed_report_load[u_index][
-                                    'lease_anchor_tenant'] + \
-                                profitability_managed_report_load[u_index][
-                                    'lease_colo_tenant'] + \
-                                profitability_managed_report_load[u_index][
+                total_revenue = prof_rep['lease_anchor_tenant'] + prof_rep[
+                    'lease_colo_tenant'] + prof_rep[
                                     'additional_space_revenue'] + \
-                                profitability_managed_report_load[u_index][
-                                    'bts_revenue'] + \
-                                profitability_managed_report_load[u_index][
-                                    'active_sharing_fees'] + \
-                                profitability_managed_report_load[u_index][
+                                prof_rep[
+                                    'bts_revenue'] + prof_rep[
+                                    'active_sharing_fees'] + prof_rep[
                                     'discount']
-                profitability_managed_report_load[u_index].update({
+                prof_rep.update({
                     'total_revenue': total_revenue,
                 })
 
@@ -229,58 +214,48 @@ class ProfitabilityReportManaged(models.Model):
                     lambda x: x.account_id.id in data['rou_depreciation_ids'])
                 total = sum(rou_depreciation.mapped('debit')) - sum(
                     rou_depreciation.mapped('credit'))
-                profitability_managed_report_load[u_index].update({
-                    'rou_depreciation':
-                        profitability_managed_report_load[u_index][
-                            'rou_depreciation'] + total,
+                prof_rep.update({
+                    'rou_depreciation': total,
                 })
 
                 fa_depreciation = projects.filtered(
                     lambda x: x.account_id.id in data['fa_depreciation_ids'])
                 total = sum(fa_depreciation.mapped('debit')) - sum(
                     fa_depreciation.mapped('credit'))
-                profitability_managed_report_load[u_index].update({
-                    'fa_depreciation':
-                        profitability_managed_report_load[u_index][
-                            'fa_depreciation'] + total,
+                prof_rep.update({
+                    'fa_depreciation': total,
                 })
 
                 lease_finance_cost = projects.filtered(
                     lambda x: x.account_id.id in data['lease_finance_cost_ids'])
                 total = sum(lease_finance_cost.mapped('debit')) - sum(
                     lease_finance_cost.mapped('credit'))
-                profitability_managed_report_load[u_index].update({
-                    'lease_finance_cost':
-                        profitability_managed_report_load[u_index][
-                            'lease_finance_cost'] + total,
+                prof_rep.update({
+                    'lease_finance_cost': total,
                 })
 
                 site_maintenance = projects.filtered(
                     lambda x: x.account_id.id in data['site_maintenance_ids'])
                 total = sum(site_maintenance.mapped('debit')) - sum(
                     site_maintenance.mapped('credit'))
-                profitability_managed_report_load[u_index].update({
-                    'site_maintenance':
-                        profitability_managed_report_load[u_index][
-                            'site_maintenance'] + total,
+                prof_rep.update({
+                    'site_maintenance': total,
                 })
 
                 site_rent = projects.filtered(
                     lambda x: x.account_id.id in data['site_rent_ids'])
                 total = sum(site_rent.mapped('debit')) - sum(
                     site_rent.mapped('credit'))
-                profitability_managed_report_load[u_index].update({
-                    'site_rent': profitability_managed_report_load[u_index][
-                                     'site_rent'] + total,
+                prof_rep.update({
+                    'site_rent': total,
                 })
 
                 security = projects.filtered(
                     lambda x: x.account_id.id in data['security_ids'])
                 total = sum(security.mapped('debit')) - sum(
                     security.mapped('credit'))
-                profitability_managed_report_load[u_index].update({
-                    'security': profitability_managed_report_load[u_index][
-                                    'security'] + total,
+                prof_rep.update({
+                    'security': total,
                 })
 
                 service_level_credit = projects.filtered(
@@ -288,45 +263,43 @@ class ProfitabilityReportManaged(models.Model):
                         'service_level_credit_ids'])
                 total = sum(service_level_credit.mapped('debit')) - sum(
                     service_level_credit.mapped('credit'))
-                profitability_managed_report_load[u_index].update({
-                    'service_level_credit':
-                        profitability_managed_report_load[u_index][
-                            'service_level_credit'] + total,
+                prof_rep.update({
+                    'service_level_credit': total,
                 })
 
-                total_cost = profitability_managed_report_load[u_index][
-                                 'rou_depreciation'] + \
-                             profitability_managed_report_load[u_index][
-                                 'fa_depreciation'] + \
-                             profitability_managed_report_load[u_index][
-                                 'lease_finance_cost'] + \
-                             profitability_managed_report_load[u_index][
+                total_cost = prof_rep['rou_depreciation'] + prof_rep[
+                    'fa_depreciation'] + \
+                             prof_rep['lease_finance_cost'] + prof_rep[
                                  'site_maintenance'] + \
-                             profitability_managed_report_load[u_index][
-                                 'site_rent'] + \
-                             profitability_managed_report_load[u_index][
-                                 'security'] + \
-                             profitability_managed_report_load[u_index][
-                                 'service_level_credit']
+                             prof_rep['site_rent'] + prof_rep['security'] + \
+                             prof_rep['service_level_credit']
                 jdo = total_revenue - total_cost
                 total_percent = ''
                 if total_revenue != 0:
                     total_percent = (abs(jdo) / total_revenue) * 100
-                profitability_managed_report_load[u_index].update({
+                prof_rep.update({
                     'total_cost': total_cost,
                     'jdo': abs(jdo),
                     '%': total_percent if total_percent else 0
                 })
-                for project_id in projects:
-                    project_id.profitability_managed_bool = True
-            if len(abc) != 0:
+                profitability_managed_report_load.append(prof_rep)
+            # for project_id in projects:
+                #     project_id.profitability_managed_bool = True
+            # abc_sql = '''update account_move_line
+            #                             set profitability_managed_bool = 'true'
+            #                             where id in %(ids)s
+            #                             '''
+            # cr = self._cr
+            # cr.execute(abc_sql, {'ids': tuple(abc)})
+            profitability_managed.limits_pr = int(data['limit'])
+            if len(project_site) <= int(data['limit']):
                 date = fields.Datetime.now()
                 schedule = self.env.ref(
                     'profitability_report_xlsx.action_profitability_managed_cron_update')
                 schedule.update({
-                    'nextcall': date + timedelta(seconds=30)
+                    'nextcall': date + timedelta(seconds=30),
                 })
-            #     # profitability_managed_report.append(prof_rep)
+            #     # profitabilbity_managed_report.append(prof_rep)
             return profitability_managed_report_load
         else:
             project_index = {}
@@ -344,7 +317,7 @@ class ProfitabilityReportManaged(models.Model):
             cr.execute(query)
             project_site = cr.dictfetchall()
             index = 0
-            for i in project_site:
+            for i in project_site[profitability_managed.limits_pr: int(data['limit'])]:
                 project_index.update({
                     i['name']: index
                 })
@@ -356,9 +329,7 @@ class ProfitabilityReportManaged(models.Model):
                     [('project_site_id', '=', i['id']),
                      ('move_id.date', '<=', data['to']),
                      ('move_id.date', '>=', data['from']),
-                     ('parent_state', '=', 'posted'),
-                     ('profitability_managed_bool', '=', False)],
-                    limit=int(data['limit']))
+                     ('parent_state', '=', 'posted')])
                 abc += projects.ids
                 lease_anchor_tenant = projects.filtered(
                     lambda x: x.account_id.id in data[
@@ -499,12 +470,13 @@ class ProfitabilityReportManaged(models.Model):
                 for project_id in projects:
                     project_id.profitability_managed_bool = True
             profitability_managed.project_index = json.dumps(project_index)
-            if len(abc) != 0:
+            profitability_managed.limits_pr = int(data['limit'])
+            if len(project_site) <= int(data['limit']):
                 date = fields.Datetime.now()
                 schedule = self.env.ref(
                     'profitability_report_xlsx.action_profitability_managed_cron_update')
                 schedule.update({
-                    'nextcall': date + timedelta(seconds=30)
+                    'nextcall': date + timedelta(seconds=30),
                 })
             return dummy_prof_list
 
@@ -513,8 +485,13 @@ class ProfitabilityReportManaged(models.Model):
         date = fields.Datetime.now()
         schedule = self.env.ref(
             'profitability_report_xlsx.action_profitability_managed_cron')
+        profitability_managed = self.env['profitability.report.managed'].search(
+            [])
+        updated_limit = profitability_managed.limits_pr +profitability_managed.limits_pr
         schedule.update({
-            'nextcall': date + timedelta(seconds=30)
+            'nextcall': date + timedelta(seconds=30),
+            'code': 'model.profitability_managed_report(filter="this_financial_year", limit="%d(s)")' % (
+                updated_limit)
         })
 
     def action_get_report(self):
@@ -622,3 +599,9 @@ class ProfitabilityReportManaged(models.Model):
         response.stream.write(output.read())
         output.close()
 
+    def managed_action_bool(self):
+        sql = '''update account_move_line
+                set profitability_managed_bool = 'false'
+                '''
+        cr = self._cr
+        cr.execute(sql)
