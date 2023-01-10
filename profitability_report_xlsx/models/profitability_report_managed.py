@@ -126,7 +126,6 @@ class ProfitabilityReportManaged(models.Model):
         if profitability_managed_report:
             profitability_managed_report_load = json.loads(
                 profitability_managed_report)
-            project_index_load = json.loads(profitability_managed.project_index)
             query = '''
                                     select id,name from account_analytic_account as analatyc_account
                                     WHERE analatyc_account.analytic_account_type = 'project_site'
@@ -140,7 +139,6 @@ class ProfitabilityReportManaged(models.Model):
             project_site = cr.dictfetchall()
             abc = []
             for i in project_site[profitability_managed.limits_pr: int(data['limit'])]:
-                u_index = project_index_load['' + i['name']]
                 prof_rep = {}
                 projects = self.env['account.move.line'].search(
                     [('project_site_id', '=', i['id']),
@@ -292,17 +290,16 @@ class ProfitabilityReportManaged(models.Model):
             # cr = self._cr
             # cr.execute(abc_sql, {'ids': tuple(abc)})
             profitability_managed.limits_pr = int(data['limit'])
-            if len(project_site) <= int(data['limit']):
+            if int(data['limit']) <= len(project_site):
                 date = fields.Datetime.now()
                 schedule = self.env.ref(
                     'profitability_report_xlsx.action_profitability_managed_cron_update')
                 schedule.update({
-                    'nextcall': date + timedelta(seconds=30),
+                    'nextcall': date + timedelta(seconds=10),
                 })
             #     # profitabilbity_managed_report.append(prof_rep)
             return profitability_managed_report_load
         else:
-            project_index = {}
             dummy_prof_list = []
             abc = []
             query = '''
@@ -316,11 +313,7 @@ class ProfitabilityReportManaged(models.Model):
             cr = self._cr
             cr.execute(query)
             project_site = cr.dictfetchall()
-            index = 0
             for i in project_site[profitability_managed.limits_pr: int(data['limit'])]:
-                project_index.update({
-                    i['name']: index
-                })
                 prof_rep = {}
                 prof_rep.update({
                     'project': i['name'],
@@ -471,12 +464,12 @@ class ProfitabilityReportManaged(models.Model):
                     project_id.profitability_managed_bool = True
             profitability_managed.project_index = json.dumps(project_index)
             profitability_managed.limits_pr = int(data['limit'])
-            if len(project_site) <= int(data['limit']):
+            if int(data['limit']) <= len(project_site):
                 date = fields.Datetime.now()
                 schedule = self.env.ref(
                     'profitability_report_xlsx.action_profitability_managed_cron_update')
                 schedule.update({
-                    'nextcall': date + timedelta(seconds=30),
+                    'nextcall': date + timedelta(seconds=10),
                 })
             return dummy_prof_list
 
@@ -489,8 +482,8 @@ class ProfitabilityReportManaged(models.Model):
             [])
         updated_limit = profitability_managed.limits_pr +profitability_managed.limits_pr
         schedule.update({
-            'nextcall': date + timedelta(seconds=30),
-            'code': 'model.profitability_managed_report(filter="this_financial_year", limit="%d(s)")' % (
+            'nextcall': date + timedelta(seconds=10),
+            'code': 'model.profitability_managed_report(filter="this_financial_year", limit="%d")' % (
                 updated_limit)
         })
 
