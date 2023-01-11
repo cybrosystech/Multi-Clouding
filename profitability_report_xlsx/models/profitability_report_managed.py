@@ -54,7 +54,6 @@ class ProfitabilityReportManaged(models.Model):
     service_level_credits = fields.Many2many('account.account',
                                              'service_level_credits_managed_rels')
     json_report_values = fields.Char('Report Values')
-    project_index = fields.Char('Project Index')
     limits_pr = fields.Integer('Limit', default=0)
 
     def profitability_managed_report(self, filter, limit):
@@ -107,15 +106,13 @@ class ProfitabilityReportManaged(models.Model):
         report_values = profitability_managed.get_profitability_managed(data,
                                                                         profitability_managed_report,
                                                                         profitability_managed)
-        print('report_values', report_values)
         profitability_managed.json_report_values = json.dumps(report_values)
 
     def get_profitability_managed(self, data, profitability_managed_report,
                                   profitability_managed):
         projects = ''
         if profitability_managed_report:
-            profitability_managed_report_load = json.loads(
-                profitability_managed_report)
+            profitability_managed_report_load = json.loads(profitability_managed_report)
             query = '''
                                     select id,name from account_analytic_account as analatyc_account
                                     WHERE analatyc_account.analytic_account_type = 'project_site'
@@ -474,7 +471,6 @@ class ProfitabilityReportManaged(models.Model):
         })
 
     def action_get_report(self):
-        print('hee', self)
         return {
             'type': 'ir.actions.report',
             'data': {'model': 'profitability.report.managed',

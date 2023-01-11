@@ -58,9 +58,6 @@
                     <field name="json_report_values"/>
                 </group>
                 <group>
-                    <field name="project_index"/>
-                </group>
-                <group>
                     <field name="limits_pr"/>
                 </group>
             </form>

@@ -294,29 +294,19 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
             'ids': self.ids,
             'model': self._name,
             'lease_anchor_tenant_ids': self.lease_anchor_tenant.ids,
-            'lease_anchor_tenant_code': self.lease_anchor_tenant.code,
             'lease_colo_tenant_ids': self.lease_colo_tenant.ids,
-            'lease_colo_tenant_code': self.lease_colo_tenant.code,
             'additional_space_revenue_ids': self.additional_space_revenue.ids,
-            'additional_space_revenue_code': self.additional_space_revenue.code,
             'bts_revenue_ids': self.bts_revenue.ids,
-            'bts_revenue_code': self.bts_revenue.code,
             'active_sharing_fees_ids': self.active_sharing_fees.ids,
-            'active_sharing_fees_code': self.active_sharing_fees.code,
             'discount_ids': self.discount.ids,
-            'discount_code': self.discount.code,
             'rou_depreciation_ids': self.rou_depreciation.ids,
             'rou_depreciation_code': self.rou_depreciation.code,
             'fa_depreciation_ids': self.fa_depreciation.ids,
-            'fa_depreciation_code': self.fa_depreciation.code,
             'lease_finance_cost_ids': self.lease_finance_cost.ids,
-            'lease_finance_cost_code': self.lease_finance_cost.code,
             'site_maintenance_ids': self.site_maintenance_managed.ids,
             # 'site_maintenance_lim_code': self.site_maintenance_managed_lim.code,
             'site_rent_ids': self.site_rent.ids,
-            'site_rent_code': self.site_rent.code,
             'security_ids': self.security.ids,
-            'security_code': self.security.code,
             'service_level_credit_ids': self.service_level_credits.ids,
             'from': from_date if from_date else self.from_date,
             'to': to_date if to_date else self.to_date,
@@ -414,14 +404,6 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
                 active_sharing_fees.mapped('credit'))
             prof_rep.update({
                 'active_sharing_fees': total,
-            })
-
-            discount = projects.filtered(
-                lambda x: x.account_id.id in data['discount_ids'])
-            total = sum(discount.mapped('debit')) - sum(
-                discount.mapped('credit'))
-            prof_rep.update({
-                'discount': total,
             })
 
             discount = projects.filtered(

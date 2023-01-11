@@ -1,4 +1,110 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
 
+        <record id="view_profitability_report_owned_form" model="ir.ui.view">
+        <field name="name">report.profitability.owned.form</field>
+        <field name="model">profitability.report.owned</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_get_report" string="Print XLSX"
+                            type="object" />
+<!--                    <button name="managed_action_bool" string="Managed Bool"-->
+<!--                            type="object" />-->
+                </header>
+                <group>
+                    <group>
+                        <field name="service_revenue" widget="many2many_tags"/>
+                        <field name="investment_revenue"
+                               widget="many2many_tags"/>
+                    </group>
+                    <group>
+                        <field name="colocation" widget="many2many_tags"/>
+                        <field name="pass_through_energy" widget="many2many_tags"/>
+                    </group>
+                    <group>
+                        <field name="active_sharing_fees" widget="many2many_tags"/>
+                        <field name="discount" widget="many2many_tags"/>
+                    </group>
+                </group>
+                <group>
+                    <field name="site_maintenance" class="oe_inline" widget="many2many_tags"/>
+<!--                    <label for="site_maintenance" string="Site Maintenance"/>-->
+<!--                    <div>-->
+<!--                        <field name="site_maintenance" class="oe_inline" widget="many2many_tags"/>-->
+<!--                        <span>To</span>-->
+<!--                        <field name="site_maintenance_lim" class="oe_inline" widget="many2many_tags"/>-->
+<!--                    </div>-->
+                </group>
+                <group>
+                    <group>
+                        <field name="insurance" widget="many2many_tags"/>
+                        <field name="energy_cost" widget="many2many_tags"/>
+                    </group>
+                    <group>
+                        <field name="security" widget="many2many_tags"/>
+                        <field name="service_level_credit"
+                               widget="many2many_tags"/>
+                    </group>
+                </group>
+                <group>
+                    <label for="fa_depreciation"
+                           string="FA Depreciation"/>
+                    <div>
+                        <field name="fa_depreciation" class="oe_inline"
+                               widget="many2many_tags"/>
+                        <span>To</span>
+                        <field name="fa_depreciation_lim" class="oe_inline"
+                               widget="many2many_tags"/>
+                    </div>
+                </group>
+                <group>
+                    <group>
+                        <field name="rou_depreciation" widget="many2many_tags"/>
+                    </group>
+                    <group>
+                       <field name="lease_finance_cost" widget="many2many_tags"/>
+                    </group>
+                </group>
+                <group>
+                    <field name="json_report_values"/>
+                </group>
+                <group>
+                    <field name="limits_pr"/>
+                </group>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_profitability_report_owned_tree" model="ir.ui.view">
+        <field name="name">report.profitability.owned.tree</field>
+        <field name="model">profitability.report.owned</field>
+        <field name="arch" type="xml">
+            <tree string="">
+                <field name="service_revenue" widget="many2many_tags"/>
+                <field name="investment_revenue"
+                       widget="many2many_tags"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_profitability_owned" model="ir.actions.act_window">
+        <field name="name">Profitability Managed</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">profitability.report.owned</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+
+            </p>
+            <p>
+
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_profitability_owned" name="Profitability Owned"
+                  parent="profitability_report_xlsx.profitability_tab_accounting" action="action_profitability_owned"
+                  sequence="100"/>
+
 </odoo>

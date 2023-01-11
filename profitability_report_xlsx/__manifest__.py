@@ -16,7 +16,7 @@
             'data/profitability_cron_jobs.xml',
             'views/assets.xml',
             'views/profitability_report_managed_view.xml',
-            'views/account_move_line_inherit_view.xml',
+            'views/profitability_report_owned_view.xml',
             'wizard/profitability_report_wizard.xml',
             'wizard/profitability_report_managed.xml',
         ]
