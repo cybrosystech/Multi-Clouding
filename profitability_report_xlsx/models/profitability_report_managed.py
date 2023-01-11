@@ -79,7 +79,8 @@ class ProfitabilityReportManaged(models.Model):
             to_date = datetime.date(last_financial_year, 12, last)
             Current_months = from_date.year
         group = self.env['account.analytic.group'].search(
-            [('name', 'ilike', 'managed')])
+            [('name', 'ilike', 'managed'),
+             ('company_id', '=', self.env.company.id)])
         data = {
             'ids': self.ids,
             'model': self._name,
