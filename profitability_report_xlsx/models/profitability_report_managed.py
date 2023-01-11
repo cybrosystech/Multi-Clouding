@@ -449,10 +449,6 @@ class ProfitabilityReportManaged(models.Model):
                     '%': total_percent if total_percent else 0
                 })
                 dummy_prof_list.append(prof_rep)
-                index += 1
-                for project_id in projects:
-                    project_id.profitability_managed_bool = True
-            profitability_managed.project_index = json.dumps(project_index)
             profitability_managed.limits_pr = int(data['limit'])
             if int(data['limit']) <= len(project_site):
                 date = fields.Datetime.now()
