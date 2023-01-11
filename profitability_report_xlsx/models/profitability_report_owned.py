@@ -62,14 +62,14 @@ class ProfitabilityReportOwned(models.Model):
         from_date = ''
         to_date = ''
         Current_months = ''
-        if self.period == 'last_financial_year':
+        if filter == 'last_financial_year':
             last_financial_year = current_date.year - 1
             first, last = calendar.monthrange(last_financial_year,
                                               12)
             from_date = datetime.date(last_financial_year, 1, 1)
             to_date = datetime.date(last_financial_year, 12, last)
             Current_months = from_date.year
-        if self.period == 'this_financial_year':
+        if filter == 'this_financial_year':
             first, last = calendar.monthrange(current_date.year,
                                               12)
             from_date = datetime.date(current_date.year, 1, 1)
