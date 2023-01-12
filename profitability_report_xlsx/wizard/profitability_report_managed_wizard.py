@@ -312,7 +312,7 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
             'service_level_credit_ids': self.service_level_credits.ids,
             'from': from_date if from_date else self.from_date,
             'to': to_date if to_date else self.to_date,
-            'company_id': self.env.company.id,
+            'company_id': self.company_id.id,
             'analytic_account_group': self.analytic_account_group.id,
             'Current_months': Current_months
         }
@@ -331,7 +331,6 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
         total_site = 0
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
-        # account_ids = ''
 
         query = '''
                         select id,name from account_analytic_account as analatyc_account 

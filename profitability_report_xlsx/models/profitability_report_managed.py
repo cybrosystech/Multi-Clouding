@@ -170,7 +170,8 @@ class ProfitabilityReportManaged(models.Model):
                     [('project_site_id', '=', i['id']),
                      ('move_id.date', '<=', data['to']),
                      ('move_id.date', '>=', data['from']),
-                     ('parent_state', '=', 'posted')])
+                     ('parent_state', '=', 'posted'),
+                     ('company_id', '=', profitability_managed.company_id.id)])
                 lease_anchor_tenant = projects.filtered(
                     lambda x: x.account_id.id in data[
                         'lease_anchor_tenant_ids'])
@@ -339,7 +340,8 @@ class ProfitabilityReportManaged(models.Model):
                     [('project_site_id', '=', i['id']),
                      ('move_id.date', '<=', data['to']),
                      ('move_id.date', '>=', data['from']),
-                     ('parent_state', '=', 'posted')])
+                     ('parent_state', '=', 'posted'),
+                     ('company_id', '=', profitability_managed.company_id.id)])
                 lease_anchor_tenant = projects.filtered(
                     lambda x: x.account_id.id in data[
                         'lease_anchor_tenant_ids'])
@@ -486,7 +488,6 @@ class ProfitabilityReportManaged(models.Model):
             return dummy_prof_list
 
     def profitability_managed_cron_update(self):
-        print('heee')
         date = fields.Datetime.now()
         schedule = self.env.ref(
             'profitability_report_xlsx.action_profitability_managed_cron')
