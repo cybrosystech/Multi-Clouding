@@ -63,6 +63,9 @@
                     <group>
                         <field name="period"/>
                     </group>
+                    <group>
+                        <field name="company_id"/>
+                    </group>
                 </group>
                 <group>
                     <label for="from_date" string="From"

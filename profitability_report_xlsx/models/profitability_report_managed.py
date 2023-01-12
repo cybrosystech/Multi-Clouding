@@ -60,8 +60,7 @@ class ProfitabilityReportManaged(models.Model):
                                            'This Financial Year'),
                                           ('last_quarter', 'Last Quarter'),
                                           ('last_financial_year',
-                                           'Last Financial Year'),
-                                          ('custom', 'Custom')]),
+                                           'Last Financial Year')]),
                               string='Periods', required=True,
                               default='last_financial_year')
     company_id = fields.Many2one('res.company', 'Company',
@@ -603,7 +602,7 @@ class ProfitabilityReportManaged(models.Model):
         date = fields.Datetime.now()
         schedule_action = self.env.ref('profitability_report_xlsx.action_profitability_managed_cron')
         schedule_action.update({
-            'nextcall': date + timedelta(seconds=10)
+            'nextcall': date + timedelta(minutes=1)
         })
         self.update({
             'limits_pr': 0,

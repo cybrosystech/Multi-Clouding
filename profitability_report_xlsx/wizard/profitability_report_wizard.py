@@ -204,6 +204,8 @@ class ProfitabilityReportWizard(models.TransientModel):
                                              default=default_analytic_account_group)
     from_date = fields.Date('From')
     to_date = fields.Date('To')
+    company_id = fields.Many2one('res.company', 'Company',
+                                 default=lambda self: self.env.company)
 
     def generate_xlsx_report(self):
         current_date = fields.Date.today()
@@ -327,7 +329,7 @@ class ProfitabilityReportWizard(models.TransientModel):
             'lease_finance_cost_ids': self.lease_finance_cost.ids,
             'from': from_date if from_date else self.from_date,
             'to': to_date if to_date else self.to_date,
-            'company_id': self.env.company.id,
+            'company_id': self.company_id.id,
             'analatyc_account_group': self.analatyc_account_group.id,
             'Current_months': Current_months
         }
@@ -393,7 +395,8 @@ class ProfitabilityReportWizard(models.TransientModel):
                 [('project_site_id', '=', i['id']),
                  ('move_id.date', '<=', data['to']),
                  ('move_id.date', '>=', data['from']),
-                 ('parent_state', '=', 'posted')])
+                 ('parent_state', '=', 'posted'),
+                 ('company_id', '=', data['company_id'])])
 
             service_revenue = projects.filtered(
                 lambda x: x.account_id.id in data['service_revenue_ids'])

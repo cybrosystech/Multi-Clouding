@@ -53,31 +53,64 @@ class ProfitabilityReportOwned(models.Model):
 
     json_report_values = fields.Char('Report Values')
     limits_pr = fields.Integer('Limit', default=0)
+    period = fields.Selection(selection=([('this_quarter', 'This Quarter'),
+                                          ('this_financial_year',
+                                           'This Financial Year'),
+                                          ('last_quarter', 'Last Quarter'),
+                                          ('last_financial_year',
+                                           'Last Financial Year')]),
+                              string='Periods', required=True,
+                              default='last_financial_year')
+    company_id = fields.Many2one('res.company', 'Company',
+                                 default=lambda self: self.env.company)
+    end_limit = fields.Integer('end limit', default=0)
 
-    def profitability_owned_report(self, filter, limit):
+    def profitability_owned_report(self, limit):
         profitability_owned = self.env['profitability.report.owned'].search(
-            [])
+            [('company_id', '=', self.env.company.id)])
         current_date = fields.Date.today()
         profitability_owned_report = profitability_owned.json_report_values
         from_date = ''
         to_date = ''
         Current_months = ''
-        if filter == 'last_financial_year':
+        if profitability_owned.period == 'this_financial_year':
+            first, last = calendar.monthrange(current_date.year,
+                                              12)
+            from_date = datetime.date(current_date.year, 1, 1)
+            to_date = datetime.date(current_date.year, 12, last)
+            Current_months = from_date.year
+        if profitability_owned.period == 'last_financial_year':
             last_financial_year = current_date.year - 1
             first, last = calendar.monthrange(last_financial_year,
                                               12)
             from_date = datetime.date(last_financial_year, 1, 1)
             to_date = datetime.date(last_financial_year, 12, last)
             Current_months = from_date.year
-        if filter == 'this_financial_year':
+        if profitability_owned.period == 'this_quarter':
+            current_quarter = (current_date.month - 1) // 3 + 1
             first, last = calendar.monthrange(current_date.year,
-                                              12)
-            from_date = datetime.date(current_date.year, 1, 1)
-            to_date = datetime.date(current_date.year, 12, last)
-            Current_months = from_date.year
+                                              3 * current_quarter)
+            from_date = datetime.date(current_date.year,
+                                      3 * current_quarter - 2, 1)
+            to_date = datetime.date(current_date.year, 3 * current_quarter,
+                                    last)
+            from_month = from_date.strftime("%B")
+            to_month = to_date.strftime("%B")
+            Current_months = from_month + ' - ' + to_month
+        if profitability_owned.period == 'last_quarter':
+            last_quarter = ((current_date.month - 1) // 3 + 1) - 1
+            first, last = calendar.monthrange(current_date.year,
+                                              3 * last_quarter)
+            from_date = datetime.date(current_date.year,
+                                      3 * last_quarter - 2, 1)
+            to_date = datetime.date(current_date.year, 3 * last_quarter,
+                                    last)
+            from_month = from_date.strftime("%B")
+            to_month = to_date.strftime("%B")
+            Current_months = from_month + ' - ' + to_month
         group = self.env['account.analytic.group'].search(
             [('name', 'ilike', 'owned'),
-             ('company_id', '=', self.env.company.id)])
+             ('company_id', '=', profitability_owned.company_id.id)])
         data = {
             'ids': self.ids,
             'model': self._name,
@@ -99,7 +132,7 @@ class ProfitabilityReportOwned(models.Model):
             'lease_finance_cost_ids': profitability_owned.lease_finance_cost.ids,
             'from': from_date,
             'to': to_date,
-            'company_id': self.env.company.id,
+            'company_id': profitability_owned.company_id.id,
             'analatyc_account_group': group.id,
             'Current_months': Current_months,
             'limit': limit
@@ -135,7 +168,9 @@ class ProfitabilityReportOwned(models.Model):
                 account_ids_depreciation = cr.dictfetchall()
                 account_fa_depreciation_ids = [dic['id'] for dic in
                                                account_ids_depreciation]
-            for i in project_site[profitability_owned.limits_pr: int(data['limit'])]:
+            end_limit = profitability_owned.limits_pr + int(data['limit'])
+            profitability_owned.end_limit = end_limit
+            for i in project_site[profitability_owned.limits_pr: end_limit]:
                 prof_rep = {}
                 prof_rep.update({
                     'project': i['name'],
@@ -144,7 +179,8 @@ class ProfitabilityReportOwned(models.Model):
                     [('project_site_id', '=', i['id']),
                      ('move_id.date', '<=', data['to']),
                      ('move_id.date', '>=', data['from']),
-                     ('parent_state', '=', 'posted')])
+                     ('parent_state', '=', 'posted'),
+                     ('company_id', '=', profitability_owned.company_id.id)])
 
                 service_revenue = projects.filtered(
                     lambda x: x.account_id.id in data[
@@ -293,8 +329,8 @@ class ProfitabilityReportOwned(models.Model):
                     'lease_finance_cost': total,
                 })
                 profitability_owned_report_load.append(prof_rep)
-            profitability_owned.limits_pr = int(data['limit'])
-            if int(data['limit']) <= len(project_site):
+            profitability_owned.limits_pr = end_limit
+            if end_limit <= len(project_site):
                 date = fields.Datetime.now()
                 schedule = self.env.ref(
                     'profitability_report_xlsx.action_profitability_owned_cron_update')
@@ -328,6 +364,8 @@ class ProfitabilityReportOwned(models.Model):
                 account_ids_depreciation = cr.dictfetchall()
                 account_fa_depreciation_ids = [dic['id'] for dic in
                                                account_ids_depreciation]
+            end_limit = profitability_owned.limits_pr + int(data['limit'])
+            profitability_owned.end_limit = end_limit
             for i in project_site[profitability_owned.limits_pr: int(data['limit'])]:
                 prof_rep = {}
                 prof_rep.update({
@@ -337,7 +375,8 @@ class ProfitabilityReportOwned(models.Model):
                     [('project_site_id', '=', i['id']),
                      ('move_id.date', '<=', data['to']),
                      ('move_id.date', '>=', data['from']),
-                     ('parent_state', '=', 'posted')])
+                     ('parent_state', '=', 'posted'),
+                     ('company_id', '=', profitability_owned.company_id.id)])
 
                 service_revenue = projects.filtered(
                     lambda x: x.account_id.id in data[
@@ -486,8 +525,8 @@ class ProfitabilityReportOwned(models.Model):
                     'lease_finance_cost': total,
                 })
                 dummy_prof_list.append(prof_rep)
-            profitability_owned.limits_pr = int(data['limit'])
-            if int(data['limit']) <= len(project_site):
+            profitability_owned.limits_pr = end_limit
+            if end_limit <= len(project_site):
                 date = fields.Datetime.now()
                 schedule = self.env.ref(
                     'profitability_report_xlsx.action_profitability_owned_cron_update')
@@ -608,11 +647,11 @@ class ProfitabilityReportOwned(models.Model):
         date = fields.Datetime.now()
         schedule = self.env.ref(
             'profitability_report_xlsx.action_profitability_owned_cron')
-        profitability_managed = self.env['profitability.report.managed'].search(
-            [])
-        updated_limit = profitability_managed.limits_pr + profitability_managed.limits_pr
         schedule.update({
-            'nextcall': date + timedelta(seconds=10),
-            'code': 'model.profitability_managed_report(filter="this_financial_year", limit="%d")' % (
-                updated_limit)
+            'nextcall': date + timedelta(seconds=10)
+        })
+        self.update({
+            'limits_pr': 0,
+            'end_limit': 0,
+            'json_report_values': ''
         })

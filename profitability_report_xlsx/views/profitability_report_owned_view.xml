@@ -7,10 +7,10 @@
         <field name="arch" type="xml">
             <form>
                 <header>
+                    <button name="profitability_owned_cron_update" string="Schedule Managed report"
+                            type="object" />
                     <button name="action_get_report" string="Print XLSX"
                             type="object" />
-<!--                    <button name="managed_action_bool" string="Managed Bool"-->
-<!--                            type="object" />-->
                 </header>
                 <group>
                     <group>
@@ -67,10 +67,19 @@
                     </group>
                 </group>
                 <group>
+                    <group>
+                        <field name="period"/>
+                    </group>
+                    <group>
+                        <field name="company_id"/>
+                    </group>
+                </group>
+                <group>
                     <field name="json_report_values"/>
                 </group>
                 <group>
                     <field name="limits_pr"/>
+                    <field name="end_limit" invisible="1"/>
                 </group>
             </form>
         </field>
