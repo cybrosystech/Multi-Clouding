@@ -5,7 +5,7 @@
         <field name="name">Profitability Managed Cron</field>
         <field name="model_id" ref="model_profitability_report_managed"/>
         <field name="state">code</field>
-        <field name="code">model.profitability_managed_report(filter="last_financial_year", limit="3")</field>
+        <field name="code">model.profitability_managed_report(limit="3")</field>
         <field name="active">False</field>
         <field name="interval_number">1</field>
         <field name="interval_type">days</field>

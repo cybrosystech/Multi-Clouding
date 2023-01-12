@@ -68,7 +68,7 @@ class ProfitabilityReportManaged(models.Model):
                                  default=lambda self: self.env.company)
     end_limit = fields.Integer('end limit', default=0)
 
-    def profitability_managed_report(self, filter, limit):
+    def profitability_managed_report(self, limit):
         profitability_managed = self.env['profitability.report.managed'].search(
             [('company_id', '=', self.env.company.id)])
         current_date = fields.Date.today()
