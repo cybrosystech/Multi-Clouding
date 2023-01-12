@@ -199,6 +199,8 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
                                              default=default_analytic_account_group)
     from_date = fields.Date('From')
     to_date = fields.Date('To')
+    company_id = fields.Many2one('res.company', 'Company',
+                                 default=lambda self: self.env.company)
 
     def generate_xlsx_report(self):
         current_date = fields.Date.today()

@@ -6,9 +6,9 @@
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <button name="action_get_report" string="Print XLSX"
+                    <button name="schedule_managed_cron" string="Schedule Managed report"
                             type="object" />
-                    <button name="managed_action_bool" string="Managed Bool"
+                    <button name="action_get_report" string="Print XLSX"
                             type="object" />
                 </header>
                 <group>
@@ -55,10 +55,19 @@
                     </group>
                 </group>
                 <group>
+                    <group>
+                        <field name="period"/>
+                    </group>
+                    <group>
+                        <field name="company_id"/>
+                    </group>
+                </group>
+                <group>
                     <field name="json_report_values"/>
                 </group>
                 <group>
-                    <field name="limits_pr"/>
+                    <field name="limits_pr" readonly="1"/>
+                    <field name="end_limit" invisible="1"/>
                 </group>
             </form>
         </field>
