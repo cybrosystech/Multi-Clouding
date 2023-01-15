@@ -4,6 +4,7 @@
         <t t-jquery="div.dropdown-menu-right" t-operation="replace">
             <div class="dropdown-menu dropdown-menu-right" role="menu">
                 <button class="btn btn-primary select_companies">Select All</button>
+                <button class="btn btn-primary deselect_companies">Deselect All</button>
                 <t t-foreach="widget.user_companies" t-as="company">
                     <div class="dropdown-item d-flex py-0 px-0"
                          data-menu="company" t-att-data-company-id="company[0]">
