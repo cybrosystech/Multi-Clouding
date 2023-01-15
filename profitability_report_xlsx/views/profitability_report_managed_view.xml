@@ -63,7 +63,7 @@
                     </group>
                 </group>
                 <group>
-                    <field name="json_report_values"/>
+                    <field name="json_report_values" invisible="1"/>
                 </group>
                 <group>
                     <field name="limits_pr" readonly="1"/>
