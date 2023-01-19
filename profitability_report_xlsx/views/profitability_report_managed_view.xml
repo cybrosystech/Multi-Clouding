@@ -63,9 +63,22 @@
                     </group>
                 </group>
                 <group>
+                    <label for="from_date" string="From"
+                           attrs="{'invisible': [('period', '!=', 'custom')]}"/>
+                    <div>
+                        <field name="from_date" class="oe_inline"
+                               attrs="{'invisible': [('period', '!=', 'custom')], 'required': [('period', '=', 'custom')]}"/>
+                        <label for="to_date" string="To"
+                               attrs="{'invisible': [('period', '!=', 'custom')]}"/>
+                        <field name="to_date" class="oe_inline"
+                               attrs="{'invisible': [('period', '!=', 'custom')], 'required': [('period', '=', 'custom')]}"/>
+                    </div>
+                </group>
+                <group>
                     <field name="json_report_values" invisible="1"/>
                 </group>
                 <group>
+                    <field name="current_filter"/>
                     <field name="limits_pr" readonly="1"/>
                     <field name="end_limit" invisible="1"/>
                 </group>
