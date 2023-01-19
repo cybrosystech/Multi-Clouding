@@ -77,7 +77,7 @@ class VendorReportWizard(models.TransientModel):
                 [('move_type', '=', 'in_invoice'),
                  ('date', '>=', date_from),
                  ('date', '<=', date_to),
-                 ('company_id', '=', self.env.company.id),
+                 ('company_id', '=', int(data['company_id'])),
                  ('state', '=', data['state'])])
         elif date_from:
             journals = self.env['account.move'].search(
@@ -107,14 +107,15 @@ class VendorReportWizard(models.TransientModel):
         sheet.write('B3', 'Accounting Date', head)
         sheet.write('C3', 'Supplier', head)
         sheet.write('D3', 'Bill Reference', head)
-        sheet.write('E3', 'Bill Number', head)
-        sheet.write('F3', 'Label', head)
-        sheet.write('G3', 'Currency', head)
-        sheet.write('H3', 'Pre Vat Amount', head)
-        sheet.write('I3', 'VAT Amount', head)
-        sheet.write('J3', 'Total', head)
-        sheet.write('K3', 'Taxes', head)
-        sheet.write('L3', 'Tax ID', head)
+        sheet.write('E3', 'Payment Reference', head)
+        sheet.write('F3', 'Bill Number', head)
+        sheet.write('G3', 'Label', head)
+        sheet.write('H3', 'Currency', head)
+        sheet.write('I3', 'Pre Vat Amount', head)
+        sheet.write('J3', 'VAT Amount', head)
+        sheet.write('K3', 'Total', head)
+        sheet.write('L3', 'Taxes', head)
+        sheet.write('M3', 'Tax ID', head)
 
         row_num = 2
         col_num = 0
@@ -134,19 +135,21 @@ class VendorReportWizard(models.TransientModel):
                             date_format)
                 sheet.write(row_num + 1, col_num + 3, rec.ref,
                             date_format)
-                sheet.write(row_num + 1, col_num + 4, rec.name,
+                sheet.write(row_num + 1, col_num + 4, rec.payment_reference,
                             date_format)
-                sheet.write(row_num + 1, col_num + 5, lines[0].name,
+                sheet.write(row_num + 1, col_num + 5, rec.name,
                             date_format)
-                sheet.write(row_num + 1, col_num + 6,
+                sheet.write(row_num + 1, col_num + 6, lines[0].name,
+                            date_format)
+                sheet.write(row_num + 1, col_num + 7,
                             rec.currency_id.name,
                             date_format)
-                sheet.write(row_num + 1, col_num + 7, sub_total, num)
-                sheet.write(row_num + 1, col_num + 8, tax_amount, num)
-                sheet.write(row_num + 1, col_num + 9, sub_total +
+                sheet.write(row_num + 1, col_num + 8, sub_total, num)
+                sheet.write(row_num + 1, col_num + 9, tax_amount, num)
+                sheet.write(row_num + 1, col_num + 10, sub_total +
                             tax_amount, num)
-                sheet.write(row_num + 1, col_num + 10, tax.name, date_format)
-                sheet.write(row_num + 1, col_num + 11,
+                sheet.write(row_num + 1, col_num + 11, tax.name, date_format)
+                sheet.write(row_num + 1, col_num + 12,
                             rec.partner_id.vat if rec.partner_id.vat else '',
                             num)
                 row_num = row_num + 1
@@ -163,24 +166,26 @@ class VendorReportWizard(models.TransientModel):
                             date_format)
                 sheet.write(row_num + 1, col_num + 3, rec.ref,
                             date_format)
-                sheet.write(row_num + 1, col_num + 4, rec.name,
+                sheet.write(row_num + 1, col_num + 4, rec.payment_reference,
                             date_format)
-                sheet.write(row_num + 1, col_num + 5,
+                sheet.write(row_num + 1, col_num + 5, rec.name,
+                            date_format)
+                sheet.write(row_num + 1, col_num + 6,
                             lines_wout_tax[0].name if lines_wout_tax[
                                 0].name else '',
                             date_format)
-                sheet.write(row_num + 1, col_num + 6,
+                sheet.write(row_num + 1, col_num + 7,
                             rec.currency_id.name,
                             date_format)
                 sheet.write(row_num + 1, col_num + 7,
                             sum(lines_wout_tax.mapped(lambda x: x.price_subtotal)),
                             num)
-                sheet.write(row_num + 1, col_num + 8, '', num)
-                sheet.write(row_num + 1, col_num + 9,
+                sheet.write(row_num + 1, col_num + 9, '', num)
+                sheet.write(row_num + 1, col_num + 10,
                             sum(lines_wout_tax.mapped(lambda x: x.price_subtotal)),
                             num)
-                sheet.write(row_num + 1, col_num + 10, '', date_format)
-                sheet.write(row_num + 1, col_num + 11,
+                sheet.write(row_num + 1, col_num + 11, '', date_format)
+                sheet.write(row_num + 1, col_num + 12,
                             rec.partner_id.vat if rec.partner_id.vat else '',
                             num)
                 row_num = row_num + 1

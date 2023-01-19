@@ -8,7 +8,7 @@
     'website': "",
     'category': '',
     'version': '14.0.1.0.0',
-    'depends': ['base'],
+    'depends': ['web', 'base'],
 
     'data':
         [

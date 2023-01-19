@@ -1,4 +1,5 @@
 from odoo import models, fields
+from odoo.exceptions import UserError
 from odoo.tools.safe_eval import datetime, json
 import calendar
 from datetime import timedelta
@@ -58,12 +59,16 @@ class ProfitabilityReportOwned(models.Model):
                                            'This Financial Year'),
                                           ('last_quarter', 'Last Quarter'),
                                           ('last_financial_year',
-                                           'Last Financial Year')]),
+                                           'Last Financial Year'),
+                                          ('custom', 'Custom')]),
                               string='Periods', required=True,
                               default='last_financial_year')
     company_id = fields.Many2one('res.company', 'Company',
                                  default=lambda self: self.env.company)
+    from_date = fields.Date('From')
+    to_date = fields.Date('To')
     end_limit = fields.Integer('end limit', default=0)
+    current_filter = fields.Char('Selected Filter')
 
     def profitability_owned_report(self, limit):
         profitability_owned = self.env['profitability.report.owned'].search(
@@ -108,6 +113,9 @@ class ProfitabilityReportOwned(models.Model):
             from_month = from_date.strftime("%B")
             to_month = to_date.strftime("%B")
             Current_months = from_month + ' - ' + to_month
+        if self.from_date and self.to_date:
+            if self.from_date > self.to_date:
+                raise UserError("Start date should be less than end date")
         group = self.env['account.analytic.group'].search(
             [('name', 'ilike', 'owned'),
              ('company_id', '=', profitability_owned.company_id.id)])
@@ -130,8 +138,8 @@ class ProfitabilityReportOwned(models.Model):
             'fa_depreciation_code': profitability_owned.fa_depreciation.code,
             'fa_depreciation_lim_code': profitability_owned.fa_depreciation_lim.code,
             'lease_finance_cost_ids': profitability_owned.lease_finance_cost.ids,
-            'from': from_date,
-            'to': to_date,
+            'from': from_date if from_date else self.from_date,
+            'to': to_date if to_date else self.to_date,
             'company_id': profitability_owned.company_id.id,
             'analatyc_account_group': group.id,
             'Current_months': Current_months,
@@ -139,6 +147,7 @@ class ProfitabilityReportOwned(models.Model):
         }
         report_values = profitability_owned.get_profitability_owned(data, profitability_owned_report, profitability_owned)
         profitability_owned.json_report_values = json.dumps(report_values)
+        profitability_owned.current_filter = Current_months
 
     def get_profitability_owned(self, data, profitability_owned_report, profitability_owned):
         if profitability_owned_report:
@@ -549,6 +558,7 @@ class ProfitabilityReportOwned(models.Model):
 
     def get_xlsx(self, data, response):
         profitability_owned_report = json.loads(data)
+        profitability_object = self.env['profitability.report.owned'].search([])
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
 
@@ -600,7 +610,7 @@ class ProfitabilityReportOwned(models.Model):
         sheet.write('V4', 'FA Depreciation', sub_heading1)
         sheet.write('W4', 'Leases Finance Cost', sub_heading1)
 
-        sheet.merge_range('B2:S2', data['Current_months'], main_head)
+        sheet.merge_range('B2:S2', profitability_object.current_filter, main_head)
         sheet.merge_range('U2:W2', '', main_head)
         sheet.merge_range('D3:J3', 'Revenues', head)
         sheet.merge_range('K3:Q3', 'Costs', head)

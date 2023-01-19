@@ -1,7 +1,9 @@
 <odoo>
-    <template id="company_click" inherit_id="web.assets_backend">
-        <xpath expr="." position="inside">
-             <script type="text/javascript" src="company_click_custom/static/src/js/switch_company_all.js"/>
-         </xpath>
-    </template>
+    <data>
+        <template id="assets_backend" name="Assets company" inherit_id="web.assets_backend">
+            <xpath expr="." position="inside">
+                <script type="text/javascript" src="/company_click_custom/static/src/js/switch_company_all.js"/>
+            </xpath>
+        </template>
+    </data>
 </odoo>
