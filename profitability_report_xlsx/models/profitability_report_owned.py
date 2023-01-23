@@ -113,8 +113,8 @@ class ProfitabilityReportOwned(models.Model):
             from_month = from_date.strftime("%B")
             to_month = to_date.strftime("%B")
             Current_months = from_month + ' - ' + to_month
-        if self.from_date and self.to_date:
-            if self.from_date > self.to_date:
+        if profitability_owned.from_date and profitability_owned.to_date:
+            if profitability_owned.from_date > profitability_owned.to_date:
                 raise UserError("Start date should be less than end date")
         group = self.env['account.analytic.group'].search(
             [('name', 'ilike', 'owned'),
@@ -138,8 +138,8 @@ class ProfitabilityReportOwned(models.Model):
             'fa_depreciation_code': profitability_owned.fa_depreciation.code,
             'fa_depreciation_lim_code': profitability_owned.fa_depreciation_lim.code,
             'lease_finance_cost_ids': profitability_owned.lease_finance_cost.ids,
-            'from': from_date if from_date else self.from_date,
-            'to': to_date if to_date else self.to_date,
+            'from': from_date if from_date else profitability_owned.from_date,
+            'to': to_date if to_date else profitability_owned.to_date,
             'company_id': profitability_owned.company_id.id,
             'analatyc_account_group': group.id,
             'Current_months': Current_months,
@@ -373,6 +373,8 @@ class ProfitabilityReportOwned(models.Model):
                 account_ids_depreciation = cr.dictfetchall()
                 account_fa_depreciation_ids = [dic['id'] for dic in
                                                account_ids_depreciation]
+            else:
+                account_fa_depreciation_ids = []
             end_limit = profitability_owned.limits_pr + int(data['limit'])
             profitability_owned.end_limit = end_limit
             for i in project_site[profitability_owned.limits_pr: int(data['limit'])]:
