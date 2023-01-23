@@ -170,6 +170,52 @@ class AccountMove(models.Model):
                                                                           'model': None,
                                                                           'res_id': None})
 
+    def button_request_purchase_cycle(self):
+        for rec in self:
+            journals = self.env['account.move'].search([('id', '=', rec.id)])
+            journals.get_budgets_in_out_budget_tab()
+            if journals.out_budget and not journals.purchase_approval_cycle_ids:
+                out_budget_list = []
+                out_budget = journals.env['budget.in.out.check.invoice'].search(
+                    [('type', '=', 'out_budget'),
+                     ('company_id', '=', journals.env.company.id)], limit=1)
+                max_value = max(journals.budget_collect_ids.mapped('demand_amount'))
+                for rec in out_budget.budget_line_ids:
+                    if max_value >= rec.from_amount:
+                        out_budget_list.append((0, 0, {
+                            'approval_seq': rec.approval_seq,
+                            'user_approve_ids': rec.user_ids.ids,
+                        }))
+
+                journals.write({'purchase_approval_cycle_ids': out_budget_list})
+            if not journals.out_budget and not journals.purchase_approval_cycle_ids:
+                in_budget_list = []
+                in_budget = journals.env['budget.in.out.check.invoice'].search(
+                    [('type', '=', 'in_budget'),
+                     ('company_id', '=', journals.env.company.id)], limit=1)
+                if journals.move_type == 'endef request_approval_buttontry':
+                    max_value = max(journals.line_ids.mapped(
+                        'local_subtotal'))  # Old Field is debit
+                else:
+                    max_value = sum(journals.invoice_line_ids.mapped('local_subtotal'))
+                for rec in in_budget.budget_line_ids:
+                    if max_value >= rec.from_amount:
+                        in_budget_list.append((0, 0, {
+                            'approval_seq': rec.approval_seq,
+                            'user_approve_ids': rec.user_ids.ids,
+                        }))
+
+                journals.write({'purchase_approval_cycle_ids': in_budget_list})
+            journals.show_request_approve_button = True
+            if journals.purchase_approval_cycle_ids:
+                min_seq_approval = min(
+                    journals.purchase_approval_cycle_ids.mapped('approval_seq'))
+                notification_to_user = journals.purchase_approval_cycle_ids.filtered(
+                    lambda x: x.approval_seq == int(min_seq_approval))
+                user = notification_to_user.user_approve_ids
+                journals.state = 'to_approve'
+                journals.send_user_notification(user)
+
     def request_approval_button(self):
         self.get_budgets_in_out_budget_tab()
         if self.out_budget and not self.purchase_approval_cycle_ids:
@@ -215,20 +261,21 @@ class AccountMove(models.Model):
             self.send_user_notification(user)
 
     def button_approve_purchase_cycle(self):
-        if not self.purchase_approval_cycle_ids:
-            self.request_approval_button()
-        min_seq_approval = min(
-            self.purchase_approval_cycle_ids.filtered(lambda x: x.is_approved is not True).mapped('approval_seq'))
-        last_approval = self.purchase_approval_cycle_ids.filtered(
-            lambda x: x.approval_seq == int(min_seq_approval))
-        if self.env.user not in last_approval.user_approve_ids:
-            raise UserError('You cannot approve this record'+ ' '+ str(self.name))
-        last_approval.is_approved = True
-        self.send_user_notification(last_approval.user_approve_ids)
-        if not self.purchase_approval_cycle_ids.filtered(lambda x: x.is_approved is False):
-            self.action_post()
-        message = 'Level ' + str(last_approval.approval_seq) + ' Approved by :' +str( self.env.user.name)
-        self.message_post(body=message)
+        for journal in self:
+            if not journal.purchase_approval_cycle_ids:
+                journal.button_request_purchase_cycle()
+            min_seq_approval = min(
+                journal.purchase_approval_cycle_ids.filtered(lambda x: x.is_approved is not True).mapped('approval_seq'))
+            last_approval = journal.purchase_approval_cycle_ids.filtered(
+                lambda x: x.approval_seq == int(min_seq_approval))
+            if journal.env.user not in last_approval.user_approve_ids:
+                raise UserError('You cannot approve this record'+ ' '+ str(journal.name))
+            last_approval.is_approved = True
+            journal.send_user_notification(last_approval.user_approve_ids)
+            if not journal.purchase_approval_cycle_ids.filtered(lambda x: x.is_approved is False):
+                journal.action_post()
+            message = 'Level ' + str(last_approval.approval_seq) + ' Approved by :' +str( journal.env.user.name)
+            journal.message_post(body=message)
     # /////////// End of Approval Cycle According To In Budget or Out Budget in Po Configuration //////////////
 
     def _auto_create_asset(self):

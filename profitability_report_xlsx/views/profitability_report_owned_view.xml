@@ -111,7 +111,7 @@
     </record>
 
     <record id="action_profitability_owned" model="ir.actions.act_window">
-        <field name="name">Profitability Managed</field>
+        <field name="name">Profitability Owned</field>
         <field name="type">ir.actions.act_window</field>
         <field name="res_model">profitability.report.owned</field>
         <field name="view_mode">tree,form</field>

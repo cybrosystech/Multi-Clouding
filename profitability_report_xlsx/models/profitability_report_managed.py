@@ -115,8 +115,8 @@ class ProfitabilityReportManaged(models.Model):
             from_month = from_date.strftime("%B")
             to_month = to_date.strftime("%B")
             Current_months = from_month + ' - ' + to_month
-        if self.from_date and self.to_date:
-            if self.from_date > self.to_date:
+        if profitability_managed.from_date and profitability_managed.to_date:
+            if profitability_managed.from_date > profitability_managed.to_date:
                 raise UserError("Start date should be less than end date")
         group = self.env['account.analytic.group'].search(
             [('name', 'ilike', 'managed'),
@@ -137,8 +137,8 @@ class ProfitabilityReportManaged(models.Model):
             'site_rent_ids': profitability_managed.site_rent.ids,
             'security_ids': profitability_managed.security.ids,
             'service_level_credit_ids': profitability_managed.service_level_credits.ids,
-            'from': from_date if from_date else self.from_date,
-            'to': to_date if to_date else self.to_date,
+            'from': from_date if from_date else profitability_managed.from_date,
+            'to': to_date if to_date else profitability_managed.to_date,
             'company_id': profitability_managed.company_id.id,
             'analytic_account_group': group.id,
             'Current_months': Current_months,

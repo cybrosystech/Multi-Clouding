@@ -7,10 +7,16 @@
             <field name="model_id" ref="account.model_account_move"/>
             <field name="binding_model_id" ref="account.model_account_move"/>
             <field name="state">code</field>
-            <field name="code">
-                for rec in records:
-                    rec.button_approve_purchase_cycle()
-            </field>
+            <field name="code">records.button_approve_purchase_cycle()</field>
+        </record>
+
+        <record id="action_to_request_bills" model="ir.actions.server">
+            <field name="name">Bulk Request</field>
+            <field name="type">ir.actions.server</field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="binding_model_id" ref="account.model_account_move"/>
+            <field name="state">code</field>
+            <field name="code">records.button_request_purchase_cycle()</field>
         </record>
     </data>
 </odoo>
