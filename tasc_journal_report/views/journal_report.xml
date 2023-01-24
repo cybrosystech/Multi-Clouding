@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="template_journal_pdf_report">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <div class="row">
+                            <div class="col-6">
+                                <h6><strong>Journal No :</strong> <t t-esc="o.name"/></h6>
+                                <h6><strong>Reference :</strong> <t t-esc="o.ref"/></h6>
+                                <h6><strong>Accounting Date :</strong> <t t-esc="o.date"/></h6>
+                            </div>
+                            <div class="col-6">
+                                <h6><strong>Journal :</strong> <t t-esc="o.journal_id.name"/></h6>
+                                <h6><strong>Currency :</strong> <t t-esc="o.company_id.currency_id.name"/></h6>
+                            </div>
+                        </div>
+                        <table class="table table-sm o_main_table" style="margin-top: 20px;">
+                            <thead>
+                                <tr>
+                                    <th>Account</th>
+                                    <th>Label</th>
+                                    <th>Cost Center</th>
+                                    <th>Project Site</th>
+                                    <th>Amount in currency</th>
+                                    <th>Acct.Dr</th>
+                                    <th>Acct.Cr</th>
+                                    <th>Tax</th>
+                                </tr>
+                            </thead>
+                            <tbody class="invoice_tbody">
+                                <t t-foreach="o.line_ids" t-as="line">
+                                    <tr>
+                                        <td t-esc="str(line.account_id.code)+ ' ' + str(line.account_id.name)"/>
+                                        <td t-esc="line.name"/>
+                                        <td t-esc="line.analytic_account_id.name"/>
+                                        <td t-esc="line.project_site_id.name"/>
+                                        <td ><t t-if="line.amount_currency" t-esc="line.amount_currency"/></td>
+                                        <td t-esc="'{:20,.2f}'.format(line.debit)"/>
+                                        <td t-esc="'{:20,.2f}'.format(line.credit)"/>
+                                        <td t-esc="', '.join(map(lambda x: (x.name), line.mapped('tax_ids')))"/>
+                                    </tr>
+                                </t>
+                                <tr>
+                                    <td/>
+                                    <td/>
+                                    <td/>
+                                    <td/>
+                                    <td>Total</td>
+                                    <td><t t-esc="'{:20,.2f}'.format(sum(o.line_ids.mapped(lambda x: x.debit)))"/> </td>
+                                    <td><t t-esc="'{:20,.2f}'.format(sum(o.line_ids.mapped(lambda x: x.credit)))"/></td>
+                                    <td/>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>
