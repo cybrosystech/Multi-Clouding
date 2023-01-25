@@ -1465,11 +1465,12 @@ class LeaseeContract(models.Model):
         lease_contract.action_activate()
         lease_contracts = self.env['leasee.contract'].search(
             [('state', '=', 'draft'), ('company_id', '=', self.env.company.id)])
-        if len(lease_contracts) > 0:
+        schedule = self.env.ref(
+            'lease_management.action_update_leasee_cron')
+        if len(lease_contracts) > 0 and schedule.active:
             LOGGER.info(str(limits) + ' Entries activated')
             date = fields.Datetime.now()
-            schedule = self.env.ref(
-                'lease_management.action_update_leasee_cron')
+
             schedule.update({
                 'nextcall': date + timedelta(seconds=20)
             })
