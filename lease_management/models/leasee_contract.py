@@ -738,6 +738,7 @@ class LeaseeContract(models.Model):
                 # 'currency_id': self.env.user.company_id.currency_id.id,
                 'acquisition_date': self.commencement_date,
                 # 'method_number': self.lease_contract_period,
+                'currency_id': self.leasee_currency_id.id,
                 'method_number': method_number,
                 'account_analytic_id': self.analytic_account_id.id,
                 'project_site_id': self.project_site_id.id,
