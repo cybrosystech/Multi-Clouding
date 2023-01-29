@@ -326,14 +326,16 @@ class AccountAsset(models.Model):
 
     def leasee_asset_entry_post(self, limits):
         assets = self.env['account.asset'].search([('name', 'ilike', 'Leasee'),
-                                                   ('state', '=', 'draft')],
+                                                   ('state', '=', 'draft'),
+                                                   ('company_id', '=', self.env.company.id)],
                                                   limit=limits)
         asset_count = 0
         for rec in assets:
             rec.validate()
             asset_count += 1
         asset = self.env['account.asset'].search([('name', 'ilike', 'Leasee'),
-                                                  ('state', '=', 'draft')])
+                                                  ('state', '=', 'draft'),
+                                                  ('company_id', '=', self.env.company.id)])
         if len(asset) > 0 and asset_count == limits:
             LOGGER.info(str(limits) + ' Asset Entries activated')
             date = fields.Datetime.now()

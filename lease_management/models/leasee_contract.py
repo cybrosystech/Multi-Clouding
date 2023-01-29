@@ -738,6 +738,7 @@ class LeaseeContract(models.Model):
                 # 'currency_id': self.env.user.company_id.currency_id.id,
                 'acquisition_date': self.commencement_date,
                 # 'method_number': self.lease_contract_period,
+                'currency_id': self.leasee_currency_id.id,
                 'method_number': method_number,
                 'account_analytic_id': self.analytic_account_id.id,
                 'project_site_id': self.project_site_id.id,
@@ -1465,11 +1466,12 @@ class LeaseeContract(models.Model):
         lease_contract.action_activate()
         lease_contracts = self.env['leasee.contract'].search(
             [('state', '=', 'draft'), ('company_id', '=', self.env.company.id)])
-        if len(lease_contracts) > 0:
+        schedule = self.env.ref(
+            'lease_management.action_update_leasee_cron')
+        if len(lease_contracts) > 0 and schedule.active:
             LOGGER.info(str(limits) + ' Entries activated')
             date = fields.Datetime.now()
-            schedule = self.env.ref(
-                'lease_management.action_update_leasee_cron')
+
             schedule.update({
                 'nextcall': date + timedelta(seconds=20)
             })
