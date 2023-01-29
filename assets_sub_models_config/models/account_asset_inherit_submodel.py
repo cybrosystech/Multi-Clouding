@@ -6,7 +6,17 @@ _logger = logging.getLogger(__name__)
 class AccountAssetSubModel(models.Model):
     _inherit = 'account.asset'
 
+    value_residual_original = fields.Monetary(compute='check_value_residual')
     asset_sub_model_id = fields.Many2one('assets.sub.model', tracking=True)
+
+    @api.depends()
+    def check_value_residual(self):
+        for rec in self:
+            depreciation_lines = rec.depreciation_move_ids.filtered(lambda x: x.state == 'posted')
+            if depreciation_lines:
+                rec.value_residual_original = rec.original_value - sum(depreciation_lines.mapped('amount_total'))
+            else:
+                rec.value_residual_original = rec.original_value
 
     @api.onchange('model_id')
     def _onchange_model_id(self):
