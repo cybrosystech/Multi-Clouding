@@ -8,6 +8,9 @@
             <field name="acquisition_date" position="after">
                     <field name="asset_sub_model_id" attrs="{'invisible': [('state', '=', 'model')]}"/>
             </field>
+            <field name="book_value" position="after">
+                <field name="value_residual_original" string="Depreciable value original"/>
+            </field>
         </field>
     </record>
 
