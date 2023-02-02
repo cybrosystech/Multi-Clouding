@@ -3,8 +3,10 @@
     <data>
         <template id="main_template_asset_report_page" inherit_id="account_reports.main_template">
             <xpath expr="//div[hasclass('o_account_reports_page')]" position="inside">
-                <div style="display: flex; justify-content: center;" t-if="context['model'] == 'account.assets.custom.report'">
-                    <button action="action_next_assets" class="btn-primary oe_highlight" style="width: 65px;">Next</button>
+                <div style="display: flex; justify-content: center;" t-if="options['depreciation_custom'] == 1">
+                    <t t-if="options['print_dep'] == 0">
+                        <button action="action_next_assets" class="btn-primary oe_highlight" style="width: 65px;">Next</button>
+                    </t>
                 </div>
             </xpath>
         </template>
