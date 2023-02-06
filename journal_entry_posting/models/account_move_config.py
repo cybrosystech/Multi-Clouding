@@ -19,7 +19,8 @@ class AccountMoveConfig(models.Model):
                                         ('scheduled', 'Scheduled')],
                              default='draft')
     scheduled_user = fields.Many2one('res.users',
-                                     default=lambda self: self.env.user.id)
+                                     default=lambda self: self.env.user.id,
+                                     readonly=True)
 
     def journal_entry_posting(self):
         journal_config = self.search([('active', '=', True)])
@@ -66,6 +67,7 @@ class AccountMoveConfig(models.Model):
             })
 
     def schedule_journal_action(self):
+        self.scheduled_user = self.env.user.id
         schedule = self.env.ref(
             'journal_entry_posting.account_move_config_cron')
         journal_config = self.env['account.move.config'].search(
