@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="view_journal_posting_config_form" model="ir.ui.view">
+        <field name="name">journal.posting.config.form</field>
+        <field name="model">account.move.config</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible=""/>
+                    <button name="schedule_journal_action" string="Schedule Journal Action"
+                            type="object" />
+                </header>
+                <group>
+                    <group>
+                        <field name="name"/>
+                        <field name="active"/>
+                    </group>
+                    <group>
+                        <field name="company_id"/>
+                        <field name="scheduled_user" string="User"/>
+                        <field name="journals" widget="many2many_tags"/>
+                    </group>
+                    <group>
+                        <field name="from_date"/>
+                        <field name="to_date"/>
+                    </group>
+                    <group>
+                        <field name="limit"/>
+                    </group>
+                </group>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_journal_posting_config_tree" model="ir.ui.view">
+        <field name="name">journal.posting.config.tree</field>
+        <field name="model">account.move.config</field>
+        <field name="arch" type="xml">
+            <tree string="">
+                <field name="name"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+
+    <record id="action_journal_managed" model="ir.actions.act_window">
+        <field name="name">Journal Posting</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">account.move.config</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+
+            </p>
+            <p>
+
+            </p>
+        </field>
+    </record>
+
+    <menuitem parent="account.menu_finance_entries" id="journal_tab_accounting" name="Journal" sequence="13" groups=""/>
+
+    <menuitem id="menu_journal_managed" name="Journal Posting"
+                  parent="journal_tab_accounting" action="action_journal_managed"
+                  sequence="100"/>
+
+
+</odoo>
