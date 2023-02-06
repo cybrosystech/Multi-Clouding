@@ -64,6 +64,7 @@ class RouAssetSchedule(models.TransientModel):
 
         contracts = self.env['leasee.contract'].search(
             [('id', 'child_of', contracts.ids)])
+
         asset_ids = contracts.mapped('asset_id').ids
         asset_domain = [('asset_id', 'child_of', asset_ids)]
         installments = self.env['account.move'].search(asset_domain,
@@ -94,6 +95,7 @@ class RouAssetSchedule(models.TransientModel):
                 'posting_date': 0,
                 'posting_doc_no': contract.name,
                 'lease_number': contract.name,
+                'project_site': contract.leasee_contract_ids.project_site_id.name
             })
             for ins in contract.depreciation_move_ids.sorted(
                     key=lambda m: m.date):
@@ -142,6 +144,7 @@ class RouAssetSchedule(models.TransientModel):
                             DF) if ins.posting_date else '',
                         'posting_doc_no': ins.name,
                         'lease_number': lease_number,
+                        'project_site': ins.asset_id.project_site_id.name
                     })
                 else:
                     data.append({
@@ -170,6 +173,7 @@ class RouAssetSchedule(models.TransientModel):
                             DF) if ins.posting_date else '',
                         'posting_doc_no': ins.name,
                         'lease_number': lease_number,
+                        'project_site': ins.asset_id.project_site_id.name
                     })
             for children in contract.children_ids:
                 data.append({
@@ -197,6 +201,8 @@ class RouAssetSchedule(models.TransientModel):
                     'posting_date': 0,
                     'posting_doc_no': children.name,
                     'lease_number': contract.name,
+                    'project_site': contract.project_site_id.name
+
                 })
                 for ins in children.depreciation_move_ids.sorted(
                         key=lambda m: m.date):
@@ -248,6 +254,8 @@ class RouAssetSchedule(models.TransientModel):
                                 DF) if ins.posting_date else '',
                             'posting_doc_no': ins.name,
                             'lease_number': lease_number,
+                            'project_site': ins.asset_id.project_site_id.name
+
                         })
                     else:
                         data.append({
@@ -278,6 +286,8 @@ class RouAssetSchedule(models.TransientModel):
                                 DF) if ins.posting_date else '',
                             'posting_doc_no': ins.name,
                             'lease_number': lease_number,
+                            'project_site': ins.asset_id.project_site_id.name
+
                         })
         return data
 
@@ -389,6 +399,8 @@ class RouAssetSchedule(models.TransientModel):
         col += 1
         worksheet.write(row, col, _('Period No.'), header_format)
         col += 1
+        worksheet.write(row, col, _('Project / Site'), header_format)
+        col += 1
         worksheet.write(row, col, _('Period Date'), header_format)
         col += 1
         worksheet.write(row, col, _('Depreciation Term (mths)'), header_format)
@@ -432,6 +444,8 @@ class RouAssetSchedule(models.TransientModel):
             worksheet.write(row, col, line['lease_number'], STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['period_no'], STYLE_LINE_Data)
+            col += 1
+            worksheet.write(row, col, line['project_site'], STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['period_start_date'],
                             STYLE_LINE_Data)

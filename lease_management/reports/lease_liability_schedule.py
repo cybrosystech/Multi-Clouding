@@ -111,6 +111,7 @@ class LeaseLiabilitySchedule(models.TransientModel):
                         if installment.date <= installment.leasee_contract_id.termination_date:
                             data.append({
                                 'period_no': period_no,
+                                'project_site': installment.leasee_contract_id.project_site_id.name,
                                 'lease_no': installment.leasee_contract_id.name,
                                 'period_start_date': start_date.strftime(DF),
                                 'opening_balance': opening_balance if period_no != first_period else 0,
@@ -141,6 +142,7 @@ class LeaseLiabilitySchedule(models.TransientModel):
                     else:
                         data.append({
                             'period_no': period_no,
+                            'project_site': installment.leasee_contract_id.project_site_id.name,
                             'lease_no': installment.leasee_contract_id.name,
                             'period_start_date': start_date.strftime(DF),
                             'opening_balance': opening_balance if period_no != first_period else 0,
@@ -172,6 +174,7 @@ class LeaseLiabilitySchedule(models.TransientModel):
                 abc = terminated_move.line_ids.filtered(lambda x: x.account_id.id in [contract1.lease_liability_account_id.id, contract1.long_lease_liability_account_id.id])
                 data.append({
                     'period_no': period_contract + 1,
+                    'project_site': contract1.project_site_id.name,
                     'lease_no': contract1.name,
                     'period_start_date': contract1.termination_date.strftime(
                         DF),
@@ -294,6 +297,8 @@ class LeaseLiabilitySchedule(models.TransientModel):
         col += 1
         worksheet.write(row, col, _('Lease No.'), header_format)
         col += 1
+        worksheet.write(row, col, _('Project / Site'), header_format)
+        col += 1
         worksheet.write(row, col, _('Period Start Date'), header_format)
         col += 1
         worksheet.write(row, col, _('Opening Balance (lease liability)'),
@@ -328,6 +333,8 @@ class LeaseLiabilitySchedule(models.TransientModel):
             worksheet.write(row, col, line['period_no'], STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['lease_no'], STYLE_LINE_Data)
+            col += 1
+            worksheet.write(row, col, line['project_site'], STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['period_start_date'],
                             STYLE_LINE_Data)

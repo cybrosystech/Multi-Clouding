@@ -10,6 +10,8 @@ import time
 import itertools
 from itertools import groupby
 from collections import defaultdict
+from odoo.addons.analytic_account_types.models.account_reports import \
+    AccountReport
 
 MAX_NAME_LENGTH = 50
 
@@ -292,6 +294,7 @@ class assets_report(models.AbstractModel):
             where_account_move = " AND state = 'posted'"
 
         if 'assets_limit' in list(self.env.context.keys()):
+            options['print_dep'] = 0
             sql = """
                             -- remove all the moves that have been reversed from the search
                             CREATE TEMPORARY TABLE IF NOT EXISTS temp_account_move () INHERITS (account_move) ON COMMIT DROP;
@@ -415,6 +418,7 @@ class assets_report(models.AbstractModel):
                 "DROP TABLE temp_account_move")  # Because tests are run in the same transaction, we need to clean here the SQL INHERITS
             return results
         else:
+            options['print_dep'] = 1
             sql = """
                             -- remove all the moves that have been reversed from the search
                             CREATE TEMPORARY TABLE IF NOT EXISTS temp_account_move () INHERITS (account_move) ON COMMIT DROP;
@@ -534,8 +538,6 @@ class assets_report(models.AbstractModel):
                 "DROP TABLE temp_account_move")  # Because tests are run in the same transaction, we need to clean here the SQL INHERITS
             return results
 
-
-
     def open_asset(self, options, params=None):
         active_id = int(params.get('id').split('_')[-1])
         asset = self.env['account.asset'].browse(active_id)
@@ -548,3 +550,87 @@ class assets_report(models.AbstractModel):
             'tag': 'account_report',
             'context': "{'model':'account.assets.custom.report','assets_limit': %s,'assets_offset': %s}" %(self.env.context['assets_limit'], int(self.env.context['assets_offset'])+200)
         }
+
+
+def get_report_informations(self, options):
+    '''
+    return a dictionary of informations that will be needed by the js widget, manager_id, footnotes, html of report and searchview, ...
+    '''
+    options = self._get_options(options)
+    if self._name == 'account.assets.custom.report':
+        options['depreciation_custom'] = 1
+    else:
+        options['depreciation_custom'] = 0
+
+    searchview_dict = {'options': options, 'context': self.env.context}
+    # Check if report needs analytic
+
+    if options.get('analytic_accounts') is not None:
+        options['selected_analytic_account_names'] = [
+            self.env['account.analytic.account'].browse(int(account)).name
+            for account in options['analytic_accounts']]
+    if options.get('analytic_tags') is not None:
+        options['selected_analytic_tag_names'] = [
+            self.env['account.analytic.tag'].browse(int(tag)).name for tag in
+            options['analytic_tags']]
+    if options.get('partner'):
+        options['selected_partner_ids'] = [
+            self.env['res.partner'].browse(int(partner)).name for partner in
+            options['partner_ids']]
+        options['selected_partner_categories'] = [
+            self.env['res.partner.category'].browse(int(category)).name for
+            category in options['partner_categories']]
+
+    if options.get('project_site_ids') is not None:
+        options['selected_project_sites'] = [
+            self.env['account.analytic.account'].browse(int(project)).name for
+            project in
+            options['project_site_ids']]
+    if options.get('type_ids') is not None:
+        options['selected_types'] = [
+            self.env['account.analytic.account'].browse(int(project)).name for
+            project in
+            options['type_ids']]
+    if options.get('location_ids') is not None:
+        options['selected_locations'] = [
+            self.env['account.analytic.account'].browse(int(project)).name for
+            project in
+            options['location_ids']]
+
+    # Check whether there are unposted entries for the selected period or not (if the report allows it)
+    if options.get('date') and options.get('all_entries') is not None:
+        date_to = options['date'].get('date_to') or options['date'].get(
+            'date') or fields.Date.today()
+        period_domain = [('state', '=', 'draft'), ('date', '<=', date_to)]
+        options['unposted_in_period'] = bool(
+            self.env['account.move'].search_count(period_domain))
+
+    if options.get('journals'):
+        journals_selected = set(
+            journal['id'] for journal in options['journals'] if
+            journal.get('selected'))
+        for journal_group in self.env['account.journal.group'].search(
+                [('company_id', '=', self.env.company.id)]):
+            if journals_selected and journals_selected == set(
+                    self._get_filter_journals().ids) - set(
+                    journal_group.excluded_journal_ids.ids):
+                options['name_journal_group'] = journal_group.name
+                break
+
+    report_manager = self._get_report_manager(options)
+    info = {'options': options,
+            'context': self.env.context,
+            'report_manager_id': report_manager.id,
+            'footnotes': [{'id': f.id, 'line': f.line, 'text': f.text} for f in
+                          report_manager.footnotes_ids],
+            'buttons': self._get_reports_buttons_in_sequence(),
+            'main_html': self.get_html(options),
+            'searchview_html': self.env['ir.ui.view']._render_template(
+                self._get_templates().get('search_template',
+                                          'account_report.search_template'),
+                values=searchview_dict),
+            }
+    return info
+
+
+AccountReport.get_report_informations = get_report_informations
