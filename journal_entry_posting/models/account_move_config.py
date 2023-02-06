@@ -67,6 +67,7 @@ class AccountMoveConfig(models.Model):
             })
 
     def schedule_journal_action(self):
+        self.scheduled_user = self.env.user.id
         schedule = self.env.ref(
             'journal_entry_posting.account_move_config_cron')
         journal_config = self.env['account.move.config'].search(
