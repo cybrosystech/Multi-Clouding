@@ -110,85 +110,105 @@ class VendorReportWizard(models.TransientModel):
         sheet.write('E3', 'Payment Reference', head)
         sheet.write('F3', 'Bill Number', head)
         sheet.write('G3', 'Label', head)
-        sheet.write('H3', 'Currency', head)
-        sheet.write('I3', 'Pre Vat Amount', head)
-        sheet.write('J3', 'VAT Amount', head)
-        sheet.write('K3', 'Total', head)
-        sheet.write('L3', 'Taxes', head)
-        sheet.write('M3', 'Tax ID', head)
+        sheet.write('H3', 'Project / Site', head)
+        sheet.write('I3', 'Cost Center', head)
+        sheet.write('J3', 'Currency', head)
+        sheet.write('K3', 'Pre Vat Amount', head)
+        sheet.write('L3', 'VAT Amount', head)
+        sheet.write('M3', 'Total', head)
+        sheet.write('N3', 'Taxes', head)
+        sheet.write('O3', 'Tax ID', head)
+        sheet.write('P3', 'payment date', head)
 
         row_num = 2
         col_num = 0
         for rec in journals:
-            taxes = rec.mapped(lambda x: x.invoice_line_ids.mapped('tax_ids'))
-            for tax in taxes:
-                lines = rec.invoice_line_ids.filtered(
-                    lambda x: x.tax_ids.id == tax.id)
-                sub_total = sum(lines.mapped(lambda x: x.price_subtotal))
-                tax_amount = (sub_total * tax.amount) / 100
-                sheet.write(row_num + 1, col_num, rec.invoice_date,
-                            date_format)
-                sheet.write(row_num + 1, col_num + 1, rec.date,
-                            date_format)
-                sheet.write(row_num + 1, col_num + 2,
-                            rec.partner_id.name,
-                            date_format)
-                sheet.write(row_num + 1, col_num + 3, rec.ref,
-                            date_format)
-                sheet.write(row_num + 1, col_num + 4, rec.payment_reference,
-                            date_format)
-                sheet.write(row_num + 1, col_num + 5, rec.name,
-                            date_format)
-                sheet.write(row_num + 1, col_num + 6, lines[0].name,
-                            date_format)
-                sheet.write(row_num + 1, col_num + 7,
-                            rec.currency_id.name,
-                            date_format)
-                sheet.write(row_num + 1, col_num + 8, sub_total, num)
-                sheet.write(row_num + 1, col_num + 9, tax_amount, num)
-                sheet.write(row_num + 1, col_num + 10, sub_total +
-                            tax_amount, num)
-                sheet.write(row_num + 1, col_num + 11, tax.name, date_format)
-                sheet.write(row_num + 1, col_num + 12,
-                            rec.partner_id.vat if rec.partner_id.vat else '',
-                            num)
-                row_num = row_num + 1
-
-            lines_wout_tax = rec.invoice_line_ids.filtered(
-                lambda x: x.tax_ids.id is False)
-            if lines_wout_tax:
-                sheet.write(row_num + 1, col_num, rec.invoice_date,
-                            date_format)
-                sheet.write(row_num + 1, col_num + 1, rec.date,
-                            date_format)
-                sheet.write(row_num + 1, col_num + 2,
-                            rec.partner_id.name,
-                            date_format)
-                sheet.write(row_num + 1, col_num + 3, rec.ref,
-                            date_format)
-                sheet.write(row_num + 1, col_num + 4, rec.payment_reference,
-                            date_format)
-                sheet.write(row_num + 1, col_num + 5, rec.name,
-                            date_format)
-                sheet.write(row_num + 1, col_num + 6,
-                            lines_wout_tax[0].name if lines_wout_tax[
-                                0].name else '',
-                            date_format)
-                sheet.write(row_num + 1, col_num + 7,
-                            rec.currency_id.name,
-                            date_format)
-                sheet.write(row_num + 1, col_num + 7,
-                            sum(lines_wout_tax.mapped(lambda x: x.price_subtotal)),
-                            num)
-                sheet.write(row_num + 1, col_num + 9, '', num)
-                sheet.write(row_num + 1, col_num + 10,
-                            sum(lines_wout_tax.mapped(lambda x: x.price_subtotal)),
-                            num)
-                sheet.write(row_num + 1, col_num + 11, '', date_format)
-                sheet.write(row_num + 1, col_num + 12,
-                            rec.partner_id.vat if rec.partner_id.vat else '',
-                            num)
-                row_num = row_num + 1
+            payment_widget = ''
+            if json.loads(rec.invoice_payments_widget):
+                payment_widget = ', '.join(map(lambda x: x['date'], json.loads(
+                    rec.invoice_payments_widget)['content']))
+            for lines in rec.invoice_line_ids:
+                if len(lines.mapped('tax_ids')) > 1:
+                    tax = lines.mapped(
+                        lambda x: max(x.tax_ids.filtered(lambda y: y.amount)))
+                    sub_total = sum(lines.mapped(lambda x: x.price_subtotal))
+                    tax_amount = (sub_total * tax.amount) / 100
+                    sheet.write(row_num + 1, col_num, rec.invoice_date,
+                                date_format)
+                    sheet.write(row_num + 1, col_num + 1, rec.date,
+                                date_format)
+                    sheet.write(row_num + 1, col_num + 2,
+                                rec.partner_id.name,
+                                date_format)
+                    sheet.write(row_num + 1, col_num + 3, rec.ref,
+                                date_format)
+                    sheet.write(row_num + 1, col_num + 4, rec.payment_reference,
+                                date_format)
+                    sheet.write(row_num + 1, col_num + 5, rec.name,
+                                date_format)
+                    sheet.write(row_num + 1, col_num + 6, lines.name,
+                                date_format)
+                    sheet.write(row_num + 1, col_num + 7,
+                                lines.project_site_id.name if lines.project_site_id.name else '',
+                                date_format)
+                    sheet.write(row_num + 1, col_num + 8,
+                                lines.analytic_account_id.name if lines.analytic_account_id.name else '',
+                                date_format)
+                    sheet.write(row_num + 1, col_num + 9,
+                                rec.currency_id.name,
+                                date_format)
+                    sheet.write(row_num + 1, col_num + 10, sub_total, num)
+                    sheet.write(row_num + 1, col_num + 11, tax_amount, num)
+                    sheet.write(row_num + 1, col_num + 12, sub_total +
+                                tax_amount, num)
+                    sheet.write(row_num + 1, col_num + 13, tax.name,
+                                date_format)
+                    sheet.write(row_num + 1, col_num + 14,
+                                rec.partner_id.vat if rec.partner_id.vat else '',
+                                num)
+                    sheet.write(row_num + 1, col_num + 15,
+                                payment_widget, date_format)
+                    row_num = row_num + 1
+                else:
+                    tax = lines.tax_ids
+                    sub_total = sum(lines.mapped(lambda x: x.price_subtotal))
+                    tax_amount = (sub_total * tax.amount) / 100
+                    sheet.write(row_num + 1, col_num, rec.invoice_date,
+                                date_format)
+                    sheet.write(row_num + 1, col_num + 1, rec.date,
+                                date_format)
+                    sheet.write(row_num + 1, col_num + 2,
+                                rec.partner_id.name,
+                                date_format)
+                    sheet.write(row_num + 1, col_num + 3, rec.ref,
+                                date_format)
+                    sheet.write(row_num + 1, col_num + 4, rec.payment_reference,
+                                date_format)
+                    sheet.write(row_num + 1, col_num + 5, rec.name,
+                                date_format)
+                    sheet.write(row_num + 1, col_num + 6, lines.name,
+                                date_format)
+                    sheet.write(row_num + 1, col_num + 7,
+                                lines.project_site_id.name if lines.project_site_id.name else '',
+                                date_format)
+                    sheet.write(row_num + 1, col_num + 8,
+                                lines.analytic_account_id.name if lines.analytic_account_id.name else '',
+                                date_format)
+                    sheet.write(row_num + 1, col_num + 9,
+                                rec.currency_id.name,
+                                date_format)
+                    sheet.write(row_num + 1, col_num + 10, sub_total, num)
+                    sheet.write(row_num + 1, col_num + 11, tax_amount, num)
+                    sheet.write(row_num + 1, col_num + 12, sub_total +
+                                tax_amount, num)
+                    sheet.write(row_num + 1, col_num + 13, tax.name,
+                                date_format)
+                    sheet.write(row_num + 1, col_num + 14,
+                                rec.partner_id.vat if rec.partner_id.vat else '',
+                                num)
+                    sheet.write(row_num + 1, col_num + 15,
+                                payment_widget, date_format)
+                    row_num = row_num + 1
 
         workbook.close()
         output.seek(0)
