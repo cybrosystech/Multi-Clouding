@@ -152,7 +152,7 @@ class VendorReportWizard(models.TransientModel):
                                 lines.project_site_id.name if lines.project_site_id.name else '',
                                 date_format)
                     sheet.write(row_num + 1, col_num + 8,
-                                lines.analytic_account_id.name if lines.analytic_account_id.name else '',
+                                lines.analytic_account_id.code if lines.analytic_account_id.code else '',
                                 date_format)
                     sheet.write(row_num + 1, col_num + 9,
                                 rec.currency_id.name,
@@ -192,7 +192,7 @@ class VendorReportWizard(models.TransientModel):
                                 lines.project_site_id.name if lines.project_site_id.name else '',
                                 date_format)
                     sheet.write(row_num + 1, col_num + 8,
-                                lines.analytic_account_id.name if lines.analytic_account_id.name else '',
+                                lines.analytic_account_id.code if lines.analytic_account_id.code else '',
                                 date_format)
                     sheet.write(row_num + 1, col_num + 9,
                                 rec.currency_id.name,
