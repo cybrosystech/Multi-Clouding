@@ -1,0 +1,1 @@
+from . import account_multicurrency_revaluation_inherit
