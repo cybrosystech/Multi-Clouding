@@ -18,5 +18,14 @@
             <field name="state">code</field>
             <field name="code">records.button_request_purchase_cycle()</field>
         </record>
+
+        <record id="action_bulk_cancel_journals" model="ir.actions.server">
+            <field name="name">Bulk Cancel</field>
+            <field name="type">ir.actions.server</field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="binding_model_id" ref="account.model_account_move"/>
+            <field name="state">code</field>
+            <field name="code">records.action_cancel_draft_entries()</field>
+        </record>
     </data>
 </odoo>

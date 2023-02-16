@@ -7,6 +7,8 @@ class AccountMoveReferenceInherit(models.Model):
 
     @api.constrains('payment_reference')
     def payment_reference_check(self):
+        """This function is being performed at the time of saving a journal to
+        check if the payment reference has been a unique"""
         if self.move_type == 'out_invoice':
             moves = self.env['account.move'].search([
                 ('partner_id', '=',
@@ -92,10 +94,10 @@ class AccountMoveReferenceInherit(models.Model):
                     raise ValidationError(
                         'The Payment reference already exists in ' + move.name)
 
-    # removed the validation of bill reference check
     @api.constrains('ref', 'move_type', 'partner_id', 'journal_id',
                     'invoice_date', 'state')
     def _check_duplicate_supplier_reference(self):
+        """removed the validation of bill reference check"""
         moves = self.filtered(lambda
                                   move: move.state == 'posted' and move.is_purchase_document() and move.ref)
         if not moves:
@@ -136,7 +138,8 @@ class AccountMoveReferenceInherit(models.Model):
         #         ))
 
     def request_approval_button(self):
-        # inherit of the function from account.move to check the validation of payment reference
+        """inherit of the function from account. Move to check the validation of
+        payment reference"""
         res = super(AccountMoveReferenceInherit, self).request_approval_button()
         journal = self.env['account.journal'].search([('name', '=',
                                                        'Vendor Bills')])
@@ -148,7 +151,8 @@ class AccountMoveReferenceInherit(models.Model):
             return res
 
     def action_post(self):
-        # inherit of the function from account.move to check the validation of payment reference
+        """inherit of the function from account. Move to check the validation of
+        payment reference"""
         res = super(AccountMoveReferenceInherit, self).action_post()
         journal = self.env['account.journal'].search([('name', '=',
                                                        'Vendor Bills')])
@@ -158,3 +162,10 @@ class AccountMoveReferenceInherit(models.Model):
                     raise ValidationError(
                         'please provide a Invoice no / payment reference for Vendor Bill')
         return res
+
+    def action_cancel_draft_entries(self):
+        """server action has been defined to cancel draft journal entries"""
+        for rec in self:
+            if rec.state != 'draft':
+                raise ValidationError('Cannot cancel the posted entries')
+            rec.button_cancel()
