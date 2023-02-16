@@ -151,6 +151,7 @@ class ProfitabilityReportOwned(models.Model):
 
     def get_profitability_owned(self, data, profitability_owned_report, profitability_owned):
         if profitability_owned_report:
+            account_fa_depreciation_ids = []
             profitability_owned_report_load = json.loads(profitability_owned_report)
             query = '''
                                         select id,name from account_analytic_account as analatyc_account 
@@ -348,6 +349,7 @@ class ProfitabilityReportOwned(models.Model):
                 })
             return profitability_owned_report_load
         else:
+            account_fa_depreciation_ids = []
             dummy_prof_list = []
             query = '''
                             select id,name from account_analytic_account as analatyc_account 
