@@ -74,7 +74,7 @@ class ProfitabilityReportManaged(models.Model):
 
     def profitability_managed_report(self, limit):
         profitability_managed = self.env['profitability.report.managed'].search(
-            [('company_id', '=', self.env.company.id)])
+            [])
         current_date = fields.Date.today()
         profitability_managed_report = profitability_managed.json_report_values
         from_date = ''

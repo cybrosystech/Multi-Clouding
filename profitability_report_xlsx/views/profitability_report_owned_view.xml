@@ -7,7 +7,7 @@
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <button name="profitability_owned_cron_update" string="Schedule Managed report"
+                    <button name="schedule_owned_cron" string="Schedule Owned report"
                             type="object" />
                     <button name="action_get_report" string="Print XLSX"
                             type="object" />
