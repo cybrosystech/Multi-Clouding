@@ -664,8 +664,3 @@ class ProfitabilityReportOwned(models.Model):
         schedule.update({
             'nextcall': date + timedelta(seconds=10)
         })
-        self.update({
-            'limits_pr': 0,
-            'end_limit': 0,
-            'json_report_values': ''
-        })
