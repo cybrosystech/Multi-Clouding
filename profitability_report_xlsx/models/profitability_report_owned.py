@@ -72,7 +72,7 @@ class ProfitabilityReportOwned(models.Model):
 
     def profitability_owned_report(self, limit):
         profitability_owned = self.env['profitability.report.owned'].search(
-            [('company_id', '=', self.env.company.id)])
+            [])
         current_date = fields.Date.today()
         profitability_owned_report = profitability_owned.json_report_values
         from_date = ''
@@ -657,10 +657,22 @@ class ProfitabilityReportOwned(models.Model):
         output.close()
 
     def profitability_owned_cron_update(self):
-        print('heee')
         date = fields.Datetime.now()
         schedule = self.env.ref(
             'profitability_report_xlsx.action_profitability_owned_cron')
         schedule.update({
             'nextcall': date + timedelta(seconds=10)
+        })
+
+    def schedule_owned_cron(self):
+        date = fields.Datetime.now()
+        schedule_action = self.env.ref(
+            'profitability_report_xlsx.action_profitability_owned_cron')
+        schedule_action.update({
+            'nextcall': date + timedelta(minutes=1)
+        })
+        self.update({
+            'limits_pr': 0,
+            'end_limit': 0,
+            'json_report_values': ''
         })
