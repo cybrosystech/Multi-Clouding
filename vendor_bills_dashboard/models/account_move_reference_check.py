@@ -9,90 +9,91 @@ class AccountMoveReferenceInherit(models.Model):
     def payment_reference_check(self):
         """This function is being performed at the time of saving a journal to
         check if the payment reference has been a unique"""
-        if self.move_type == 'out_invoice':
-            moves = self.env['account.move'].search([
-                ('partner_id', '=',
-                 self.partner_id.id),
-                ('move_type', '=',
-                 'out_invoice')])
-            if self.payment_reference:
-                move = (moves.filtered(
-                    lambda
-                        x: x.payment_reference == self.payment_reference)).filtered(
-                    lambda x: x.id != self.id)
-                if move:
-                    raise ValidationError(
-                        'The Payment reference already exists in ' + move.name)
-        elif self.move_type == 'out_refund':
-            moves = self.env['account.move'].search([
-                ('partner_id', '=',
-                 self.partner_id.id),
-                ('move_type', '=',
-                 'out_refund')])
-            if self.payment_reference:
-                move = (moves.filtered(
-                    lambda
-                        x: x.payment_reference == self.payment_reference)).filtered(
-                    lambda x: x.id != self.id)
-                if move:
-                    raise ValidationError(
-                        'The Payment reference already exists in ' + move.name)
-        elif self.move_type == 'out_receipt':
-            moves = self.env['account.move'].search([
-                ('partner_id', '=',
-                 self.partner_id.id),
-                ('move_type', '=',
-                 'out_receipt')])
-            if self.payment_reference:
-                move = (moves.filtered(
-                    lambda
-                        x: x.payment_reference == self.payment_reference)).filtered(
-                    lambda x: x.id != self.id)
-                if move:
-                    raise ValidationError(
-                        'The Payment reference already exists in ' + move.name)
-        elif self.move_type == 'in_invoice':
-            moves = self.env['account.move'].search([
-                ('partner_id', '=',
-                 self.partner_id.id),
-                ('move_type', '=',
-                 'in_invoice')])
-            if self.payment_reference:
-                move = (moves.filtered(
-                    lambda
-                        x: x.payment_reference == self.payment_reference)).filtered(
-                    lambda x: x.id != self.id)
-                if move:
-                    raise ValidationError(
-                        'The Payment reference already exists in ' + move.name)
-        elif self.move_type == 'in_refund':
-            moves = self.env['account.move'].search([
-                ('partner_id', '=',
-                 self.partner_id.id),
-                ('move_type', '=',
-                 'in_refund')])
-            if self.payment_reference:
-                move = (moves.filtered(
-                    lambda
-                        x: x.payment_reference == self.payment_reference)).filtered(
-                    lambda x: x.id != self.id)
-                if move:
-                    raise ValidationError(
-                        'The Payment reference already exists in ' + move.name)
-        elif self.move_type == 'in_receipt':
-            moves = self.env['account.move'].search([
-                ('partner_id', '=',
-                 self.partner_id.id),
-                ('move_type', '=',
-                 'in_receipt')])
-            if self.payment_reference:
-                move = (moves.filtered(
-                    lambda
-                        x: x.payment_reference == self.payment_reference)).filtered(
-                    lambda x: x.id != self.id)
-                if move:
-                    raise ValidationError(
-                        'The Payment reference already exists in ' + move.name)
+        for rec in self:
+            if rec.move_type == 'out_invoice':
+                moves = rec.env['account.move'].search([
+                    ('partner_id', '=',
+                     rec.partner_id.id),
+                    ('move_type', '=',
+                     'out_invoice')])
+                if rec.payment_reference:
+                    move = (moves.filtered(
+                        lambda
+                            x: x.payment_reference == rec.payment_reference)).filtered(
+                        lambda x: x.id != rec.id)
+                    if move:
+                        raise ValidationError(
+                            'The Payment reference already exists in ' + move.name)
+            elif rec.move_type == 'out_refund':
+                moves = rec.env['account.move'].search([
+                    ('partner_id', '=',
+                     rec.partner_id.id),
+                    ('move_type', '=',
+                     'out_refund')])
+                if rec.payment_reference:
+                    move = (moves.filtered(
+                        lambda
+                            x: x.payment_reference == rec.payment_reference)).filtered(
+                        lambda x: x.id != rec.id)
+                    if move:
+                        raise ValidationError(
+                            'The Payment reference already exists in ' + move.name)
+            elif rec.move_type == 'out_receipt':
+                moves = rec.env['account.move'].search([
+                    ('partner_id', '=',
+                     rec.partner_id.id),
+                    ('move_type', '=',
+                     'out_receipt')])
+                if rec.payment_reference:
+                    move = (moves.filtered(
+                        lambda
+                            x: x.payment_reference == rec.payment_reference)).filtered(
+                        lambda x: x.id != rec.id)
+                    if move:
+                        raise ValidationError(
+                            'The Payment reference already exists in ' + move.name)
+            elif rec.move_type == 'in_invoice':
+                moves = rec.env['account.move'].search([
+                    ('partner_id', '=',
+                     rec.partner_id.id),
+                    ('move_type', '=',
+                     'in_invoice')])
+                if rec.payment_reference:
+                    move = (moves.filtered(
+                        lambda
+                            x: x.payment_reference == rec.payment_reference)).filtered(
+                        lambda x: x.id != rec.id)
+                    if move:
+                        raise ValidationError(
+                            'The Payment reference already exists in ' + move.name)
+            elif rec.move_type == 'in_refund':
+                moves = rec.env['account.move'].search([
+                    ('partner_id', '=',
+                     rec.partner_id.id),
+                    ('move_type', '=',
+                     'in_refund')])
+                if rec.payment_reference:
+                    move = (moves.filtered(
+                        lambda
+                            x: x.payment_reference == rec.payment_reference)).filtered(
+                        lambda x: x.id != rec.id)
+                    if move:
+                        raise ValidationError(
+                            'The Payment reference already exists in ' + move.name)
+            elif rec.move_type == 'in_receipt':
+                moves = rec.env['account.move'].search([
+                    ('partner_id', '=',
+                     rec.partner_id.id),
+                    ('move_type', '=',
+                     'in_receipt')])
+                if rec.payment_reference:
+                    move = (moves.filtered(
+                        lambda
+                            x: x.payment_reference == rec.payment_reference)).filtered(
+                        lambda x: x.id != rec.id)
+                    if move:
+                        raise ValidationError(
+                            'The Payment reference already exists in ' + move.name)
 
     @api.constrains('ref', 'move_type', 'partner_id', 'journal_id',
                     'invoice_date', 'state')
