@@ -8,7 +8,25 @@
             <a role="menuitem" class="dropdown-item js_cashflow_report_date_filter" title="This Month" data-filter="this_month">This Month</a>
             <a role="menuitem" class="dropdown-item js_cashflow_report_date_filter" title="This Quarter" data-filter="this_quarter">This Quarter</a>
             <a role="menuitem" class="dropdown-item js_cashflow_report_date_filter" title="This Financial Year" data-filter="this_year">This Financial Year</a>
-            <div role="separator" class="dropdown-divider"></div>
+            <div role="separator" class="dropdown-divider"/>
+            <a role="menuitem" class="dropdown-item js_cashflow_report_date_filter" title="Last Month" data-filter="last_month">Last Month</a>
+            <a role="menuitem" class="dropdown-item js_cashflow_report_date_filter" title="Last Quarter" data-filter="last_quarter">Last Quarter</a>
+            <a role="menuitem" class="dropdown-item js_cashflow_report_date_filter" title="Last Financial Year" data-filter="last_year">Last Financial Year</a>
+            <div role="separator" class="dropdown-divider"/>
+            <a role="menuitem" class="dropdown-item inner_click" title="Custom" data-toggle="collapse" data-target="#demo" data-filter="custom">Custom</a>
+            <div id="custom_date" style="display: none;">
+                <div class="form-group">
+                    <label for="from_date">From Date:</label>
+                    <br/>
+                    <input type="date" id="from_date" name="Start Date"/>
+                    <br/>
+                    <label for="to_date">To Date:</label>
+                    <br/>
+                    <input type="date" id="to_date" name="To Date"/>
+                    <br/>
+                    <button type="button" id="custom_filter_btn" class="btn btn-primary">Apply</button>
+                </div>
+            </div>
         </div>
     </template>
     <template id="cashflow_report_posted_filter">

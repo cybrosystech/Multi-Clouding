@@ -5,6 +5,7 @@ import xlsxwriter
 
 from odoo import models, fields, _
 from odoo.tools import date_utils, datetime
+from dateutil.relativedelta import relativedelta
 
 
 class CashFlowStatement(models.Model):
@@ -37,7 +38,30 @@ class CashFlowStatement(models.Model):
                     fields.Date.context_today(self))
                 date_from = company_fiscalyear_dates['date_from']
                 date_to = company_fiscalyear_dates['date_to']
-                period_type = 'year'
+                period_type = 'This financial year'
+            elif options['date_filter'] == 'last_month':
+                date_from, date_to = date_utils.get_month(
+                    fields.Date.context_today(self) - relativedelta(months=1))
+                period_type = 'Last month'
+            elif options['date_filter'] == 'last_year':
+                company_fiscalyear_dates = self.env.company.compute_fiscalyear_dates(
+                    fields.Date.context_today(self) - relativedelta(years=1))
+                date_from = company_fiscalyear_dates['date_from']
+                date_to = company_fiscalyear_dates['date_to']
+                print(date_to, date_from)
+                period_type = 'Last financial year'
+            elif options['date_filter'] == 'last_quarter':
+                date_from, date_to = date_utils.get_quarter(
+                    fields.Date.context_today(self) - relativedelta(months=3))
+                period_type = 'quarter'
+            elif options['date_filter'] == 'custom':
+                print(options['custom_from'], options['custom_to'],
+                      type(options['custom_to']))
+                date_from = datetime.strptime(options['custom_from'],
+                                              "%Y-%m-%d")
+                date_to = datetime.strptime(options['custom_to'],
+                                            "%Y-%m-%d")
+                period_type = 'custom'
         else:
             date_from, date_to = date_utils.get_month(
                 fields.Date.context_today(self))
@@ -275,6 +299,54 @@ class CashFlowStatement(models.Model):
 
         return movement_trade_payable_account2_debit - movement_trade_payable_account2_credit
 
+    def sub_movement_trade_payable_account3_sum(self, query, options,
+                                                states_args):
+        self.env.cr.execute(query + '''where account.code = %(account_code)s
+                                                and journal_item.company_id in (%(company_ids)s)
+                                                and journal_item.date >= %(from_date)s 
+                                                and journal_item.date <= %(to_date)s
+                                                and {states_args}
+                                                '''.format(
+            states_args=states_args),
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'account_code': '213403',
+                             'company_ids': self.env.company.id})
+        sub_movement_trade = self.env.cr.dictfetchall()
+        sub_movement_trade_credit = sub_movement_trade[0]['credit'] if \
+        sub_movement_trade[0]['credit'] else 0
+        sub_movement_trade_debit = sub_movement_trade[0]['debit'] if \
+        sub_movement_trade[0]['debit'] else 0
+        return sub_movement_trade_debit - sub_movement_trade_credit
+
+    def sub_movement_trade_payable_account3_sum1(self, query, options,
+                                                 states_args):
+        self.env.cr.execute(query + '''where account.code = %(account_code)s
+                                                        and journal_item.company_id in (%(company_ids)s)
+                                                        and journal_item.date >= %(from_date)s 
+                                                        and journal_item.date <= %(to_date)s
+                                                        and {states_args}
+                                                        '''.format(
+            states_args=states_args),
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'account_code': '581103',
+                             'company_ids': self.env.company.id})
+        sub_movement_trade1 = self.env.cr.dictfetchall()
+        sub_movement_trade1_credit = sub_movement_trade1[0]['credit'] if \
+            sub_movement_trade1[0]['credit'] else 0
+        sub_movement_trade1_debit = sub_movement_trade1[0]['debit'] if \
+            sub_movement_trade1[0]['debit'] else 0
+        return sub_movement_trade1_debit - sub_movement_trade1_credit
+
+    def get_movement_trade_payable_account3_sum(self, query, options,
+                                                states_args):
+        sum1 = self.sub_movement_trade_payable_account3_sum(query, options,
+                                                            states_args)
+        sum2 = self.sub_movement_trade_payable_account3_sum1(query, options,
+                                                             states_args)
+        return sum1 + sum2
+
     def get_movement_trade_payable_dict(self, query, options, states_args):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
                                             and journal_item.company_id = %(company_ids)s
@@ -301,6 +373,8 @@ class CashFlowStatement(models.Model):
 
         movement_trade_payable_account2_sum = self.get_movement_trade_payable_account2_sum(
             query, options, states_args)
+        movement_trade_payable_account3_sum = self.get_movement_trade_payable_account3_sum(
+            query, options, states_args)
 
         movement_trade_payable_dict = {
             'id': 'movement_trade_payable',
@@ -309,8 +383,8 @@ class CashFlowStatement(models.Model):
             'class': 'cash_flow_line_val_tr',
             'columns': [
                 {
-                    'name': round(((
-                                           movement_trade_payable_account_sum + movement_trade_payable_sum + movement_trade_payable_account1_sum + movement_trade_payable_account2_sum) * -1),
+                    'name': round((((
+                                            movement_trade_payable_sum + movement_trade_payable_account_sum + movement_trade_payable_account1_sum + movement_trade_payable_account2_sum) * -1) - movement_trade_payable_account3_sum),
                                   2),
                     'class': 'number'}]
         }
@@ -407,7 +481,7 @@ class CashFlowStatement(models.Model):
         }
         adjustment_list.append(interest_lease_liability_dict)
 
-        self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
+        self.env.cr.execute(query + '''where account.code = %(code_start)s
                                             and journal_item.company_id = %(company_ids)s
                                             and journal_item.date >= %(from_date)s 
                                             and journal_item.date <= %(to_date)s
@@ -415,7 +489,7 @@ class CashFlowStatement(models.Model):
                                             '''.format(states_args=states_args),
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
-                             'code_start': '213401', 'code_end': '213499',
+                             'code_start': '581103',
                              'company_ids': self.env.company.id})
         finance_zain = self.env.cr.dictfetchall()
         finance_zain_credit = finance_zain[0]['credit'] if finance_zain[0][
@@ -430,7 +504,7 @@ class CashFlowStatement(models.Model):
             'columns': [
                 {
                     'name': round(
-                        ((finance_zain_credit) * -1), 2),
+                        (finance_zain_debit - finance_zain_credit), 2),
                     'class': 'number'}]
         }
         adjustment_list.append(finance_zain_dict)
@@ -769,7 +843,7 @@ class CashFlowStatement(models.Model):
                                         and {states_args}
                                         '''.format(states_args=states_args),
                             {'from_date': options['date']['date_from'],
-                             'code_start': '101003', 'code_end': '111109',
+                             'code_start': '101001', 'code_end': '111109',
                              'company_ids': self.env.company.id})
         equivalent_cash = self.env.cr.dictfetchall()
         equivalent_cash_credit = equivalent_cash[0]['credit'] if \
@@ -948,24 +1022,51 @@ class CashFlowStatement(models.Model):
         return cash_flow_lines
 
     def get_cash_flow_header(self, options):
-        if options['date']['period_type'] == 'month':
+        filter_months = ['month', 'Last month']
+        filter_years = ['This financial year', 'Last financial year']
+        if options['date']['period_type'] in filter_months:
             month = datetime.strptime(options['date']['date_from'],
                                       "%Y-%m-%d")
             return {
                 'name': month.strftime("%B")
             }
-        elif options['date']['period_type'] == 'quarter':
-            month = datetime.strptime(options['date']['date_from'],
-                                      "%Y-%m-%d")
-            return {
-                'name': 'Quarter'
-            }
-        elif options['date']['period_type'] == 'year':
+        elif options['date']['period_type'] in filter_years:
             year = datetime.strptime(options['date']['date_from'],
                                      "%Y-%m-%d").year
             return {
                 'name': year
             }
+        elif options['date']['period_type'] == 'custom':
+            options['date']['period_type'] = options['date'][
+                                                 'date_from'] + ' to ' + \
+                                             options['date'][
+                                                 'date_to']
+            return {
+                'name': options['date']['date_from'] + ' to ' + options['date'][
+                    'date_to']
+            }
+        else:
+            return {
+                'name': 'Quarter'
+            }
+        # if options['date']['period_type'] == 'month':
+        #     month = datetime.strptime(options['date']['date_from'],
+        #                               "%Y-%m-%d")
+        #     return {
+        #         'name': month.strftime("%B")
+        #     }
+        # elif options['date']['period_type'] == 'quarter':
+        #     month = datetime.strptime(options['date']['date_from'],
+        #                               "%Y-%m-%d")
+        #     return {
+        #         'name': 'Quarter'
+        #     }
+        # elif options['date']['period_type'] == 'This financial year':
+        #     year = datetime.strptime(options['date']['date_from'],
+        #                              "%Y-%m-%d").year
+        #     return {
+        #         'name': year
+        #     }
 
     def get_button_cashflow(self):
         return [
