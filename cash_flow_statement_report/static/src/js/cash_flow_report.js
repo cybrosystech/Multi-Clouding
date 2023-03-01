@@ -14,6 +14,8 @@ var cashFlowReportWidget = AbstractAction.extend({
         'click .js_cashflow_report_date_filter': 'filter_click',
         'click .js_cashflow_report_journal_filter': 'posted_click',
         'click [action]': 'trigger_action',
+        'click .inner_click': 'prevent_menu',
+        'click #custom_filter_btn': 'custom_filter_apply',
     },
 
     init: function(parent, action) {
@@ -77,6 +79,27 @@ var cashFlowReportWidget = AbstractAction.extend({
     filter_click: function(e) {
         var date_filter = e.target.attributes['data-filter'].value;
         this.report_options['date_filter'] = date_filter;
+        this.render_values()
+    },
+
+    prevent_menu: function(e){
+        e.stopPropagation();
+        var panel_custom = this.$('#custom_date')
+        if (panel_custom[0].style.display === "block") {
+          panel_custom[0].style.display = "none";
+        } else {
+          panel_custom[0].style.display = "block";
+        }
+    },
+
+    custom_filter_apply: function(e){
+    console.log('hhhhhhhhh')
+        var from_date = this.$('#from_date')
+        var to_date = this.$('#to_date')
+        console.log(from_date, to_date)
+        this.report_options['date_filter'] = 'custom';
+        this.report_options['custom_from'] = from_date.val();
+        this.report_options['custom_to'] = to_date.val();
         this.render_values()
     },
 
