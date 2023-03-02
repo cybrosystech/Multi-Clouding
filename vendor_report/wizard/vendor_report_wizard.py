@@ -110,15 +110,16 @@ class VendorReportWizard(models.TransientModel):
         sheet.write('E3', 'Payment Reference', head)
         sheet.write('F3', 'Bill Number', head)
         sheet.write('G3', 'Label', head)
-        sheet.write('H3', 'Project / Site', head)
-        sheet.write('I3', 'Cost Center', head)
-        sheet.write('J3', 'Currency', head)
-        sheet.write('K3', 'Pre Vat Amount', head)
-        sheet.write('L3', 'VAT Amount', head)
-        sheet.write('M3', 'Total', head)
-        sheet.write('N3', 'Taxes', head)
-        sheet.write('O3', 'Tax ID', head)
-        sheet.write('P3', 'payment date', head)
+        sheet.write('H3', 'Account', head)
+        sheet.write('I3', 'Project / Site', head)
+        sheet.write('J3', 'Cost Center', head)
+        sheet.write('K3', 'Currency', head)
+        sheet.write('L3', 'Pre Vat Amount', head)
+        sheet.write('M3', 'VAT Amount', head)
+        sheet.write('N3', 'Total', head)
+        sheet.write('O3', 'Taxes', head)
+        sheet.write('P3', 'Tax ID', head)
+        sheet.write('Q3', 'payment date', head)
 
         row_num = 2
         col_num = 0
@@ -128,6 +129,7 @@ class VendorReportWizard(models.TransientModel):
                 payment_widget = ', '.join(map(lambda x: x['date'], json.loads(
                     rec.invoice_payments_widget)['content']))
             for lines in rec.invoice_line_ids:
+                account_name = str(lines.account_id.code)+ ' ' + lines.account_id.name
                 if len(lines.mapped('tax_ids')) > 1:
                     tax = lines.mapped(
                         lambda x: max(x.tax_ids.filtered(lambda y: y.amount)))
@@ -148,25 +150,27 @@ class VendorReportWizard(models.TransientModel):
                                 date_format)
                     sheet.write(row_num + 1, col_num + 6, lines.name,
                                 date_format)
-                    sheet.write(row_num + 1, col_num + 7,
-                                lines.project_site_id.name if lines.project_site_id.name else '',
+                    sheet.write(row_num + 1, col_num + 7, account_name if account_name else '',
                                 date_format)
                     sheet.write(row_num + 1, col_num + 8,
-                                lines.analytic_account_id.code if lines.analytic_account_id.code else '',
+                                lines.project_site_id.name if lines.project_site_id.name else '',
                                 date_format)
                     sheet.write(row_num + 1, col_num + 9,
+                                lines.analytic_account_id.code if lines.analytic_account_id.code else '',
+                                date_format)
+                    sheet.write(row_num + 1, col_num + 10,
                                 rec.currency_id.name,
                                 date_format)
-                    sheet.write(row_num + 1, col_num + 10, sub_total, num)
-                    sheet.write(row_num + 1, col_num + 11, tax_amount, num)
-                    sheet.write(row_num + 1, col_num + 12, sub_total +
+                    sheet.write(row_num + 1, col_num + 11, sub_total, num)
+                    sheet.write(row_num + 1, col_num + 12, tax_amount, num)
+                    sheet.write(row_num + 1, col_num + 13, sub_total +
                                 tax_amount, num)
-                    sheet.write(row_num + 1, col_num + 13, tax.name,
+                    sheet.write(row_num + 1, col_num + 14, tax.name,
                                 date_format)
-                    sheet.write(row_num + 1, col_num + 14,
+                    sheet.write(row_num + 1, col_num + 15,
                                 rec.partner_id.vat if rec.partner_id.vat else '',
                                 num)
-                    sheet.write(row_num + 1, col_num + 15,
+                    sheet.write(row_num + 1, col_num + 16,
                                 payment_widget, date_format)
                     row_num = row_num + 1
                 else:
@@ -189,24 +193,27 @@ class VendorReportWizard(models.TransientModel):
                     sheet.write(row_num + 1, col_num + 6, lines.name,
                                 date_format)
                     sheet.write(row_num + 1, col_num + 7,
-                                lines.project_site_id.name if lines.project_site_id.name else '',
+                                account_name if account_name else '',
                                 date_format)
                     sheet.write(row_num + 1, col_num + 8,
-                                lines.analytic_account_id.code if lines.analytic_account_id.code else '',
+                                lines.project_site_id.name if lines.project_site_id.name else '',
                                 date_format)
                     sheet.write(row_num + 1, col_num + 9,
+                                lines.analytic_account_id.code if lines.analytic_account_id.code else '',
+                                date_format)
+                    sheet.write(row_num + 1, col_num + 10,
                                 rec.currency_id.name,
                                 date_format)
-                    sheet.write(row_num + 1, col_num + 10, sub_total, num)
-                    sheet.write(row_num + 1, col_num + 11, tax_amount, num)
-                    sheet.write(row_num + 1, col_num + 12, sub_total +
+                    sheet.write(row_num + 1, col_num + 11, sub_total, num)
+                    sheet.write(row_num + 1, col_num + 12, tax_amount, num)
+                    sheet.write(row_num + 1, col_num + 13, sub_total +
                                 tax_amount, num)
-                    sheet.write(row_num + 1, col_num + 13, tax.name,
+                    sheet.write(row_num + 1, col_num + 14, tax.name,
                                 date_format)
-                    sheet.write(row_num + 1, col_num + 14,
+                    sheet.write(row_num + 1, col_num + 15,
                                 rec.partner_id.vat if rec.partner_id.vat else '',
                                 num)
-                    sheet.write(row_num + 1, col_num + 15,
+                    sheet.write(row_num + 1, col_num + 16,
                                 payment_widget, date_format)
                     row_num = row_num + 1
 
