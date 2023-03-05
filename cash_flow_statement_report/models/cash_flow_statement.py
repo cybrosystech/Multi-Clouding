@@ -24,53 +24,60 @@ class CashFlowStatement(models.Model):
         date_from = ''
         date_to = ''
         period_type = ''
+        previous_date = ''
         if options:
             if options['date_filter'] == 'this_month':
                 date_from, date_to = date_utils.get_month(
                     fields.Date.context_today(self))
+                previous_date = date_from - relativedelta(days=1)
                 period_type = 'month'
             elif options['date_filter'] == 'this_quarter':
                 date_from, date_to = date_utils.get_quarter(
                     fields.Date.context_today(self))
+                previous_date = date_from - relativedelta(days=1)
                 period_type = 'quarter'
             elif options['date_filter'] == 'this_year':
                 company_fiscalyear_dates = self.env.company.compute_fiscalyear_dates(
                     fields.Date.context_today(self))
                 date_from = company_fiscalyear_dates['date_from']
                 date_to = company_fiscalyear_dates['date_to']
+                previous_date = date_from - relativedelta(days=1)
                 period_type = 'This financial year'
             elif options['date_filter'] == 'last_month':
                 date_from, date_to = date_utils.get_month(
                     fields.Date.context_today(self) - relativedelta(months=1))
+                previous_date = date_from - relativedelta(days=1)
                 period_type = 'Last month'
             elif options['date_filter'] == 'last_year':
                 company_fiscalyear_dates = self.env.company.compute_fiscalyear_dates(
                     fields.Date.context_today(self) - relativedelta(years=1))
                 date_from = company_fiscalyear_dates['date_from']
                 date_to = company_fiscalyear_dates['date_to']
-                print(date_to, date_from)
+                previous_date = date_from - relativedelta(days=1)
                 period_type = 'Last financial year'
             elif options['date_filter'] == 'last_quarter':
                 date_from, date_to = date_utils.get_quarter(
                     fields.Date.context_today(self) - relativedelta(months=3))
+                previous_date = date_from - relativedelta(days=1)
                 period_type = 'quarter'
             elif options['date_filter'] == 'custom':
-                print(options['custom_from'], options['custom_to'],
-                      type(options['custom_to']))
                 date_from = datetime.strptime(options['custom_from'],
                                               "%Y-%m-%d")
                 date_to = datetime.strptime(options['custom_to'],
                                             "%Y-%m-%d")
+                previous_date = date_from - relativedelta(days=1)
                 period_type = 'custom'
         else:
             date_from, date_to = date_utils.get_month(
                 fields.Date.context_today(self))
+            previous_date = date_from - relativedelta(days=1)
             period_type = 'month'
             options['entry'] = ''
             options['date_filter'] = 'this_month'
         options['date'] = {
             'date_from': fields.Date.to_string(date_from),
             'date_to': fields.Date.to_string(date_to),
+            'previous_date': fields.Date.to_string(previous_date),
             'period_type': period_type
         }
 
@@ -818,7 +825,7 @@ class CashFlowStatement(models.Model):
                                                 and {states_args}
                                                 '''.format(
             states_args=states_args),
-                            {'from_date': options['date']['date_from'],
+                            {'from_date': options['date']['previous_date'],
                              'code_start': '111111', 'code_end': '111299',
                              'company_ids': self.env.company.id})
         equivalent_cash_account = self.env.cr.dictfetchall()
@@ -842,7 +849,7 @@ class CashFlowStatement(models.Model):
                                         and journal_item.date <= %(from_date)s
                                         and {states_args}
                                         '''.format(states_args=states_args),
-                            {'from_date': options['date']['date_from'],
+                            {'from_date': options['date']['previous_date'],
                              'code_start': '101001', 'code_end': '111109',
                              'company_ids': self.env.company.id})
         equivalent_cash = self.env.cr.dictfetchall()

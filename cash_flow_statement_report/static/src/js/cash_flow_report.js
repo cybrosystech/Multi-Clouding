@@ -93,10 +93,8 @@ var cashFlowReportWidget = AbstractAction.extend({
     },
 
     custom_filter_apply: function(e){
-    console.log('hhhhhhhhh')
         var from_date = this.$('#from_date')
         var to_date = this.$('#to_date')
-        console.log(from_date, to_date)
         this.report_options['date_filter'] = 'custom';
         this.report_options['custom_from'] = from_date.val();
         this.report_options['custom_to'] = to_date.val();
