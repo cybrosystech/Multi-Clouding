@@ -33,7 +33,12 @@ class AdvanceLeaseeWizard(models.TransientModel):
             rec.installment_ids = new_installments
 
     def action_apply(self):
+        reduction_amount = 0
         ins_values = []
+        adv_instalment = self.installment_ids.filtered(lambda x:x.date.year == self.date.year)
+        if adv_instalment.installment_id.amount == 0:
+            abc = adv_instalment.date - self.date
+            reduction_amount = (adv_instalment.installment_id.subsequent_amount * abc.days)/365
         contract = self.env['leasee.contract'].browse(self._context.get('active_id'))
         reassessment_installments = contract.installment_ids.filtered(lambda i: i.date > self.date).sorted(key=lambda i: i.date)
         first_installment = reassessment_installments[0]
@@ -56,7 +61,7 @@ class AdvanceLeaseeWizard(models.TransientModel):
             }))
         ins_values.append((0, 0, {'date': self.date, 'amount': self.amount, 'period': prev_period + 1, 'is_advance': True}))
         contract.installment_ids = ins_values
-        contract.update_reassessed_installments_after(before_update_values_dict, self.date, remaining_lease_liability_before)
+        contract.update_reassessed_installments_after(before_update_values_dict, self.date, remaining_lease_liability_before, reduction_amount)
 
 
 class AdvanceLeaseeLineWizard(models.TransientModel):

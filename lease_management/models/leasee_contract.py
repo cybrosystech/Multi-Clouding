@@ -316,7 +316,7 @@ class LeaseeContract(models.Model):
 
     def update_reassessed_installments_after(self, before_update_values_dict,
                                              assessment_date,
-                                             remaining_lease_liability_before):
+                                             remaining_lease_liability_before, reduction_amount):
         first_installment = self.installment_ids.filtered(
             lambda i: i.date == assessment_date)
 
@@ -393,7 +393,7 @@ class LeaseeContract(models.Model):
                 reassessment_installments)
             stl_amount = remaining_lease_liability_after - remaining_lease_liability_before
             self.create_reassessment_installment_entry(stl_amount,
-                                                       first_installment.date)
+                                                       first_installment.date, reduction_amount)
 
             body = self.env.user.name + _(' reassess the contract ') + _(
                 ' starting from ') + first_installment.date.strftime(
@@ -2197,8 +2197,8 @@ class LeaseeContract(models.Model):
         return amount
 
     def create_reassessment_installment_entry(self, stl_amount,
-                                              reassessment_date):
-        amount = stl_amount
+                                              reassessment_date, reduction_amount):
+        amount = stl_amount - reduction_amount
         if round(abs(amount), 3) > 0:
             lines = [(0, 0, {
                 'name': 'Reassessment Installment Entry',
