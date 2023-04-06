@@ -1,5 +1,6 @@
 <odoo>
 
+    <!--    <Added the menu buttons in accounting dashboard tiles>-->
     <record id="account_journal_dashboard_kanban_view_inherit_vendor_bill"
             model="ir.ui.view">
         <field name="name">account.journal.dashboard.kanban.vendor</field>
@@ -175,6 +176,7 @@
         </field>
     </record>
 
+    <!--    <Created new window action for redirection to approve records in journals>-->
     <record id="action_move_journal_to_approve" model="ir.actions.act_window">
         <field name="name">Journal Entries</field>
         <field name="res_model">account.move</field>

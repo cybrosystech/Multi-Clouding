@@ -5,17 +5,19 @@ class AccountJournalInherit(models.Model):
     _inherit = "account.journal"
 
     def get_journal_dashboard_datas(self):
+        """The function is over ride to add extra datas to the journal
+        dashboard"""
         res = super(AccountJournalInherit, self).get_journal_dashboard_datas()
-        lease_drafts = ''
-        lease_drafts_amount = ''
-        lease_active = ''
-        lease_active_amount = ''
-        lease_extended = ''
-        lease_extended_amount = ''
-        lease_expired = ''
-        lease_expired_amount = ''
-        lease_terminated = ''
-        lease_terminated_amount = ''
+        lease_drafts = 0
+        lease_drafts_amount = 0
+        lease_active = 0
+        lease_active_amount = 0
+        lease_extended = 0
+        lease_extended_amount = 0
+        lease_expired = 0
+        lease_expired_amount = 0
+        lease_terminated = 0
+        lease_terminated_amount = 0
         currency = self.currency_id or self.company_id.currency_id
         (query, query_args) = self._get_to_approve_bills_query()
         (journal_query, journal_query_args) = self.get_journals_to_approve()
@@ -60,23 +62,25 @@ class AccountJournalInherit(models.Model):
 
         res.update({
             'number_to_approve': number_to_approve,
-            'sum_to_approve': sum_to_approve,
+            'sum_to_approve': round(sum_to_approve, 2),
             'journals_to_approve': journal_to_approve,
-            'journal_sum_to_approve': journal_sum_to_approve,
+            'journal_sum_to_approve': round(journal_sum_to_approve, 2),
             'lease_drafts': lease_drafts,
-            'lease_drafts_amount': lease_drafts_amount,
-            'lease_active':lease_active,
-            'lease_active_amount':lease_active_amount,
+            'lease_drafts_amount': round(lease_drafts_amount, 2),
+            'lease_active': lease_active,
+            'lease_active_amount': round(lease_active_amount, 2),
             'lease_extended': lease_extended,
-            'lease_extended_amount': lease_extended_amount,
+            'lease_extended_amount': round(lease_extended_amount, 2),
             'lease_expired': lease_expired,
-            'lease_expired_amount': lease_expired_amount,
+            'lease_expired_amount': round(lease_expired_amount, 2),
             'lease_terminated': lease_terminated,
-            'lease_terminated_amount': lease_terminated_amount,
+            'lease_terminated_amount': round(lease_terminated_amount, 2),
         })
         return res
 
     def _get_to_approve_bills_query(self):
+        """This function is call from the get_journal_dashboard_datas() to
+        get the amount and count of to_approve bills"""
         return ('''
                     SELECT
                         (CASE WHEN move.move_type IN ('out_refund', 'in_refund') THEN -1 ELSE 1 END) * move.amount_total AS amount_total,
@@ -92,6 +96,8 @@ class AccountJournalInherit(models.Model):
                 ''', {'journal_id': self.id})
 
     def get_journals_to_approve(self):
+        """This function is call from the get_journal_dashboard_datas() to
+                get the amount and count of to_approve bills"""
         return ('''
                             SELECT
                                 (CASE WHEN move.move_type IN ('out_refund', 'in_refund') THEN -1 ELSE 1 END) * move.amount_total AS amount_total,
@@ -105,6 +111,7 @@ class AccountJournalInherit(models.Model):
                         ''', {'journal_id': self.id})
 
     def open_journal_entry_to_approve(self):
+        """Action window opened to show the to_approve status"""
         action = self.env["ir.actions.act_window"]._for_xml_id(
             'vendor_bills_dashboard.action_move_journal_to_approve')
         action['context'] = ({
@@ -115,6 +122,7 @@ class AccountJournalInherit(models.Model):
         return action
 
     def get_lease_contract_draft(self):
+        """Lease entries in IFRS jornal """
         return ('''select lease.original_rou as amount_total,
                     lease.leasee_currency_id as currency,
                     lease.company_id
@@ -123,6 +131,7 @@ class AccountJournalInherit(models.Model):
                 and lease.company_id = %(company)s''', {'company': self.env.company.id})
 
     def get_lease_contract_active(self):
+        """Lease entries in IFRS jornal on active state"""
         return ('''select lease.original_rou as amount_total,
                             lease.leasee_currency_id as currency,
                             lease.company_id
@@ -132,6 +141,7 @@ class AccountJournalInherit(models.Model):
                 {'company': self.env.company.id})
 
     def get_lease_contract_extended(self):
+        """Lease entries in IFRS jornal on extended state"""
         return ('''select lease.original_rou as amount_total,
                                     lease.leasee_currency_id as currency,
                                     lease.company_id
@@ -141,6 +151,7 @@ class AccountJournalInherit(models.Model):
                 {'company': self.env.company.id})
 
     def get_lease_contract_expired(self):
+        """Lease entries in IFRS jornal on expired state"""
         return ('''select lease.original_rou as amount_total,
                                             lease.leasee_currency_id as currency,
                                             lease.company_id
@@ -150,6 +161,7 @@ class AccountJournalInherit(models.Model):
                 {'company': self.env.company.id})
 
     def get_lease_contract_terminated(self):
+        """Lease entries in IFRS jornal on terminated state"""
         return ('''select lease.original_rou as amount_total,
                                                     lease.leasee_currency_id as currency,
                                                     lease.company_id
@@ -159,6 +171,7 @@ class AccountJournalInherit(models.Model):
                 {'company': self.env.company.id})
 
     def open_leasee_contract(self):
+        """Lease contract open action"""
         action = self.env["ir.actions.act_window"]._for_xml_id(
             'lease_management.view_leasee_contract_action')
         action['domain'] = [('state', '=', self._context['domain'])]
