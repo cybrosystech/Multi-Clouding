@@ -1,0 +1,38 @@
+<odoo>
+    <record id="consolidation_period_form_inherit_name" model="ir.ui.view">
+        <field name="name">consolidation.period.form.inherit</field>
+        <field name="model">consolidation.period</field>
+        <field name="inherit_id" ref="account_consolidation.consolidation_period_form"/>
+        <field name="arch" type="xml">
+            <field name="chart_id" position="before">
+                <field name="name"/>
+            </field>
+            <field name="chart_id" position="after">
+                <field name="description"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="consolidation_period_kanban_inherit_name" model="ir.ui.view">
+        <field name="name">consolidation.period.kanban.inherit.name</field>
+        <field name="model">consolidation.period</field>
+        <field name="inherit_id" ref="account_consolidation.consolidation_period_kanban"/>
+        <field name="arch" type="xml">
+            <field name="chart_id" position="before">
+                <field name="name"/>
+                <field name="description"/>
+            </field>
+            <xpath expr="//div[hasclass('o_primary')]" position="before">
+                <div>
+                    <field name="name"/>
+                </div>
+            </xpath>
+            <xpath expr="//div[hasclass('o_primary')]" position="after">
+                <div>
+                    <field name="description"/>
+                </div>
+            </xpath>
+        </field>
+
+    </record>
+</odoo>
