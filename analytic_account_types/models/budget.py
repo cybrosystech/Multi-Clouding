@@ -26,8 +26,9 @@ class CrossOveredBudgetLines(models.Model):
     @api.depends('planned_amount', 'practical_amount')
     def get_actual_percentage(self):
         for rec in self:
-            if rec.planned_amount !=0:
-                rec.actual_percentage = (abs(rec.practical_amount) *100) / rec.planned_amount
+            if rec.planned_amount != 0:
+                rec.actual_percentage = (
+                                                abs(rec.practical_amount) * 100) / rec.planned_amount
             else:
                 rec.actual_percentage = 0.0
 

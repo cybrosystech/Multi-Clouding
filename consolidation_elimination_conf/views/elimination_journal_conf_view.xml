@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="elimination_journal_config_form" model="ir.ui.view">
+        <field name="name">elimination.journal.config.form</field>
+        <field name="model">elimination.journal.conf</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group col="4">
+                        <field name="name"/>
+                        <field name="consolidation_period_id"/>
+                    </group>
+                    <group>
+                        <field name="elimination_lines">
+                            <tree editable="bottom">
+                                <field name="report_type"/>
+                                <field name="consolidation_period_line" attrs="{'invisible': [('report_type', 'not in', ['share', 'invest'])]}"/>
+                                <field name="consolidation_account_ids" widget="many2many_tags"/>
+                                <field name="elimination_journal_id" invisible="1"/>
+                            </tree>
+                        </field>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="elimination_journal_config_action" model="ir.actions.act_window">
+        <field name="name">Elimination Journal config</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">elimination.journal.conf</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+
+            </p>
+            <p>
+
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="elimination_journal_config_menu" name="Elimination Journal Config" parent="account_consolidation.menu_consolidation_operations"
+              sequence="34" action="elimination_journal_config_action"/>
+
+</odoo>

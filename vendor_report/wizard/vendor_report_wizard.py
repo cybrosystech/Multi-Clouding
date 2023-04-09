@@ -7,6 +7,7 @@ from datetime import datetime
 
 class VendorReportWizard(models.TransientModel):
     _name = 'vendor.report.wizard'
+    _description = 'Wizard view on button action to print bills report'
 
     date_from = fields.Date(string="Accounting Date From")
     date_to = fields.Date(string="Accounting Date To")
@@ -18,9 +19,9 @@ class VendorReportWizard(models.TransientModel):
         default='posted')
 
     def generate_pdf_report(self):
+        """Execute to generate bills pdf report on the date parameters and state
+        used in wizard"""
         self.ensure_one()
-        logged_users = self.env['res.company']._company_default_get(
-            'rent.request')
         if self.date_from and self.date_to:
             if self.date_from > self.date_to:
                 raise UserError("Start date should be less than end date")
@@ -37,6 +38,8 @@ class VendorReportWizard(models.TransientModel):
             self, data)
 
     def generate_xlsx_report(self):
+        """Execute to generate bills xlsx report on the date parameters and state
+        used in wizard"""
         if self.date_from and self.date_to:
             if self.date_from > self.date_to:
                 raise UserError("Start date should be less than end date")
@@ -59,6 +62,7 @@ class VendorReportWizard(models.TransientModel):
         }
 
     def get_xlsx(self, data, response):
+        """The xlsx report view defined from here"""
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
         date_from = ''
@@ -102,6 +106,9 @@ class VendorReportWizard(models.TransientModel):
 
         sheet.set_row(2, 25)
         sheet.set_column('A2:L2', 20)
+        sheet.merge_range('S2:V2', 'Book Currency' + str(
+            self.env.company.currency_id.symbol),
+                          head)
 
         sheet.write('A3', 'Bill Date', head)
         sheet.write('B3', 'Accounting Date', head)
@@ -120,16 +127,29 @@ class VendorReportWizard(models.TransientModel):
         sheet.write('O3', 'Taxes', head)
         sheet.write('P3', 'Tax ID', head)
         sheet.write('Q3', 'payment date', head)
+        sheet.write('R3', 'payment Amount', head)
+        sheet.write('S3', 'pre Vat Amount', head)
+        sheet.write('T3', 'Vat Amount', head)
+        sheet.write('U3', 'Total', head)
+        sheet.write('V3', 'payment Amount', head)
 
         row_num = 2
         col_num = 0
         for rec in journals:
             payment_widget = ''
+            paid_amount = 0
             if json.loads(rec.invoice_payments_widget):
                 payment_widget = ', '.join(map(lambda x: x['date'], json.loads(
                     rec.invoice_payments_widget)['content']))
+                paid_amount = sum(map(lambda x: x['amount'], json.loads(
+                    rec.invoice_payments_widget)['content']))
             for lines in rec.invoice_line_ids:
-                account_name = str(lines.account_id.code)+ ' ' + lines.account_id.name
+                rate = self.env['res.currency']._get_conversion_rate(
+                    rec.currency_id, rec.company_id.currency_id,
+                    rec.company_id,
+                    rec.date)
+                account_name = str(
+                    lines.account_id.code) + ' ' + lines.account_id.name
                 if len(lines.mapped('tax_ids')) > 1:
                     tax = lines.mapped(
                         lambda x: max(x.tax_ids.filtered(lambda y: y.amount)))
@@ -172,6 +192,16 @@ class VendorReportWizard(models.TransientModel):
                                 num)
                     sheet.write(row_num + 1, col_num + 16,
                                 payment_widget, date_format)
+                    sheet.write(row_num + 1, col_num + 17,
+                                paid_amount, num)
+                    sheet.write(row_num + 1, col_num + 18, sub_total * rate,
+                                num)
+                    sheet.write(row_num + 1, col_num + 19, tax_amount * rate,
+                                num)
+                    sheet.write(row_num + 1, col_num + 20,
+                                (sub_total * rate) + (tax_amount * rate), num)
+                    sheet.write(row_num + 1, col_num + 21, paid_amount * rate,
+                                num)
                     row_num = row_num + 1
                 else:
                     tax = lines.tax_ids
@@ -215,6 +245,16 @@ class VendorReportWizard(models.TransientModel):
                                 num)
                     sheet.write(row_num + 1, col_num + 16,
                                 payment_widget, date_format)
+                    sheet.write(row_num + 1, col_num + 17,
+                                paid_amount, num)
+                    sheet.write(row_num + 1, col_num + 18, sub_total * rate,
+                                num)
+                    sheet.write(row_num + 1, col_num + 19, tax_amount * rate,
+                                num)
+                    sheet.write(row_num + 1, col_num + 20,
+                                (sub_total * rate) + (tax_amount * rate), num)
+                    sheet.write(row_num + 1, col_num + 21, paid_amount * rate,
+                                num)
                     row_num = row_num + 1
 
         workbook.close()

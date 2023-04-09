@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <template id="tasc_budget_analysis_search_view">
+        <div class="btn-group o_dropdown">
+            <t t-call="tasc_budget_analysis_report.tasc_budget_analysis_search_template_date_filter"/>
+        </div>
+        <div class="btn-group o_dropdown">
+            <t t-call="tasc_budget_analysis_report.tasc_budget_analysis_search_template_budget_filter"/>
+        </div>
+    </template>
+
+     <template id="tasc_budget_analysis_html_content_view">
+         <div class='o_account_reports_body'>
+             <div class="table-responsive" style="margin-top:20px;">
+                 <table class="o_account_reports_table table-hover bd_main_table">
+                     <thead>
+                         <tr>
+                             <t t-foreach="lines['header']" t-as="header">
+                                 <th t-esc="header" colspan="2" class="bd_main_thead"/>
+                             </t>
+                         </tr>
+                     </thead>
+                     <tbody>
+                         <t t-foreach="lines['lines']" t-as="line_val">
+                             <t t-if="line_val['lines']">
+                                 <tr class="bd_main_th">
+                                     <td t-attf-data-id="budget_#{line_val['id']}" class="tr_budget bd_main_line_td" t-esc="line_val['name']" colspan="2"/>
+                                     <td  colspan="2" class="bd_main_line_td"/>
+                                     <td  colspan="2" class="bd_main_line_td"/>
+                                     <td colspan="2" class="bd_main_line_td"/>
+                                     <td  colspan="2" class="bd_main_line_td"/>
+                                     <td colspan="2" class="bd_main_line_td"/>
+                                     <td  colspan="2" class="bd_main_line_td"><span t-esc="'{:20,.2f}'.format(line_val['planned_amount'])"/></td>
+                                     <td colspan="2" class="bd_main_line_td"><span t-esc="'{:20,.2f}'.format(line_val['practical_amount'])"/></td>
+                                     <td colspan="2" class="bd_main_line_td"><span t-esc="'{:20,.2f}'.format(line_val['remaining_amount'])"/></td>
+                                     <td colspan="2" class="bd_main_line_td"><span t-esc="'{:20,.2f}'.format(line_val['percentage'])"/></td>
+                                 </tr>
+                                 <t t-foreach="line_val['lines']" t-as="line">
+                                     <t t-set="trclass" t-value="line_val['id']"/>
+                                     <tr t-attf-class="budget_#{trclass}" style="display: none;">
+                                         <td colspan="2" class="bd_sub_line_td"><span t-esc="line_val['name']" style="margin-left: 8px;"/></td>
+                                         <td colspan="2" class="bd_sub_line_td"><span t-esc="line['budget']"/></td>
+                                         <td colspan="2" class="bd_sub_line_td"><span t-esc="line['analytic']"/></td>
+                                         <td colspan="2" class="bd_sub_line_td"><span t-esc="line['project_site']"/></td>
+                                         <td colspan="2" class="bd_sub_line_td"><span t-esc="line['date_from']"/></td>
+                                         <td colspan="2" class="bd_sub_line_td"><span t-esc="line['date_to']"/></td>
+                                         <td colspan="2" class="bd_sub_line_td"><span t-esc="'{:20,.2f}'.format(line['planned_amount'])"/></td>
+                                         <td colspan="2" class="bd_sub_line_td"><span t-esc="'{:20,.2f}'.format(line['practical_amount'])"/></td>
+                                         <td colspan="2" class="bd_sub_line_td"><span t-esc="'{:20,.2f}'.format(line['remaining_amount'])"/></td>
+                                         <td colspan="2" class="bd_sub_line_td"><span t-esc="'{:20,.2f}'.format(line['percentage'])"/></td>
+                                     </tr>
+                                 </t>
+                             </t>
+                         </t>
+                     </tbody>
+                 </table>
+             </div>
+         </div>
+     </template>
+
+
+    <record id="action_budget_analysis" model="ir.actions.client">
+        <field name="name">TASC Budget Analysis</field>
+        <field name="tag">cash_flow</field>
+        <field name="context" eval="{'model': 'tasc.budget.analysis'}"/>
+    </record>
+
+    <menuitem id="menu_action_budget_analysis" name="TASC Budget Analysis"
+                  action="action_budget_analysis"
+                  parent="account.account_reports_management_menu"/>
+
+</odoo>

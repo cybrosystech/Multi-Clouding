@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="consolidation_period_elimination_view_form" model="ir.ui.view">
+        <field name="name">consolidation.period.elimination.form</field>
+        <field name="model">consolidation.period</field>
+        <field name="inherit_id" ref="account_consolidation.consolidation_period_form"/>
+        <field name="arch" type="xml">
+            <button name="action_generate_journals" position="after">
+                <button name="action_generate_elimination_journal" type="object"
+                        string="Elimination Journal" class="oe_highlight"
+                        groups="account_consolidation.group_consolidation_user"
+                        attrs="{'invisible': ['|', ('state', '=', 'closed'), ('id', '=', False)]}"/>
+            </button>
+        </field>
+    </record>
+</odoo>

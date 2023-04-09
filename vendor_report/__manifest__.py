@@ -1,8 +1,9 @@
 {
     'name': 'Vendor Report',
-    'summary': """""",
+    'summary': """Generate the vendor bills report""",
 
-    'description': """""",
+    'description': """This module has been developed for generating excel 
+    report of bills""",
 
     'author': "",
     'website': "",
