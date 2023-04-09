@@ -6,7 +6,8 @@ class ConsolidationPeriodElimination(models.Model):
 
     def action_generate_elimination_journal(self):
         eliminated_journal = self.env['consolidation.journal'].search([(
-            'name', '=', 'Elimination Journal')])
+            'name', '=', 'Elimination Journal'),
+            ('chart_id', '=', self.chart_id.id)])
         if not eliminated_journal:
             eliminated_journal = self.env['consolidation.journal'].create({
                 'name': 'Elimination Journal',
