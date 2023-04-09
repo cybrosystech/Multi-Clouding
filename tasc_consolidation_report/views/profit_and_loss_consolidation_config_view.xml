@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="consolidation_profit_loss_config_form" model="ir.ui.view">
+        <field name="name">consolidation.profit.loss.config.form</field>
+        <field name="model">consolidation.report.config</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group col="4">
+                        <field name="name"/>
+                        <field name="active_bool"/>
+                        <field name="config_type" string="Report Type"/>
+                    </group>
+                    <group>
+                        <field name="profit_loss_related_ids">
+                            <tree editable="bottom">
+                                <field name="sequence" widget="handle"/>
+                                <field name="line_type"/>
+                                <field name="config_name" attrs="{'invisible': [('line_type', '!=', 'total_config')]}"/>
+                                <field name="consolidation_parent" widget="many2many_tags" attrs="{'invisible': [('line_type', '!=', 'total_config')]}"/>
+                                <field name="consolidation_parent_group_id" attrs="{'invisible': [('line_type', '==', 'total_config')]}"/>
+                                <field name="consolidation_child_group_ids"
+                                       widget="many2many_tags" attrs="{'invisible': [('line_type', '==', 'total_config')]}"/>
+                                <field name="profit_loss_config_id"
+                                       invisible="1"/>
+                            </tree>
+                        </field>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="consolidation_profit_loss_config_action" model="ir.actions.act_window">
+        <field name="name">Consolidation Report config</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">consolidation.report.config</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+
+            </p>
+            <p>
+
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_consolidation_profit_loss_config" name="Consolidation Report Config" parent="account_consolidation.menu_consolidation_configuration"
+                  sequence="32" action="consolidation_profit_loss_config_action"/>
+</odoo>

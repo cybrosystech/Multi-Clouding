@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_wizard_consolidation_report,access.wizard.consolidation.report,model_wizard_consolidation_report,base.group_user,1,1,1,1
+access_consolidation_report_config,access.consolidation.report.config,model_consolidation_report_config,base.group_user,1,1,1,1
+access_consolidation_config_relation,access.consolidation.config.relation,model_consolidation_config_relation,base.group_user,1,1,1,1
