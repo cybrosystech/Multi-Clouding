@@ -8,17 +8,18 @@ class AccountMoveLineInherit(models.Model):
     def _onchange_account_id(self):
         res = super(AccountMoveLineInherit, self)._onchange_account_id()
         if self.account_id:
+            filtered_budget = []
             budgetory_position = self.env['account.budget.post'].search([])
             filtered_budget = budgetory_position.filtered(
                 lambda x: x.account_ids.filtered(
-                    lambda y: y.id == self.account_id.id))
-            domain = [('general_budget_id', 'in', filtered_budget.ids),
+                    lambda y: y.id == self.account_id.id)).ids
+            domain = [('general_budget_id', 'in', filtered_budget),
                       ('date_from', '<=', self.move_id.date),
                       ('date_to', '>=', self.move_id.date),
                       ('analytic_account_id', '=', False),
                       ('project_site_id', '=', False)]
             if self.analytic_account_id or self.project_site_id:
-                domain = [('general_budget_id', 'in', filtered_budget.ids),
+                domain = [('general_budget_id', 'in', filtered_budget),
                           ('date_from', '<=', self.move_id.date),
                           ('date_to', '>=', self.move_id.date)]
                 if self.analytic_account_id and self.project_site_id:
@@ -43,7 +44,7 @@ class AccountMoveLineInherit(models.Model):
                 if self.analytic_account_id or self.project_site_id:
                     domain = [('date_from', '<=', self.move_id.date),
                               ('date_to', '>=', self.move_id.date),
-                              ('general_budget_id', 'in', filtered_budget.ids),
+                              ('general_budget_id', 'in', filtered_budget),
                               ('project_site_id', '=', False),
                               ('analytic_account_id', '=',
                                self.analytic_account_id.id)]
@@ -55,7 +56,7 @@ class AccountMoveLineInherit(models.Model):
                     else:
                         domain = [('date_from', '<=', self.move_id.date),
                                   ('date_to', '>=', self.move_id.date),
-                                  ('general_budget_id', 'in', filtered_budget.ids),
+                                  ('general_budget_id', 'in', filtered_budget),
                                   ('project_site_id', '=', self.project_site_id.id),
                                   ('analytic_account_id', '=',
                                    False)]
@@ -77,14 +78,15 @@ class AccountMoveLineInherit(models.Model):
     @api.onchange('project_site_id', 'analytic_account_id')
     def _onchange_analytic_account_id(self):
         if self.account_id or self.analytic_account_id or self.project_site_id:
+            filtered_budget = []
             domain = [('date_from', '<=', self.move_id.date),
                       ('date_to', '>=', self.move_id.date)]
             if self.account_id:
                 budgetory_position = self.env['account.budget.post'].search([])
                 filtered_budget = budgetory_position.filtered(
                     lambda x: x.account_ids.filtered(
-                        lambda y: y.id == self.account_id.id))
-                domain += [('general_budget_id', 'in', filtered_budget.ids)]
+                        lambda y: y.id == self.account_id.id)).ids
+                domain += [('general_budget_id', 'in', filtered_budget)]
             if self.analytic_account_id and self.project_site_id:
                 domain += [('analytic_account_id', '=',
                             self.analytic_account_id.id),
@@ -104,7 +106,7 @@ class AccountMoveLineInherit(models.Model):
             else:
                 domain = [('date_from', '<=', self.move_id.date),
                           ('date_to', '>=', self.move_id.date),
-                          ('general_budget_id', 'in', filtered_budget.ids),
+                          ('general_budget_id', 'in', filtered_budget),
                           ('project_site_id', '=', False),
                           ('analytic_account_id', '=',
                            self.analytic_account_id.id)]
@@ -116,7 +118,7 @@ class AccountMoveLineInherit(models.Model):
                 else:
                     domain = [('date_from', '<=', self.move_id.date),
                               ('date_to', '>=', self.move_id.date),
-                              ('general_budget_id', 'in', filtered_budget.ids),
+                              ('general_budget_id', 'in', filtered_budget),
                               ('project_site_id', '=', self.project_site_id.id),
                               ('analytic_account_id', '=',
                                False)]
@@ -129,7 +131,7 @@ class AccountMoveLineInherit(models.Model):
                         domain = [('date_from', '<=', self.move_id.date),
                                   ('date_to', '>=', self.move_id.date),
                                   ('general_budget_id', 'in',
-                                   filtered_budget.ids),
+                                   filtered_budget),
                                   ('project_site_id', '=', False),
                                   ('analytic_account_id', '=',
                                    False)]
