@@ -1494,7 +1494,8 @@ class LeaseeContract(models.Model):
     @api.model
     def leasee_action_expired(self):
         leasee_contracts = self.search([]).filtered(lambda
-                                                        rec: rec.estimated_ending_date <= fields.Date.today() and rec.state != 'extended')
+                                                        rec: rec.estimated_ending_date <= fields.Date.today() and rec.state not in [
+            'extended', 'terminated'])
         for contract in leasee_contracts:
             contract.state = 'expired'
 
