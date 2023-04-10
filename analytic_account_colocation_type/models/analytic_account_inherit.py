@@ -30,6 +30,20 @@ class AccountAssetInherit(models.Model):
             rec.co_location = rec.project_site_id.co_location.id
         return super(AccountAssetInherit, self)._onchange_project_site_id()
 
+    @api.depends('acquisition_date', 'original_move_line_ids', 'method_period',
+                 'company_id')
+    def _compute_first_depreciation_date(self):
+        if self.prorata:
+            self.prorata_date = self.acquisition_date
+        return super(AccountAssetInherit, self)._compute_first_depreciation_date()
+
+    @api.onchange('prorata')
+    def _onchange_prorata(self):
+        if self.prorata and self.acquisition_date:
+            self.prorata_date = self.acquisition_date
+        else:
+            self.prorata_date = fields.Date.today()
+
 
 class AccountMoveLineInherit(models.Model):
     _inherit = 'account.move.line'
