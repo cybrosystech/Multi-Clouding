@@ -10,12 +10,10 @@
         </field>
     </record>
 
-    <record id="analytic_line_view_inherit_co_location"
-            model="ir.ui.view">
+    <record id="analytic_line_view_inherit_co_location" model="ir.ui.view">
         <field name="name">account.analytic.line.form.inherit.account.co.location</field>
         <field name="model">account.analytic.line</field>
-        <field name="inherit_id"
-               ref="analytic_account_types.view_account_analytic_line_form_inherit_account"/>
+        <field name="inherit_id" ref="analytic_account_types.view_account_analytic_line_form_inherit_account"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='location_id']" position="after">
                 <field name="co_location_id"/>
@@ -26,8 +24,7 @@
     <record id="view_account_analytic_line_tree_co_location" model="ir.ui.view">
         <field name="name">account.analytic.line.tree.inherit.account.co.location</field>
         <field name="model">account.analytic.line</field>
-        <field name="inherit_id"
-               ref="analytic_account_types.view_account_analytic_line_tree"/>
+        <field name="inherit_id" ref="analytic_account_types.view_account_analytic_line_tree"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='location_id']" position="after">
                 <field name="co_location_id"/>
@@ -50,12 +47,10 @@
         </field>
     </record>
 
-    <record id="view_inherit_purchase_order_form_co_location"
-            model="ir.ui.view">
+    <record id="view_inherit_purchase_order_form_co_location" model="ir.ui.view">
         <field name="name">view_inherit_purchase_order_form_co_location</field>
         <field name="model">purchase.order</field>
-        <field name="inherit_id"
-               ref="analytic_account_types.view_inherit_purchase_order_form"/>
+        <field name="inherit_id" ref="analytic_account_types.view_inherit_purchase_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//notebook/page/field/tree/field[@name='location_id']" position="after">
                 <field name="co_location_id" optional="show" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
@@ -66,8 +61,7 @@
     <record id="view_inherit_view_order_form_co_location" model="ir.ui.view">
         <field name="name">view_inherit_view_order_form_co_location</field>
         <field name="model">sale.order</field>
-        <field name="inherit_id"
-               ref="analytic_account_types.view_inherit_view_order_form"/>
+        <field name="inherit_id" ref="analytic_account_types.view_inherit_view_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//notebook/page/field/tree/field[@name='location_id']" position="after">
                 <field name="co_location_id" optional="show" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
@@ -78,8 +72,7 @@
     <record id="view_inherit_view_analytic_account_form_co_location" model="ir.ui.view">
         <field name="name">view_inherit_view_analytic_account_form_co_location</field>
         <field name="model">account.analytic.account</field>
-        <field name="inherit_id"
-               ref="analytic_account_types.view_inherit_view_account_analytic_account_form_inherit_budget"/>
+        <field name="inherit_id" ref="analytic_account_types.view_inherit_view_account_analytic_account_form_inherit_budget"/>
         <field name="arch" type="xml">
             <field name="analytic_location_id" position="after">
                 <field name="co_location" attrs="{'invisible':[('analytic_account_type','!=','project_site')]}"/>
