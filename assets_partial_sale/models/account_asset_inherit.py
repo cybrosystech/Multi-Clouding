@@ -1,4 +1,4 @@
-from odoo import models, fields, _
+from odoo import models, fields, _, api
 from math import copysign
 from odoo.tools import float_compare
 from odoo.exceptions import UserError
@@ -189,3 +189,17 @@ class AccountAssetPartialInherit(models.Model):
             return super(AccountAsset, self)._get_disposal_moves(
                 invoice_line_ids, disposal_date, partial, partial_amount)
 
+    @api.depends('acquisition_date', 'original_move_line_ids', 'method_period',
+                 'company_id')
+    def _compute_first_depreciation_date(self):
+        if self.prorata:
+            self.prorata_date = self.acquisition_date
+        return super(AccountAssetPartialInherit,
+                     self)._compute_first_depreciation_date()
+
+    @api.onchange('prorata')
+    def _onchange_prorata(self):
+        if self.prorata and self.acquisition_date:
+            self.prorata_date = self.acquisition_date
+        else:
+            self.prorata_date = fields.Date.today()

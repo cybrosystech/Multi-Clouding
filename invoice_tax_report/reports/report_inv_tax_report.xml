@@ -31,9 +31,16 @@
                    t-value="doc.with_context({'lang':doc.partner_id.lang})"/>
                 <div class="page">
                     <div class="oe_structure"/>
-                    <p style="text-align:center;font-weight:bold;font-size:18px;">
-                        Tax Invoice
-                    </p>
+                    <t t-if="doc.move_type in ['out_refund', 'in_refund']">
+                        <p style="text-align:center;font-weight:bold;font-size:18px;">
+                            Tax Credit Note
+                        </p>
+                    </t>
+                    <t t-else="">
+                        <p style="text-align:center;font-weight:bold;font-size:18px;">
+                            Tax Invoice
+                        </p>
+                    </t>
                     <div class="row">
                         <div class="col-6">
                             <div>
@@ -52,13 +59,25 @@
 
                         <div class="col-6">
                             <div>
-                                <span style="font-weight:bold">Invoice Date:
-                                </span>
+                                <t t-if="doc.move_type in ['out_refund', 'in_refund']">
+                                    <span style="font-weight:bold">Credit Note Date:
+                                    </span>
+                                </t>
+                                <t t-else="">
+                                    <span style="font-weight:bold">Invoice Date:
+                                    </span>
+                                </t>
                                 <span t-field="doc.invoice_date"/>
                             </div>
                             <div>
-                                <span style="font-weight:bold">Invoice No.:
-                                </span>
+                                <t t-if="doc.move_type in ['out_refund', 'in_refund']">
+                                    <span style="font-weight:bold">Credit Note No.:
+                                    </span>
+                                </t>
+                                <t t-else="">
+                                    <span style="font-weight:bold">Invoice No.:
+                                    </span>
+                                </t>
                                 <span t-field="doc.name"/>
                             </div>
                             <div>
@@ -249,29 +268,60 @@
                     </div>
                     <div class="row" style="margin-top: 5rem;">
                         <div class="col-12">
-                            <span>
-                                <span style="text-decoration:underline;font-weight:bold">
-                                    BANK DETAILS :
+                            <t t-if="doc.move_type in ['out_refund', 'in_refund']">
+                                <span>
+                                    <span style="text-decoration:underline;font-weight:bold">
+                                        BANK DETAILS :
+                                    </span>
+                                    <br/>
+                                    Transfer the amount to the business account
+                                    below.
+                                    <br/>
+                                    Please remit payment by electronic transfer
+                                    to
+                                    the following account, quoting the Credit Note
+                                    number as the reference:
+                                    <br/>
+                                    Bank Name : First Abu Dhabi Bank
+                                    <br/>
+                                    Bank Account Name : TASC Towers Holding
+                                    Limited
+                                    <br/>
+                                    Bank Account Number : 100-100-4115781-02-6
+                                    <br/>
+                                    IBAN Number : AE-06-035-100-100-4115781-02-6
+                                    <br/>
+                                    SWIFT: FGBMAEAA
+                                    <br/>
                                 </span>
-                                <br/>
-                                Transfer the amount to the business account
-                                below.
-                                <br/>
-                                Please remit payment by electronic transfer to
-                                the following account, quoting the invoice
-                                number as the reference:
-                                <br/>
-                                Bank Name : First Abu Dhabi Bank
-                                <br/>
-                                Bank Account Name : TASC Towers Holding Limited
-                                <br/>
-                                Bank Account Number : 100-100-4115781-02-6
-                                <br/>
-                                IBAN Number : AE-06-035-100-100-4115781-02-6
-                                <br/>
-                                SWIFT: FGBMAEAA
-                                <br/>
-                            </span>
+                            </t>
+                            <t t-else="">
+                                <span>
+                                    <span style="text-decoration:underline;font-weight:bold">
+                                        BANK DETAILS :
+                                    </span>
+                                    <br/>
+                                    Transfer the amount to the business account
+                                    below.
+                                    <br/>
+                                    Please remit payment by electronic transfer
+                                    to
+                                    the following account, quoting the invoice
+                                    number as the reference:
+                                    <br/>
+                                    Bank Name : First Abu Dhabi Bank
+                                    <br/>
+                                    Bank Account Name : TASC Towers Holding
+                                    Limited
+                                    <br/>
+                                    Bank Account Number : 100-100-4115781-02-6
+                                    <br/>
+                                    IBAN Number : AE-06-035-100-100-4115781-02-6
+                                    <br/>
+                                    SWIFT: FGBMAEAA
+                                    <br/>
+                                </span>
+                            </t>
                         </div>
                     </div>
                     <div class="row">
@@ -285,9 +335,19 @@
                     </div>
                     <div class="row" style="margin-top: 3px;">
                         <div class="col-12">
-                            <span style="font-weight:bold;">This is an automated
-                                invoice and no signature required.
-                            </span>
+                            <t t-if="doc.move_type in ['out_refund', 'in_refund']">
+                                <span style="font-weight:bold;">This is an
+                                    automated
+                                    Credit Note and no signature required.
+                                </span>
+                            </t>
+                            <t t-else="">
+                                <span style="font-weight:bold;">This is an
+                                    automated
+                                    invoice and no signature required.
+                                </span>
+
+                            </t>
                         </div>
                     </div>
                 </div>
