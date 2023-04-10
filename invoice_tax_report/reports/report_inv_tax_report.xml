@@ -33,7 +33,7 @@
                     <div class="oe_structure"/>
                     <t t-if="doc.move_type in ['out_refund', 'in_refund']">
                         <p style="text-align:center;font-weight:bold;font-size:18px;">
-                            Credit Note
+                            Tax Credit Note
                         </p>
                     </t>
                     <t t-else="">
