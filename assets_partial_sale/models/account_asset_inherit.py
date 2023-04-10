@@ -192,10 +192,12 @@ class AccountAssetPartialInherit(models.Model):
     @api.depends('acquisition_date', 'original_move_line_ids', 'method_period',
                  'company_id')
     def _compute_first_depreciation_date(self):
-        if self.prorata:
-            self.prorata_date = self.acquisition_date
-        return super(AccountAssetPartialInherit,
+        res =  super(AccountAssetPartialInherit,
                      self)._compute_first_depreciation_date()
+        for rec in self:
+            if rec.prorata:
+                rec.prorata_date = rec.acquisition_date
+        return res
 
     @api.onchange('prorata')
     def _onchange_prorata(self):
