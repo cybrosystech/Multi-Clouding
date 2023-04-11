@@ -153,7 +153,6 @@ class ConsolidationPeriodElimination(models.Model):
                                 'account_id': account.id,
                                 'amount': amount
                             })
-
         for lines in test:
             self.env['consolidation.journal.line'].create({
                 'account_id': lines['account_id'],

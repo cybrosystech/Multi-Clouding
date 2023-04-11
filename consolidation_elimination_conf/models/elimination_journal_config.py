@@ -1,4 +1,5 @@
 from odoo import models, fields, api
+from odoo.exceptions import ValidationError
 
 
 class EliminationJournalConf(models.Model):
@@ -7,9 +8,15 @@ class EliminationJournalConf(models.Model):
                    'Balance sheet'
 
     name = fields.Char()
-    consolidation_period_id = fields.Many2one('consolidation.period')
+    consolidation_period_id = fields.Many2one('consolidation.period', copy=False)
     elimination_lines = fields.One2many('elimination.journal.line',
-                                        'elimination_journal_id')
+                                        'elimination_journal_id', copy=True)
+
+    @api.constrains('consolidation_period_id')
+    def consolidation_period_check(self):
+        elimination_conf = self.search([('consolidation_period_id', '=', self.consolidation_period_id.id)])
+        if len(elimination_conf) > 1:
+            raise ValidationError('Consolidation period has already configured')
 
 
 class EliminationJournalLines(models.Model):
