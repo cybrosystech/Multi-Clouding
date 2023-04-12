@@ -6,11 +6,12 @@ class ConsolidationPeriodElimination(models.Model):
 
     def action_generate_elimination_journal(self):
         eliminated_journal = self.env['consolidation.journal'].search([(
-            'name', '=', 'Elimination Journal'),
+            'name', '=', 'Elimination '+self.name),
             ('chart_id', '=', self.chart_id.id)])
+        print('eliminated_journal', eliminated_journal)
         if not eliminated_journal:
             eliminated_journal = self.env['consolidation.journal'].create({
-                'name': 'Elimination Journal',
+                'name': 'Elimination '+self.name,
                 'period_id': self.id,
                 'chart_id': self.chart_id.id
             })
@@ -153,7 +154,6 @@ class ConsolidationPeriodElimination(models.Model):
                                 'account_id': account.id,
                                 'amount': amount
                             })
-
         for lines in test:
             self.env['consolidation.journal.line'].create({
                 'account_id': lines['account_id'],

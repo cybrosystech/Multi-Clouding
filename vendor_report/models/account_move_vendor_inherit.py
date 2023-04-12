@@ -1,4 +1,7 @@
-from odoo import models
+from collections import defaultdict
+
+from odoo import models, api
+from odoo.exceptions import ValidationError
 
 
 class AccountMoveVendor(models.Model):
