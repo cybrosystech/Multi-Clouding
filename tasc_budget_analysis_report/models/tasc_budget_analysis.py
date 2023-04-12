@@ -107,12 +107,15 @@ class TascBudgetAnalysis(models.Model):
         cross_overed_budget_lines = self.env.cr.dictfetchall()
         print('cross_overed_budget_lines', cross_overed_budget_lines)
         for lines in cross_overed_budget_lines:
+            percent = 0
             obj = self.env['crossovered.budget.lines'].browse(int(lines['id']))
+            if obj.practical_amount != 0 or lines['planned_amount'] != 0:
+                percent = round(-1 * ((obj.practical_amount / lines[
+                    'planned_amount']) * 100))
             lines.update({
                 'practical_amount': obj.practical_amount,
                 'remaining_amount': obj.remaining_amount,
-                'percentage': round(-1 * ((obj.practical_amount / lines[
-                    'planned_amount']) * 100)) if obj.practical_amount != 0 or lines['planned_amount'] != 0 else 0,
+                'percentage':  percent,
             })
         print('cross_overed_budget_lines22', cross_overed_budget_lines)
         return cross_overed_budget_lines
