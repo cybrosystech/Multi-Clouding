@@ -111,8 +111,8 @@ class TascBudgetAnalysis(models.Model):
             lines.update({
                 'practical_amount': round(lines['practical_demo'] if lines['practical_demo'] else 0),
                 'remaining_amount': round(obj.remaining_amount),
-                'percentage': round(-1 * ((lines['practical_demo'] / lines[
-                    'planned_amount']) * 100)),
+                'percentage': round(-1 * ((lines['practical_demo'] if lines['practical_demo'] !=0 else 1 / lines[
+                    'planned_amount'] if lines['planned_amount'] !=0 else 1) * 100)),
             })
         print('cross_overed_budget_lines22', cross_overed_budget_lines)
         return cross_overed_budget_lines
