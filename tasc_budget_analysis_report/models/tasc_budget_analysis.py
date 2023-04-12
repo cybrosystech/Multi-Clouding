@@ -67,7 +67,6 @@ class TascBudgetAnalysis(models.Model):
         template = templates['main_template']
         values = {'model': self}
         lines = self.get_budget_lines(options)
-        print('lines', lines)
         header = self.get_budget_header()
         values['lines'] = {'lines': lines, 'header': header,
                            'currency_symbol': self.env.company.currency_id.symbol}
@@ -105,11 +104,10 @@ class TascBudgetAnalysis(models.Model):
                                  'date_to': options['date']['date_to'],
                                  'company_id': self.env.company.id})
         cross_overed_budget_lines = self.env.cr.dictfetchall()
-        print('cross_overed_budget_lines', cross_overed_budget_lines)
         for lines in cross_overed_budget_lines:
             percent = 0
             obj = self.env['crossovered.budget.lines'].browse(int(lines['id']))
-            if obj.practical_amount != 0 or lines['planned_amount'] != 0:
+            if obj.practical_amount != 0 and lines['planned_amount'] != 0:
                 percent = round(-1 * ((obj.practical_amount / lines[
                     'planned_amount']) * 100))
             lines.update({
@@ -117,7 +115,6 @@ class TascBudgetAnalysis(models.Model):
                 'remaining_amount': obj.remaining_amount,
                 'percentage':  percent,
             })
-        print('cross_overed_budget_lines22', cross_overed_budget_lines)
         return cross_overed_budget_lines
 
     @api.model
@@ -131,9 +128,7 @@ class TascBudgetAnalysis(models.Model):
     def get_budget_lines(self, options):
         """Used to get the budget lines"""
         cross_overed_budget = self.get_cross_overed_budget_lines(options)
-        print('cross_overed_budget', cross_overed_budget)
         budgetory_position = self.get_budgetary_position()
-        print('budgetory_position', budgetory_position)
         for position in budgetory_position:
             filtered_data = list(
                 filter(lambda x: x['general_budget_id'] == position['id'],
@@ -206,7 +201,6 @@ class TascBudgetAnalysis(models.Model):
         date_filter_name = self.env['cash.flow.statement'].get_cash_flow_header(
             options)
         lines = self.get_budget_lines(options)
-        print('lines', lines)
         headers = self.get_budget_header()
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
