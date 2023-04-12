@@ -31,10 +31,10 @@
                                      <td colspan="2" class="bd_main_line_td"/>
                                      <td  colspan="2" class="bd_main_line_td"/>
                                      <td colspan="2" class="bd_main_line_td"/>
-                                     <td  colspan="2" class="bd_main_line_td"><span t-esc="'{:20,.2f}'.format(line_val['planned_amount'])"/></td>
-                                     <td colspan="2" class="bd_main_line_td"><span t-esc="'{:20,.2f}'.format(line_val['practical_amount'])"/></td>
-                                     <td colspan="2" class="bd_main_line_td"><span t-esc="'{:20,.2f}'.format(line_val['remaining_amount'])"/></td>
-                                     <td colspan="2" class="bd_main_line_td"><span t-esc="'{:20,.2f}'.format(line_val['percentage'])"/></td>
+                                     <td  colspan="2" class="bd_main_line_td"><span t-esc="line_val['planned_amount']"/></td>
+                                     <td colspan="2" class="bd_main_line_td"><span t-esc="line_val['practical_amount']"/></td>
+                                     <td colspan="2" class="bd_main_line_td"><span t-esc="line_val['remaining_amount']"/></td>
+                                     <td colspan="2" class="bd_main_line_td"><span t-esc="line_val['percentage']"/></td>
                                  </tr>
                                  <t t-foreach="line_val['lines']" t-as="line">
                                      <t t-set="trclass" t-value="line_val['id']"/>
@@ -45,10 +45,10 @@
                                          <td colspan="2" class="bd_sub_line_td"><span t-esc="line['project_site']"/></td>
                                          <td colspan="2" class="bd_sub_line_td"><span t-esc="line['date_from']"/></td>
                                          <td colspan="2" class="bd_sub_line_td"><span t-esc="line['date_to']"/></td>
-                                         <td colspan="2" class="bd_sub_line_td"><span t-esc="'{:20,.2f}'.format(line['planned_amount'])"/></td>
-                                         <td colspan="2" class="bd_sub_line_td"><span t-esc="'{:20,.2f}'.format(line['practical_amount'])"/></td>
-                                         <td colspan="2" class="bd_sub_line_td"><span t-esc="'{:20,.2f}'.format(line['remaining_amount'])"/></td>
-                                         <td colspan="2" class="bd_sub_line_td"><span t-esc="'{:20,.2f}'.format(line['percentage'])"/></td>
+                                         <td colspan="2" class="bd_sub_line_td"><span t-esc="line['planned_amount']"/></td>
+                                         <td colspan="2" class="bd_sub_line_td"><span t-esc="line['practical_amount']"/></td>
+                                         <td colspan="2" class="bd_sub_line_td"><span t-esc="line['remaining_amount']"/></td>
+                                         <td colspan="2" class="bd_sub_line_td"><span t-esc="line['percentage']"/></td>
                                      </tr>
                                  </t>
                              </t>

@@ -109,10 +109,10 @@ class TascBudgetAnalysis(models.Model):
         for lines in cross_overed_budget_lines:
             obj = self.env['crossovered.budget.lines'].browse(int(lines['id']))
             lines.update({
-                'practical_amount': round(obj.practical_amount),
-                'remaining_amount': round(obj.remaining_amount),
-                'percentage': round(-1 * ((obj.practical_amount if obj.practical_amount !=0 else 1 / lines[
-                    'planned_amount'] if lines['planned_amount'] !=0 else 1) * 100)),
+                'practical_amount': obj.practical_amount,
+                'remaining_amount': obj.remaining_amount,
+                'percentage': round(-1 * ((obj.practical_amount / lines[
+                    'planned_amount']) * 100)) if obj.practical_amount != 0 or lines['planned_amount'] != 0 else 0,
             })
         print('cross_overed_budget_lines22', cross_overed_budget_lines)
         return cross_overed_budget_lines
@@ -275,16 +275,20 @@ class TascBudgetAnalysis(models.Model):
                     sheet.write(row_line, col_line, sub_line['date_to'],
                                 sub_line_style)
                     col_line += 1
-                    sheet.write(row_line, col_line, '{:20,.2f}'.format(int(sub_line['planned_amount'])),
+                    sheet.write(row_line, col_line,
+                        int(sub_line['planned_amount']),
                                 sub_line_style)
                     col_line += 1
-                    sheet.write(row_line, col_line, '{:20,.2f}'.format(sub_line['practical_amount']),
+                    sheet.write(row_line, col_line,
+                        sub_line['practical_amount'],
                                 sub_line_style)
                     col_line += 1
-                    sheet.write(row_line, col_line, '{:20,.2f}'.format(sub_line['remaining_amount']),
+                    sheet.write(row_line, col_line,
+                        sub_line['remaining_amount'],
                                 sub_line_style)
                     col_line += 1
-                    sheet.write(row_line, col_line, '{:20,.2f}'.format(sub_line['percentage']),
+                    sheet.write(row_line, col_line,
+                                sub_line['percentage'],
                                 sub_line_style)
                     col_line += 1
             row_line += 1
