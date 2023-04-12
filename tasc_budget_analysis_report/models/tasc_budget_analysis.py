@@ -272,20 +272,16 @@ class TascBudgetAnalysis(models.Model):
                     sheet.write(row_line, col_line, sub_line['date_to'],
                                 sub_line_style)
                     col_line += 1
-                    sheet.write(row_line, col_line,
-                        int(sub_line['planned_amount']),
+                    sheet.write(row_line, col_line, '{:20,.2f}'.format(int(sub_line['planned_amount'])),
                                 sub_line_style)
                     col_line += 1
-                    sheet.write(row_line, col_line,
-                        sub_line['practical_amount'],
+                    sheet.write(row_line, col_line, '{:20,.2f}'.format(sub_line['practical_amount']),
                                 sub_line_style)
                     col_line += 1
-                    sheet.write(row_line, col_line,
-                        sub_line['remaining_amount'],
+                    sheet.write(row_line, col_line, '{:20,.2f}'.format(sub_line['remaining_amount']),
                                 sub_line_style)
                     col_line += 1
-                    sheet.write(row_line, col_line,
-                                sub_line['percentage'],
+                    sheet.write(row_line, col_line, '{:20,.2f}'.format(sub_line['percentage']),
                                 sub_line_style)
                     col_line += 1
             row_line += 1
