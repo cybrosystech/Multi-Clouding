@@ -109,9 +109,9 @@ class TascBudgetAnalysis(models.Model):
         for lines in cross_overed_budget_lines:
             obj = self.env['crossovered.budget.lines'].browse(int(lines['id']))
             lines.update({
-                'practical_amount': round(lines['practical_demo'] if lines['practical_demo'] else 0),
+                'practical_amount': round(obj.practical_amount),
                 'remaining_amount': round(obj.remaining_amount),
-                'percentage': round(-1 * ((lines['practical_demo'] if lines['practical_demo'] !=0 else 1 / lines[
+                'percentage': round(-1 * ((obj.practical_amount if obj.practical_amount !=0 else 1 / lines[
                     'planned_amount'] if lines['planned_amount'] !=0 else 1) * 100)),
             })
         print('cross_overed_budget_lines22', cross_overed_budget_lines)
