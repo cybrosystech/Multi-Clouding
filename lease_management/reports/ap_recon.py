@@ -47,10 +47,13 @@ class APRecon(models.TransientModel):
 
     excel_sheet = fields.Binary('Download Report')
     excel_sheet_name = fields.Char(string='Name', size=64)
+    lease_contract_id = fields.Many2many("leasee.contract", )
 
     def get_report_data(self):
         data = []
-        domain = [('move_type', '=', 'in_invoice'),('leasee_contract_id', '!=', False)]
+        domain = [('move_type', 'in', ['in_invoice', 'in_refund']),('leasee_contract_id', '!=', False)]
+        if self.lease_contract_id:
+            domain += [('leasee_contract_id', 'in', self.lease_contract_id.ids)]
 
         vendor_bills = self.env['account.move'].search(domain).filtered(lambda bill: bill.invoice_date <= self.date_to and bill.invoice_date >= self.date_from)
         lease_contracts = vendor_bills.mapped('leasee_contract_id')

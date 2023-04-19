@@ -12,6 +12,9 @@
                             <field name="date_from"/>
                             <field name="date_to"/>
                         </group>
+                        <group>
+                            <field name="lease_contract_id" widget="many2many_tags"/>
+                        </group>
                     </sheet>
                     <footer>
                         <button name="print_report_xlsx" string="Print" type="object" class="oe_highlight"/>
