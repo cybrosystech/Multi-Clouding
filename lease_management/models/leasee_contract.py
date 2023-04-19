@@ -1366,10 +1366,12 @@ class LeaseeContract(models.Model):
         amount = ratio * current_installment.subsequent_amount
         return amount
 
-    def process_termination(self):
+    def process_termination(self, disposal_date):
         # print('account_move', self.account_move_ids)
-        moves_after_terminate = self.account_move_ids.filtered(lambda s: not s.asset_id and s.date > date.today())
-        moves_today_terminate = self.account_move_ids.filtered(lambda s: not s.asset_id and s.date == date.today())
+        moves_after_terminate = self.account_move_ids.filtered(
+            lambda s: not s.asset_id and s.date > disposal_date)
+        moves_today_terminate = self.account_move_ids.filtered(
+            lambda s: not s.asset_id and s.date == date.today())
         # print('leasee_moves', abc, len(abc))
         # leasee_moves = self.env['account.move'].search(
         #     [('leasee_contract_id', '=', self.id), ('asset_id', '=', False)])

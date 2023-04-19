@@ -183,7 +183,7 @@ class AccountAssetPartialInherit(models.Model):
                         tracking_value_ids=tracking_value_ids)
                 move_ids += self.env['account.move'].search(
                     [('asset_id', '=', asset.id), ('state', '=', 'draft')]).ids
-            self.leasee_contract_ids.process_termination()
+            self.leasee_contract_ids.process_termination(disposal_date)
             return move_ids
         else:
             return super(AccountAsset, self)._get_disposal_moves(
