@@ -40,7 +40,7 @@ class assets_report(models.AbstractModel):
         return [
             [
                 {'name': ''},
-                {'name': _('Characteristics'), 'colspan': 7},
+                {'name': _('Characteristics'), 'colspan': 8},
                 {'name': _('Assets'), 'colspan': 4},
                 {'name': _('Depreciation'), 'colspan': 4},
                 {'name': _('Book Value')},
@@ -54,6 +54,7 @@ class assets_report(models.AbstractModel):
                 {'name': _('Remaining Life'), 'class': 'text-center'},
                 {'name': _('Co Location'), 'class': 'text-center'},
                 {'name': _('Project/Site'), 'class': 'text-center'},
+                {'name': _('Capex Type'), 'class': 'text-center'},
                 {'name': _('Rate'), 'class': 'number', 'title': _(
                     'In percent.<br>For a linear method, the depreciation rate is computed per year.<br>For a declining method, it is the declining factor'),
                  'data-toggle': 'tooltip'},
@@ -135,6 +136,19 @@ class assets_report(models.AbstractModel):
         if key not in cache:
             cache[key] = self.env['res.currency']._get_conversion_rate(*key)
         return cache[key]
+
+    def get_capex_type(self, capex):
+        capex_type = {
+            'replacement_capex': 'Replacement CAPEX',
+            'tenant_capex': 'Tenant upgrade CAPEX',
+            'expansion_capex': 'Expansion CAPEX',
+            '5g_capex': '5G CAPEX',
+            'other_capex': 'Other CAPEX'
+        }
+        if capex:
+            return capex_type[''+capex]
+        else:
+            return ''
 
     def _get_lines(self, options, line_id=None):
         self = self._with_context_company2code2account()
@@ -240,6 +254,8 @@ class assets_report(models.AbstractModel):
                         {'name': al['total_move_count'], 'no_format_name': ''},
                         {'name': al['analytic_colocation'], 'no_format_name': ''},
                         {'name': al['analytic_project'], 'no_format_name': ''},
+                        {'name': self.get_capex_type(al['capex_type']),
+                         'no_format_name': ''},
                         {'name': asset_depreciation_rate, 'no_format_name': ''},
                         {'name': self.format_value(asset_opening), 'no_format_name': asset_opening},  # Assets
                         {'name': self.format_value(asset_add), 'no_format_name': asset_add},
@@ -321,6 +337,7 @@ class assets_report(models.AbstractModel):
                                    asset.method_period as asset_method_period,
                                    asset.method_progress_factor as asset_method_progress_factor,
                                    asset.state as asset_state,
+                                   asset.capex_type as capex_type,
                                    account.code as account_code,
                                    account.name as account_name,
                                    account.id as account_id,
@@ -445,6 +462,7 @@ class assets_report(models.AbstractModel):
                                    asset.method_period as asset_method_period,
                                    asset.method_progress_factor as asset_method_progress_factor,
                                    asset.state as asset_state,
+                                   asset.capex_type as capex_type,
                                    account.code as account_code,
                                    account.name as account_name,
                                    account.id as account_id,
