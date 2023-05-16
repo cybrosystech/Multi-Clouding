@@ -8,6 +8,13 @@ from odoo.addons.lease_management.models.account_asset import AccountAsset
 class AccountAssetPartialInherit(models.Model):
     _inherit = 'account.asset'
 
+    capex_type = fields.Selection(selection=[
+        ('replacement_capex', 'Replacement CAPEX'),
+        ('tenant_capex', 'Tenant upgrade CAPEX'),
+        ('expansion_capex', 'Expansion CAPEX'),
+        ('5g_capex', '5G CAPEX'),
+        ('other_capex', 'Other CAPEX'), ])
+
     def set_to_close(self, invoice_line_id, partial, partial_amount, date=None):
         self.ensure_one()
         disposal_date = date or fields.Date.today()
