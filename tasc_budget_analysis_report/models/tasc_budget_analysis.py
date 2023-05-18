@@ -8,6 +8,8 @@ import xlsxwriter
 class TascBudgetAnalysis(models.Model):
     _name = 'tasc.budget.analysis'
 
+    budget_line_json = fields.Char()
+
     def _get_templates(self):
         return {
             'main_template': 'tasc_budget_analysis_report.tasc_budget_analysis_html_content_view',
@@ -68,6 +70,13 @@ class TascBudgetAnalysis(models.Model):
         values = {'model': self}
         lines = self.get_budget_lines(options)
         header = self.get_budget_header()
+        budget_analysis_obj = self.sudo().search([])
+        if not budget_analysis_obj:
+            self.env['tasc.budget.analysis'].sudo().create({
+                'budget_line_json': json.dumps(lines, default=str)
+            })
+        else:
+            budget_analysis_obj.budget_line_json = json.dumps(lines, default=str)
         values['lines'] = {'lines': lines, 'header': header,
                            'currency_symbol': self.env.company.currency_id.symbol}
         html = self.env.ref(template)._render(values)
@@ -200,7 +209,8 @@ class TascBudgetAnalysis(models.Model):
     def get_xlsx(self, options, response=None):
         date_filter_name = self.env['cash.flow.statement'].get_cash_flow_header(
             options)
-        lines = self.get_budget_lines(options)
+        budget_analysis_obj = self.sudo().search([])
+        lines = json.loads(budget_analysis_obj.budget_line_json)
         headers = self.get_budget_header()
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
