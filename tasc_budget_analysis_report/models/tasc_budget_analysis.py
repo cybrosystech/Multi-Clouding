@@ -1,4 +1,4 @@
-from odoo import models, api, _
+from odoo import models, api, _, fields
 import json
 from odoo.tools import date_utils
 import io
