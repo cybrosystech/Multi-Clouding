@@ -8,6 +8,8 @@ import xlsxwriter
 class TascBudgetAnalysis(models.Model):
     _name = 'tasc.budget.analysis'
 
+    budget_line_json = fields.Char()
+
     def _get_templates(self):
         return {
             'main_template': 'tasc_budget_analysis_report.tasc_budget_analysis_html_content_view',
@@ -68,6 +70,13 @@ class TascBudgetAnalysis(models.Model):
         values = {'model': self}
         lines = self.get_budget_lines(options)
         header = self.get_budget_header()
+        budget_analysis_obj = self.sudo().search([])
+        if not budget_analysis_obj:
+            self.env['tasc.budget.analysis'].sudo().create({
+                'budget_line_json': json.dumps(lines, default=str)
+            })
+        else:
+            budget_analysis_obj.budget_line_json = json.dumps(lines, default=str)
         values['lines'] = {'lines': lines, 'header': header,
                            'currency_symbol': self.env.company.currency_id.symbol}
         html = self.env.ref(template)._render(values)
@@ -200,7 +209,8 @@ class TascBudgetAnalysis(models.Model):
     def get_xlsx(self, options, response=None):
         date_filter_name = self.env['cash.flow.statement'].get_cash_flow_header(
             options)
-        lines = self.get_budget_lines(options)
+        budget_analysis_obj = self.sudo().search([])
+        lines = json.loads(budget_analysis_obj.budget_line_json)
         headers = self.get_budget_header()
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
@@ -213,12 +223,12 @@ class TascBudgetAnalysis(models.Model):
         sub_head = workbook.add_format(
             {'font_size': 12, 'align': 'center', 'border': 1,
              'bg_color': '#5db5fc'})
-        line_style = workbook.add_format(
-            {'font_size': 12, 'bold': True})
         sub_line_style = workbook.add_format(
             {'font_size': 12})
+        date_format = workbook.add_format(
+            {'num_format': 'yyyy/mm/dd', 'align': 'center'})
         sheet.write('G3', date_filter_name['name'], main_head)
-        sheet.write('I3', options['budget_filter'], main_head)
+        sheet.write('I3', options['budget_name'], main_head)
         row_head = 4
         col_head = 1
         for header in headers:
@@ -226,34 +236,9 @@ class TascBudgetAnalysis(models.Model):
             col_head += 1
         row_line = 5
         for bd_line in lines:
-            col_line = 1
-            sheet.write(row_line, col_line, bd_line['name'], line_style)
-            col_line += 1
-            sheet.write(row_line, col_line, '', line_style)
-            col_line += 1
-            sheet.write(row_line, col_line, '', line_style)
-            col_line += 1
-            sheet.write(row_line, col_line, '', line_style)
-            col_line += 1
-            sheet.write(row_line, col_line, '', line_style)
-            col_line += 1
-            sheet.write(row_line, col_line, '', line_style)
-            col_line += 1
-            sheet.write(row_line, col_line, bd_line['planned_amount'],
-                        line_style)
-            col_line += 1
-            sheet.write(row_line, col_line, bd_line['practical_amount'],
-                        line_style)
-            col_line += 1
-            sheet.write(row_line, col_line, bd_line['remaining_amount'],
-                        line_style)
-            col_line += 1
-            sheet.write(row_line, col_line, bd_line['percentage'], line_style)
-            col_line += 1
             if bd_line['lines']:
                 for sub_line in bd_line['lines']:
                     col_line = 1
-                    row_line += 1
                     sheet.write(row_line, col_line, bd_line['name'],
                                 sub_line_style)
                     col_line += 1
@@ -267,10 +252,10 @@ class TascBudgetAnalysis(models.Model):
                                 sub_line_style)
                     col_line += 1
                     sheet.write(row_line, col_line, sub_line['date_from'],
-                                sub_line_style)
+                                date_format)
                     col_line += 1
                     sheet.write(row_line, col_line, sub_line['date_to'],
-                                sub_line_style)
+                                date_format)
                     col_line += 1
                     sheet.write(row_line, col_line, '{:20,.2f}'.format(int(sub_line['planned_amount'])),
                                 sub_line_style)
@@ -284,7 +269,7 @@ class TascBudgetAnalysis(models.Model):
                     sheet.write(row_line, col_line, '{:20,.2f}'.format(sub_line['percentage']),
                                 sub_line_style)
                     col_line += 1
-            row_line += 1
+                    row_line += 1
         workbook.close()
         output.seek(0)
         response.stream.write(output.read())

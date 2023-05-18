@@ -12,9 +12,11 @@
 
     'data':
         [
+            'security/ir.model.access.csv',
             'views/assets.xml',
             'views/tasc_budget_analysis_search_view.xml',
             'views/tasc_budget_analysis_view.xml',
+            'views/account_move_budget_conf_button_view.xml',
         ],
     'qweb': [
     ],
