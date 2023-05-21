@@ -266,7 +266,7 @@ class TascBudgetAnalysis(models.Model):
                     sheet.write(row_line, col_line, '{:20,.2f}'.format(sub_line['remaining_amount']),
                                 sub_line_style)
                     col_line += 1
-                    sheet.write(row_line, col_line, '{:20,.2f}'.format(sub_line['percentage']),
+                    sheet.write(row_line, col_line, str(round(sub_line['percentage']))+'%',
                                 sub_line_style)
                     col_line += 1
                     row_line += 1
