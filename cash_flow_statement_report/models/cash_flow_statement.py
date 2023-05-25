@@ -317,7 +317,7 @@ class CashFlowStatement(models.Model):
             states_args=states_args),
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
-                             'account_code': '213403',
+                             'account_code': '581103',
                              'company_ids': self.env.company.id})
         sub_movement_trade = self.env.cr.dictfetchall()
         sub_movement_trade_credit = sub_movement_trade[0]['credit'] if \
