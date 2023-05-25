@@ -1062,7 +1062,8 @@ class CashFlowStatement(models.Model):
             return {
                 'name': year
             }
-        elif options['date']['period_type'] == 'custom' or options['date']['custom'] == True:
+        elif options['date']['period_type'] == 'custom' or 'custom' in list(
+                options['date'].keys()):
             options['date']['period_type'] = options['date'][
                                                  'date_from'] + ' to ' + \
                                              options['date'][
