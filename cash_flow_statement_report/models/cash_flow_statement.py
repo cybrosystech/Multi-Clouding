@@ -520,13 +520,15 @@ class CashFlowStatement(models.Model):
             states_args=states_args),
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
-                             'code_start': '212101', 'code_end': '212999',
+                             'code_start': '212101', 'code_end': '212169',
                              'company_ids': self.env.company.id})
         movement_related_parties = self.env.cr.dictfetchall()
         movement_related_parties_credit = movement_related_parties[0][
             'credit'] if movement_related_parties[0]['credit'] else 0
         movement_related_parties_debit = movement_related_parties[0]['debit'] if \
             movement_related_parties[0]['debit'] else 0
+        movement_related_parties_sum = movement_related_parties_debit - movement_related_parties_credit
+        movement_related_parties_account = self._get_movement_related_parties_account(query, options, states_args)
         movement_related_parties_dict = {
             'id': 'movement_related_parties',
             'name': 'Movement in due to related parties',
@@ -534,8 +536,7 @@ class CashFlowStatement(models.Model):
             'class': 'cash_flow_line_val_tr',
             'columns': [
                 {
-                    'name': round(((
-                                           movement_related_parties_debit - movement_related_parties_credit) * -1),
+                    'name': round(((movement_related_parties_sum + movement_related_parties_account) * -1),
                                   2),
                     'class': 'number'}]
         }
@@ -566,6 +567,25 @@ class CashFlowStatement(models.Model):
         movement_list.append(movement_related_parties_dict)
 
         return movement_list
+
+    def _get_movement_related_parties_account(self, query, options, states_args):
+        self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
+                                                                and journal_item.company_id = %(company_ids)s
+                                                                and journal_item.date >= %(from_date)s 
+                                                                and journal_item.date <= %(to_date)s
+                                                                and {states_args}
+                                                                '''.format(
+            states_args=states_args),
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '212171', 'code_end': '212999',
+                             'company_ids': self.env.company.id})
+        movement_related_parties_account = self.env.cr.dictfetchall()
+        movement_related_parties_account_credit = movement_related_parties_account[0]['credit'] if \
+            movement_related_parties_account[0]['credit'] else 0
+        movement_related_parties_account_debit = movement_related_parties_account[0]['debit'] if \
+            movement_related_parties_account[0]['debit'] else 0
+        return movement_related_parties_account_debit - movement_related_parties_account_credit
 
     def get_purchase_asset_account_sum(self, query, options, states_args):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
