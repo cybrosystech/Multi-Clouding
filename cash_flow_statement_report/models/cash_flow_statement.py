@@ -155,7 +155,7 @@ class CashFlowStatement(models.Model):
         return amortisation_right_dict
 
     def get_movement_trade_account_sum(self, query, options, states_args):
-        self.env.cr.execute(query + '''where account.code = %(account_code)s
+        self.env.cr.execute(query + '''where account.code in %(account_code)s
                                                     and journal_item.company_id = %(company_ids)s
                                                     and journal_item.date >= %(from_date)s 
                                                     and journal_item.date <= %(to_date)s
@@ -164,7 +164,7 @@ class CashFlowStatement(models.Model):
             states_args=states_args),
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
-                             'account_code': '111110',
+                             'account_code': ('111110', '116105'),
                              'company_ids': self.env.company.id})
         movement_trade_account = self.env.cr.dictfetchall()
         movement_trade_account_credit = movement_trade_account[0]['credit'] if \
@@ -337,14 +337,12 @@ class CashFlowStatement(models.Model):
             states_args=states_args),
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
-                             'account_code': '581103',
+                             'account_code': '213403',
                              'company_ids': self.env.company.id})
         sub_movement_trade1 = self.env.cr.dictfetchall()
         sub_movement_trade1_credit = sub_movement_trade1[0]['credit'] if \
             sub_movement_trade1[0]['credit'] else 0
-        sub_movement_trade1_debit = sub_movement_trade1[0]['debit'] if \
-            sub_movement_trade1[0]['debit'] else 0
-        return sub_movement_trade1_debit - sub_movement_trade1_credit
+        return sub_movement_trade1_credit
 
     def get_movement_trade_payable_account3_sum(self, query, options,
                                                 states_args):
@@ -670,6 +668,26 @@ class CashFlowStatement(models.Model):
 
         return investing_activities_list
 
+    def zain_loan_account(self, query, states_args, options):
+        self.env.cr.execute(query + '''where account.code = %(account_code)s
+                                                and journal_item.company_id = %(company_ids)s
+                                                and journal_item.date >= %(from_date)s 
+                                                and journal_item.date <= %(to_date)s
+                                                and {states_args}
+                                                '''.format(
+            states_args=states_args),
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'account_code': '212170',
+                             'company_ids': self.env.company.id})
+        zain_loan_account_fetch = self.env.cr.dictfetchall()
+        zain_loan_account_sum = zain_loan_account_fetch[0]['debit'] if \
+        zain_loan_account_fetch[0][
+            'debit'] else 0 - zain_loan_account_fetch[0]['credit'] if \
+        zain_loan_account_fetch[0][
+            'credit'] else 0
+        return zain_loan_account_sum
+
     def get_cash_flow_financial(self, options, states_args):
         cash_flow_financial_list = []
 
@@ -776,6 +794,7 @@ class CashFlowStatement(models.Model):
         zain_loan = self.env.cr.dictfetchall()
         zain_loan_credit = zain_loan[0]['credit'] if zain_loan[0][
             'credit'] else 0
+        zain_loan_account = self.zain_loan_account(query, states_args, options)
         zain_loan_dict = {
             'id': 'zain_loan',
             'name': 'Loan from Zain',
@@ -783,7 +802,7 @@ class CashFlowStatement(models.Model):
             'class': 'cash_flow_line_val_tr',
             'columns': [
                 {
-                    'name': round(((zain_loan_credit) * -1), 2),
+                    'name': round(((zain_loan_credit + zain_loan_account) * -1), 2),
                     'class': 'number'}]
         }
         cash_flow_financial_list.append(zain_loan_dict)
