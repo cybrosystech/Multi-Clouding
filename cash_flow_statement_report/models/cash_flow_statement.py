@@ -272,7 +272,7 @@ class CashFlowStatement(models.Model):
                                         '''.format(states_args=states_args),
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
-                             'code_start': '213501', 'code_end': '213999',
+                             'code_start': '213501', 'code_end': '213599',
                              'company_ids': self.env.company.id})
         movement_trade_payable_account1 = self.env.cr.dictfetchall()
         movement_trade_payable_account1_credit = \
@@ -344,13 +344,6 @@ class CashFlowStatement(models.Model):
             sub_movement_trade1[0]['credit'] else 0
         return sub_movement_trade1_credit
 
-    def get_movement_trade_payable_account3_sum(self, query, options,
-                                                states_args):
-        sum1 = self.sub_movement_trade_payable_account3_sum(query, options,
-                                                            states_args)
-        sum2 = self.sub_movement_trade_payable_account3_sum1(query, options,
-                                                             states_args)
-        return sum1 + sum2
 
     def get_movement_trade_payable_dict(self, query, options, states_args):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
@@ -361,7 +354,7 @@ class CashFlowStatement(models.Model):
                                             '''.format(states_args=states_args),
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
-                             'code_start': '211101', 'code_end': '211999',
+                             'code_start': '211101', 'code_end': '211402',
                              'company_ids': self.env.company.id})
         movement_trade_payable = self.env.cr.dictfetchall()
         movement_trade_payable_credit = movement_trade_payable[0]['credit'] if \
@@ -378,8 +371,10 @@ class CashFlowStatement(models.Model):
 
         movement_trade_payable_account2_sum = self.get_movement_trade_payable_account2_sum(
             query, options, states_args)
-        movement_trade_payable_account3_sum = self.get_movement_trade_payable_account3_sum(
-            query, options, states_args)
+        movement_trade_payable_account3_sum = self.sub_movement_trade_payable_account3_sum(query, options,
+                                                            states_args)
+        movement_trade_payable_account4_sum = self.sub_movement_trade_payable_account3_sum1(query, options,
+                                                             states_args)
 
         movement_trade_payable_dict = {
             'id': 'movement_trade_payable',
@@ -389,7 +384,7 @@ class CashFlowStatement(models.Model):
             'columns': [
                 {
                     'name': round((((
-                                            movement_trade_payable_sum + movement_trade_payable_account_sum + movement_trade_payable_account1_sum + movement_trade_payable_account2_sum) * -1) - movement_trade_payable_account3_sum),
+                                            movement_trade_payable_sum + movement_trade_payable_account_sum + movement_trade_payable_account1_sum + movement_trade_payable_account2_sum) * -1) - movement_trade_payable_account3_sum) + movement_trade_payable_account4_sum,
                                   2),
                     'class': 'number'}]
         }
