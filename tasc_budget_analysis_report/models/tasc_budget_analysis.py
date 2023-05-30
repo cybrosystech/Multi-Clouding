@@ -257,7 +257,7 @@ class TascBudgetAnalysis(models.Model):
                     sheet.write(row_line, col_line, sub_line['date_to'],
                                 date_format)
                     col_line += 1
-                    sheet.write(row_line, col_line, '{:20,.2f}'.format(int(sub_line['planned_amount'])),
+                    sheet.write(row_line, col_line, '{:20,.2f}'.format(round(sub_line['planned_amount'], 2)),
                                 sub_line_style)
                     col_line += 1
                     sheet.write(row_line, col_line, '{:20,.2f}'.format(sub_line['practical_amount']),

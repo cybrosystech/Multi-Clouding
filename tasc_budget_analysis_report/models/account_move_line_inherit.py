@@ -88,6 +88,7 @@ class AccountMoveRequest(AccountMoveInherit):
 
     def request_approval_button(self):
         res = super(AccountMoveRequest, self).request_approval_button()
+        self.configure_budget_line()
         lines = self.line_ids.filtered(lambda x: x.remaining_amount < x.debit or x.remaining_amount < x.credit)
         self.budget_collect_copy_ids = [(6, 0, [])]
         for line in lines:
