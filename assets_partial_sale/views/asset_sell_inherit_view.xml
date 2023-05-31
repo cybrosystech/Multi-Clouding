@@ -9,7 +9,7 @@
                 <field name="invoice_line_id" options="{'no_create': True}" attrs="{'invisible': [('select_invoice_line_id', '=', False)]}"/>
             </field>
             <field name="action" position="after">
-                <field name="partial_bool" />
+                <field name="partial_bool" attrs="{'invisible': [('from_leasee_contract', '=', True)]}"/>
                 <field name="partial_amount" attrs="{'invisible': [('partial_bool', '=', False)]}"/>
             </field>
         </field>
