@@ -7,7 +7,9 @@ from odoo import api
 @api.depends()
 def check_out_budget(self):
     self.out_budget = False
-    if self.line_ids.filtered(lambda x: x.remaining_amount < x.debit or x.remaining_amount < x.credit):
+    lines = self.line_ids.filtered(lambda x: x.budget_id is False)
+    if lines.filtered(
+            lambda x: x.remaining_amount < x.debit or x.remaining_amount < x.credit):
         self.out_budget = True
 
 
