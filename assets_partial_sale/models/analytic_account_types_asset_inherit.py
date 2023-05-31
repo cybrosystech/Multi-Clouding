@@ -13,7 +13,7 @@ def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial,
                         partial_amount):
     def get_line(asset, amount, account):
         _logger.info("llllllll")
-
+        amount = round(amount, 2)
         return (0, 0, {
             'name': asset.name,
             'account_id': account.id,
