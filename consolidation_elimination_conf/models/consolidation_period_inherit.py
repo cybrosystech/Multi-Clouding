@@ -20,6 +20,7 @@ class ConsolidationPeriodElimination(models.Model):
 
     def get_consolidation_journal_lines(self, eliminated_journal):
         test = []
+        share_invest = []
         for company_period in self.company_period_ids:
             companies = self.company_period_ids.mapped('company_id').ids
             companies.remove(company_period.company_id.id)
@@ -35,7 +36,7 @@ class ConsolidationPeriodElimination(models.Model):
                             abc = self.env['account.move'].search(
                                 [('line_ids.account_id',
                                   'in', account.mapped(
-                                    'account_ids').ids), ('company_id', '=',
+                                    'account_ids').ids), ('state', '=', 'posted'), ('company_id', '=',
                                                           company_period.company_id.id),
                                  domain]).mapped(
                                 'line_ids').filtered(
@@ -45,7 +46,7 @@ class ConsolidationPeriodElimination(models.Model):
                             abc = self.env['account.move'].search(
                                 [('line_ids.account_id',
                                   'in', account.mapped(
-                                    'account_ids').ids), ('company_id', '=',
+                                    'account_ids').ids), ('state', '=', 'posted'), ('company_id', '=',
                                                           company_period.company_id.id),
                                  ('date', '>=',
                                   company_period.date_company_begin),
@@ -90,31 +91,31 @@ class ConsolidationPeriodElimination(models.Model):
                         abc = self.env['account.move.line'].search(
                             [('account_id',
                               'in', account.mapped(
-                                'account_ids').ids), ('company_id', '=',
+                                'account_ids').ids), ('parent_state', '=', 'posted'), ('company_id', '=',
                                                       elimination_conf1.consolidation_period_line.company_id.id),
                              ('date', '<=',
                               elimination_conf1.consolidation_period_line.date_company_end)])
                         for move_line in abc:
                             total_amount += elimination_conf1.consolidation_period_line._apply_historical_rates(
                                 move_line)
-                        if test:
+                        if share_invest:
                             filtered_data = list(
                                 filter(
                                     lambda x: x['name'] == account.name,
-                                    test))
+                                    share_invest))
                             if filtered_data:
                                 filtered_data[0].update({
                                     'amount': filtered_data[0][
                                                   'amount'] + total_amount
                                 })
                             else:
-                                test.append({
+                                share_invest.append({
                                     'name': account.name,
                                     'account_id': account.id,
                                     'amount': total_amount
                                 })
                         else:
-                            test.append({
+                            share_invest.append({
                                 'name': account.name,
                                 'account_id': account.id,
                                 'amount': total_amount
@@ -124,7 +125,7 @@ class ConsolidationPeriodElimination(models.Model):
                         move_lines = self.env['account.move.line'].search(
                             [('account_id',
                               'in', account.mapped(
-                                'account_ids').ids), ('company_id', '=',
+                                'account_ids').ids), ('parent_state', '=', 'posted'), ('company_id', '=',
                                                       elimination_conf1.consolidation_period_line.company_id.id),
                              ('date', '<=',
                               elimination_conf1.consolidation_period_line.date_company_end)])
@@ -132,28 +133,29 @@ class ConsolidationPeriodElimination(models.Model):
                             -sum(move_lines.mapped('credit')))
                         amount = elimination_conf1.consolidation_period_line._apply_rates(
                             currency_amount, account)
-                        if test:
+                        if share_invest:
                             filtered_data = list(
                                 filter(
                                     lambda x: x['name'] == account.name,
-                                    test))
+                                    share_invest))
                             if filtered_data:
                                 filtered_data[0].update({
                                     'amount': filtered_data[0][
                                                   'amount'] + amount
                                 })
                             else:
-                                test.append({
+                                share_invest.append({
                                     'name': account.name,
                                     'account_id': account.id,
                                     'amount': amount
                                 })
                         else:
-                            test.append({
+                            share_invest.append({
                                 'name': account.name,
                                 'account_id': account.id,
                                 'amount': amount
                             })
+        test += share_invest
         for lines in test:
             self.env['consolidation.journal.line'].create({
                 'account_id': lines['account_id'],
