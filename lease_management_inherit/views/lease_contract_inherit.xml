@@ -9,4 +9,16 @@
             </field>
         </field>
     </record>
+
+    <record id="lease_management_search_view" model="ir.ui.view">
+        <field name="name">leasee.contract.form.search</field>
+        <field name="model">leasee.contract</field>
+        <field name="arch" type="xml">
+            <search string="Search">
+                <field name="name" filter_domain="['|', ('name', 'ilike', self)]"/>
+                <field name="external_reference_number" string="Eternal reference"/>
+                <field name="project_site_id"/>
+            </search>
+        </field>
+    </record>
 </odoo>
