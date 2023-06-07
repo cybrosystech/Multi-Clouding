@@ -2,7 +2,6 @@ from datetime import timedelta
 
 from odoo import models, fields, _, api
 from odoo.exceptions import ValidationError
-from odoo.tools.profiler import profile
 
 
 class LeaseeContractInheritAdvance(models.Model):
@@ -16,7 +15,6 @@ class LeaseeContractInheritAdvance(models.Model):
 
     def action_security_advance(self):
         for rec in self:
-            print('rec', rec)
             if not rec.security_prepaid_account or rec.security_amount <= 0:
                 raise ValidationError(
                     _('Please choose the security prepaid account and security amount'))
@@ -110,22 +108,20 @@ class LeaseeContractInheritAdvance(models.Model):
 
     @api.model
     def security_advance_activation(self, limits):
-        print(limits, self.env.company)
         lease_contract = self.env['leasee.contract'].search(
             [('state', '=', 'active'), ('company_id', '=', self.env.company.id),
-             ('security_advance_id', '=', False)],
+             ('security_advance_id', '=', False),
+             ('security_prepaid_account', '!=', False),
+             ('security_amount', '>', '0')],
             limit=limits)
-        print('lease_contract', lease_contract)
         lease_contract.action_security_advance()
-        print('lease_contract', lease_contract)
         lease_contracts = self.env['leasee.contract'].search(
             [('state', '=', 'active'), ('company_id', '=', self.env.company.id),
              ('security_advance_id', '=', False),
-             ('security_amount', '>', '0')])
-        print('lease_contracts', lease_contracts)
+             ('security_amount', '>', '0'),
+             ('security_prepaid_account', '!=', False)])
         schedule = self.env.ref(
             'lease_security_advance.action_advance_security_cron_update')
-        print('schedule', schedule)
         if len(lease_contracts) > 0 and schedule.active:
             date = fields.Datetime.now()
             schedule.update({
@@ -137,7 +133,6 @@ class LeaseeContractInheritAdvance(models.Model):
         date = fields.Datetime.now()
         schedule = self.env.ref(
             'lease_security_advance.action_advance_security_activation')
-        print('schedule1', schedule)
         schedule.update({
             'nextcall': date + timedelta(seconds=30)
         })
