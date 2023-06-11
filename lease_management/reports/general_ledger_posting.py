@@ -90,6 +90,7 @@ class GeneralLedgerPostingWizard(models.TransientModel):
                 'download_datetime': fieldsDatetime.now().strftime(DTF),
                 'debit': line.debit,
                 'credit': line.credit,
+                'Currency': line.currency_id.name,
             })
         return data
 
@@ -233,6 +234,10 @@ class GeneralLedgerPostingWizard(models.TransientModel):
         worksheet.write(row, col, _('Debit'), header_format)
         col += 1
         worksheet.write(row, col, _('Credit'), header_format)
+        col += 1
+        worksheet.write(row, col, _('Functional Amount'), header_format)
+        col += 1
+        worksheet.write(row, col, _('Lease Currency'), header_format)
 
         for line in report_data:
             col = 0
@@ -278,8 +283,10 @@ class GeneralLedgerPostingWizard(models.TransientModel):
             worksheet.write(row, col, line['debit'], STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['credit'], STYLE_LINE_Data)
-
-
-
-
+            col += 1
+            worksheet.write(row, col,
+                            line['debit'] if line['debit'] != 0 else -line[
+                                'credit'], STYLE_LINE_Data)
+            col += 1
+            worksheet.write(row, col, line['Currency'], STYLE_LINE_Data)
 

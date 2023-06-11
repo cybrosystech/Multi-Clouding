@@ -192,25 +192,32 @@ class Reassessment(models.TransientModel):
     def create_reassessment_move(self, contract, amount):
         rou_account = contract.asset_model_id.account_asset_id
         if amount:
+            base_amount = amount
+            if contract.leasee_currency_id != contract.company_id.currency_id:
+                amount = contract.leasee_currency_id._convert(amount, contract.company_id.currency_id, contract.company_id, self.reassessment_start_Date)
             lines = [(0, 0, {
                 'name': 'Reassessment contract number %s' % contract.name,
                 'account_id': rou_account.id,
                 'credit': -amount if amount < 0 else 0,
                 'debit': amount if amount > 0 else 0,
+                'amount_currency': base_amount if base_amount > 0 else -base_amount,
                 'analytic_account_id': contract.analytic_account_id.id,
                 'project_site_id': contract.project_site_id.id,
                 'type_id': contract.type_id.id,
                 'location_id': contract.location_id.id,
+                'currency_id': contract.leasee_currency_id.id
             }), (0, 0, {
                 'name': 'Reassessment contract number %s' % contract.name,
                 # 'account_id': contract.lease_liability_account_id.id,
                 'account_id': contract.long_lease_liability_account_id.id,
                 'debit': -amount if amount < 0 else 0,
                 'credit': amount if amount > 0 else 0,
+                'amount_currency': base_amount if base_amount > 0 else -base_amount,
                 'analytic_account_id': contract.analytic_account_id.id,
                 'project_site_id': contract.project_site_id.id,
                 'type_id': contract.type_id.id,
                 'location_id': contract.location_id.id,
+                'currency_id': contract.leasee_currency_id.id
             })]
             move = self.env['account.move'].create({
                 'partner_id': contract.vendor_id.id,
@@ -223,6 +230,9 @@ class Reassessment(models.TransientModel):
                 'line_ids': lines,
                 'auto_post': True,
             })
+            if contract.leasee_currency_id != contract.company_id.currency_id:
+                test_amount_c = move.line_ids.filtered(lambda x: x.credit > 0)
+                test_amount_c.amount_currency = test_amount_c.amount_currency * -1
 
     def update_asset_value(self, new_value):
         asset = self.leasee_contract_id.asset_id
@@ -314,19 +324,37 @@ class Reassessment(models.TransientModel):
                     self.reassessment_start_Date - prev_start).days / days + first_installment.subsequent_amount * (
                                       (
                                               end_month - self.reassessment_start_Date).days + 1) / days_after_reassessment
+            print('beginning_interest_move', beginning_interest_move)
             if subsequent_amount_data != 0:
+                subsequent_amount_base = subsequent_amount_data
+                if beginning_interest_move.currency_id != self.env.company.currency_id:
+                    subsequent_amount_data = beginning_interest_move.currency_id._convert(subsequent_amount_data,
+                                                          self.env.company.currency_id,
+                                                          self.env.company,
+                                                          beginning_interest_move.date)
                 beginning_interest_move.write(
                     {'line_ids': [
-                        (1, debit_line.id, {'debit': subsequent_amount_data}),
+                        (1, debit_line.id, {'debit': subsequent_amount_data,
+                                            'amount_currency': subsequent_amount_base}),
                         (
-                            1, credit_line.id, {'credit': subsequent_amount_data})]})
+                            1, credit_line.id, {'credit': subsequent_amount_data,
+                                                'amount_currency': -subsequent_amount_base})]})
             else:
+                beginning_interest_base = interest_amount
+                if beginning_interest_move.currency_id != self.env.company.currency_id:
+                    interest_amount = beginning_interest_move.currency_id._convert(
+                        interest_amount,
+                        self.env.company.currency_id,
+                        self.env.company,
+                        beginning_interest_move.date)
                 beginning_interest_move.write(
                     {'line_ids': [
-                        (1, debit_line.id, {'debit': interest_amount}),
+                        (1, debit_line.id, {'debit': interest_amount,
+                                            'amount_currency': beginning_interest_base}),
                         (
-                            1, credit_line.id, {'credit': interest_amount})]})
-
+                            1, credit_line.id, {'credit': interest_amount,
+                                                'amount_currency': -beginning_interest_base})]})
+        print('after_reassessment_moves', after_reassessment_moves)
         for move in after_reassessment_moves:
             debit_line = move.line_ids.filtered(lambda l: l.debit > 0)
             credit_line = move.line_ids.filtered(lambda l: l.credit > 0)
@@ -338,8 +366,17 @@ class Reassessment(models.TransientModel):
             else:
                 interest_amount = first_installment.subsequent_amount * (
                             (end_month - start_month).days + 1) / days_after_reassessment
-            move.write({'line_ids': [(1, debit_line.id, {'debit': interest_amount}),
-                                     (1, credit_line.id, {'credit': interest_amount})]})
+            after_reassessment_base = interest_amount
+            if move.currency_id != self.env.company.currency_id:
+                interest_amount = move.currency_id._convert(
+                    interest_amount,
+                    self.env.company.currency_id,
+                    self.env.company,
+                    move.date)
+            move.write({'line_ids': [(1, debit_line.id, {'debit': interest_amount,
+                                                         'amount_currency': after_reassessment_base}),
+                                     (1, credit_line.id, {'credit': interest_amount,
+                                                          'amount_currency': -after_reassessment_base})]})
         lease_liability_accounts = [contract.long_lease_liability_account_id.id, contract.lease_liability_account_id.id]
         amount = self.get_installment_entry_amount(first_installment)
         if amount:
@@ -347,8 +384,19 @@ class Reassessment(models.TransientModel):
                 lambda m: set(m.line_ids.mapped('account_id').ids) == set(lease_liability_accounts))
             debit_line = installment_entry.line_ids.filtered(lambda l: l.debit > 0)
             credit_line = installment_entry.line_ids.filtered(lambda l: l.credit > 0)
+            installment_entry_base = amount
+            print('installment_entry', installment_entry)
+            if installment_entry.currency_id != self.env.company.currency_id:
+                amount = installment_entry.currency_id._convert(
+                    amount,
+                    self.env.company.currency_id,
+                    self.env.company,
+                    installment_entry.date)
             installment_entry.write(
-                {'line_ids': [(1, debit_line.id, {'debit': amount}), (1, credit_line.id, {'credit': amount})]})
+                {'line_ids': [(1, debit_line.id, {'debit': amount,
+                                                  'amount_currency': installment_entry_base}),
+                              (1, credit_line.id, {'credit': amount,
+                                                   'amount_currency': -installment_entry_base})]})
 
     def get_installment_entry_amount(self, installment):
         contract = self.leasee_contract_id
@@ -388,25 +436,35 @@ class Reassessment(models.TransientModel):
     def create_installment_entry(self, contract, stl_amount):
         amount = stl_amount
         if round(abs(amount), 3) > 0:
+            amount_base = amount
+            if contract.leasee_currency_id != contract.company_id.currency_id:
+                amount = contract.leasee_currency_id._convert(amount,
+                                                          contract.company_id.currency_id,
+                                                          contract.company_id,
+                                                          self.reassessment_start_Date)
             lines = [(0, 0, {
                 'name': 'Reassessment Installment Entry',
                 'account_id': contract.long_lease_liability_account_id.id or contract.leasee_template_id.long_lease_liability_account_id.id,
                 'debit': amount if amount > 0 else 0,
                 'credit': -amount if amount < 0 else 0,
+                'amount_currency': amount_base if amount_base > 0 else -amount_base,
                 'analytic_account_id': contract.analytic_account_id.id,
                 'project_site_id': contract.project_site_id.id,
                 'type_id': contract.type_id.id,
                 'location_id': contract.location_id.id,
+                'currency_id': contract.leasee_currency_id.id
             }),
                      (0, 0, {
                          'name': 'Reassessment Installment Entry',
                          'account_id': contract.lease_liability_account_id.id,
                          'credit': amount if amount > 0 else 0,
                          'debit': -amount if amount < 0 else 0,
+                         'amount_currency': amount_base if amount_base > 0 else -amount_base,
                          'analytic_account_id': contract.analytic_account_id.id,
                          'project_site_id': contract.project_site_id.id,
                          'type_id': contract.type_id.id,
                          'location_id': contract.location_id.id,
+                         'currency_id': contract.leasee_currency_id.id
                      })]
             move = self.env['account.move'].create({
                 'move_type': 'entry',
@@ -418,6 +476,9 @@ class Reassessment(models.TransientModel):
                 'line_ids': lines,
                 'auto_post': True,
             })
+            if contract.leasee_currency_id != contract.company_id.currency_id:
+                test_amount_c = move.line_ids.filtered(lambda x: x.credit > 0)
+                test_amount_c.amount_currency = test_amount_c.amount_currency * -1
 
     def get_before_remaining_lease(self, reassessment_installments, days_before_reassessment, days):
         contract = self.leasee_contract_id

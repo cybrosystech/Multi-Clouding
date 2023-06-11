@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record model="ir.cron" id="action_advance_security_activation">
+        <field name="name">Leasee Advance Security Activation</field>
+        <field name="model_id" ref="model_leasee_contract"/>
+        <field name="state">code</field>
+        <field name="code">model.security_advance_activation(50)</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+    </record>
+
+    <record model="ir.cron" id="action_advance_security_cron_update">
+        <field name="name">Leasee Advance Security Cron Update</field>
+        <field name="model_id" ref="model_leasee_contract"/>
+        <field name="state">code</field>
+        <field name="code">model.security_advance_cron_update()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+    </record>
+
+</odoo>
