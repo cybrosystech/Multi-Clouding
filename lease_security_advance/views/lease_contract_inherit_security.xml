@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="inherit_view_leasee_contract_template_form_security" model="ir.ui.view">
+        <field name="name">leasee.contract.template.form.inherit.security</field>
+        <field name="model">leasee.contract</field>
+        <field name="inherit_id" ref="lease_management.view_leasee_contract_form"/>
+        <field name="arch" type="xml">
+            <button name="action_activate" position="after">
+                <button name="action_security_advance" string="Security" class="oe_highlight" attrs="{'invisible': ['|', ('security_button_bool', '!=', True), ('state', '!=', 'active')]}"
+                                type="object"/>
+            </button>
+            <button name="action_open_bills" position="after">
+                <button class="oe_stat_button" string="Security Advance"
+                                    name="action_security_bills" type="object" attrs="{'invisible': [('security_advance_bool', '=', False)]}" icon="fa-external-link">
+                            </button>
+            </button>
+            <field name="company_id" position="after">
+                <field name="security_amount"/>
+                <field name="security_advance_bool" invisible="1"/>
+                <field name="security_button_bool" invisible="1"/>
+            </field>
+            <field name="asset_model_id" position="after">
+                <field name="security_prepaid_account"/>
+            </field>
+        </field>
+    </record>
+
+
+</odoo>

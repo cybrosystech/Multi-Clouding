@@ -27,24 +27,50 @@ class AccountAssetPartialInherit(models.Model):
         if move_ids:
             return self._return_disposal_view(move_ids)
 
-    def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial, partial_amount):
+    def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial,
+                            partial_amount):
         def get_line(asset, amount, account):
-            return (0, 0, {
-                'name': asset.name,
-                'account_id': account.id,
-                'debit': 0.0 if float_compare(amount, 0.0,
-                                              precision_digits=prec) > 0 else -amount,
-                'credit': amount if float_compare(amount, 0.0,
-                                                  precision_digits=prec) > 0 else 0.0,
-                'analytic_account_id': account_analytic_id.id if asset.asset_type == 'sale' or asset.leasee_contract_ids else False,
-                'analytic_tag_ids': [(6, 0,
-                                      analytic_tag_ids.ids)] if asset.asset_type == 'sale' else False,
-                'currency_id': current_currency.id,
-                'amount_currency': -asset.value_residual,
-                'project_site_id': asset.project_site_id.id,
-                'type_id': asset.type_id.id,
-                'location_id': asset.location_id.id,
-            })
+            if asset.currency_id == asset.company_id.currency_id:
+                return (0, 0, {
+                    'name': asset.name,
+                    'account_id': account.id,
+                    'debit': 0.0 if float_compare(amount, 0.0,
+                                                  precision_digits=prec) > 0 else -amount,
+                    'credit': amount if float_compare(amount, 0.0,
+                                                      precision_digits=prec) > 0 else 0.0,
+                    'analytic_account_id': account_analytic_id.id if asset.asset_type == 'sale' or asset.leasee_contract_ids else False,
+                    'analytic_tag_ids': [(6, 0,
+                                          analytic_tag_ids.ids)] if asset.asset_type == 'sale' else False,
+                    'currency_id': current_currency.id,
+                    'amount_currency': -asset.value_residual,
+                    'project_site_id': asset.project_site_id.id,
+                    'type_id': asset.type_id.id,
+                    'location_id': asset.location_id.id,
+                })
+            else:
+                print('amount1111111', amount)
+                base_amount = amount
+                amount = asset.currency_id._convert(round(amount, 2),
+                                                    asset.company_id.currency_id,
+                                                    asset.company_id,
+                                                    disposal_date)
+                print('amount2222222', amount)
+                return (0, 0, {
+                    'name': asset.name,
+                    'account_id': account.id,
+                    'debit': 0.0 if float_compare(amount, 0.0,
+                                                  precision_digits=prec) > 0 else -amount,
+                    'credit': amount if float_compare(amount, 0.0,
+                                                      precision_digits=prec) > 0 else 0.0,
+                    'analytic_account_id': account_analytic_id.id if asset.asset_type == 'sale' or asset.leasee_contract_ids else False,
+                    'analytic_tag_ids': [(6, 0,
+                                          analytic_tag_ids.ids)] if asset.asset_type == 'sale' else False,
+                    'currency_id': current_currency.id,
+                    'amount_currency': -base_amount,
+                    'project_site_id': asset.project_site_id.id,
+                    'type_id': asset.type_id.id,
+                    'location_id': asset.location_id.id,
+                })
 
         if len(self.leasee_contract_ids) == 1:
             move_ids = []
@@ -95,9 +121,11 @@ class AccountAssetPartialInherit(models.Model):
                     sum(depreciation_moves.mapped('amount_total')),
                     -initial_amount)
                 depreciation_account = asset.account_depreciation_id
-                invoice_amount = copysign(invoice_line_id.amount_total if invoice_line_id._name == 'account.move' else invoice_line_id.price_subtotal,
-                                      -initial_amount)
-                invoice_account = invoice_line_id.invoice_line_ids[0].account_id if invoice_line_id._name == 'account.move' else invoice_line_id.account_id
+                invoice_amount = copysign(
+                    invoice_line_id.amount_total if invoice_line_id._name == 'account.move' else invoice_line_id.price_subtotal,
+                    -initial_amount)
+                invoice_account = invoice_line_id.invoice_line_ids[
+                    0].account_id if invoice_line_id._name == 'account.move' else invoice_line_id.account_id
                 difference = -initial_amount - depreciated_amount - invoice_amount
                 difference_account = asset.company_id.gain_account_id if difference > 0 else asset.company_id.loss_account_id
                 value_residual = asset.value_residual
@@ -156,27 +184,80 @@ class AccountAssetPartialInherit(models.Model):
                                   (difference, difference_account)]
                     if not invoice_line_id:
                         del line_datas[2]
-                vals = {
-                    'amount_total': current_currency._convert(value_residual,
-                                                              company_currency,
-                                                              asset.company_id,
-                                                              disposal_date),
-                    'asset_id': asset.id,
-                    'ref': asset.name + ': ' + (
-                        _('Disposal') if not invoice_line_id else _('Sale')),
-                    'asset_remaining_value': 0,
-                    'asset_depreciated_value': max(
-                        asset.depreciation_move_ids.filtered(
-                            lambda x: x.state == 'posted'),
-                        key=lambda x: x.date,
-                        default=self.env[
-                            'account.move']).asset_depreciated_value,
-                    'date': disposal_date,
-                    'journal_id': asset.journal_id.id,
-                    'line_ids': [get_line(asset, amount, account) for
-                                 amount, account in line_datas if account],
-                    'leasee_contract_id': self.leasee_contract_ids.id,
-                }
+                if company_currency == current_currency:
+                    vals = {
+                        'amount_total': current_currency._convert(
+                            value_residual,
+                            company_currency,
+                            asset.company_id,
+                            disposal_date),
+                        'asset_id': asset.id,
+                        'ref': asset.name + ': ' + (
+                            _('Disposal') if not invoice_line_id else _(
+                                'Sale')),
+                        'asset_remaining_value': 0,
+                        'asset_depreciated_value': max(
+                            asset.depreciation_move_ids.filtered(
+                                lambda x: x.state == 'posted'),
+                            key=lambda x: x.date,
+                            default=self.env[
+                                'account.move']).asset_depreciated_value,
+                        'date': disposal_date,
+                        'journal_id': asset.journal_id.id,
+                        'line_ids': [get_line(asset, amount, account) for
+                                     amount, account in line_datas if account],
+                        'leasee_contract_id': self.leasee_contract_ids.id,
+                        'currency_id': asset.currency_id.id
+                    }
+                else:
+                    line_records = [get_line(asset, amount, account) for
+                                    amount, account in line_datas if account]
+                    difference_current = round(
+                        sum(list(
+                            map(lambda x: x[2]['debit'], line_records))) - sum(
+                            list(map(lambda x: x[2]['credit'], line_records))),
+                        2)
+                    if difference_current < 1 and difference_current > -1:
+                        line_records.append((0, 0, {
+                            'name': asset.name,
+                            'account_id': self.leasee_contract_ids.terminate_account_id.id,
+                            'debit': 0.0 if float_compare(difference_current,
+                                                          0.0,
+                                                          precision_digits=prec) > 0 else -difference_current,
+                            'credit': difference_current if float_compare(
+                                difference_current, 0.0,
+                                precision_digits=prec) > 0 else 0.0,
+                            'analytic_account_id': account_analytic_id.id if asset.asset_type == 'sale' or asset.leasee_contract_ids else False,
+                            'analytic_tag_ids': [(6, 0,
+                                                  analytic_tag_ids.ids)] if asset.asset_type == 'sale' else False,
+                            'currency_id': current_currency.id,
+                            'project_site_id': asset.project_site_id.id,
+                            'type_id': asset.type_id.id,
+                            'location_id': asset.location_id.id,
+                        }))
+                        vals = {
+                            'amount_total': current_currency._convert(
+                                value_residual,
+                                company_currency,
+                                asset.company_id,
+                                disposal_date),
+                            'asset_id': asset.id,
+                            'ref': asset.name + ': ' + (
+                                _('Disposal') if not invoice_line_id else _(
+                                    'Sale')),
+                            'asset_remaining_value': 0,
+                            'asset_depreciated_value': max(
+                                asset.depreciation_move_ids.filtered(
+                                    lambda x: x.state == 'posted'),
+                                key=lambda x: x.date,
+                                default=self.env[
+                                    'account.move']).asset_depreciated_value,
+                            'date': disposal_date,
+                            'journal_id': asset.journal_id.id,
+                            'line_ids': line_records,
+                            'leasee_contract_id': self.leasee_contract_ids.id,
+                            'currency_id': asset.currency_id.id
+                        }
                 commands.append((0, 0, vals))
                 asset.write({'depreciation_move_ids': commands,
                              'method_number': asset_sequence})
@@ -212,3 +293,34 @@ class AccountAssetPartialInherit(models.Model):
             self.prorata_date = self.acquisition_date
         else:
             self.prorata_date = fields.Date.today()
+
+    @api.depends(
+        'original_value', 'salvage_value', 'already_depreciated_amount_import',
+        'depreciation_move_ids.state',
+        'depreciation_move_ids.amount_total',
+        'depreciation_move_ids.reversal_move_id'
+    )
+    def _compute_value_residual(self):
+        for record in self:
+            posted = record.depreciation_move_ids.filtered(
+                lambda m: m.state == 'posted' and not m.reversal_move_id
+            )
+            if record.currency_id != record.env.company.currency_id:
+                posted_depreciation_move_ids = record.depreciation_move_ids.filtered(
+                    lambda x: x.state == 'posted')
+                print('jjjj',
+                      sum(posted_depreciation_move_ids.mapped('amount_total')))
+                record.value_residual = (
+                        record.original_value
+                        - record.salvage_value
+                        - record.already_depreciated_amount_import
+                        - sum(
+                    posted_depreciation_move_ids.mapped('amount_total'))
+                )
+            else:
+                record.value_residual = (
+                        record.original_value
+                        - record.salvage_value
+                        - record.already_depreciated_amount_import
+                        - sum(move._get_depreciation() for move in posted)
+                )
