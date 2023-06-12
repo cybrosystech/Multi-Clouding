@@ -1,0 +1,889 @@
+from odoo import models
+
+gross_profit_revenue = []
+gross_profit_budget = []
+indirect_cost_sum = []
+indirect_cost_budget = []
+other_income_sum = []
+other_income_budget = []
+depreciation_amortization_sum = []
+depreciation_amortization_budget = []
+finance_cost_sum = []
+finance_cost_budget_list = []
+taxes_sum = []
+taxes_budget_list = []
+
+
+class ProfitLossBalance(models.AbstractModel):
+    _name = 'profit.loss.balance'
+
+    def _get_templates(self):
+        return {
+            'main_template': 'tasc_pf_bs_report.tasc_pf_bs_html_content_view',
+            'main_table_header_template': 'account_reports.main_table_header',
+            'line_template': 'cash_flow_statement_report.line_template_cash_flow',
+            'footnotes_template': 'account_reports.footnotes_template',
+            'budget_analysis_search_view': 'tasc_pf_bs_report.tasc_pf_bs_search_view',
+        }
+
+    def get_cash_flow_information(self, filter):
+        print('filter', filter)
+        options = self.env['cash.flow.statement']._get_cashflow_options(filter)
+        info = {
+            'options': options,
+            'main_html': self.get_html_content(options),
+            'searchview_html': self.env['ir.ui.view']._render_template(
+                self._get_templates().get('budget_analysis_search_view', ),
+                values={'options': options}),
+            'buttons': ''
+        }
+        return info
+
+    def get_html_content(self, options):
+        gross_profit_revenue.clear()
+        gross_profit_budget.clear()
+        indirect_cost_sum.clear()
+        indirect_cost_budget.clear()
+        other_income_sum.clear()
+        other_income_budget.clear()
+        depreciation_amortization_sum.clear()
+        depreciation_amortization_budget.clear()
+        finance_cost_sum.clear()
+        finance_cost_budget_list.clear()
+        taxes_sum.clear()
+        taxes_budget_list.clear()
+        templates = self._get_templates()
+        template = templates['main_template']
+        values = {'model': self}
+        header = self._get_header()
+        lines = self._get_pf_bs_lines(options)
+        values['lines'] = {'lines': lines, 'header': header}
+        html = self.env.ref(template)._render(values)
+        return html
+
+    def _get_header(self):
+        return ['Account', 'Balance', 'Budget', 'Variance']
+
+    def _get_pf_bs_lines(self, options):
+        test_child_lines = []
+        states_args = """ parent_state = 'posted'"""
+        if options['entry'] != 'posted':
+            states_args = """ parent_state in ('posted', 'draft')"""
+        query = '''select coalesce((sum(journal_item.debit) - sum(journal_item.credit)), 0) total,
+                    account.name, account.code, account.id, account.group_id
+                    from account_move_line as journal_item
+                    left join account_account as account on journal_item.account_id = account.id
+                    '''
+        query_budget = '''select coalesce(sum(budget_line.planned_amount), 0) as planned,
+                          account.name, account.code
+                          from crossovered_budget_lines as budget_line
+                          left join account_budget_post as budgetary on 
+                          budget_line.general_budget_id = budgetary.id
+                          left join account_budget_rel as rel on budgetary.id = rel.budget_id
+                          left join account_account as account on rel.account_id = account.id
+                        '''
+        pf_lines = [
+            {
+                'id': 'operating_revenue_id',
+                'name': 'Operating Revenue',
+                'columns': [
+                    {'name': round(operating_revenue, 2), 'class': 'number'} for
+                    operating_revenue in
+                    self._get_operating_revenue(
+                        states_args, query,
+                        query_budget,
+                        options, test_child_lines,
+                        dict_id='operating_revenue_id')],
+                'child_lines': '',
+                'account_lines': test_child_lines
+            },
+            {
+                'id': 'direct_cost_id',
+                'name': 'Direct Cost',
+                'columns': [{'name': round(direct_cost, 2), 'class': 'number'}
+                            for
+                            direct_cost in
+                            self._get_direct_cost(states_args, query,
+                                                  query_budget,
+                                                  options, test_child_lines,
+                                                  dict_id='direct_cost_id')],
+                'child_lines': '',
+                'account_lines': test_child_lines
+            },
+            {
+                'id': 'gross_profit',
+                'name': 'Gross Profit',
+                'columns': [{'name': round(sum(gross_profit_revenue), 2),
+                             'class': 'number'},
+                            {'name': round(sum(gross_profit_budget), 2),
+                             'class': 'number'},
+                            {'name': round(sum(gross_profit_revenue) - sum(
+                                gross_profit_budget), 2),
+                             'class': 'number'}],
+                'child_lines': '',
+                'account_lines': ''
+            },
+            {
+                'id': 'indirect_cost',
+                'name': 'Indirect Cost',
+                'columns': '',
+                'child_lines': [
+                    {
+                        'id': 'staff_cost',
+                        'name': 'Staff Cost',
+                        'columns': [
+                            {'name': round(staff_cost, 2), 'class': 'number'}
+                            for
+                            staff_cost in
+                            self._get_staff_cost(states_args, query,
+                                                 query_budget, options,
+                                                 test_child_lines,
+                                                 dict_id='staff_cost')],
+                        'account_lines': test_child_lines
+                    },
+                    {
+                        'id': 'general_admin_expense',
+                        'name': 'General Admin Expense',
+                        'columns': [
+                            {'name': round(general_admin_expense, 2),
+                             'class': 'number'}
+                            for
+                            general_admin_expense in
+                            self._get_general_admin_expense(states_args, query,
+                                                            query_budget,
+                                                            options,
+                                                            test_child_lines,
+                                                            dict_id='general_admin_expense')],
+                        'account_lines': test_child_lines
+                    },
+                    {
+                        'id': 'statutory_and_misc',
+                        'name': 'Statutory and Misc',
+                        'columns': [
+                            {'name': round(statutory_and_misc, 2),
+                             'class': 'number'} for
+                            statutory_and_misc in
+                            self._get_statutory_and_misc(states_args, query,
+                                                         query_budget,
+                                                         options,
+                                                         test_child_lines,
+                                                         dict_id='statutory_and_misc')],
+                        'account_lines': test_child_lines
+                    },
+                    {
+                        'id': 'bank_changes',
+                        'name': 'Bank Charges',
+                        'columns': [
+                            {'name': round(bank_changes, 2), 'class': 'number'}
+                            for
+                            bank_changes in
+                            self._get_bank_changes(states_args, query,
+                                                   query_budget,
+                                                   options, test_child_lines,
+                                                   dict_id='bank_changes')],
+                        'account_lines': test_child_lines
+                    },
+                ],
+                'account_lines': ''
+            },
+            {
+                'id': 'other_income',
+                'name': 'Other Income',
+                'columns': '',
+                'child_lines': [
+                    {
+                        'id': 'disposal_gain_loss',
+                        'name': 'Disposal Gain/Loss',
+                        'columns': [
+                            {'name': round(disposal_gain_loss, 2),
+                             'class': 'number'} for
+                            disposal_gain_loss in
+                            self._get_disposal_gain_loss(states_args, query,
+                                                         query_budget,
+                                                         options,
+                                                         test_child_lines,
+                                                         dict_id='disposal_gain_loss')],
+                        'account_lines': test_child_lines
+                    },
+                    {
+                        'id': 'interest_income',
+                        'name': 'Interest Income',
+                        'columns': [{'name': round(interest_income, 2),
+                                     'class': 'number'}
+                                    for
+                                    interest_income in
+                                    self._get_interest_income(states_args,
+                                                              query,
+                                                              query_budget,
+                                                              options,
+                                                              test_child_lines,
+                                                              dict_id='interest_income')],
+                        'account_lines': test_child_lines
+                    },
+                    {
+                        'id': 'intra_group_interest_income',
+                        'name': 'Intra group - Interest income',
+                        'columns': [
+                            {'name': round(intra_group_interest_income, 2),
+                             'class': 'number'} for
+                            intra_group_interest_income in
+                            self._get_intra_group_interest_income(states_args,
+                                                                  query,
+                                                                  query_budget,
+                                                                  options,
+                                                                  test_child_lines,
+                                                                  dict_id='intra_group_interest_income')],
+                        'account_lines': test_child_lines
+                    },
+                ],
+                'account_lines': ''
+            },
+            {
+                'id': 'ebitda',
+                'name': 'EBITDA',
+                'columns': [{'name': round(sum(
+                    gross_profit_revenue + indirect_cost_sum + other_income_sum),
+                    2),
+                    'class': 'number'},
+                    {'name': round(sum(
+                        gross_profit_budget + indirect_cost_budget + other_income_budget),
+                        2),
+                        'class': 'number'},
+                    {'name': round(sum(
+                        gross_profit_revenue + indirect_cost_sum + other_income_sum) - sum(
+                        gross_profit_budget + indirect_cost_budget + other_income_budget),
+                                   2),
+                     'class': 'number'}],
+                'child_lines': '',
+                'account_lines': ''
+            },
+            {
+                'id': 'depreciation_amortization',
+                'name': 'Depreciation and Amortization',
+                'columns': [
+                    {'name': round(depreciation_amortization, 2),
+                     'class': 'number'}
+                    for depreciation_amortization in
+                    self._get_depreciation_amortization(states_args, query,
+                                                        query_budget,
+                                                        options,
+                                                        test_child_lines,
+                                                        dict_id='depreciation_amortization')],
+                'child_lines': '',
+                'account_lines': test_child_lines
+            },
+            {
+                'id': 'ebit',
+                'name': 'EBIT',
+                'columns': [{'name': round(sum(
+                    gross_profit_revenue + indirect_cost_sum + other_income_sum + depreciation_amortization_sum),
+                    2),
+                    'class': 'number'},
+                    {'name': round(sum(
+                        gross_profit_budget + indirect_cost_budget + other_income_budget + depreciation_amortization_budget),
+                        2),
+                        'class': 'number'},
+                    {'name': round(sum(
+                        gross_profit_revenue + indirect_cost_sum + other_income_sum + depreciation_amortization_sum) - sum(
+                        gross_profit_budget + indirect_cost_budget + other_income_budget + depreciation_amortization_budget),
+                                   2),
+                     'class': 'number'}],
+                'child_lines': '',
+                'account_lines': ''
+            },
+            {
+                'id': 'finance_cost',
+                'name': 'Finance Cost',
+                'columns': [
+                    {'name': round(finance_cost, 2), 'class': 'number'}
+                    for finance_cost in
+                    self._get_finance_cost(states_args, query,
+                                           query_budget,
+                                           options, test_child_lines,
+                                           dict_id='finance_cost')],
+                'child_lines': '',
+                'account_lines': test_child_lines
+            },
+            {
+                'id': 'ebt',
+                'name': 'EBT',
+                'columns': [{'name': round(sum(
+                    gross_profit_revenue + indirect_cost_sum + other_income_sum + depreciation_amortization_sum + finance_cost_sum),
+                    2),
+                    'class': 'number'},
+                    {'name': round(sum(
+                        gross_profit_budget + indirect_cost_budget + other_income_budget + depreciation_amortization_budget + finance_cost_budget_list),
+                        2),
+                        'class': 'number'},
+                    {'name': round(sum(
+                        gross_profit_budget + indirect_cost_budget + other_income_budget + depreciation_amortization_budget + finance_cost_budget_list) - sum(
+                        gross_profit_budget + indirect_cost_budget + other_income_budget + depreciation_amortization_budget + finance_cost_budget_list),
+                                   2),
+                     'class': 'number'}],
+                'child_lines': '',
+                'account_lines': ''
+            },
+            {
+                'id': 'taxes',
+                'name': 'Taxes',
+                'columns': [{'name': round(taxes, 2), 'class': 'number'} for
+                            taxes in
+                            self._get_taxes(states_args, query,
+                                            query_budget,
+                                            options, test_child_lines,
+                                            dict_id='taxes')],
+                'child_lines': '',
+                'account_lines': test_child_lines
+            },
+            {
+                'id': 'net_profit_loss',
+                'name': 'Net Profit - Loss',
+                'columns': [{'name': round(sum(
+                    gross_profit_revenue + indirect_cost_sum + other_income_sum + depreciation_amortization_sum + finance_cost_sum + taxes_sum),
+                    2),
+                    'class': 'number'},
+                    {'name': round(sum(
+                        gross_profit_budget + indirect_cost_budget + other_income_budget + depreciation_amortization_budget + finance_cost_budget_list + taxes_budget_list),
+                        2),
+                        'class': 'number'},
+                    {'name': round(sum(
+                        gross_profit_revenue + indirect_cost_sum + other_income_sum + depreciation_amortization_sum + finance_cost_sum + taxes_sum) - sum(
+                        gross_profit_budget + indirect_cost_budget + other_income_budget + depreciation_amortization_budget + finance_cost_budget_list + taxes_budget_list),
+                                   2),
+                     'class': 'number'}],
+                'child_lines': '',
+                'account_lines': ''
+            },
+        ]
+        pf_lines[3]['columns'] = [{'name': round(sum(indirect_cost_sum), 2),
+                                   'class': 'number'},
+                                  {'name': round(sum(indirect_cost_budget), 2),
+                                   'class': 'number'},
+                                  {'name': round(sum(indirect_cost_sum) - sum(
+                                      indirect_cost_budget), 2),
+                                   'class': 'number'}]
+        pf_lines[4]['columns'] = [{'name': round(sum(other_income_sum), 2),
+                                   'class': 'number'},
+                                  {'name': round(sum(other_income_budget), 2),
+                                   'class': 'number'},
+                                  {'name': round(sum(other_income_sum) - sum(
+                                      other_income_budget), 2),
+                                   'class': 'number'}]
+        print('pf_lines', pf_lines)
+        print('test_child_lines', test_child_lines)
+        return pf_lines
+
+    def _get_operating_revenue(self, states_args, query, query_budget, options,
+                               test_child_lines, dict_id):
+        self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
+                                    and journal_item.company_id = %(company_ids)s
+                                    and journal_item.date >= %(from_date)s 
+                                    and journal_item.date <= %(to_date)s
+                                    and {states_args}
+                                    group by account.name, account.code, account.id, account.group_id
+                                    '''.format(states_args=states_args),
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '410000', 'code_end': '419999',
+                             'company_ids': self.env.company.id})
+        operating_revenue = self.env.cr.dictfetchall()
+        self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
+                                            and budget_line.company_id = %(company_ids)s
+                                            and budget_line.date_from >= %(from_date)s 
+                                            and budget_line.date_to <= %(to_date)s
+                                            group by account.name, account.code
+                                            ''',
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '410000', 'code_end': '419999',
+                             'company_ids': self.env.company.id})
+        operating_revenue_budget = self.env.cr.dictfetchall()
+        self._arrange_account_budget_line(test_child_lines,
+                                          operating_revenue,
+                                          operating_revenue_budget, dict_id)
+        operating_revenue_total = sum(
+            list(map(lambda x: x['total'], operating_revenue)))
+        operating_revenue_budget_total = sum(list(
+            map(lambda x: x['planned'], operating_revenue_budget)))
+        gross_profit_revenue.append(operating_revenue_total)
+        gross_profit_budget.append(operating_revenue_budget_total)
+        return [operating_revenue_total, operating_revenue_budget_total,
+                operating_revenue_total - operating_revenue_budget_total]
+
+    def _get_direct_cost(self, states_args, query,
+                         query_budget,
+                         options, test_child_lines, dict_id):
+        self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
+                                            and journal_item.company_id = %(company_ids)s
+                                            and journal_item.date >= %(from_date)s 
+                                            and journal_item.date <= %(to_date)s
+                                            and {states_args}
+                                            group by account.name, account.code, account.id, account.group_id
+                                            '''.format(states_args=states_args),
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '420000', 'code_end': '429999',
+                             'company_ids': self.env.company.id})
+        direct_cost = self.env.cr.dictfetchall()
+        self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
+                                                    and budget_line.company_id = %(company_ids)s
+                                                    and budget_line.date_from >= %(from_date)s 
+                                                    and budget_line.date_to <= %(to_date)s
+                                                    group by account.name, account.code
+                                                    ''',
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '420000', 'code_end': '429999',
+                             'company_ids': self.env.company.id})
+        direct_cost_budget = self.env.cr.dictfetchall()
+        self._arrange_account_budget_line(test_child_lines,
+                                          direct_cost,
+                                          direct_cost_budget, dict_id)
+        direct_cost_total = sum(
+            list(map(lambda x: x['total'], direct_cost)))
+        direct_cost_budget_total = sum(list(
+            map(lambda x: x['planned'], direct_cost_budget)))
+        gross_profit_revenue.append(direct_cost_total)
+        gross_profit_budget.append(direct_cost_budget_total)
+        return [direct_cost_total, direct_cost_budget_total,
+                direct_cost_total - direct_cost_budget_total]
+
+    def _get_staff_cost(self, states_args, query, query_budget, options,
+                        test_child_lines, dict_id):
+        self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
+                                                    and journal_item.company_id = %(company_ids)s
+                                                    and journal_item.date >= %(from_date)s 
+                                                    and journal_item.date <= %(to_date)s
+                                                    and {states_args}
+                                                    group by account.name, account.code, account.id, account.group_id
+                                                    '''.format(
+            states_args=states_args),
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '510000', 'code_end': '549999',
+                             'company_ids': self.env.company.id})
+        staff_cost = self.env.cr.dictfetchall()
+        self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
+                                                            and budget_line.company_id = %(company_ids)s
+                                                            and budget_line.date_from >= %(from_date)s 
+                                                            and budget_line.date_to <= %(to_date)s
+                                                            group by account.name, account.code
+                                                            ''',
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '510000', 'code_end': '549999',
+                             'company_ids': self.env.company.id})
+        staff_cost_budget = self.env.cr.dictfetchall()
+        self._arrange_account_budget_line(test_child_lines,
+                                          staff_cost,
+                                          staff_cost_budget, dict_id)
+        staff_cost_total = sum(
+            list(map(lambda x: x['total'], staff_cost)))
+        staff_cost_budget_total = sum(list(
+            map(lambda x: x['planned'], staff_cost_budget)))
+        indirect_cost_sum.append(staff_cost_total)
+        indirect_cost_budget.append(staff_cost_budget_total)
+        return [staff_cost_total, staff_cost_budget_total,
+                staff_cost_total - staff_cost_budget_total]
+
+    def _get_general_admin_expense(self, states_args, query, query_budget,
+                                   options, test_child_lines, dict_id):
+        self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
+                                                    and journal_item.company_id = %(company_ids)s
+                                                    and journal_item.date >= %(from_date)s 
+                                                    and journal_item.date <= %(to_date)s
+                                                    and {states_args}
+                                                    group by account.name, account.code, account.id, account.group_id
+                                                    '''.format(
+            states_args=states_args),
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '550000', 'code_end': '552999',
+                             'company_ids': self.env.company.id})
+        general_admin_expense = self.env.cr.dictfetchall()
+        self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
+                                                            and budget_line.company_id = %(company_ids)s
+                                                            and budget_line.date_from >= %(from_date)s 
+                                                            and budget_line.date_to <= %(to_date)s
+                                                            group by account.name, account.code
+                                                            ''',
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '550000', 'code_end': '552999',
+                             'company_ids': self.env.company.id})
+        general_admin_expense_budget = self.env.cr.dictfetchall()
+        self._arrange_account_budget_line(test_child_lines,
+                                          general_admin_expense,
+                                          general_admin_expense_budget, dict_id)
+        general_admin_total = sum(
+            list(map(lambda x: x['total'], general_admin_expense)))
+        general_admin_budget_total = sum(list(
+            map(lambda x: x['planned'], general_admin_expense_budget)))
+        indirect_cost_sum.append(general_admin_total)
+        indirect_cost_budget.append(general_admin_budget_total)
+        return [general_admin_total,
+                general_admin_budget_total, general_admin_total -
+                general_admin_budget_total]
+
+    def _get_statutory_and_misc(self, states_args, query, query_budget,
+                                options, test_child_lines, dict_id):
+        self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
+                                                    and journal_item.company_id = %(company_ids)s
+                                                    and journal_item.date >= %(from_date)s 
+                                                    and journal_item.date <= %(to_date)s
+                                                    and {states_args}
+                                                    group by account.name, account.code, account.id, account.group_id
+                                                    '''.format(
+            states_args=states_args),
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '555000', 'code_end': '559999',
+                             'company_ids': self.env.company.id})
+        statutory_and_misc = self.env.cr.dictfetchall()
+        self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
+                                                            and budget_line.company_id = %(company_ids)s
+                                                            and budget_line.date_from >= %(from_date)s 
+                                                            and budget_line.date_to <= %(to_date)s
+                                                            group by account.name, account.code
+                                                            ''',
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '555000', 'code_end': '559999',
+                             'company_ids': self.env.company.id})
+        statutory_and_misc_budget = self.env.cr.dictfetchall()
+        self._arrange_account_budget_line(test_child_lines,
+                                          statutory_and_misc,
+                                          statutory_and_misc_budget, dict_id)
+        statutory_and_misc_total = sum(
+            list(map(lambda x: x['total'], statutory_and_misc)))
+        statutory_and_misc_budget_total = sum(list(
+            map(lambda x: x['planned'], statutory_and_misc_budget)))
+        indirect_cost_sum.append(statutory_and_misc_total)
+        indirect_cost_budget.append(statutory_and_misc_budget_total)
+        return [statutory_and_misc_total, statutory_and_misc_budget_total,
+                statutory_and_misc_total - statutory_and_misc_budget_total]
+
+    def _get_bank_changes(self, states_args, query, query_budget,
+                          options, test_child_lines, dict_id):
+        self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
+                                                    and journal_item.company_id = %(company_ids)s
+                                                    and journal_item.date >= %(from_date)s 
+                                                    and journal_item.date <= %(to_date)s
+                                                    and {states_args}
+                                                    group by account.name, account.code, account.id, account.group_id
+                                                    '''.format(
+            states_args=states_args),
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '582100', 'code_end': '582299',
+                             'company_ids': self.env.company.id})
+        bank_changes = self.env.cr.dictfetchall()
+        self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
+                                                            and budget_line.company_id = %(company_ids)s
+                                                            and budget_line.date_from >= %(from_date)s 
+                                                            and budget_line.date_to <= %(to_date)s
+                                                            group by account.name, account.code
+                                                            ''',
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '582100', 'code_end': '582299',
+                             'company_ids': self.env.company.id})
+        bank_changes_budget = self.env.cr.dictfetchall()
+        self._arrange_account_budget_line(test_child_lines,
+                                          bank_changes,
+                                          bank_changes_budget, dict_id)
+        bank_changes_total = sum(
+            list(map(lambda x: x['total'], bank_changes)))
+        bank_changes_budget_total = sum(list(
+            map(lambda x: x['planned'], bank_changes_budget)))
+        indirect_cost_sum.append(bank_changes_total)
+        indirect_cost_budget.append(bank_changes_budget_total)
+        return [bank_changes_total, bank_changes_budget_total,
+                bank_changes_total - bank_changes_budget_total]
+
+    def _get_disposal_gain_loss(self, states_args, query, query_budget,
+                                options, test_child_lines, dict_id):
+        self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
+                                                        and journal_item.company_id = %(company_ids)s
+                                                        and journal_item.date >= %(from_date)s 
+                                                        and journal_item.date <= %(to_date)s
+                                                        and {states_args}
+                                                        group by account.name, account.code, account.id, account.group_id
+                                                        '''.format(
+            states_args=states_args),
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '558100', 'code_end': '558199',
+                             'company_ids': self.env.company.id})
+        disposal_gain_loss = self.env.cr.dictfetchall()
+        self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
+                                                                and budget_line.company_id = %(company_ids)s
+                                                                and budget_line.date_from >= %(from_date)s 
+                                                                and budget_line.date_to <= %(to_date)s
+                                                                group by account.name, account.code
+                                                                ''',
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '558100', 'code_end': '558199',
+                             'company_ids': self.env.company.id})
+        disposal_gain_loss_budget = self.env.cr.dictfetchall()
+        self._arrange_account_budget_line(test_child_lines,
+                                          disposal_gain_loss,
+                                          disposal_gain_loss_budget, dict_id)
+        disposal_gain_loss_total = sum(
+            list(map(lambda x: x['total'], disposal_gain_loss)))
+        disposal_gain_loss_budget_total = sum(list(
+            map(lambda x: x['planned'], disposal_gain_loss_budget)))
+        other_income_sum.append(disposal_gain_loss_total)
+        other_income_budget.append(disposal_gain_loss_budget_total)
+        return [disposal_gain_loss_total, disposal_gain_loss_budget_total,
+                disposal_gain_loss_total - disposal_gain_loss_budget_total]
+
+    def _get_interest_income(self, states_args, query, query_budget,
+                             options, test_child_lines, dict_id):
+        self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
+                                                            and journal_item.company_id = %(company_ids)s
+                                                            and journal_item.date >= %(from_date)s 
+                                                            and journal_item.date <= %(to_date)s
+                                                            and {states_args}
+                                                            group by account.name, account.code, account.id, account.group_id
+                                                            '''.format(
+            states_args=states_args),
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '581300', 'code_end': '581399',
+                             'company_ids': self.env.company.id})
+        interest_income = self.env.cr.dictfetchall()
+        self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
+                                                                    and budget_line.company_id = %(company_ids)s
+                                                                    and budget_line.date_from >= %(from_date)s 
+                                                                    and budget_line.date_to <= %(to_date)s
+                                                                    group by account.name, account.code
+                                                                    ''',
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '581300', 'code_end': '581399',
+                             'company_ids': self.env.company.id})
+        interest_income_budget = self.env.cr.dictfetchall()
+        self._arrange_account_budget_line(test_child_lines,
+                                          interest_income,
+                                          interest_income_budget, dict_id)
+        interest_income_total = sum(
+            list(map(lambda x: x['total'], interest_income)))
+        interest_income_budget_total = sum(list(
+            map(lambda x: x['planned'], interest_income_budget)))
+        other_income_sum.append(interest_income_total)
+        other_income_budget.append(interest_income_budget_total)
+        return [interest_income_total, interest_income_budget_total,
+                interest_income_total - interest_income_budget_total]
+
+    def _get_intra_group_interest_income(self, states_args, query, query_budget,
+                                         options, test_child_lines, dict_id):
+        self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
+                                                                and journal_item.company_id = %(company_ids)s
+                                                                and journal_item.date >= %(from_date)s 
+                                                                and journal_item.date <= %(to_date)s
+                                                                and {states_args}
+                                                                group by account.name, account.code, account.id, account.group_id
+                                                                '''.format(
+            states_args=states_args),
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '570000', 'code_end': '579999',
+                             'company_ids': self.env.company.id})
+        intra_group_interest_income = self.env.cr.dictfetchall()
+        self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
+                                                                        and budget_line.company_id = %(company_ids)s
+                                                                        and budget_line.date_from >= %(from_date)s 
+                                                                        and budget_line.date_to <= %(to_date)s
+                                                                        group by account.name, account.code
+                                                                        ''',
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '570000', 'code_end': '579999',
+                             'company_ids': self.env.company.id})
+        intra_group_interest_income_budget = self.env.cr.dictfetchall()
+        self._arrange_account_budget_line(test_child_lines,
+                                          intra_group_interest_income,
+                                          intra_group_interest_income_budget,
+                                          dict_id)
+        intra_group_interest_income_total = sum(
+            list(map(lambda x: x['total'], intra_group_interest_income)))
+        intra_group_interest_income_budget_total = sum(list(
+            map(lambda x: x['planned'], intra_group_interest_income_budget)))
+        other_income_sum.append(intra_group_interest_income_total)
+        other_income_budget.append(intra_group_interest_income_budget_total)
+        return [intra_group_interest_income_total,
+                intra_group_interest_income_budget_total,
+                intra_group_interest_income_total -
+                intra_group_interest_income_budget_total]
+
+    def _get_depreciation_amortization(self, states_args, query, query_budget,
+                                       options, test_child_lines, dict_id):
+        self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
+                                                                    and journal_item.company_id = %(company_ids)s
+                                                                    and journal_item.date >= %(from_date)s 
+                                                                    and journal_item.date <= %(to_date)s
+                                                                    and {states_args}
+                                                                    group by account.name,account.code, account.id, account.group_id
+                                                                    '''.format(
+            states_args=states_args),
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '553000', 'code_end': '554999',
+                             'company_ids': self.env.company.id})
+        depreciation_amortization = self.env.cr.dictfetchall()
+        self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
+                                                                            and budget_line.company_id = %(company_ids)s
+                                                                            and budget_line.date_from >= %(from_date)s 
+                                                                            and budget_line.date_to <= %(to_date)s
+                                                                            group by account.name, account.code
+                                                                            ''',
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '553000', 'code_end': '554999',
+                             'company_ids': self.env.company.id})
+        depreciation_amortization_budget_val = self.env.cr.dictfetchall()
+        self._arrange_account_budget_line(test_child_lines,
+                                          depreciation_amortization,
+                                          depreciation_amortization_budget_val,
+                                          dict_id)
+        amortization_total = sum(
+            list(map(lambda x: x['total'], depreciation_amortization)))
+        amortization_budget_total = sum(list(
+            map(lambda x: x['planned'], depreciation_amortization_budget_val)))
+        depreciation_amortization_sum.append(amortization_total)
+        depreciation_amortization_budget.append(amortization_budget_total)
+        return [amortization_total,
+                amortization_budget_total, amortization_total -
+                amortization_budget_total]
+
+    def _get_finance_cost(self, states_args, query, query_budget,
+                          options, test_child_lines, dict_id):
+        self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
+                                                                        and journal_item.company_id = %(company_ids)s
+                                                                        and journal_item.date >= %(from_date)s 
+                                                                        and journal_item.date <= %(to_date)s
+                                                                        and {states_args}
+                                                                        group by account.name,account.code, account.id, account.group_id
+                                                                        '''.format(
+            states_args=states_args),
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '581100', 'code_end': '581299',
+                             'company_ids': self.env.company.id})
+        finance_cost = self.env.cr.dictfetchall()
+        self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
+                                                                                and budget_line.company_id = %(company_ids)s
+                                                                                and budget_line.date_from >= %(from_date)s 
+                                                                                and budget_line.date_to <= %(to_date)s
+                                                                                group by account.name, account.code
+                                                                                ''',
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '581100', 'code_end': '581299',
+                             'company_ids': self.env.company.id})
+        finance_cost_budget = self.env.cr.dictfetchall()
+        self._arrange_account_budget_line(test_child_lines,
+                                          finance_cost,
+                                          finance_cost_budget, dict_id)
+        finance_cost_total = sum(list(map(lambda x: x['total'], finance_cost)))
+        finance_cost_budget_total = sum(
+            list(map(lambda x: x['planned'], finance_cost_budget)))
+        finance_cost_sum.append(finance_cost_total)
+        finance_cost_budget_list.append(finance_cost_budget_total)
+        return [finance_cost_total,
+                finance_cost_budget_total,
+                finance_cost_total - finance_cost_budget_total]
+
+    def _get_taxes(self, states_args, query, query_budget,
+                   options, test_child_lines, dict_id):
+        self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
+                                                                        and journal_item.company_id = %(company_ids)s
+                                                                        and journal_item.date >= %(from_date)s 
+                                                                        and journal_item.date <= %(to_date)s
+                                                                        and {states_args}
+                                                                        group by account.name,account.code, account.id, account.group_id
+                                                                        '''.format(
+            states_args=states_args),
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '561100', 'code_end': '569999',
+                             'company_ids': self.env.company.id})
+        taxes = self.env.cr.dictfetchall()
+        self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
+                                                                                and budget_line.company_id = %(company_ids)s
+                                                                                and budget_line.date_from >= %(from_date)s 
+                                                                                and budget_line.date_to <= %(to_date)s
+                                                                                group by account.name, account.code
+                                                                                ''',
+                            {'from_date': options['date']['date_from'],
+                             'to_date': options['date']['date_to'],
+                             'code_start': '561100', 'code_end': '569999',
+                             'company_ids': self.env.company.id})
+        taxes_budget = self.env.cr.dictfetchall()
+        self._arrange_account_budget_line(test_child_lines,
+                                          taxes,
+                                          taxes_budget, dict_id)
+        taxes_total = sum(list(map(lambda x: x['total'], taxes)))
+        taxes_budget_total = sum(
+            list(map(lambda x: x['planned'], taxes_budget)))
+        taxes_sum.append(taxes_total)
+        taxes_budget_list.append(taxes_budget_total)
+        return [taxes_total,
+                taxes_budget_total, taxes_total - taxes_budget_total]
+
+    def _arrange_account_budget_line(self, test_child_lines, account_lines,
+                                     budget_lines, dict_id):
+        group_ids = self.env['account.group'].search(
+            [('id', 'in', list(map(lambda x: x['group_id'], account_lines)))])
+        for lines in account_lines:
+            if budget_lines:
+                budget_line = list(
+                    filter(lambda x: x['code'] == lines['code'], budget_lines))
+                if len(budget_line) > 0:
+                    lines['planned'] = budget_line[0]['planned']
+                else:
+                    lines['planned'] = 0
+                lines['dict_id'] = dict_id
+                lines['group'] = False
+            else:
+                lines['planned'] = 0
+                lines['dict_id'] = dict_id
+                lines['group'] = False
+        new_lines = self._arrange_account_groups(group_ids, account_lines, dict_id)
+
+        test_child_lines += new_lines
+
+    def _arrange_account_groups(self, group_ids, account_lines, dict_id):
+        new_lines = []
+        print('account_lines', account_lines)
+        for group in group_ids:
+            test_lines = list(
+                filter(lambda x: x['group_id'] == group.id, account_lines))
+            new_lines.append({
+                'id': str(group.id) + dict_id,
+                'code': '',
+                'group': True,
+                'name': group.display_name,
+                'total': sum(list(map(lambda x: x['total'], test_lines))),
+                'planned': sum(list(map(lambda x: x['planned'], test_lines))),
+                'dict_id': dict_id,
+            })
+            new_lines += test_lines
+        no_group_lines = list(
+            filter(lambda x: x['group_id'] is None, account_lines))
+        if no_group_lines:
+            new_lines.append({
+                'id': 'None' + dict_id,
+                'code': '',
+                'group': True,
+                'name': 'no group',
+                'total': sum(list(map(lambda x: x['total'], no_group_lines))),
+                'planned': sum(
+                    list(map(lambda x: x['planned'], no_group_lines))),
+                'dict_id': dict_id,
+            })
+            new_lines += no_group_lines
+        return new_lines
+

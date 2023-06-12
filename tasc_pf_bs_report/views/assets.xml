@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <template id="pf_bs_reports_backend" inherit_id="web.assets_backend" active="True">
+        <xpath expr="." position="inside">
+            <script type="text/javascript" src="/tasc_pf_bs_report/static/src/js/multi_companies.js"></script>
+            <link rel="stylesheet" type="text/scss" href="/tasc_pf_bs_report/static/src/scss/pf_bs_report.scss"/>
+        </xpath>
+    </template>
+
+</odoo>

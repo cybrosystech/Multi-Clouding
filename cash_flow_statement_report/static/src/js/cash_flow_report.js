@@ -103,8 +103,24 @@ var cashFlowReportWidget = AbstractAction.extend({
 
     posted_click: function(e) {
         var journal_filter = e.target.attributes['data-filter'].value;
+        if (journal_filter == 'unfold'){
+            var $table_row = this.$el.find('.child_lines')
+            _.each($table_row, function (el) {
+                if (el.style.display == "none"){
+                    el.style.display = "";
+                    e.target.text = 'Fold All';
+                }
+                else{
+                    el.style.display = "none";
+                    e.target.text = 'Unfold all';
+                }
+            });
+        }
+        else{
         this.report_options['entry'] = journal_filter;
         this.render_values()
+        }
+
     },
 
     render_template: function() {
