@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <template id="tasc_trail_balance_search_template_date_filter">
+        <button type="button"
+                class="o_dropdown_toggler_btn btn btn-secondary dropdown-toggle"
+                data-toggle="dropdown">
+            <span class="fa fa-calendar" title="Dates" role="img"
+                  aria-label="Dates"/>
+            <t t-esc="options['date']['period_type']"/>
+        </button>
+        <div class="dropdown-menu o_filter_menu" role="menu">
+            <a role="menuitem"
+               class="dropdown-item js_cashflow_report_date_filter"
+               title="This Month" data-filter="this_month">This Month
+            </a>
+            <a role="menuitem"
+               class="dropdown-item js_cashflow_report_date_filter"
+               title="This Quarter" data-filter="this_quarter">This Quarter
+            </a>
+            <a role="menuitem"
+               class="dropdown-item js_cashflow_report_date_filter"
+               title="This Financial Year" data-filter="this_year">This
+                Financial Year
+            </a>
+            <div role="separator" class="dropdown-divider"/>
+            <a role="menuitem"
+               class="dropdown-item js_cashflow_report_date_filter"
+               title="Last Month" data-filter="last_month">Last Month
+            </a>
+            <a role="menuitem"
+               class="dropdown-item js_cashflow_report_date_filter"
+               title="Last Quarter" data-filter="last_quarter">Last Quarter
+            </a>
+            <a role="menuitem"
+               class="dropdown-item js_cashflow_report_date_filter"
+               title="Last Financial Year" data-filter="last_year">Last
+                Financial Year
+            </a>
+            <div role="separator" class="dropdown-divider"/>
+            <a role="menuitem" class="dropdown-item inner_click" title="Custom"
+               data-toggle="collapse" data-target="#demo" data-filter="custom">
+                Custom
+            </a>
+            <div id="custom_date" style="display: none;">
+                <div class="form-group">
+                    <label for="from_date">From Date:</label>
+                    <br/>
+                    <input type="date" id="from_date" name="Start Date"/>
+                    <br/>
+                    <label for="to_date">To Date:</label>
+                    <br/>
+                    <input type="date" id="to_date" name="To Date"/>
+                    <br/>
+                    <button type="button" id="custom_filter_btn"
+                            class="btn btn-primary">Apply
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tasc_trail_balance_report_posted_filter">
+        <button type="button"
+                class="o_dropdown_toggler_btn btn btn-secondary dropdown-toggle"
+                data-toggle="dropdown">
+            <span class="fa fa-filter"/>
+            Options:
+            <t t-if="options['entry'] == 'posted'">
+                <span>posted entries only</span>
+            </t>
+            <t t-else="">
+                <span>Included draft entries</span>
+            </t>
+        </button>
+        <div class="dropdown-menu o_filter_menu" role="menu">
+            <a role="menuitem"
+               class="dropdown-item js_cashflow_report_journal_filter"
+               title="posted entry" data-filter="posted">Posted Entry
+            </a>
+            <a role="menuitem"
+               class="dropdown-item js_cashflow_report_journal_filter"
+               title="all entries" data-filter="all_entry">Include unposted
+                Entry
+            </a>
+            <a role="menuitem"
+               class="dropdown-item js_cashflow_report_journal_filter"
+               title="all entries" data-filter="unfold">Unfold All
+            </a>
+        </div>
+    </template>
+
+
+</odoo>
