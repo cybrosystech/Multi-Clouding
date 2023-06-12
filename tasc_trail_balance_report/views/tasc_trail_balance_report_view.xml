@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+     <template id="tasc_trail_balance_search_view">
+        <div class="btn-group o_dropdown">
+            <t t-call="tasc_trail_balance_report.tasc_trail_balance_search_template_date_filter"/>
+        </div>
+        <div class="btn-group o_dropdown">
+            <t t-call="tasc_trail_balance_report.tasc_trail_balance_report_posted_filter"/>
+        </div>
+    </template>
+
+    <template id="tasc_trail_balance_html_content_view">
+         <div class='o_account_reports_body'>
+             <div class="table-responsive" style="margin-top:20px;">
+                 <table class="o_account_reports_table table-hover bd_main_table ttb_table">
+                     <thead class="ttb_table_head">
+                         <tr class="ttb_table_row">
+                             <th class="ttb_table_head_data" colspan="4">Account</th>
+                             <th class="ttb_table_head_data" colspan="2">Initial</th>
+                             <th class="ttb_table_head_data" colspan="2">Current</th>
+                             <th class="ttb_table_head_data" colspan="2">Total</th>
+                         </tr>
+                         <tr class="ttb_table_row">
+                             <th class="ttb_table_head_data" colspan="4"/>
+                             <th class="ttb_table_head_data">Debit</th>
+                             <th class="ttb_table_head_data">Credit</th>
+                             <th class="ttb_table_head_data">Debit</th>
+                             <th class="ttb_table_head_data">Credit</th>
+                             <th class="ttb_table_head_data">Debit</th>
+                             <th class="ttb_table_head_data">Credit</th>
+                         </tr>
+                     </thead>
+                     <tbody class="ttb_table_head">
+                         <t t-foreach="lines['lines']" t-as="line_val">
+                             <t t-if="line_val['initial']['debit'] != 0 or line_val['initial']['credit'] != 0 or line_val['monthly']['debit'] != 0 or line_val['monthly']['credit'] != 0">
+                                 <tr class="ttb_table_row">
+                                     <td class="ttb_table_td" colspan="4"><span t-esc="line_val['initial']['account']"/></td>
+                                     <td class="ttb_table_td"><span t-if="line_val['initial']['debit'] != 0" t-esc="'{:20,.2f}'.format(line_val['initial']['debit'])"/></td>
+                                     <td class="ttb_table_td"><span t-if="line_val['initial']['credit'] != 0" t-esc="'{:20,.2f}'.format(line_val['initial']['credit'])"/></td>
+                                     <td class="ttb_table_td"><span t-if="line_val['monthly']['debit'] != 0" t-esc="'{:20,.2f}'.format(line_val['monthly']['debit'])"/></td>
+                                     <td class="ttb_table_td"><span t-if="line_val['monthly']['credit'] != 0" t-esc="'{:20,.2f}'.format(line_val['monthly']['credit'])"/></td>
+                                     <td class="ttb_table_td"><span t-if="line_val['total']['debit'] != 0" t-esc="'{:20,.2f}'.format(line_val['total']['debit'])"/></td>
+                                     <td class="ttb_table_td"><span t-if="line_val['total']['credit'] != 0" t-esc="'{:20,.2f}'.format(line_val['total']['credit'])"/></td>
+                                 </tr>
+                             </t>
+                         </t>
+                     </tbody>
+                 </table>
+             </div>
+         </div>
+    </template>
+
+    <record id="action_trail_balance" model="ir.actions.client">
+        <field name="name">TASC Trail Balance</field>
+        <field name="tag">cash_flow</field>
+        <field name="context" eval="{'model': 'tasc.trail.balance'}"/>
+    </record>
+
+    <menuitem id="menu_action_trail_balance" name="TASC Trail Balance"
+                  action="action_trail_balance"
+                  parent="account.account_reports_management_menu"/>
+
+</odoo>
