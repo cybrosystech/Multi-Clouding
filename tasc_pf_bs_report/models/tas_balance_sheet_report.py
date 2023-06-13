@@ -35,9 +35,6 @@ class TascBalanceSheetReport(models.AbstractModel):
         else:
             if options['multi_company'] == 'all-companies':
                 options['multi-company'] = True
-                company_ids = self.env['res.company'].search([])
-                options['multi_company'] = company_ids.ids
-            print('options', options)
 
     def get_cash_flow_information(self, filter):
         options = self.env['cash.flow.statement']._get_cashflow_options(filter)
@@ -297,8 +294,7 @@ class TascBalanceSheetReport(models.AbstractModel):
             states_args=states_args),
                             {'to_date': options['date']['date_to'],
                              'code_start': '110000', 'code_end': '119999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else options['multi_company'])})
-        print('mmmmmmmmm', tuple([self.env.company.id] if options['multi-company'] is False else options['multi_company']), options['multi-company'])
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         current_assets = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                                             and budget_line.company_id in %(company_ids)s
@@ -309,7 +305,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '110000', 'code_end': '119999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else options['multi_company'])})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         current_assets_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(balance_sheet_lines,
                                           current_assets,
@@ -334,7 +330,7 @@ class TascBalanceSheetReport(models.AbstractModel):
             states_args=states_args),
                             {'to_date': options['date']['date_to'],
                              'code_start': '120000', 'code_end': '129999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else options['multi_company'])})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         non_current_assets = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                                             and budget_line.company_id in %(company_ids)s
@@ -345,7 +341,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '120000', 'code_end': '129999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else options['multi_company'])})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         non_current_assets_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(balance_sheet_lines,
                                           non_current_assets,
@@ -370,7 +366,7 @@ class TascBalanceSheetReport(models.AbstractModel):
             states_args=states_args),
                             {'to_date': options['date']['date_to'],
                              'code_start': '210000', 'code_end': '219999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else options['multi_company'])})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         current_liabilities = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                                                 and budget_line.company_id in %(company_ids)s
@@ -381,7 +377,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '210000', 'code_end': '219999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else options['multi_company'])})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         current_liabilities_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(balance_sheet_lines,
                                           current_liabilities,
@@ -407,7 +403,7 @@ class TascBalanceSheetReport(models.AbstractModel):
             states_args=states_args),
                             {'to_date': options['date']['date_to'],
                              'code_start': '220000', 'code_end': '299999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else options['multi_company'])})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         non_current_liabilities = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                                                     and budget_line.company_id in %(company_ids)s
@@ -418,7 +414,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '220000', 'code_end': '299999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else options['multi_company'])})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         non_current_liabilities_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(balance_sheet_lines,
                                           non_current_liabilities,
@@ -446,7 +442,7 @@ class TascBalanceSheetReport(models.AbstractModel):
             states_args=states_args),
                             {'to_date': options['date']['date_to'],
                              'code_start': '310000', 'code_end': '399999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else options['multi_company'])})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         equity = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                                                     and budget_line.company_id in %(company_ids)s
@@ -457,7 +453,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '310000', 'code_end': '399999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else options['multi_company'])})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         equity_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(balance_sheet_lines,
                                           equity,
@@ -488,7 +484,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                             {'to_date': options['date']['date_to'],
                              'from_date': static_date,
                              'code_start': '400000', 'code_end': '899999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else options['multi_company'])})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         current_year_profit = self.env.cr.dictfetchall()
         current_year_profit_account = self._get_current_year_profit_account(
             static_date,
@@ -503,7 +499,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                             {'from_date': static_date,
                              'to_date': options['date']['date_to'],
                              'code_start': '400000', 'code_end': '899999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else options['multi_company'])})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         current_year_profit_budget = self.env.cr.dictfetchall()
         current_year_profit += current_year_profit_account
         self._arrange_account_budget_line(balance_sheet_lines,
@@ -539,7 +535,7 @@ class TascBalanceSheetReport(models.AbstractModel):
             states_args=states_args),
                             {'to_date': static_date,
                              'code_start': '400000', 'code_end': '899999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else options['multi_company'])})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         unallocated_earning = self.env.cr.dictfetchall()
         unallocated_earning_account = self._get_unallocated_earning_account(
             static_date,
@@ -554,7 +550,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '420000', 'code_end': '429999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else options['multi_company'])})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         unallocated_earning_budget = self.env.cr.dictfetchall()
         unallocated_earning += unallocated_earning_account
         self._arrange_account_budget_line(balance_sheet_lines,
@@ -590,7 +586,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                             {'to_date': options['date']['date_to'],
                              'from_date': static_date,
                              'code': '999999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else options['multi_company'])})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         current_year_profit_account = self.env.cr.dictfetchall()
         return current_year_profit_account
 
@@ -606,7 +602,7 @@ class TascBalanceSheetReport(models.AbstractModel):
             states_args=states_args),
                             {'to_date': static_date,
                              'code': '999999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else options['multi_company'])})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         unallocated_earning_account = self.env.cr.dictfetchall()
         return unallocated_earning_account
 

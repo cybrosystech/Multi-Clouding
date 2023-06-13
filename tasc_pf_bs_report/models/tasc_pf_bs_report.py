@@ -26,9 +26,17 @@ class ProfitLossBalance(models.AbstractModel):
             'budget_analysis_search_view': 'tasc_pf_bs_report.tasc_pf_bs_search_view',
         }
 
+    def get_company_filter(self, options):
+        if 'multi_company' not in list(options.keys()):
+            options['multi-company'] = False
+        else:
+            if options['multi_company'] == 'all-companies':
+                options['multi-company'] = True
+            print('options', options)
+
     def get_cash_flow_information(self, filter):
-        print('filter', filter)
         options = self.env['cash.flow.statement']._get_cashflow_options(filter)
+        self.get_company_filter(options)
         info = {
             'options': options,
             'main_html': self.get_html_content(options),
@@ -376,7 +384,7 @@ class ProfitLossBalance(models.AbstractModel):
     def _get_operating_revenue(self, states_args, query, query_budget, options,
                                test_child_lines, dict_id):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
-                                    and journal_item.company_id = %(company_ids)s
+                                    and journal_item.company_id in %(company_ids)s
                                     and journal_item.date >= %(from_date)s 
                                     and journal_item.date <= %(to_date)s
                                     and {states_args}
@@ -385,10 +393,10 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '410000', 'code_end': '419999',
-                             'company_ids': self.env.company.id})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         operating_revenue = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
-                                            and budget_line.company_id = %(company_ids)s
+                                            and budget_line.company_id in %(company_ids)s
                                             and budget_line.date_from >= %(from_date)s 
                                             and budget_line.date_to <= %(to_date)s
                                             group by account.name, account.code
@@ -396,7 +404,7 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '410000', 'code_end': '419999',
-                             'company_ids': self.env.company.id})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         operating_revenue_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           operating_revenue,
@@ -414,7 +422,7 @@ class ProfitLossBalance(models.AbstractModel):
                          query_budget,
                          options, test_child_lines, dict_id):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
-                                            and journal_item.company_id = %(company_ids)s
+                                            and journal_item.company_id in %(company_ids)s
                                             and journal_item.date >= %(from_date)s 
                                             and journal_item.date <= %(to_date)s
                                             and {states_args}
@@ -423,10 +431,10 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '420000', 'code_end': '429999',
-                             'company_ids': self.env.company.id})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         direct_cost = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
-                                                    and budget_line.company_id = %(company_ids)s
+                                                    and budget_line.company_id in %(company_ids)s
                                                     and budget_line.date_from >= %(from_date)s 
                                                     and budget_line.date_to <= %(to_date)s
                                                     group by account.name, account.code
@@ -434,7 +442,7 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '420000', 'code_end': '429999',
-                             'company_ids': self.env.company.id})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         direct_cost_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           direct_cost,
@@ -451,7 +459,7 @@ class ProfitLossBalance(models.AbstractModel):
     def _get_staff_cost(self, states_args, query, query_budget, options,
                         test_child_lines, dict_id):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
-                                                    and journal_item.company_id = %(company_ids)s
+                                                    and journal_item.company_id in %(company_ids)s
                                                     and journal_item.date >= %(from_date)s 
                                                     and journal_item.date <= %(to_date)s
                                                     and {states_args}
@@ -461,10 +469,10 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '510000', 'code_end': '549999',
-                             'company_ids': self.env.company.id})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         staff_cost = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
-                                                            and budget_line.company_id = %(company_ids)s
+                                                            and budget_line.company_id in %(company_ids)s
                                                             and budget_line.date_from >= %(from_date)s 
                                                             and budget_line.date_to <= %(to_date)s
                                                             group by account.name, account.code
@@ -472,7 +480,7 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '510000', 'code_end': '549999',
-                             'company_ids': self.env.company.id})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         staff_cost_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           staff_cost,
@@ -489,7 +497,7 @@ class ProfitLossBalance(models.AbstractModel):
     def _get_general_admin_expense(self, states_args, query, query_budget,
                                    options, test_child_lines, dict_id):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
-                                                    and journal_item.company_id = %(company_ids)s
+                                                    and journal_item.company_id in %(company_ids)s
                                                     and journal_item.date >= %(from_date)s 
                                                     and journal_item.date <= %(to_date)s
                                                     and {states_args}
@@ -499,10 +507,10 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '550000', 'code_end': '552999',
-                             'company_ids': self.env.company.id})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         general_admin_expense = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
-                                                            and budget_line.company_id = %(company_ids)s
+                                                            and budget_line.company_id in %(company_ids)s
                                                             and budget_line.date_from >= %(from_date)s 
                                                             and budget_line.date_to <= %(to_date)s
                                                             group by account.name, account.code
@@ -510,7 +518,7 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '550000', 'code_end': '552999',
-                             'company_ids': self.env.company.id})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         general_admin_expense_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           general_admin_expense,
@@ -528,7 +536,7 @@ class ProfitLossBalance(models.AbstractModel):
     def _get_statutory_and_misc(self, states_args, query, query_budget,
                                 options, test_child_lines, dict_id):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
-                                                    and journal_item.company_id = %(company_ids)s
+                                                    and journal_item.company_id in %(company_ids)s
                                                     and journal_item.date >= %(from_date)s 
                                                     and journal_item.date <= %(to_date)s
                                                     and {states_args}
@@ -538,10 +546,10 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '555000', 'code_end': '559999',
-                             'company_ids': self.env.company.id})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         statutory_and_misc = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
-                                                            and budget_line.company_id = %(company_ids)s
+                                                            and budget_line.company_id in %(company_ids)s
                                                             and budget_line.date_from >= %(from_date)s 
                                                             and budget_line.date_to <= %(to_date)s
                                                             group by account.name, account.code
@@ -549,7 +557,7 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '555000', 'code_end': '559999',
-                             'company_ids': self.env.company.id})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         statutory_and_misc_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           statutory_and_misc,
@@ -566,7 +574,7 @@ class ProfitLossBalance(models.AbstractModel):
     def _get_bank_changes(self, states_args, query, query_budget,
                           options, test_child_lines, dict_id):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
-                                                    and journal_item.company_id = %(company_ids)s
+                                                    and journal_item.company_id in %(company_ids)s
                                                     and journal_item.date >= %(from_date)s 
                                                     and journal_item.date <= %(to_date)s
                                                     and {states_args}
@@ -576,10 +584,10 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '582100', 'code_end': '582299',
-                             'company_ids': self.env.company.id})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         bank_changes = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
-                                                            and budget_line.company_id = %(company_ids)s
+                                                            and budget_line.company_id in %(company_ids)s
                                                             and budget_line.date_from >= %(from_date)s 
                                                             and budget_line.date_to <= %(to_date)s
                                                             group by account.name, account.code
@@ -587,7 +595,7 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '582100', 'code_end': '582299',
-                             'company_ids': self.env.company.id})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         bank_changes_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           bank_changes,
@@ -604,7 +612,7 @@ class ProfitLossBalance(models.AbstractModel):
     def _get_disposal_gain_loss(self, states_args, query, query_budget,
                                 options, test_child_lines, dict_id):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
-                                                        and journal_item.company_id = %(company_ids)s
+                                                        and journal_item.company_id in %(company_ids)s
                                                         and journal_item.date >= %(from_date)s 
                                                         and journal_item.date <= %(to_date)s
                                                         and {states_args}
@@ -614,10 +622,10 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '558100', 'code_end': '558199',
-                             'company_ids': self.env.company.id})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         disposal_gain_loss = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
-                                                                and budget_line.company_id = %(company_ids)s
+                                                                and budget_line.company_id in %(company_ids)s
                                                                 and budget_line.date_from >= %(from_date)s 
                                                                 and budget_line.date_to <= %(to_date)s
                                                                 group by account.name, account.code
@@ -625,7 +633,7 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '558100', 'code_end': '558199',
-                             'company_ids': self.env.company.id})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         disposal_gain_loss_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           disposal_gain_loss,
@@ -642,7 +650,7 @@ class ProfitLossBalance(models.AbstractModel):
     def _get_interest_income(self, states_args, query, query_budget,
                              options, test_child_lines, dict_id):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
-                                                            and journal_item.company_id = %(company_ids)s
+                                                            and journal_item.company_id in %(company_ids)s
                                                             and journal_item.date >= %(from_date)s 
                                                             and journal_item.date <= %(to_date)s
                                                             and {states_args}
@@ -652,10 +660,10 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '581300', 'code_end': '581399',
-                             'company_ids': self.env.company.id})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         interest_income = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
-                                                                    and budget_line.company_id = %(company_ids)s
+                                                                    and budget_line.company_id in %(company_ids)s
                                                                     and budget_line.date_from >= %(from_date)s 
                                                                     and budget_line.date_to <= %(to_date)s
                                                                     group by account.name, account.code
@@ -663,7 +671,7 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '581300', 'code_end': '581399',
-                             'company_ids': self.env.company.id})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         interest_income_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           interest_income,
@@ -680,7 +688,7 @@ class ProfitLossBalance(models.AbstractModel):
     def _get_intra_group_interest_income(self, states_args, query, query_budget,
                                          options, test_child_lines, dict_id):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
-                                                                and journal_item.company_id = %(company_ids)s
+                                                                and journal_item.company_id in %(company_ids)s
                                                                 and journal_item.date >= %(from_date)s 
                                                                 and journal_item.date <= %(to_date)s
                                                                 and {states_args}
@@ -690,10 +698,10 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '570000', 'code_end': '579999',
-                             'company_ids': self.env.company.id})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         intra_group_interest_income = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
-                                                                        and budget_line.company_id = %(company_ids)s
+                                                                        and budget_line.company_id in %(company_ids)s
                                                                         and budget_line.date_from >= %(from_date)s 
                                                                         and budget_line.date_to <= %(to_date)s
                                                                         group by account.name, account.code
@@ -701,7 +709,7 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '570000', 'code_end': '579999',
-                             'company_ids': self.env.company.id})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         intra_group_interest_income_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           intra_group_interest_income,
@@ -721,7 +729,7 @@ class ProfitLossBalance(models.AbstractModel):
     def _get_depreciation_amortization(self, states_args, query, query_budget,
                                        options, test_child_lines, dict_id):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
-                                                                    and journal_item.company_id = %(company_ids)s
+                                                                    and journal_item.company_id in %(company_ids)s
                                                                     and journal_item.date >= %(from_date)s 
                                                                     and journal_item.date <= %(to_date)s
                                                                     and {states_args}
@@ -731,10 +739,10 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '553000', 'code_end': '554999',
-                             'company_ids': self.env.company.id})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         depreciation_amortization = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
-                                                                            and budget_line.company_id = %(company_ids)s
+                                                                            and budget_line.company_id in %(company_ids)s
                                                                             and budget_line.date_from >= %(from_date)s 
                                                                             and budget_line.date_to <= %(to_date)s
                                                                             group by account.name, account.code
@@ -742,7 +750,7 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '553000', 'code_end': '554999',
-                             'company_ids': self.env.company.id})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         depreciation_amortization_budget_val = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           depreciation_amortization,
@@ -761,7 +769,7 @@ class ProfitLossBalance(models.AbstractModel):
     def _get_finance_cost(self, states_args, query, query_budget,
                           options, test_child_lines, dict_id):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
-                                                                        and journal_item.company_id = %(company_ids)s
+                                                                        and journal_item.company_id in %(company_ids)s
                                                                         and journal_item.date >= %(from_date)s 
                                                                         and journal_item.date <= %(to_date)s
                                                                         and {states_args}
@@ -771,10 +779,10 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '581100', 'code_end': '581299',
-                             'company_ids': self.env.company.id})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         finance_cost = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
-                                                                                and budget_line.company_id = %(company_ids)s
+                                                                                and budget_line.company_id in %(company_ids)s
                                                                                 and budget_line.date_from >= %(from_date)s 
                                                                                 and budget_line.date_to <= %(to_date)s
                                                                                 group by account.name, account.code
@@ -782,7 +790,7 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '581100', 'code_end': '581299',
-                             'company_ids': self.env.company.id})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         finance_cost_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           finance_cost,
@@ -799,7 +807,7 @@ class ProfitLossBalance(models.AbstractModel):
     def _get_taxes(self, states_args, query, query_budget,
                    options, test_child_lines, dict_id):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
-                                                                        and journal_item.company_id = %(company_ids)s
+                                                                        and journal_item.company_id in %(company_ids)s
                                                                         and journal_item.date >= %(from_date)s 
                                                                         and journal_item.date <= %(to_date)s
                                                                         and {states_args}
@@ -809,10 +817,10 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '561100', 'code_end': '569999',
-                             'company_ids': self.env.company.id})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         taxes = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
-                                                                                and budget_line.company_id = %(company_ids)s
+                                                                                and budget_line.company_id in %(company_ids)s
                                                                                 and budget_line.date_from >= %(from_date)s 
                                                                                 and budget_line.date_to <= %(to_date)s
                                                                                 group by account.name, account.code
@@ -820,7 +828,7 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '561100', 'code_end': '569999',
-                             'company_ids': self.env.company.id})
+                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         taxes_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           taxes,
