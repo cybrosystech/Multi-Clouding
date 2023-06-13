@@ -7,7 +7,7 @@
                 data-toggle="dropdown">
             <span class="fa fa-filter"/>
             Multi-Company:
-            <t t-if="options['entry'] == 'posted'">
+            <t t-if="options['multi-company'] == False">
                 <span>Excluded</span>
             </t>
             <t t-else="">
