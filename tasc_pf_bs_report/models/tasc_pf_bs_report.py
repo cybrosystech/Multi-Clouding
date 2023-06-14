@@ -855,30 +855,33 @@ class ProfitLossBalance(models.AbstractModel):
                     lines['planned'] = 0
                 lines['dict_id'] = dict_id
                 lines['group'] = False
+                lines['parent_id'] = ''
             else:
                 lines['planned'] = 0
                 lines['dict_id'] = dict_id
                 lines['group'] = False
+                lines['parent_id'] = ''
         new_lines = self._arrange_account_groups(group_ids, account_lines, dict_id)
 
         test_child_lines += new_lines
 
     def _arrange_account_groups(self, group_ids, account_lines, dict_id):
         new_lines = []
-        print('account_lines', account_lines)
         for group in group_ids:
             test_lines = list(
                 filter(lambda x: x['group_id'] == group.id, account_lines))
-            new_lines.append({
-                'id': str(group.id) + dict_id,
-                'code': '',
-                'group': True,
-                'name': group.display_name,
-                'total': sum(list(map(lambda x: x['total'], test_lines))),
-                'planned': sum(list(map(lambda x: x['planned'], test_lines))),
-                'dict_id': dict_id,
-            })
-            new_lines += test_lines
+            codes = self.get_group_hierarchy(group, dict_id)
+            parent_id = dict_id
+            for code in codes:
+                code.update({
+                    'total': sum(list(map(lambda x: x['total'], test_lines))),
+                    'planned': sum(
+                        list(map(lambda x: x['planned'], test_lines))),
+                    'parent_id': parent_id
+                })
+                parent_id = code['id']
+            codes += test_lines
+            new_lines += codes
         no_group_lines = list(
             filter(lambda x: x['group_id'] is None, account_lines))
         if no_group_lines:
@@ -891,7 +894,24 @@ class ProfitLossBalance(models.AbstractModel):
                 'planned': sum(
                     list(map(lambda x: x['planned'], no_group_lines))),
                 'dict_id': dict_id,
+                'parent_id': dict_id
             })
             new_lines += no_group_lines
         return new_lines
+
+    def get_group_hierarchy(self, group, dict_id):
+        codes = []
+        group = group
+        while group:
+            codes.append({
+                'id': str(group.id) + dict_id,
+                'code': '',
+                'group': True,
+                'name': group.display_name,
+                'total': 0,
+                'planned': 0,
+                'dict_id': dict_id,
+            })
+            group = group.parent_id
+        return list(reversed(codes))
 

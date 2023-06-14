@@ -78,99 +78,83 @@
                                         </t>
                                     </tr>
                                     <t t-if="child_lines['account_lines']">
-                                        <t t-foreach="child_lines['account_lines']"
-                                           t-as="account_line">
+                                        <t t-set="count" t-value="20"/>
+                                        <t t-foreach="child_lines['account_lines']" t-as="account_line">
                                             <t t-if="account_line['dict_id'] == child_lines['id']">
-                                                <t t-set="trclass1"
-                                                   t-value="child_lines['id']"/>
-                                                <t t-if="account_line['group'] == True">
-                                                    <tr t-attf-class="pf_#{trclass1} child_lines"
-                                                        style="display: none; font-weight: bold;">
-                                                        <td colspan="3">
-                                                            <span t-esc="account_line['code'] + ' ' +account_line['name']"
-                                                                  class="tr_budget"
-                                                                  t-attf-data-id="pf_#{account_line['id']}"
-                                                                  style="margin-left: 18px;"/>
-                                                        </td>
-                                                        <td colspan="3">
-                                                            <span t-esc="'{:20,.2f}'.format(account_line['total'])"/>
-                                                        </td>
-                                                        <td colspan="3">
-                                                            <span t-esc="'{:20,.2f}'.format(account_line['planned'])"/>
-                                                        </td>
-                                                        <td colspan="3">
-                                                            <span t-esc="'{:20,.2f}'.format(account_line['total'] - account_line['planned'])"/>
-                                                        </td>
-                                                    </tr>
+                                                <t t-if="account_line['parent_id']">
+                                                    <t t-set="trclass1" t-value="account_line['parent_id']"/>
                                                 </t>
                                                 <t t-else="">
-                                                    <t t-set="child"
-                                                       t-value="str(account_line['group_id']) + account_line['dict_id']"/>
-                                                    <tr t-attf-class="pf_#{child} child_lines"
-                                                        style="display: none;">
-                                                        <td colspan="3">
-                                                            <span t-esc="account_line['code'] + ' ' +account_line['name']"
-                                                                  style="margin-left: 30px;"/>
-                                                        </td>
-                                                        <td colspan="3">
-                                                            <span t-esc="'{:20,.2f}'.format(account_line['total'])"/>
-                                                        </td>
-                                                        <td colspan="3">
-                                                            <span t-esc="'{:20,.2f}'.format(account_line['planned'])"/>
-                                                        </td>
-                                                        <td colspan="3">
-                                                            <span t-esc="'{:20,.2f}'.format(account_line['total'] - account_line['planned'])"/>
-                                                        </td>
-                                                    </tr>
+                                                    <t t-set="trclass1" t-value="str(account_line['group_id']) + account_line['dict_id']"/>
                                                 </t>
+                                                <t t-if="account_line['group'] == True">
+                                                    <t t-set="sub_class" t-value="'main_lines_pf_bs'"/>
+                                                    <t t-set="count" t-value="count + 8"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-set="sub_class" t-value="''"/>
+                                                </t>
+                                                <tr t-attf-class="pf_#{trclass1} child_lines #{sub_class}" style="display: none;">
+                                                    <td colspan="3">
+                                                        <span t-esc="account_line['code'] + ' ' +account_line['name']"
+                                                                  class="tr_budget"
+                                                                  t-attf-data-id="pf_#{account_line['id']}"
+                                                                  t-att-style="'margin-left: %spx;' %count"/>
+                                                    </td>
+                                                    <td colspan="3">
+                                                        <span t-esc="'{:20,.2f}'.format(account_line['total'])"/>
+                                                    </td>
+                                                    <td colspan="3">
+                                                        <span t-esc="'{:20,.2f}'.format(account_line['planned'])"/>
+                                                    </td>
+                                                    <td colspan="3">
+                                                        <span t-esc="'{:20,.2f}'.format(account_line['total'] - account_line['planned'])"/>
+                                                    </td>
+                                                </tr>
                                             </t>
                                         </t>
                                     </t>
                                 </t>
                             </t>
                             <t t-if="line_val['account_lines']">
+                                <t t-set="count" t-value="20"/>
                                 <t t-foreach="line_val['account_lines']" t-as="account_line">
                                     <t t-if="account_line['dict_id'] == line_val['id']">
-                                        <t t-set="trclass1" t-value="line_val['id']"/>
-                                        <t t-if="account_line['group'] == True">
-                                            <tr t-attf-class="pf_#{trclass1} child_lines"
-                                                style="display: none; font-weight: bold;">
-                                                <td colspan="3">
-                                                    <span t-esc="account_line['code'] + ' ' +account_line['name']"
-                                                          class="tr_budget"
-                                                          t-attf-data-id="pf_#{account_line['id']}"
-                                                          style="margin-left: 18px;"/>
-                                                </td>
-                                                <td colspan="3">
-                                                    <span t-esc="'{:20,.2f}'.format(account_line['total'])"/>
-                                                </td>
-                                                <td colspan="3">
-                                                    <span t-esc="'{:20,.2f}'.format(account_line['planned'])"/>
-                                                </td>
-                                                <td colspan="3">
-                                                    <span t-esc="'{:20,.2f}'.format(account_line['total'] - account_line['planned'])"/>
-                                                </td>
-                                            </tr>
+                                        <t t-if="account_line['parent_id']">
+                                            <t t-set="trclass1"
+                                               t-value="account_line['parent_id']"/>
                                         </t>
                                         <t t-else="">
-                                            <t t-set="child" t-value="str(account_line['group_id']) + account_line['dict_id']"/>
-                                            <tr t-attf-class="pf_#{child} child_lines"
-                                                style="display: none;">
-                                                <td colspan="3">
-                                                    <span t-esc="account_line['code'] + ' ' +account_line['name']"
-                                                          style="margin-left: 30px;"/>
-                                                </td>
-                                                <td colspan="3">
-                                                    <span t-esc="'{:20,.2f}'.format(account_line['total'])"/>
-                                                </td>
-                                                <td colspan="3">
-                                                    <span t-esc="'{:20,.2f}'.format(account_line['planned'])"/>
-                                                </td>
-                                                <td colspan="3">
-                                                    <span t-esc="'{:20,.2f}'.format(account_line['total'] - account_line['planned'])"/>
-                                                </td>
-                                            </tr>
+                                            <t t-set="trclass1"
+                                               t-value="str(account_line['group_id']) + account_line['dict_id']"/>
                                         </t>
+                                        <t t-if="account_line['group'] == True">
+                                            <t t-set="sub_class"
+                                               t-value="'main_lines_pf_bs'"/>
+                                            <t t-set="count"
+                                               t-value="count + 8"/>
+                                        </t>
+                                        <t t-else="">
+                                            <t t-set="sub_class" t-value="''"/>
+                                        </t>
+                                        <tr t-attf-class="pf_#{trclass1} child_lines #{sub_class}"
+                                            style="display: none;">
+                                            <td colspan="3">
+                                                <span t-esc="account_line['code'] + ' ' +account_line['name']"
+                                                      class="tr_budget"
+                                                      t-attf-data-id="pf_#{account_line['id']}"
+                                                      t-att-style="'margin-left: %spx;' %count"/>
+                                            </td>
+                                            <td colspan="3">
+                                                <span t-esc="'{:20,.2f}'.format(account_line['total'])"/>
+                                            </td>
+                                            <td colspan="3">
+                                                <span t-esc="'{:20,.2f}'.format(account_line['planned'])"/>
+                                            </td>
+                                            <td colspan="3">
+                                                <span t-esc="'{:20,.2f}'.format(account_line['total'] - account_line['planned'])"/>
+                                            </td>
+                                        </tr>
                                     </t>
                                 </t>
                             </t>
