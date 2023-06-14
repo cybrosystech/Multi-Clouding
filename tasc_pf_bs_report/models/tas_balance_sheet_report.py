@@ -667,17 +667,24 @@ class TascBalanceSheetReport(models.AbstractModel):
     def get_group_hierarchy(self, group, dict_id):
         codes = []
         group = group
-        while group:
-            codes.append({
-                'id': str(group.id) + dict_id,
-                'code': '',
-                'group': True,
-                'name': group.display_name,
-                'total': 0,
-                'planned': 0,
-                'dict_id': dict_id,
-            })
-            group = group.parent_id
+        codes.append({
+            'id': str(group.id) + dict_id,
+            'code': '',
+            'group': True,
+            'name': group.display_name,
+            'total': 0,
+            'planned': 0,
+            'dict_id': dict_id,
+        })
+        codes.append({
+            'id': str(group.parent_id.id) + dict_id,
+            'code': '',
+            'group': True,
+            'name': group.parent_id.display_name,
+            'total': 0,
+            'planned': 0,
+            'dict_id': dict_id,
+        })
         return list(reversed(codes))
 
 
