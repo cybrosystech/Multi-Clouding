@@ -637,7 +637,6 @@ class TascBalanceSheetReport(models.AbstractModel):
         for group in group_ids:
             test_lines = list(filter(lambda x: x['group_id'] == group.id,
                                      account_lines))
-            # parent_id = dict_id
             if group.parent_id:
                 if len(new_lines) != 0:
                     parent_line = list(filter(
