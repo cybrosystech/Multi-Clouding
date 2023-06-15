@@ -633,11 +633,11 @@ class TascBalanceSheetReport(models.AbstractModel):
     def _arrange_account_groups(self, group_ids, account_lines, dict_id):
         new_lines = []
         for group in group_ids:
-            test_lines = list(
-                filter(lambda x: x['group_id'] == group.id, account_lines))
-            parent_id = dict_id
+            test_lines = list(filter(lambda x: x['group_id'] == group.id,
+                                     account_lines))
+            # parent_id = dict_id
             if group.parent_id:
-                if new_lines:
+                if len(new_lines) != 0:
                     parent_line = list(filter(
                         lambda x: x['id'] == str(group.parent_id.id) + dict_id,
                         new_lines))
@@ -660,30 +660,55 @@ class TascBalanceSheetReport(models.AbstractModel):
                             'dict_id': dict_id,
                             'parent_id': parent_line[0]['id']
                         })
-                        new_lines += test_lines
+                    else:
+                        new_lines.append({
+                            'id': str(group.parent_id.id) + dict_id,
+                            'code': '',
+                            'group': True,
+                            'name': group.parent_id.display_name,
+                            'total': sum(
+                                list(map(lambda x: x['total'], test_lines))),
+                            'planned': sum(
+                                list(map(lambda x: x['planned'], test_lines))),
+                            'dict_id': dict_id,
+                            'parent_id': dict_id
+                        })
+                        new_lines.append({
+                            'id': str(group.id) + dict_id,
+                            'code': '',
+                            'group': True,
+                            'name': group.display_name,
+                            'total': sum(
+                                list(map(lambda x: x['total'], test_lines))),
+                            'planned': sum(
+                                list(map(lambda x: x['planned'], test_lines))),
+                            'dict_id': dict_id,
+                            'parent_id': str(group.parent_id.id) + dict_id
+                        })
                 else:
                     new_lines.append({
                         'id': str(group.parent_id.id) + dict_id,
                         'code': '',
                         'group': True,
                         'name': group.parent_id.display_name,
-                        'total': sum(list(map(lambda x: x['total'], test_lines))),
+                        'total': sum(
+                            list(map(lambda x: x['total'], test_lines))),
                         'planned': sum(
                             list(map(lambda x: x['planned'], test_lines))),
                         'dict_id': dict_id,
-                        'parent_id': parent_id
+                        'parent_id': dict_id
                     })
-                    parent_id = str(group.parent_id.id) + dict_id
                     new_lines.append({
                         'id': str(group.id) + dict_id,
                         'code': '',
                         'group': True,
                         'name': group.display_name,
-                        'total': sum(list(map(lambda x: x['total'], test_lines))),
+                        'total': sum(
+                            list(map(lambda x: x['total'], test_lines))),
                         'planned': sum(
                             list(map(lambda x: x['planned'], test_lines))),
                         'dict_id': dict_id,
-                        'parent_id': parent_id
+                        'parent_id': str(group.parent_id.id) + dict_id
                     })
             else:
                 new_lines.append({
@@ -695,10 +720,9 @@ class TascBalanceSheetReport(models.AbstractModel):
                     'planned': sum(
                         list(map(lambda x: x['planned'], test_lines))),
                     'dict_id': dict_id,
-                    'parent_id': parent_id
+                    'parent_id': dict_id
                 })
             new_lines += test_lines
-            print('new_lines//////', new_lines)
         no_group_lines = list(
             filter(lambda x: x['group_id'] is None, account_lines))
         if no_group_lines:
@@ -715,22 +739,6 @@ class TascBalanceSheetReport(models.AbstractModel):
             })
             new_lines += no_group_lines
         return new_lines
-
-    def get_group_hierarchy(self, group, dict_id):
-        codes = []
-        group = group
-        while group:
-            codes.append({
-                'id': str(group.id) + dict_id,
-                'code': '',
-                'group': True,
-                'name': group.display_name,
-                'total': 0,
-                'planned': 0,
-                'dict_id': dict_id,
-            })
-            group = group.parent_id
-        return list(reversed(codes))
 
     def print_xlsx_tasc_balance_sheet(self, options, params):
         print('llllllllllll', self.env.context)
