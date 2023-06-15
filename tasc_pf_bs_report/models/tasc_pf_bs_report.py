@@ -870,9 +870,8 @@ class ProfitLossBalance(models.AbstractModel):
         for group in group_ids:
             test_lines = list(
                 filter(lambda x: x['group_id'] == group.id, account_lines))
-            parent_id = dict_id
             if group.parent_id:
-                if new_lines:
+                if len(new_lines) != 0:
                     parent_line = list(filter(
                         lambda x: x['id'] == str(group.parent_id.id) + dict_id,
                         new_lines))
@@ -893,9 +892,36 @@ class ProfitLossBalance(models.AbstractModel):
                             'planned': sum(
                                 list(map(lambda x: x['planned'], test_lines))),
                             'dict_id': dict_id,
-                            'parent_id': parent_line[0]['id']
+                            'parent_id': parent_line[0]['id'],
+                            'count': 20
                         })
-                        new_lines += test_lines
+                    else:
+                        new_lines.append({
+                            'id': str(group.parent_id.id) + dict_id,
+                            'code': '',
+                            'group': True,
+                            'name': group.parent_id.display_name,
+                            'total': sum(
+                                list(map(lambda x: x['total'], test_lines))),
+                            'planned': sum(
+                                list(map(lambda x: x['planned'], test_lines))),
+                            'dict_id': dict_id,
+                            'parent_id': dict_id,
+                            'count': 15
+                        })
+                        new_lines.append({
+                            'id': str(group.id) + dict_id,
+                            'code': '',
+                            'group': True,
+                            'name': group.display_name,
+                            'total': sum(
+                                list(map(lambda x: x['total'], test_lines))),
+                            'planned': sum(
+                                list(map(lambda x: x['planned'], test_lines))),
+                            'dict_id': dict_id,
+                            'parent_id': str(group.parent_id.id) + dict_id,
+                            'count': 20
+                        })
                 else:
                     new_lines.append({
                         'id': str(group.parent_id.id) + dict_id,
@@ -907,9 +933,9 @@ class ProfitLossBalance(models.AbstractModel):
                         'planned': sum(
                             list(map(lambda x: x['planned'], test_lines))),
                         'dict_id': dict_id,
-                        'parent_id': parent_id
+                        'parent_id': dict_id,
+                        'count': 15
                     })
-                    parent_id = str(group.parent_id.id) + dict_id
                     new_lines.append({
                         'id': str(group.id) + dict_id,
                         'code': '',
@@ -920,7 +946,8 @@ class ProfitLossBalance(models.AbstractModel):
                         'planned': sum(
                             list(map(lambda x: x['planned'], test_lines))),
                         'dict_id': dict_id,
-                        'parent_id': parent_id
+                        'parent_id': str(group.parent_id.id) + dict_id,
+                        'count': 20
                     })
             else:
                 new_lines.append({
@@ -932,7 +959,8 @@ class ProfitLossBalance(models.AbstractModel):
                     'planned': sum(
                         list(map(lambda x: x['planned'], test_lines))),
                     'dict_id': dict_id,
-                    'parent_id': parent_id
+                    'parent_id': dict_id,
+                    'count': 15
                 })
             new_lines += test_lines
         no_group_lines = list(
@@ -947,7 +975,8 @@ class ProfitLossBalance(models.AbstractModel):
                 'planned': sum(
                     list(map(lambda x: x['planned'], no_group_lines))),
                 'dict_id': dict_id,
-                'parent_id': dict_id
+                'parent_id': dict_id,
+                'count': 15
             })
             new_lines += no_group_lines
         return new_lines
