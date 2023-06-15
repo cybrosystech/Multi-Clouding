@@ -78,9 +78,9 @@
                                         </t>
                                     </tr>
                                     <t t-if="child_lines['account_lines']">
-                                        <t t-set="count" t-value="20"/>
                                         <t t-foreach="child_lines['account_lines']" t-as="account_line">
                                             <t t-if="account_line['dict_id'] == child_lines['id']">
+                                                <t t-set="count" t-value="account_line['count']"/>
                                                 <t t-if="account_line['parent_id']">
                                                     <t t-set="trclass1" t-value="account_line['parent_id']"/>
                                                 </t>
@@ -89,7 +89,6 @@
                                                 </t>
                                                 <t t-if="account_line['group'] == True">
                                                     <t t-set="sub_class" t-value="'main_lines_pf_bs'"/>
-                                                    <t t-set="count" t-value="count + 8"/>
                                                 </t>
                                                 <t t-else="">
                                                     <t t-set="sub_class" t-value="''"/>
@@ -117,9 +116,9 @@
                                 </t>
                             </t>
                             <t t-if="line_val['account_lines']">
-                                <t t-set="count" t-value="20"/>
                                 <t t-foreach="line_val['account_lines']" t-as="account_line">
                                     <t t-if="account_line['dict_id'] == line_val['id']">
+                                        <t t-set="count" t-value="account_line['count']"/>
                                         <t t-if="account_line['parent_id']">
                                             <t t-set="trclass1"
                                                t-value="account_line['parent_id']"/>
@@ -131,8 +130,6 @@
                                         <t t-if="account_line['group'] == True">
                                             <t t-set="sub_class"
                                                t-value="'main_lines_pf_bs'"/>
-                                            <t t-set="count"
-                                               t-value="count + 8"/>
                                         </t>
                                         <t t-else="">
                                             <t t-set="sub_class" t-value="''"/>
