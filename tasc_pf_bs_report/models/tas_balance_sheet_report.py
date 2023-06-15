@@ -621,13 +621,15 @@ class TascBalanceSheetReport(models.AbstractModel):
                 lines['dict_id'] = dict_id
                 lines['group'] = False
                 lines['parent_id'] = ''
+                lines['count'] = 25
             else:
                 lines['planned'] = 0
                 lines['dict_id'] = dict_id
                 lines['group'] = False
                 lines['parent_id'] = ''
-        new_lines = self._arrange_account_groups(group_ids, account_lines, dict_id)
-
+                lines['count'] = 25
+        new_lines = self._arrange_account_groups(group_ids, account_lines,
+                                                 dict_id)
         balance_sheet_lines += new_lines
 
     def _arrange_account_groups(self, group_ids, account_lines, dict_id):
@@ -658,7 +660,8 @@ class TascBalanceSheetReport(models.AbstractModel):
                             'planned': sum(
                                 list(map(lambda x: x['planned'], test_lines))),
                             'dict_id': dict_id,
-                            'parent_id': parent_line[0]['id']
+                            'parent_id': parent_line[0]['id'],
+                            'count': 20
                         })
                     else:
                         new_lines.append({
@@ -671,7 +674,8 @@ class TascBalanceSheetReport(models.AbstractModel):
                             'planned': sum(
                                 list(map(lambda x: x['planned'], test_lines))),
                             'dict_id': dict_id,
-                            'parent_id': dict_id
+                            'parent_id': dict_id,
+                            'count': 15
                         })
                         new_lines.append({
                             'id': str(group.id) + dict_id,
@@ -683,7 +687,8 @@ class TascBalanceSheetReport(models.AbstractModel):
                             'planned': sum(
                                 list(map(lambda x: x['planned'], test_lines))),
                             'dict_id': dict_id,
-                            'parent_id': str(group.parent_id.id) + dict_id
+                            'parent_id': str(group.parent_id.id) + dict_id,
+                            'count': 20
                         })
                 else:
                     new_lines.append({
@@ -696,7 +701,8 @@ class TascBalanceSheetReport(models.AbstractModel):
                         'planned': sum(
                             list(map(lambda x: x['planned'], test_lines))),
                         'dict_id': dict_id,
-                        'parent_id': dict_id
+                        'parent_id': dict_id,
+                        'count': 15
                     })
                     new_lines.append({
                         'id': str(group.id) + dict_id,
@@ -708,7 +714,8 @@ class TascBalanceSheetReport(models.AbstractModel):
                         'planned': sum(
                             list(map(lambda x: x['planned'], test_lines))),
                         'dict_id': dict_id,
-                        'parent_id': str(group.parent_id.id) + dict_id
+                        'parent_id': str(group.parent_id.id) + dict_id,
+                        'count': 20
                     })
             else:
                 new_lines.append({
@@ -720,7 +727,8 @@ class TascBalanceSheetReport(models.AbstractModel):
                     'planned': sum(
                         list(map(lambda x: x['planned'], test_lines))),
                     'dict_id': dict_id,
-                    'parent_id': dict_id
+                    'parent_id': dict_id,
+                    'count': 15
                 })
             new_lines += test_lines
         no_group_lines = list(
@@ -735,7 +743,8 @@ class TascBalanceSheetReport(models.AbstractModel):
                 'planned': sum(
                     list(map(lambda x: x['planned'], no_group_lines))),
                 'dict_id': dict_id,
-                'parent_id': dict_id
+                'parent_id': dict_id,
+                'count': 15
             })
             new_lines += no_group_lines
         return new_lines
