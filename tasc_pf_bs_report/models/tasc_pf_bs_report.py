@@ -856,11 +856,13 @@ class ProfitLossBalance(models.AbstractModel):
                 lines['dict_id'] = dict_id
                 lines['group'] = False
                 lines['parent_id'] = ''
+                lines['count'] = 25
             else:
                 lines['planned'] = 0
                 lines['dict_id'] = dict_id
                 lines['group'] = False
                 lines['parent_id'] = ''
+                lines['count'] = 25
         new_lines = self._arrange_account_groups(group_ids, account_lines, dict_id)
 
         test_child_lines += new_lines
