@@ -1033,7 +1033,7 @@ class ProfitLossBalance(models.AbstractModel):
         sub_line_style = workbook.add_format(
             {'font_size': 12, })
         sub_line_style1 = workbook.add_format(
-            {'font_size': 12, })
+            {'font_size': 12, 'bold': True})
         sub_line_style1.set_indent(2)
         sub_line_style2 = workbook.add_format(
             {'font_size': 12, })
@@ -1132,3 +1132,10 @@ class ProfitLossBalance(models.AbstractModel):
                                       sub_line_style)
             row_head += 1
 
+            # col_head += 3
+            # col_head_sub += 3
+
+        workbook.close()
+        output.seek(0)
+        response.stream.write(output.read())
+        output.close()
