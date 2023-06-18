@@ -1,4 +1,10 @@
-from odoo import models, api, _
+import io
+
+import xlsxwriter
+
+from odoo import models, api, _, fields
+from odoo.tools import date_utils
+from odoo.tools.safe_eval import json
 
 assets_sum = []
 assets_budget_sum = []
@@ -6,6 +12,7 @@ liabilities_sum = []
 liabilities_budget = []
 shareholders_equity_sum = []
 shareholders_equity_budget = []
+report_json_bs = []
 from datetime import datetime, date
 
 
@@ -64,8 +71,8 @@ class TascBalanceSheetReport(models.AbstractModel):
         values = {'model': self}
         header = self._get_header()
         lines = self._get_balance_sheet_line(options)
-        print('contexxxxxxx', self)
-        # self.env.context['test'] = 'llllll'
+        report_json_bs.clear()
+        report_json_bs.append(lines)
         values['lines'] = {'lines': lines, 'header': header}
         html = self.env.ref(template)._render(values)
         return html
@@ -749,4 +756,114 @@ class TascBalanceSheetReport(models.AbstractModel):
         return new_lines
 
     def print_xlsx_tasc_balance_sheet(self, options, params):
-        print('llllllllllll', self.env.context)
+        return {
+            'type': 'ir.actions.report',
+            'data': {'model': self.env.context.get('model'),
+                     'options': json.dumps(options,
+                                           default=date_utils.json_default),
+                     'output_format': 'xlsx',
+                     'financial_id': self.env.context.get('id'),
+                     'allowed_company_ids': self.env.context.get(
+                         'allowed_company_ids'),
+                     'report_name': 'Tasc Balance Sheet Report',
+                     },
+            'report_type': 'xlsx'
+        }
+
+    @api.model
+    def get_xlsx(self, options, response=None):
+        print('report_json_bs', report_json_bs)
+        headers = self._get_header()
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+        sheet = workbook.add_worksheet()
+        main_head = workbook.add_format(
+            {'font_size': 13, 'align': 'center', 'border': 1,
+             'bg_color': '#fcd15b'})
+        line_style = workbook.add_format(
+            {'font_size': 12, 'bold': True})
+        line_style_sub = workbook.add_format(
+            {'font_size': 12, 'bold': True})
+        line_style_sub.set_indent(1)
+        sub_line_style = workbook.add_format(
+            {'font_size': 12, })
+        sub_line_style1 = workbook.add_format(
+            {'font_size': 12, })
+        sub_line_style1.set_indent(2)
+        sub_line_style2 = workbook.add_format(
+            {'font_size': 12, })
+        sub_line_style2.set_indent(3)
+        row_head = 3
+        col_head = 1
+        col_head_sub = 3
+        for header in headers:
+            sheet.merge_range(row_head, col_head, row_head, col_head_sub,
+                              header, main_head)
+            col_head += 3
+            col_head_sub += 3
+        row_head = 4
+        col_head = 1
+        col_head_sub = 3
+        for line in report_json_bs[0]:
+            print('line', line)
+            sheet.merge_range(row_head, col_head, row_head, col_head_sub,
+                              line['name'], line_style)
+            col_head_1 = 4
+            col_head_2 = 6
+            for column in line['columns']:
+                sheet.merge_range(row_head, col_head_1, row_head, col_head_2,
+                                  column['name'], line_style)
+                col_head_1 += 3
+                col_head_2 += 3
+            if line['child_lines']:
+                col_head_23 = 1
+                col_head_sub_23 = 3
+                for child in line['child_lines']:
+                    row_head += 1
+                    print('child', child)
+                    sheet.merge_range(row_head, col_head_23, row_head,
+                                      col_head_sub_23,
+                                      child['name'], line_style_sub)
+                    col_head_11 = 4
+                    col_head_22 = 6
+                    for column in child['columns']:
+                        sheet.merge_range(row_head, col_head_11, row_head,
+                                          col_head_22,
+                                          column['name'], line_style)
+                        col_head_11 += 3
+                        col_head_22 += 3
+                    if child['account_lines']:
+                        col_head_24 = 1
+                        col_head_sub_24 = 3
+                        for acc_ch_lines in child['account_lines']:
+                            print('acc_ch_lines', acc_ch_lines)
+                            row_head += 1
+                            sheet.merge_range(row_head, col_head_24, row_head,
+                                              col_head_sub_24,
+                                              acc_ch_lines['name'], sub_line_style1 if acc_ch_lines['group'] is True else sub_line_style2)
+                            sheet.merge_range(row_head, col_head_24 + 3, row_head,
+                                              col_head_sub_24 + 3,
+                                              acc_ch_lines['total'], sub_line_style)
+                            sheet.merge_range(row_head, col_head_24 + 6, row_head,
+                                              col_head_sub_24 + 6,
+                                              acc_ch_lines['planned'], sub_line_style)
+                            sheet.merge_range(row_head, col_head_24 + 9, row_head,
+                                              col_head_sub_24 + 9,
+                                              acc_ch_lines['total'] - acc_ch_lines['planned'], sub_line_style)
+            if line['account_lines']:
+                col_head_24 = 1
+                col_head_sub_24 = 3
+                for acc_line in line['account_lines']:
+                    row_head += 1
+                    sheet.merge_range(row_head, col_head_24, row_head,
+                                      col_head_sub_24,
+                                      acc_line['name'], line_style_sub)
+            row_head += 1
+
+            # col_head += 3
+            # col_head_sub += 3
+
+        workbook.close()
+        output.seek(0)
+        response.stream.write(output.read())
+        output.close()

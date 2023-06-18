@@ -1,4 +1,10 @@
-from odoo import models
+import io
+
+import xlsxwriter
+
+from odoo import models, api, _
+from odoo.tools import date_utils
+from odoo.tools.safe_eval import json
 
 gross_profit_revenue = []
 gross_profit_budget = []
@@ -12,6 +18,7 @@ finance_cost_sum = []
 finance_cost_budget_list = []
 taxes_sum = []
 taxes_budget_list = []
+report_json_pl = []
 
 
 class ProfitLossBalance(models.AbstractModel):
@@ -25,6 +32,14 @@ class ProfitLossBalance(models.AbstractModel):
             'footnotes_template': 'account_reports.footnotes_template',
             'budget_analysis_search_view': 'tasc_pf_bs_report.tasc_pf_bs_search_view',
         }
+
+    @api.model
+    def get_button_profit_loss(self):
+        return [
+            {'name': _('Export (XLSX)'), 'sequence': 2,
+             'action': 'print_xlsx_tasc_profit_loss',
+             'file_export_type': _('XLSX')},
+        ]
 
     def get_company_filter(self, options):
         if 'multi_company' not in list(options.keys()):
@@ -43,7 +58,7 @@ class ProfitLossBalance(models.AbstractModel):
             'searchview_html': self.env['ir.ui.view']._render_template(
                 self._get_templates().get('budget_analysis_search_view', ),
                 values={'options': options}),
-            'buttons': ''
+            'buttons': self.get_button_profit_loss()
         }
         return info
 
@@ -65,6 +80,8 @@ class ProfitLossBalance(models.AbstractModel):
         values = {'model': self}
         header = self._get_header()
         lines = self._get_pf_bs_lines(options)
+        report_json_pl.clear()
+        report_json_pl.append(lines)
         values['lines'] = {'lines': lines, 'header': header}
         html = self.env.ref(template)._render(values)
         return html
@@ -983,4 +1000,135 @@ class ProfitLossBalance(models.AbstractModel):
             new_lines += no_group_lines
         return new_lines
 
+    def print_xlsx_tasc_profit_loss(self, options, params):
+        return {
+            'type': 'ir.actions.report',
+            'data': {'model': self.env.context.get('model'),
+                     'options': json.dumps(options,
+                                           default=date_utils.json_default),
+                     'output_format': 'xlsx',
+                     'financial_id': self.env.context.get('id'),
+                     'allowed_company_ids': self.env.context.get(
+                         'allowed_company_ids'),
+                     'report_name': 'Tasc Profit and Loss Report',
+                     },
+            'report_type': 'xlsx'
+        }
+
+    @api.model
+    def get_xlsx(self, options, response=None):
+        print('report_json_bs', report_json_pl)
+        headers = self._get_header()
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+        sheet = workbook.add_worksheet()
+        main_head = workbook.add_format(
+            {'font_size': 13, 'align': 'center', 'border': 1,
+             'bg_color': '#fcd15b'})
+        line_style = workbook.add_format(
+            {'font_size': 12, 'bold': True})
+        line_style_sub = workbook.add_format(
+            {'font_size': 12, 'bold': True})
+        line_style_sub.set_indent(1)
+        sub_line_style = workbook.add_format(
+            {'font_size': 12, })
+        sub_line_style1 = workbook.add_format(
+            {'font_size': 12, })
+        sub_line_style1.set_indent(2)
+        sub_line_style2 = workbook.add_format(
+            {'font_size': 12, })
+        sub_line_style2.set_indent(3)
+        row_head = 3
+        col_head = 1
+        col_head_sub = 3
+        for header in headers:
+            sheet.merge_range(row_head, col_head, row_head, col_head_sub,
+                              header, main_head)
+            col_head += 3
+            col_head_sub += 3
+        row_head = 4
+        col_head = 1
+        col_head_sub = 3
+        for line in report_json_pl[0]:
+            print('line', line)
+            sheet.merge_range(row_head, col_head, row_head, col_head_sub,
+                              line['name'], line_style)
+            col_head_1 = 4
+            col_head_2 = 6
+            for column in line['columns']:
+                sheet.merge_range(row_head, col_head_1, row_head, col_head_2,
+                                  column['name'], line_style)
+                col_head_1 += 3
+                col_head_2 += 3
+            if line['child_lines']:
+                col_head_23 = 1
+                col_head_sub_23 = 3
+                for child in line['child_lines']:
+                    row_head += 1
+                    print('child', child)
+                    sheet.merge_range(row_head, col_head_23, row_head,
+                                      col_head_sub_23,
+                                      child['name'], line_style_sub)
+                    col_head_11 = 4
+                    col_head_22 = 6
+                    for column in child['columns']:
+                        sheet.merge_range(row_head, col_head_11, row_head,
+                                          col_head_22,
+                                          column['name'], line_style)
+                        col_head_11 += 3
+                        col_head_22 += 3
+                    if child['account_lines']:
+                        col_head_24 = 1
+                        col_head_sub_24 = 3
+                        for acc_ch_lines in child['account_lines']:
+                            print('acc_ch_lines', acc_ch_lines)
+                            row_head += 1
+                            sheet.merge_range(row_head, col_head_24, row_head,
+                                              col_head_sub_24,
+                                              acc_ch_lines['name'],
+                                              sub_line_style1 if acc_ch_lines[
+                                                                     'group'] is True else sub_line_style2)
+                            sheet.merge_range(row_head, col_head_24 + 3,
+                                              row_head,
+                                              col_head_sub_24 + 3,
+                                              acc_ch_lines['total'],
+                                              sub_line_style)
+                            sheet.merge_range(row_head, col_head_24 + 6,
+                                              row_head,
+                                              col_head_sub_24 + 6,
+                                              acc_ch_lines['planned'],
+                                              sub_line_style)
+                            sheet.merge_range(row_head, col_head_24 + 9,
+                                              row_head,
+                                              col_head_sub_24 + 9,
+                                              acc_ch_lines['total'] -
+                                              acc_ch_lines['planned'],
+                                              sub_line_style)
+            if line['account_lines']:
+                col_head_24 = 1
+                col_head_sub_24 = 3
+                for acc_line in line['account_lines']:
+                    row_head += 1
+                    sheet.merge_range(row_head, col_head_24, row_head,
+                                      col_head_sub_24,
+                                      acc_line['name'],
+                                      sub_line_style1 if acc_line[
+                                                             'group'] is True else sub_line_style2)
+                    sheet.merge_range(row_head, col_head_24 + 3,
+                                      row_head,
+                                      col_head_sub_24 + 3,
+                                      acc_line['total'],
+                                      sub_line_style)
+                    sheet.merge_range(row_head, col_head_24 + 6,
+                                      row_head,
+                                      col_head_sub_24 + 6,
+                                      acc_line['planned'],
+                                      sub_line_style)
+                    sheet.merge_range(row_head, col_head_24 + 9,
+                                      row_head,
+                                      col_head_sub_24 + 9,
+                                      acc_line['total'] -
+                                      acc_line['planned'],
+                                      sub_line_style)
+            row_head += 1
 
