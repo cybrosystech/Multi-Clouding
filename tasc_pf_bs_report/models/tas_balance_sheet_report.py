@@ -836,47 +836,49 @@ class TascBalanceSheetReport(models.AbstractModel):
                         col_head_24 = 1
                         col_head_sub_24 = 3
                         for acc_ch_lines in child['account_lines']:
-                            row_head += 1
-                            sheet.merge_range(row_head, col_head_24, row_head,
-                                              col_head_sub_24,
-                                              acc_ch_lines['code'] + ' ' +
-                                              acc_ch_lines['name'], sub_line_style1 if acc_ch_lines['group'] is True else sub_line_style2)
-                            sheet.merge_range(row_head, col_head_24 + 3, row_head,
-                                              col_head_sub_24 + 3,
-                                              acc_ch_lines['total'], sub_line_style)
-                            sheet.merge_range(row_head, col_head_24 + 6, row_head,
-                                              col_head_sub_24 + 6,
-                                              acc_ch_lines['planned'], sub_line_style)
-                            sheet.merge_range(row_head, col_head_24 + 9, row_head,
-                                              col_head_sub_24 + 9,
-                                              acc_ch_lines['total'] - acc_ch_lines['planned'], sub_line_style)
+                            if acc_ch_lines['dict_id'] == child['id']:
+                                row_head += 1
+                                sheet.merge_range(row_head, col_head_24, row_head,
+                                                  col_head_sub_24,
+                                                  acc_ch_lines['code'] + ' ' +
+                                                  acc_ch_lines['name'], sub_line_style1 if acc_ch_lines['group'] is True else sub_line_style2)
+                                sheet.merge_range(row_head, col_head_24 + 3, row_head,
+                                                  col_head_sub_24 + 3,
+                                                  acc_ch_lines['total'], sub_line_style)
+                                sheet.merge_range(row_head, col_head_24 + 6, row_head,
+                                                  col_head_sub_24 + 6,
+                                                  acc_ch_lines['planned'], sub_line_style)
+                                sheet.merge_range(row_head, col_head_24 + 9, row_head,
+                                                  col_head_sub_24 + 9,
+                                                  acc_ch_lines['total'] - acc_ch_lines['planned'], sub_line_style)
             if line['account_lines']:
                 col_head_24 = 1
                 col_head_sub_24 = 3
                 for acc_line in line['account_lines']:
-                    row_head += 1
-                    sheet.merge_range(row_head, col_head_24, row_head,
-                                      col_head_sub_24,
-                                      acc_line['code'] + ' ' +
-                                      acc_line['name'],
-                                      sub_line_style1 if acc_line[
-                                                             'group'] is True else sub_line_style2)
-                    sheet.merge_range(row_head, col_head_24 + 3,
-                                      row_head,
-                                      col_head_sub_24 + 3,
-                                      acc_line['total'],
-                                      sub_line_style)
-                    sheet.merge_range(row_head, col_head_24 + 6,
-                                      row_head,
-                                      col_head_sub_24 + 6,
-                                      acc_line['planned'],
-                                      sub_line_style)
-                    sheet.merge_range(row_head, col_head_24 + 9,
-                                      row_head,
-                                      col_head_sub_24 + 9,
-                                      acc_line['total'] -
-                                      acc_line['planned'],
-                                      sub_line_style)
+                    if acc_line['dict_id'] == line['id']:
+                        row_head += 1
+                        sheet.merge_range(row_head, col_head_24, row_head,
+                                          col_head_sub_24,
+                                          acc_line['code'] + ' ' +
+                                          acc_line['name'],
+                                          sub_line_style1 if acc_line[
+                                                                 'group'] is True else sub_line_style2)
+                        sheet.merge_range(row_head, col_head_24 + 3,
+                                          row_head,
+                                          col_head_sub_24 + 3,
+                                          acc_line['total'],
+                                          sub_line_style)
+                        sheet.merge_range(row_head, col_head_24 + 6,
+                                          row_head,
+                                          col_head_sub_24 + 6,
+                                          acc_line['planned'],
+                                          sub_line_style)
+                        sheet.merge_range(row_head, col_head_24 + 9,
+                                          row_head,
+                                          col_head_sub_24 + 9,
+                                          acc_line['total'] -
+                                          acc_line['planned'],
+                                          sub_line_style)
             row_head += 1
 
             # col_head += 3
