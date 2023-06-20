@@ -119,7 +119,6 @@ def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial,
                 value_residual = asset.value_residual
             if not invoice_line_id:
                 del line_datas[2]
-            print('line_datas', line_datas)
             if company_currency == current_currency:
                 vals = {
                     'amount_total': current_currency._convert(
@@ -201,7 +200,8 @@ def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial,
                 asset.write({'depreciation_move_ids': commands,
                              'method_number': asset_sequence if not asset.method_period == 'day' else '',
                              'salvage_value': asset.book_value - residual_partial,
-                             'value_residual': residual_partial})
+                             'value_residual': residual_partial,
+                             'partial_disposal': True})
                 # asset.compute_depreciation_board()
 
             else:
