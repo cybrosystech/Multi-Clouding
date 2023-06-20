@@ -3,15 +3,11 @@
 
 from odoo import api, fields, models, _
 from odoo.tools import format_date
-import copy
-import binascii
-import struct
-import time
-import itertools
 from itertools import groupby
 from collections import defaultdict
 from odoo.addons.analytic_account_types.models.account_reports import \
     AccountReport
+import re
 
 MAX_NAME_LENGTH = 50
 
@@ -228,6 +224,14 @@ class assets_report(models.AbstractModel):
                     asset_add, asset_minus = asset_minus, asset_add
                     depreciation_add, depreciation_minus = depreciation_minus, depreciation_add
                     asset_closing, depreciation_closing = -asset_closing, -depreciation_closing
+                if asset.partial_disposal:
+                    partial_moves = asset.depreciation_move_ids.filtered(lambda x: 'Disposal' in x.ref)
+                    max_date = max(partial_moves.mapped('date'))
+                    depreciated_partial_moves = asset.depreciation_move_ids.filtered(lambda x: x.date < max_date)
+                    asset_minus = sum(partial_moves.mapped('amount_total_signed'))
+                    asset_closing -= asset_minus
+                    depreciation_opening = sum(depreciated_partial_moves.mapped('amount_total_signed'))
+                    depreciation_minus = (depreciation_opening * asset_minus) / asset.original_value
 
                 asset_gross = asset_closing - depreciation_closing
 
