@@ -232,7 +232,7 @@ class assets_report(models.AbstractModel):
                     asset_closing -= asset_minus
                     depreciation_add = sum(depreciated_partial_moves.mapped('amount_total_signed'))
                     depreciation_minus = (depreciation_add * asset_minus) / asset.original_value
-                    depreciation_closing = depreciation_add - depreciation_minus
+                    depreciation_closing = depreciation_opening + depreciation_add - depreciation_minus
 
                 asset_gross = asset_closing - depreciation_closing
 
