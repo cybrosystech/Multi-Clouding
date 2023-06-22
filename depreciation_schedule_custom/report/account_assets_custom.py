@@ -227,11 +227,12 @@ class assets_report(models.AbstractModel):
                 if asset.partial_disposal:
                     partial_moves = asset.depreciation_move_ids.filtered(lambda x: 'Disposal' in x.ref)
                     max_date = max(partial_moves.mapped('date'))
-                    depreciated_partial_moves = asset.depreciation_move_ids.filtered(lambda x: x.date < max_date)
+                    depreciated_partial_moves = asset.depreciation_move_ids.filtered(lambda x: x.date.year == max_date.year and x.date <= max_date and 'Disposal' not in x.ref)
                     asset_minus = sum(partial_moves.mapped('amount_total_signed'))
                     asset_closing -= asset_minus
-                    depreciation_opening = sum(depreciated_partial_moves.mapped('amount_total_signed'))
-                    depreciation_minus = (depreciation_opening * asset_minus) / asset.original_value
+                    depreciation_add = sum(depreciated_partial_moves.mapped('amount_total_signed'))
+                    depreciation_minus = (sum(asset.depreciation_move_ids.filtered(lambda x: x.date <= max_date and 'Disposal' not in x.ref).mapped('amount_total')) * asset_minus) / asset.original_value
+                    depreciation_closing = depreciation_opening + depreciation_add - depreciation_minus
 
                 asset_gross = asset_closing - depreciation_closing
 
