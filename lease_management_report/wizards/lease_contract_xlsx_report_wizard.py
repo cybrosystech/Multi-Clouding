@@ -12,13 +12,12 @@ class LeaseContractXlsxWizard(models.TransientModel):
 
     lease_contract_ids = fields.Many2many('leasee.contract',
                                           string="Lease Contract")
-    end_date = fields.Datetime(string="As of Date",
-                               default=datetime.datetime.now(), required=True)
+    end_date = fields.Date(string="As of Date",
+                           default=datetime.datetime.now(), required=True)
     excel_sheet = fields.Binary('Download Report')
     excel_sheet_name = fields.Char(string='Name', size=64)
 
     def print_report_xlsx(self):
-
         report_data = self.get_report_data()
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
@@ -37,7 +36,7 @@ class LeaseContractXlsxWizard(models.TransientModel):
             'bold': 1,
             'font_name': 'Aharoni',
             'border': 0,
-            'font_size': 12,
+            'font_size': 13,
             'align': 'center',
             'valign': 'vcenter',
             'font_color': 'black',
@@ -50,6 +49,15 @@ class LeaseContractXlsxWizard(models.TransientModel):
             'border': 0,
             'align': 'center',
             'valign': 'vcenter',
+        })
+        STYLE_LINE_HEADER = workbook.add_format({
+            'bold': 1,
+            'font_name': 'Aharoni',
+            'font_size': 14,
+            'border': 0,
+            'align': 'center',
+            'valign': 'vcenter',
+            'bg_color': '#7f8eb8',
         })
 
         TABLE_data = workbook.add_format({
@@ -87,7 +95,8 @@ class LeaseContractXlsxWizard(models.TransientModel):
         STYLE_LINE_Data.num_format_str = '#,##0.00_);(#,##0.00)'
 
         if report_data:
-            self.add_xlsx_sheet(report_data, workbook, STYLE_LINE_Data, header_format)
+            self.add_xlsx_sheet(report_data, workbook, STYLE_LINE_Data,
+                                header_format, STYLE_LINE_HEADER)
 
         self.excel_sheet_name = 'Payment Aging'
         workbook.close()
@@ -97,63 +106,85 @@ class LeaseContractXlsxWizard(models.TransientModel):
         return {
             'type': 'ir.actions.act_url',
             'name': 'Payment Aging',
-            'url': '/web/content/%s/%s/excel_sheet/%s?download=true' % (self._name, self.id, self.excel_sheet_name),
+            'url': '/web/content/%s/%s/excel_sheet/%s?download=true' % (
+                self._name, self.id, self.excel_sheet_name),
             'target': 'self'
         }
 
     def get_report_data(self):
         data = []
-        domain = [('move_type', '=', 'in_invoice'), ('leasee_contract_id', '!=', False)]
+        domain = [('move_type', '=', 'in_invoice'),
+                  ('leasee_contract_id', '!=', False),
+                  ('company_id', '=', self.env.company.id)]
         if self.lease_contract_ids:
-            domain += [('leasee_contract_id', 'in', self.lease_contract_ids.ids)]
-        domain += [('invoice_date_due', '<=', self.end_date), ('invoice_date_due', '!=', False)]
+            domain += [
+                ('leasee_contract_id', 'in', self.lease_contract_ids.ids)]
+        domain += [('invoice_date_due', '<=', self.end_date),
+                   ('invoice_date_due', '!=', False)]
         vendor_bills = self.env['account.move'].search(domain)
-        lease_contracts = vendor_bills.mapped('leasee_contract_id')
+        lease_contracts = vendor_bills.mapped('leasee_contract_id').search(
+            [('company_id', '=', self.env.company.id)],
+            order='id ASC')
 
         # Less than 1 year
-        next_year_date = self.end_date + dateutil.relativedelta.relativedelta(years=1)
-        next_year_date = next_year_date - dateutil.relativedelta.relativedelta(days=1)
+        next_year_date = self.end_date + dateutil.relativedelta.relativedelta(
+            years=1)
+        next_year_date = next_year_date - dateutil.relativedelta.relativedelta(
+            days=1)
 
         # 1.01 -  2years
-        next_2year_start_date = self.end_date + dateutil.relativedelta.relativedelta(years=1)
+        next_2year_start_date = self.end_date + dateutil.relativedelta.relativedelta(
+            years=1)
         next_2year_end_date = (self.end_date + dateutil.relativedelta.relativedelta(
-            years=2)) - dateutil.relativedelta.relativedelta(days=1)
+                               years=2)) - dateutil.relativedelta.relativedelta(
+            days=1)
 
         # 2.01 - 5 years
-        start_date_2nd_year = self.end_date + dateutil.relativedelta.relativedelta(years=2)
+        start_date_2nd_year = self.end_date + dateutil.relativedelta.relativedelta(
+            years=2)
         end_date_5th_year = (self.end_date + dateutil.relativedelta.relativedelta(
-            years=5)) - dateutil.relativedelta.relativedelta(days=1)
+                            years=5)) - dateutil.relativedelta.relativedelta(
+            days=1)
         # More than 5 years
-        start_date_5th_year = self.end_date + dateutil.relativedelta.relativedelta(years=5)
+        start_date_5th_year = self.end_date + dateutil.relativedelta.relativedelta(
+            years=5)
 
         for contract in lease_contracts:
-
             # Bills less than 1year
             move_ids_next_year = self.env['account.move'].search(
-                [('id', 'in', contract.account_move_ids.ids), ('invoice_date_due', '!=', False),
-                 ('invoice_date_due', '<=', next_year_date.date()), ('invoice_date_due', '>=', self.end_date.date())])
+                [('id', 'in', contract.account_move_ids.ids),
+                 ('invoice_date_due', '!=', False),
+                 ('invoice_date_due', '<=', next_year_date),
+                 ('invoice_date_due', '>=', self.end_date)])
             # Bills from 1.01 - 2 years
 
             move_ids_next_two_years = self.env['account.move'].search(
-                [('id', 'in', contract.account_move_ids.ids), ('invoice_date_due', '!=', False),
-                 ('invoice_date_due', '<=', next_2year_end_date.date()),
-                 ('invoice_date_due', '>=', next_2year_start_date.date())])
+                [('id', 'in', contract.account_move_ids.ids),
+                 ('invoice_date_due', '!=', False),
+                 ('invoice_date_due', '<=', next_2year_end_date),
+                 ('invoice_date_due', '>=', next_2year_start_date)])
             # Bills from 2.01 - 5 years
 
             move_ids_next_5_years = self.env['account.move'].search(
-                [('id', 'in', contract.account_move_ids.ids), ('invoice_date_due', '!=', False),
-                 ('invoice_date_due', '<=', end_date_5th_year.date()),
-                 ('invoice_date_due', '>=', start_date_2nd_year.date())])
+                [('id', 'in', contract.account_move_ids.ids),
+                 ('invoice_date_due', '!=', False),
+                 ('invoice_date_due', '<=', end_date_5th_year),
+                 ('invoice_date_due', '>=', start_date_2nd_year)])
 
             # Bills more than 5 years
             move_ids_more_than_5_years = self.env['account.move'].search(
-                [('id', 'in', contract.account_move_ids.ids), ('invoice_date_due', '!=', False),
-                 ('invoice_date_due', '>=', start_date_5th_year.date())])
+                [('id', 'in', contract.account_move_ids.ids),
+                 ('invoice_date_due', '!=', False),
+                 ('invoice_date_due', '>=', start_date_5th_year)])
 
-            total_amount_next_year = sum(move_ids_next_year.mapped('amount_total'))
-            total_amount_next_2years = sum(move_ids_next_two_years.mapped('amount_total'))
-            total_amount_next_5years = sum(move_ids_next_5_years.mapped('amount_total'))
-            total_amount_more_than_5_years = sum(move_ids_more_than_5_years.mapped('amount_total'))
+            total_amount_next_year = sum(
+                move_ids_next_year.mapped('amount_total'))
+            total_amount_next_2years = sum(
+                move_ids_next_two_years.mapped('amount_total'))
+            total_amount_next_5years = sum(
+                move_ids_next_5_years.mapped('amount_total'))
+            total_amount_more_than_5_years = sum(
+                move_ids_more_than_5_years.mapped('amount_total'))
 
             data.append({
                 'leasor_name': contract.name,
@@ -167,7 +198,8 @@ class LeaseContractXlsxWizard(models.TransientModel):
             })
         return data
 
-    def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data, header_format):
+    def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data,
+                       header_format, STYLE_LINE_HEADER):
         self.ensure_one()
         worksheet = workbook.add_worksheet(_('Payment Aging Report'))
         lang = self.env.user.lang
@@ -176,7 +208,8 @@ class LeaseContractXlsxWizard(models.TransientModel):
 
         row = 0
         col = 0
-        worksheet.merge_range(row, row, col, col + 8, _('Payment Aging'), STYLE_LINE_Data)
+        worksheet.merge_range(row, row, col, col + 7, _('Payment Aging Report'),
+                              STYLE_LINE_HEADER)
         row += 1
         col = 0
         worksheet.write(row, col, _('Lease Name'), header_format)
@@ -200,16 +233,21 @@ class LeaseContractXlsxWizard(models.TransientModel):
             row += 1
             worksheet.write(row, col, line['leasor_name'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['external_reference_number'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['external_reference_number'],
+                            STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['project_site'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['total_amount_next_year'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['total_amount_next_year'],
+                            STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['total_amount_next_2years'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['total_amount_next_2years'],
+                            STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['total_amount_next_5years'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['total_amount_next_5years'],
+                            STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['total_amount_more_than_5_years'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['total_amount_more_than_5_years'],
+                            STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['currency'], STYLE_LINE_Data)
