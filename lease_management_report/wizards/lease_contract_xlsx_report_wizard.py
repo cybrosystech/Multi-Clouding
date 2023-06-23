@@ -7,8 +7,9 @@ from odoo.tools.safe_eval import dateutil
 
 
 class LeaseContractXlsxWizard(models.TransientModel):
+    """ Class for Payment Aging Report Xlsx"""
     _name = "lease.contract.xlsx.report.wizard"
-    _description = "Lease Contract xlsx report"
+    _description = "Payment Aging xlsx report"
 
     lease_contract_ids = fields.Many2many('leasee.contract',
                                           string="Lease Contract")
@@ -135,15 +136,17 @@ class LeaseContractXlsxWizard(models.TransientModel):
         # 1.01 -  2years
         next_2year_start_date = self.end_date + dateutil.relativedelta.relativedelta(
             years=1)
-        next_2year_end_date = (self.end_date + dateutil.relativedelta.relativedelta(
-                               years=2)) - dateutil.relativedelta.relativedelta(
+        next_2year_end_date = (
+                                          self.end_date + dateutil.relativedelta.relativedelta(
+                                      years=2)) - dateutil.relativedelta.relativedelta(
             days=1)
 
         # 2.01 - 5 years
         start_date_2nd_year = self.end_date + dateutil.relativedelta.relativedelta(
             years=2)
-        end_date_5th_year = (self.end_date + dateutil.relativedelta.relativedelta(
-                            years=5)) - dateutil.relativedelta.relativedelta(
+        end_date_5th_year = (
+                                        self.end_date + dateutil.relativedelta.relativedelta(
+                                    years=5)) - dateutil.relativedelta.relativedelta(
             days=1)
         # More than 5 years
         start_date_5th_year = self.end_date + dateutil.relativedelta.relativedelta(
