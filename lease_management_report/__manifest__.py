@@ -13,6 +13,7 @@
     'data': [
         'security/ir.model.access.csv',
         'wizards/lease_contract_xlsx_report_wizard_views.xml',
+        'wizards/lease_interest_amortization_report_wizard_views.xml',
     ],
     'license': 'AGPL-3',
     'installable': True,
