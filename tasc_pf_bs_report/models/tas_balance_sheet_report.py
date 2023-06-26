@@ -81,6 +81,9 @@ class TascBalanceSheetReport(models.AbstractModel):
         return ['Account', 'Balance', 'Budget', 'Variance']
 
     def _get_balance_sheet_line(self, options):
+        date_to_demo = fields.Date.to_date(options['date']['date_to'])
+        budget_date = date(day=1, month=date_to_demo.month,
+                           year=date_to_demo.year)
         balance_sheet_lines = []
         states_args = """ parent_state = 'posted'"""
         if options['entry'] != 'posted':
@@ -115,7 +118,9 @@ class TascBalanceSheetReport(models.AbstractModel):
                                                      query_budget,
                                                      options,
                                                      balance_sheet_lines,
-                                                     dict_id='current_assets')],
+                                                     budget_date,
+                                                     dict_id='current_assets',
+                                                     )],
                         'account_lines': balance_sheet_lines
                     },
                     {
@@ -129,6 +134,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                                                          query_budget,
                                                          options,
                                                          balance_sheet_lines,
+                                                         budget_date,
                                                          dict_id='non_current_assets')],
                         'account_lines': balance_sheet_lines
 
@@ -151,6 +157,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                                                           query_budget,
                                                           options,
                                                           balance_sheet_lines,
+                                                          budget_date,
                                                           dict_id='current_liabilities')],
                         'account_lines': balance_sheet_lines
                     },
@@ -166,6 +173,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                                                               query_budget,
                                                               options,
                                                               balance_sheet_lines,
+                                                              budget_date,
                                                               dict_id='non_current_liabilities')],
                         'account_lines': balance_sheet_lines
                     },
@@ -188,6 +196,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                                              query,
                                              query_budget,
                                              options, balance_sheet_lines,
+                                             budget_date,
                                              dict_id='equity')],
                         'account_lines': balance_sheet_lines
                     },
@@ -291,7 +300,7 @@ class TascBalanceSheetReport(models.AbstractModel):
         return bs_lines
 
     def _get_current_assets(self, states_args, query, query_budget, options,
-                            balance_sheet_lines, dict_id):
+                            balance_sheet_lines, budget_date, dict_id):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
                                                     and journal_item.company_id in %(company_ids)s
                                                     and journal_item.date <= %(to_date)s
@@ -309,7 +318,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                                                             and budget_line.date_to <= %(to_date)s
                                                             group by account.name, account.code
                                                             ''',
-                            {'from_date': options['date']['date_from'],
+                            {'from_date': budget_date,
                              'to_date': options['date']['date_to'],
                              'code_start': '110000', 'code_end': '119999',
                              'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
@@ -327,7 +336,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                 current_assets_total - current_assets_budget_total]
 
     def _get_non_current_assets(self, states_args, query, query_budget,
-                                options, balance_sheet_lines, dict_id):
+                                options, balance_sheet_lines, budget_date, dict_id):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
                                                     and journal_item.company_id in %(company_ids)s
                                                     and journal_item.date <= %(to_date)s
@@ -345,7 +354,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                                                             and budget_line.date_to <= %(to_date)s
                                                             group by account.name, account.code
                                                             ''',
-                            {'from_date': options['date']['date_from'],
+                            {'from_date': budget_date,
                              'to_date': options['date']['date_to'],
                              'code_start': '120000', 'code_end': '129999',
                              'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
@@ -363,7 +372,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                 non_current_assets_total - non_current_assets_budget_total]
 
     def _get_current_liabilities(self, states_args, query, query_budget,
-                                 options, balance_sheet_lines, dict_id):
+                                 options, balance_sheet_lines, budget_date, dict_id):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
                                                         and journal_item.company_id in %(company_ids)s
                                                         and journal_item.date <= %(to_date)s
@@ -381,7 +390,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                                                                 and budget_line.date_to <= %(to_date)s
                                                                 group by account.name, account.code
                                                                 ''',
-                            {'from_date': options['date']['date_from'],
+                            {'from_date': budget_date,
                              'to_date': options['date']['date_to'],
                              'code_start': '210000', 'code_end': '219999',
                              'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
@@ -400,7 +409,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                 current_liabilities_total - current_liabilities_budget_total]
 
     def _get_non_current_liabilities(self, states_args, query, query_budget,
-                                     options, balance_sheet_lines, dict_id):
+                                     options, balance_sheet_lines, budget_date, dict_id):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
                                                             and journal_item.company_id in %(company_ids)s
                                                             and journal_item.date <= %(to_date)s
@@ -418,7 +427,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                                                                     and budget_line.date_to <= %(to_date)s
                                                                     group by account.name, account.code
                                                                     ''',
-                            {'from_date': options['date']['date_from'],
+                            {'from_date': budget_date,
                              'to_date': options['date']['date_to'],
                              'code_start': '220000', 'code_end': '299999',
                              'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
@@ -439,7 +448,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                 non_current_liabilities_budget_total]
 
     def _get_equity(self, states_args, query, query_budget,
-                    options, balance_sheet_lines, dict_id):
+                    options, balance_sheet_lines, budget_date, dict_id):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
                                                             and journal_item.company_id in %(company_ids)s
                                                             and journal_item.date <= %(to_date)s
@@ -457,7 +466,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                                                                     and budget_line.date_to <= %(to_date)s
                                                                     group by account.name, account.code
                                                                     ''',
-                            {'from_date': options['date']['date_from'],
+                            {'from_date': budget_date,
                              'to_date': options['date']['date_to'],
                              'code_start': '310000', 'code_end': '399999',
                              'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
@@ -820,7 +829,6 @@ class TascBalanceSheetReport(models.AbstractModel):
                 col_head_sub_23 = 3
                 for child in line['child_lines']:
                     row_head += 1
-                    print('child', child)
                     sheet.merge_range(row_head, col_head_23, row_head,
                                       col_head_sub_23,
                                       child['name'], line_style_sub)
@@ -880,9 +888,6 @@ class TascBalanceSheetReport(models.AbstractModel):
                                           acc_line['planned'],
                                           sub_line_style)
             row_head += 1
-
-            # col_head += 3
-            # col_head_sub += 3
 
         workbook.close()
         output.seek(0)
