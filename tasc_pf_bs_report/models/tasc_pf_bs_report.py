@@ -1017,7 +1017,6 @@ class ProfitLossBalance(models.AbstractModel):
 
     @api.model
     def get_xlsx(self, options, response=None):
-        print('report_json_bs', report_json_pl)
         headers = self._get_header()
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
