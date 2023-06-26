@@ -1,3 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_lease_contract_xlsx_report_wizard,lease.contract.xlsx.report.wizard,model_lease_contract_xlsx_report_wizard,base.group_user,1,1,1,1
 access_lease_interest_amortization_report_wizard,lease.interest.amortization.report.wizard,model_lease_interest_amortization_report_wizard,base.group_user,1,1,1,1
+access_lease_ll_and_rou_report_wizard,lease.ll.rou.report.wizard,model_lease_ll_rou_report_wizard,base.group_user,1,1,1,1
