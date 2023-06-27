@@ -83,15 +83,6 @@ class LeaseContractXlsxWizard(models.TransientModel):
         })
 
         TABLE_data_tolal_line.num_format_str = '#,##0.00'
-        TABLE_data_o = workbook.add_format({
-            'bold': 1,
-            'font_name': 'Aharoni',
-            'border': 0,
-            'font_size': 12,
-            'align': 'center',
-            'valign': 'vcenter',
-            'font_color': 'black',
-        })
         STYLE_LINE_Data = STYLE_LINE
         STYLE_LINE_Data.num_format_str = '#,##0.00_);(#,##0.00)'
 

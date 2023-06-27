@@ -1,7 +1,7 @@
 import base64
+import datetime
 import io
 import xlsxwriter
-import datetime
 from odoo import fields, models, _
 
 
@@ -28,7 +28,6 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
         report_data = self.get_report_data()
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
-
         TABLE_HEADER = workbook.add_format({
             'bold': 1,
             'font_name': 'Tahoma',
@@ -38,7 +37,6 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
             'valign': 'vcenter',
             'font_color': 'black',
         })
-
         header_format = workbook.add_format({
             'bold': 1,
             'font_name': 'Aharoni',
@@ -49,7 +47,6 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
             'font_color': 'black',
             'bg_color': '#c3c6c5',
         })
-
         TABLE_HEADER_Data = TABLE_HEADER
         TABLE_HEADER_Data.num_format_str = '#,##0.00_);(#,##0.00)'
         STYLE_LINE = workbook.add_format({
@@ -89,15 +86,6 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
         })
 
         TABLE_data_tolal_line.num_format_str = '#,##0.00'
-        TABLE_data_o = workbook.add_format({
-            'bold': 1,
-            'font_name': 'Aharoni',
-            'border': 0,
-            'font_size': 12,
-            'align': 'center',
-            'valign': 'vcenter',
-            'font_color': 'black',
-        })
         STYLE_LINE_Data = STYLE_LINE
         STYLE_LINE_Data.num_format_str = '#,##0.00_);(#,##0.00)'
 
