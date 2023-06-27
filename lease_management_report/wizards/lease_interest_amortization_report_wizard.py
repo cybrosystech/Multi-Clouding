@@ -28,7 +28,6 @@ class LeaseInterestAndAmortizationReportWizard(models.TransientModel):
 
     def print_report_xlsx(self):
         """Method to print xlsx report based on the selected parameters."""
-        print("print_report_xlsx")
         report_data = self.get_report_data()
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
@@ -93,15 +92,6 @@ class LeaseInterestAndAmortizationReportWizard(models.TransientModel):
         })
 
         TABLE_data_tolal_line.num_format_str = '#,##0.00'
-        TABLE_data_o = workbook.add_format({
-            'bold': 1,
-            'font_name': 'Aharoni',
-            'border': 0,
-            'font_size': 12,
-            'align': 'center',
-            'valign': 'vcenter',
-            'font_color': 'black',
-        })
         STYLE_LINE_Data = STYLE_LINE
         STYLE_LINE_Data.num_format_str = '#,##0.00_);(#,##0.00)'
 
