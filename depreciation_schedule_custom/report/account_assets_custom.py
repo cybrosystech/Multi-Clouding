@@ -225,19 +225,40 @@ class assets_report(models.AbstractModel):
                     depreciation_add, depreciation_minus = depreciation_minus, depreciation_add
                     asset_closing, depreciation_closing = -asset_closing, -depreciation_closing
                 if asset.partial_disposal:
-                    if asset.depreciation_move_ids.filtered(lambda x: x.date <=fields.Date.to_date(options['date']['date_to']) and 'Disposal' in x.ref):
+                    print('options', options)
+                    state = ['posted']
+                    if options['all_entries']:
+                        state = ['draft', 'posted']
+                    if asset.depreciation_move_ids.filtered(lambda x: x.date >=fields.Date.to_date(options['date']['date_from']) and  x.date <=fields.Date.to_date(options['date']['date_to']) and 'Disposal' in x.ref):
                         partial_moves = asset.depreciation_move_ids.filtered(lambda x: 'Disposal' in x.ref)
                         max_date = max(partial_moves.mapped('date'))
                         if options['date']['period_type'] == 'fiscalyear':
-                            depreciated_partial_moves = asset.depreciation_move_ids.filtered(lambda x: x.date.year == max_date.year and x.date <= max_date and 'Disposal' not in x.ref)
+                            depreciated_partial_moves = asset.depreciation_move_ids.filtered(lambda x: x.date.year == max_date.year and x.date <= max_date and 'Disposal' not in x.ref and x.state in state)
                         else:
-                            depreciated_partial_moves = asset.depreciation_move_ids.filtered(lambda x: x.date >=fields.Date.to_date(options['date']['date_from']) and  x.date <= fields.Date.to_date(options['date']['date_to']) and 'Disposal' not in x.ref)
+                            depreciated_partial_moves = asset.depreciation_move_ids.filtered(lambda x: x.date >=fields.Date.to_date(options['date']['date_from']) and  x.date <= fields.Date.to_date(options['date']['date_to']) and 'Disposal' not in x.ref and x.state in state)
                         asset_minus = sum(partial_moves.mapped('amount_total_signed'))
                         asset_closing -= asset_minus
                         depreciation_add = sum(depreciated_partial_moves.mapped('amount_total_signed'))
                         depreciation_minus = (sum(asset.depreciation_move_ids.filtered(lambda x: x.date <= max_date and 'Disposal' not in x.ref).mapped('amount_total')) * asset_minus) / asset.original_value
                         depreciation_closing = depreciation_opening + depreciation_add - depreciation_minus
-
+                    elif asset.depreciation_move_ids.filtered(lambda x: x.date <=fields.Date.to_date(options['date']['date_from']) and 'Disposal' in x.ref):
+                        depreciation_opening = sum(asset.depreciation_move_ids.filtered(lambda x: x.date <fields.Date.to_date(options['date']['date_from']) and 'Disposal' not in x.ref).mapped('amount_total_signed'))
+                        partial_moves = asset.depreciation_move_ids.filtered(
+                            lambda x: 'Disposal' in x.ref)
+                        depreciated_partial_moves = asset.depreciation_move_ids.filtered(
+                            lambda x: x.date >= fields.Date.to_date(
+                                options['date'][
+                                    'date_from']) and x.date <= fields.Date.to_date(
+                                options['date'][
+                                    'date_to']) and 'Disposal' not in x.ref and x.state in state)
+                        depreciation_add = sum(depreciated_partial_moves.mapped('amount_total_signed'))
+                        max_date = max(partial_moves.mapped('date'))
+                        asset_opening = asset_opening - sum(partial_moves.mapped('amount_total_signed'))
+                        asset_minus_demo = (sum(asset.depreciation_move_ids.filtered(lambda x: x.date <= max_date and 'Disposal' not in x.ref and x.state in state).mapped('amount_total')) * sum(partial_moves.mapped('amount_total_signed'))) / asset.original_value
+                        asset_closing = asset_opening
+                        depreciation_opening = depreciation_opening - asset_minus_demo
+                        depreciation_closing = depreciation_opening + depreciation_add - depreciation_minus
+                print('///////', asset_closing, depreciation_closing)
                 asset_gross = asset_closing - depreciation_closing
 
                 total = [x + y for x, y in zip(total, [asset_opening, asset_add, asset_minus, asset_closing, depreciation_opening, depreciation_add, depreciation_minus, depreciation_closing, asset_gross])]
