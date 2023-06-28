@@ -12,14 +12,14 @@
         </template>
 
         <record id="action_account_report_assets_custom" model="ir.actions.client">
-            <field name="name">Depreciation Schedule Custom</field>
+            <field name="name">Tasc Depreciation Schedule</field>
             <field name="tag">account_report</field>
             <field name="context" eval="{'model': 'account.assets.custom.report',
                                          'assets_limit': '200', 'assets_offset': '0'}" />
         </record>
 
-        <menuitem id="menu_action_account_report_assets_custom" name="Depreciation Schedule Custom"
+        <menuitem id="menu_action_account_report_assets_custom" name="Tasc Depreciation Schedule"
                   action="action_account_report_assets_custom"
-                  parent="account.account_reports_management_menu"/>
+                  parent="cash_flow_statement_report.tasc_dynamic_reports"/>
     </data>
 </odoo>
