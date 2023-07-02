@@ -68,6 +68,6 @@
 
     <menuitem id="menu_action_budget_analysis" name="TASC Budget Analysis"
                   action="action_budget_analysis"
-                  parent="account.account_reports_management_menu"/>
+                  parent="cash_flow_statement_report.tasc_dynamic_reports"/>
 
 </odoo>
