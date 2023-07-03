@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-
-        <report id="action_inv_general_template_report"
-                string="Tasc Invoices/Credit Note"
+        <report id="action_debit_note_template_report"
+                string="Tasc Debit Note"
                 model="account.move"
                 report_type="qweb-pdf"
-                name="tasc_invoice_report_general.inv_general_report"
-                file="tasc_invoice_report_general.inv_general_report"
+                name="tasc_invoice_report_general.debit_note_report"
+                file="tasc_invoice_report_general.debit_note_report"
         />
 
-        <record id="action_inv_general_template_report"
+        <record id="action_debit_note_template_report"
                 model="ir.actions.report">
             <field name="paperformat_id"
                    ref="tasc_invoice_report_general.paperformat_inv_general_template_report"/>
@@ -18,30 +17,23 @@
                 (object._get_report_base_filename())
             </field>
         </record>
-        <template id="tasc_invoice_report_general.inv_general_report">
+        <template id="tasc_invoice_report_general.debit_note_report">
             <t t-call="web.html_container">
                 <t t-foreach="docs" t-as="doc">
-                    <t t-call="tasc_invoice_report_general.report_inv_general_document_order"
+                    <t t-call="tasc_invoice_report_general.report_debit_note_document_order"
                        t-lang="doc.partner_id.lang"/>
                 </t>
             </t>
         </template>
-        <template id="report_inv_general_document_order">
+        <template id="report_debit_note_document_order">
             <t t-call="tasc_invoice_report_general.external_layout_inv_template">
                 <t t-set="doc"
                    t-value="doc.with_context({'lang':doc.partner_id.lang})"/>
                 <div class="page">
                     <div class="oe_structure"/>
-                    <t t-if="doc.move_type in ['out_refund', 'in_refund']">
-                        <p style="text-align:center;font-weight:bold;font-size:18px;">
-                            Credit Note
-                        </p>
-                    </t>
-                    <t t-else="">
-                        <p style="text-align:center;font-weight:bold;font-size:18px;">
-                            Invoice
-                        </p>
-                    </t>
+                    <p style="text-align:center;font-weight:bold;font-size:18px;">
+                        Debit Note
+                    </p>
                     <div class="row">
                         <div class="col-6">
                             <div>
@@ -60,27 +52,13 @@
 
                         <div class="col-6">
                             <div>
-                                <t t-if="doc.move_type in ['out_refund', 'in_refund']">
-                                    <span style="font-weight:bold">Credit Note
-                                        Date:
-                                    </span>
-                                </t>
-                                <t t-else="">
-                                    <span style="font-weight:bold">Invoice Date:
-                                    </span>
-                                </t>
+                                <span style="font-weight:bold">Debit Note Date:
+                                </span>
                                 <span t-field="doc.invoice_date"/>
                             </div>
                             <div>
-                                <t t-if="doc.move_type in ['out_refund', 'in_refund']">
-                                    <span style="font-weight:bold">Credit Note
-                                        No.:
-                                    </span>
-                                </t>
-                                <t t-else="">
-                                    <span style="font-weight:bold">Invoice No.:
-                                    </span>
-                                </t>
+                                <span style="font-weight:bold">Debit Note No.:
+                                </span>
                                 <span t-field="doc.name"/>
                             </div>
                             <div>
@@ -98,8 +76,8 @@
                             </div>
                             <div>
                                 <span style="font-weight:bold">Currency:
-                                </span>
-                                <span t-field="doc.currency_id.name"/>
+                                    </span>
+                                    <span t-field="doc.currency_id.name"/>
                             </div>
 
                         </div>
@@ -151,6 +129,7 @@
                                     <th>Tax %
                                     </th>
                                     <th>Total Amount
+
                                     </th>
                                 </tr>
                             </thead>
@@ -228,19 +207,10 @@
                     </div>
                     <div class="row" style="position:fixed;top:1100px;line-break:avoid;width:1000px;">
                         <div class="col-lg">
-                            <t t-if="doc.move_type in ['out_refund', 'in_refund']">
-                                <span style="font-weight:bold;">This is an
-                                    automated
-                                    Credit Note and no signature required.
-                                </span>
-                            </t>
-                            <t t-else="">
-                                <span style="font-weight:bold;">This is an
-                                    automated
-                                    invoice and no signature required.
-                                </span>
-
-                            </t>
+                            <span style="font-weight:bold;">This is an
+                                automated
+                                Debit Note and no signature required.
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -248,3 +218,4 @@
         </template>
     </data>
 </odoo>
+

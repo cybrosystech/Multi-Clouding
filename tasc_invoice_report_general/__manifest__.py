@@ -13,11 +13,11 @@
     'website': '',
     'depends': ['account'],
     'data': [
-        'views/account_move_views.xml',
         'report/layout.xml',
         'report/format.xml',
         'report/account_move_report_templates.xml',
         'report/account_move_report.xml',
+        'report/credit_note_views.xml',
     ],
     'license': 'AGPL-3',
     'installable': True,

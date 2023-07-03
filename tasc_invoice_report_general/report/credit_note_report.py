@@ -2,10 +2,10 @@ from odoo import api, models
 from odoo.exceptions import ValidationError
 
 
-class ReportTascInvoiceGeneral(models.AbstractModel):
-    """ Generic report for Invoice and credit note. """
-    _name = 'report.tasc_invoice_report_general.inv_general_report'
-    _description = 'Invoice / Credit Note Report General'
+class DebitNote(models.AbstractModel):
+    """ Report Debit Note. """
+    _name = 'debit.note'
+    _description = 'Debit Note'
 
     @api.model
     def _get_report_values(self, docids, data=None):
