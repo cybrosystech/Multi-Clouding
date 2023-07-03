@@ -17,6 +17,7 @@
         'report/format.xml',
         'report/account_move_report_templates.xml',
         'report/account_move_report.xml',
+        'views/account_move_views.xml',
     ],
     'license': 'AGPL-3',
     'installable': True,

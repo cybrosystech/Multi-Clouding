@@ -117,6 +117,8 @@ def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial,
                 asset_sequence = asset.method_number if not asset.method_period == 'day' else asset.depreciation_mo_number
                 salvage_value = asset.salvage_value + partial_amount
                 value_residual = asset.value_residual
+                asset.disposal_amount = asset.disposal_amount + partial_amount
+                asset.asset_net = asset.asset_net + (asset.original_value - partial_amount)
             if not invoice_line_id:
                 del line_datas[2]
             if company_currency == current_currency:

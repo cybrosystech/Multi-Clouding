@@ -59,6 +59,6 @@
 
     <menuitem id="menu_action_trail_balance" name="TASC Trail Balance"
                   action="action_trail_balance"
-                  parent="account.account_reports_management_menu"/>
+                  parent="cash_flow_statement_report.tasc_dynamic_reports"/>
 
 </odoo>
