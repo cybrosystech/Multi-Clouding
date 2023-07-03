@@ -7,6 +7,6 @@ class AccountMove(models.Model):
 
     invoice_type = fields.Selection(string="Refund Type",
                                     selection=[
-                                        ('out_refund', 'Customer Credit Note '),
-                                        ('in_refund', 'Vendor Debit Note')],
+                                        ('out_refund', 'Credit Note '),
+                                        ('in_refund', 'Debit Note')],
                                     default='out_refund')

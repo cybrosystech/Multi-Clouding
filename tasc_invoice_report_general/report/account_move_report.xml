@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
     <report id="action_inv_general_template_report"
-            string="Invoice/ Debit Note/ Credit Note"
+            string="Debit Note/ Credit Note"
             model="account.move"
             report_type="qweb-pdf"
             name="tasc_invoice_report_general.inv_general_report"
@@ -43,7 +43,7 @@
                 </t>
                 <t t-else="">
                     <p style="text-align:center;font-weight:bold;font-size:18px;">
-                        Invoice
+                        Credit Note
                     </p>
                 </t>
                 <div class="row">
@@ -73,7 +73,7 @@
                                 </span>
                             </t>
                             <t t-else="">
-                                <span style="font-weight:bold">Invoice Date:
+                                <span style="font-weight:bold">Credit Note Date:
                                 </span>
                             </t>
                             <span t-field="doc.invoice_date"/>
@@ -88,7 +88,7 @@
                                 </span>
                             </t>
                             <t t-else="">
-                                <span style="font-weight:bold">Invoice No.:
+                                <span style="font-weight:bold">Credit Note No.:
                                 </span>
                             </t>
                             <span t-field="doc.name"/>
@@ -244,7 +244,7 @@
                         <t t-else="">
                             <span style="font-weight:bold;">This is an
                                 automated
-                                invoice and no signature required.
+                                Credit Note and no signature required.
                             </span>
                         </t>
                     </div>
