@@ -27,6 +27,30 @@
         </field>
     </record>
 
+    <record id="disposal_fields_asset_expense_tree" model="ir.ui.view">
+        <field name="name">disposal.asset.expense.tree</field>
+        <field name="model">account.asset</field>
+        <field name="inherit_id" ref="account_asset.view_account_asset_expense_tree"/>
+        <field name="arch" type="xml">
+            <field name="state" position="after">
+                <field name="disposal_amount" string="Disposal Amount"/>
+                <field name="asset_net" string="Net Amount"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="disposal_fields_asset_sale_tree" model="ir.ui.view">
+        <field name="name">disposal.asset.sale.tree</field>
+        <field name="model">account.asset</field>
+        <field name="inherit_id" ref="account_asset.view_account_asset_sale_tree"/>
+        <field name="arch" type="xml">
+            <field name="state" position="after">
+                <field name="disposal_amount" string="Disposal Amount"/>
+                <field name="asset_net" string="Net Amount"/>
+            </field>
+        </field>
+    </record>
+
     <record id="view_currency_attribute_asset_form" model="ir.ui.view">
         <field name="name">account.currency.type</field>
         <field name="model">account.asset</field>
