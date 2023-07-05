@@ -20,7 +20,7 @@
         </field>
     </record>
     <record id="action_lease_contract_xlsx_report_wizard" model="ir.actions.act_window">
-        <field name="name">Lease Contract Excel Report</field>
+        <field name="name">Payment Aging Report</field>
         <field name="res_model">lease.contract.xlsx.report.wizard</field>
         <field name="type">ir.actions.act_window</field>
         <field name="view_mode">form</field>

@@ -113,7 +113,7 @@ class LLAgingReportWizard(models.Model):
                 data.append({
                     'leasor_name': contract.name,
                     'external_reference_number': contract.external_reference_number,
-                    'project_site': contract.project_site_id.name,
+                    'project_site': contract.project_site_id.name if contract.project_site_id else '',
                     'less_than_one_year': liabilities[
                         'tot_liability_amt_less_than_1_year'],
                     'one_to_two_year': liabilities[
@@ -132,7 +132,7 @@ class LLAgingReportWizard(models.Model):
                 data.append({
                     'leasor_name': contract.name,
                     'external_reference_number': contract.external_reference_number,
-                    'project_site': contract.project_site_id.name,
+                    'project_site': contract.project_site_id.name if contract.project_site_id else '',
                     'less_than_one_year': liabilities[
                         'tot_liability_amt_less_than_1_year'],
                     'one_to_two_year': liabilities[

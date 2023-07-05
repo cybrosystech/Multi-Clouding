@@ -159,31 +159,31 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
 
                 stll_credit_amt = stll_move_line_ids.mapped('credit')
                 stll_debit_amt = stll_move_line_ids.mapped('debit')
-                stll_amount = sum(stll_credit_amt) + sum(stll_debit_amt)
+                stll_amount = sum(stll_debit_amt) - sum(stll_credit_amt)
 
                 ltll_credit_amt = ltll_move_line_ids.mapped('credit')
                 ltll_debit_amt = ltll_move_line_ids.mapped('debit')
-                ltll_amount = sum(ltll_credit_amt) + sum(ltll_debit_amt)
+                ltll_amount = sum(ltll_debit_amt) - sum(ltll_credit_amt)
                 asset_credit_amt = fixed_asset_account_move_line_ids.mapped(
                     'credit')
                 asset_debit_amt = fixed_asset_account_move_line_ids.mapped(
                     'debit')
 
-                asset_tot_amt = sum(asset_credit_amt) + sum(asset_debit_amt)
+                asset_tot_amt = sum(asset_debit_amt) - sum(asset_credit_amt)
                 depreciation_credit_amt = depreciation_account_move_line_ids.mapped(
                     'credit')
                 depreciation_debit_amt = depreciation_account_move_line_ids.mapped(
                     'debit')
 
-                depreciation_tot_amt = sum(depreciation_credit_amt) + sum(
-                    depreciation_debit_amt)
+                depreciation_tot_amt = sum(
+                    depreciation_debit_amt) - sum(depreciation_credit_amt)
 
                 net_rou = asset_tot_amt - depreciation_tot_amt
 
                 data.append({
                     'leasor_name': contract.name,
                     'external_reference_number': contract.external_reference_number,
-                    'project_site': contract.project_site_id.name,
+                    'project_site': contract.project_site_id.name if contract.project_site_id else '',
                     'stll': stll_amount,
                     'ltll': ltll_amount,
                     'net_rou': net_rou,
@@ -216,7 +216,6 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
 
                     depreciation_account_move_line_ids = self.find_depreciation_account_move_lines(
                         move_ids, contract)
-
                 else:
                     move_ids = self.env['account.move'].search(
                         [('id', 'in', contract.account_move_ids.ids),
@@ -243,27 +242,26 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
 
                 stll_credit_amt = stll_move_line_ids.mapped('credit')
                 stll_debit_amt = stll_move_line_ids.mapped('debit')
-                stll_amount = sum(stll_credit_amt) + sum(stll_debit_amt)
+                stll_amount = sum(stll_debit_amt) - sum(stll_credit_amt)
 
                 ltll_credit_amt = ltll_move_line_ids.mapped('credit')
                 ltll_debit_amt = ltll_move_line_ids.mapped('debit')
-                ltll_amount = sum(ltll_credit_amt) + sum(ltll_debit_amt)
+                ltll_amount = sum(ltll_debit_amt) - sum(ltll_credit_amt)
                 asset_credit_amt = fixed_asset_account_move_line_ids.mapped(
                     'credit')
                 asset_debit_amt = fixed_asset_account_move_line_ids.mapped(
                     'debit')
-                asset_tot_amt = sum(asset_credit_amt) + sum(asset_debit_amt)
+                asset_tot_amt = sum(asset_debit_amt) - sum(asset_credit_amt)
                 depreciation_credit_amt = depreciation_account_move_line_ids.mapped(
                     'credit')
                 depreciation_debit_amt = depreciation_account_move_line_ids.mapped(
                     'debit')
-                depreciation_tot_amt = sum(depreciation_credit_amt) + sum(
-                    depreciation_debit_amt)
+                depreciation_tot_amt = sum(depreciation_debit_amt) - sum(depreciation_credit_amt)
                 net_rou = asset_tot_amt - depreciation_tot_amt
                 data.append({
                     'leasor_name': contract.name,
                     'external_reference_number': contract.external_reference_number,
-                    'project_site': contract.project_site_id.name,
+                    'project_site': contract.project_site_id.name if contract.project_site_id else '',
                     'stll': stll_amount,
                     'ltll': ltll_amount,
                     'net_rou': net_rou,
