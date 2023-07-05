@@ -169,7 +169,7 @@ class LeaseInterestAndAmortizationReportWizard(models.TransientModel):
                 data.append({
                     'leasor_name': contract.name,
                     'external_reference_number': contract.external_reference_number,
-                    'project_site': contract.project_site_id.name,
+                    'project_site': contract.project_site_id.name if contract.project_site_id else '',
                     'interest': interest_amount,
                     'amortization': amortization_amount,
                     'currency': contract.leasee_currency_id.name,
@@ -227,7 +227,7 @@ class LeaseInterestAndAmortizationReportWizard(models.TransientModel):
                 data.append({
                     'leasor_name': contract.name,
                     'external_reference_number': contract.external_reference_number,
-                    'project_site': contract.project_site_id.name,
+                    'project_site': contract.project_site_id.name if contract.project_site_id else '',
                     'interest': interest_amount,
                     'amortization': amortization_amount,
                     'currency': contract.leasee_currency_id.name,
@@ -238,7 +238,7 @@ class LeaseInterestAndAmortizationReportWizard(models.TransientModel):
     def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data,
                        header_format, STYLE_LINE_HEADER):
         self.ensure_one()
-        worksheet = workbook.add_worksheet(_('Payment Aging Report'))
+        worksheet = workbook.add_worksheet(_('Lease Interest and Amortization Report'))
         lang = self.env.user.lang
         if lang.startswith('ar_'):
             worksheet.right_to_left()
