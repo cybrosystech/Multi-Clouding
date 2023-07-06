@@ -113,7 +113,6 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
                 if self.state:
                     move_ids = self.env['account.move'].search(
                         [('id', 'in', contract.account_move_ids.ids),
-                         ('move_type', '=', 'entry'),
                          ('date', '<=', self.end_date),
                          ('state', '=', self.state),
                          ('company_id', '=', self.env.company.id)])
@@ -137,7 +136,6 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
                 else:
                     move_ids = self.env['account.move'].search(
                         [('id', 'in', contract.account_move_ids.ids),
-                         ('move_type', '=', 'entry'),
                          ('date', '<=', self.end_date),
                          ('company_id', '=', self.env.company.id)
                          ])
@@ -178,7 +176,7 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
                 depreciation_tot_amt = sum(
                     depreciation_debit_amt) - sum(depreciation_credit_amt)
 
-                net_rou = asset_tot_amt - depreciation_tot_amt
+                net_rou = asset_tot_amt + depreciation_tot_amt
 
                 data.append({
                     'leasor_name': contract.name,
@@ -196,7 +194,6 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
                 if self.state:
                     move_ids = self.env['account.move'].search(
                         [('id', 'in', contract.account_move_ids.ids),
-                         ('move_type', '=', 'entry'),
                          ('date', '<=', self.end_date),
                          ('state', '=', self.state),
                          ('company_id', '=', self.env.company.id)])
@@ -219,7 +216,6 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
                 else:
                     move_ids = self.env['account.move'].search(
                         [('id', 'in', contract.account_move_ids.ids),
-                         ('move_type', '=', 'entry'),
                          ('date', '<=', self.end_date),
                          ('company_id', '=', self.env.company.id)
                          ])
@@ -257,7 +253,7 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
                 depreciation_debit_amt = depreciation_account_move_line_ids.mapped(
                     'debit')
                 depreciation_tot_amt = sum(depreciation_debit_amt) - sum(depreciation_credit_amt)
-                net_rou = asset_tot_amt - depreciation_tot_amt
+                net_rou = asset_tot_amt + depreciation_tot_amt
                 data.append({
                     'leasor_name': contract.name,
                     'external_reference_number': contract.external_reference_number,
