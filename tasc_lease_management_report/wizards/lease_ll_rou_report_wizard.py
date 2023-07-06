@@ -116,6 +116,11 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
                          ('date', '<=', self.end_date),
                          ('state', '=', self.state),
                          ('company_id', '=', self.env.company.id)])
+                    asset_move_ids = self.env['account.move'].search(
+                        [('id', 'in', contract.asset_id.depreciation_move_ids.ids),
+                         ('date', '<=', self.end_date),
+                         ('state', '=', self.state),
+                         ('company_id', '=', self.env.company.id)])
 
                     # computation for STLL
 
@@ -128,10 +133,10 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
 
                     # computation for Net ROU
                     fixed_asset_account_move_line_ids = self.find_fixed_asset_account_move_lines(
-                        move_ids, contract)
+                        asset_move_ids, contract)
 
                     depreciation_account_move_line_ids = self.find_depreciation_account_move_lines(
-                        move_ids, contract)
+                        asset_move_ids, contract)
 
                 else:
                     move_ids = self.env['account.move'].search(
@@ -139,6 +144,11 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
                          ('date', '<=', self.end_date),
                          ('company_id', '=', self.env.company.id)
                          ])
+                    asset_move_ids = self.env['account.move'].search(
+                        [('id', 'in',
+                          contract.asset_id.depreciation_move_ids.ids),
+                         ('date', '<=', self.end_date),
+                         ('company_id', '=', self.env.company.id)])
                     # computation for STLL
 
                     stll_move_line_ids = self.find_stll_move_lines(move_ids,
@@ -151,9 +161,9 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
 
                     # computation for Net ROU
                     fixed_asset_account_move_line_ids = self.find_fixed_asset_account_move_lines(
-                        move_ids, contract)
+                        asset_move_ids, contract)
                     depreciation_account_move_line_ids = self.find_depreciation_account_move_lines(
-                        move_ids, contract)
+                        asset_move_ids, contract)
 
                 stll_credit_amt = stll_move_line_ids.mapped('credit')
                 stll_debit_amt = stll_move_line_ids.mapped('debit')
@@ -166,7 +176,6 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
                     'credit')
                 asset_debit_amt = fixed_asset_account_move_line_ids.mapped(
                     'debit')
-
                 asset_tot_amt = sum(asset_debit_amt) - sum(asset_credit_amt)
                 depreciation_credit_amt = depreciation_account_move_line_ids.mapped(
                     'credit')
@@ -197,6 +206,12 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
                          ('date', '<=', self.end_date),
                          ('state', '=', self.state),
                          ('company_id', '=', self.env.company.id)])
+                    asset_move_ids = self.env['account.move'].search(
+                        [('id', 'in',
+                          contract.asset_id.depreciation_move_ids.ids),
+                         ('date', '<=', self.end_date),
+                         ('state', '=', self.state),
+                         ('company_id', '=', self.env.company.id)])
 
                     # computation for STLL
                     stll_move_line_ids = self.find_stll_move_lines(move_ids,
@@ -209,16 +224,21 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
 
                     # computation for Net ROU
                     fixed_asset_account_move_line_ids = self.find_fixed_asset_account_move_lines(
-                        move_ids, contract)
+                        asset_move_ids, contract)
 
                     depreciation_account_move_line_ids = self.find_depreciation_account_move_lines(
-                        move_ids, contract)
+                        asset_move_ids, contract)
                 else:
                     move_ids = self.env['account.move'].search(
                         [('id', 'in', contract.account_move_ids.ids),
                          ('date', '<=', self.end_date),
                          ('company_id', '=', self.env.company.id)
                          ])
+                    asset_move_ids = self.env['account.move'].search(
+                        [('id', 'in',
+                          contract.asset_id.depreciation_move_ids.ids),
+                         ('date', '<=', self.end_date),
+                         ('company_id', '=', self.env.company.id)])
                     # computation for STLL
 
                     stll_move_line_ids = self.find_stll_move_lines(move_ids,
@@ -231,10 +251,10 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
 
                     # computation for Net ROU
                     fixed_asset_account_move_line_ids = self.find_fixed_asset_account_move_lines(
-                        move_ids, contract)
+                        asset_move_ids, contract)
 
                     depreciation_account_move_line_ids = self.find_depreciation_account_move_lines(
-                        move_ids, contract)
+                        asset_move_ids, contract)
 
                 stll_credit_amt = stll_move_line_ids.mapped('credit')
                 stll_debit_amt = stll_move_line_ids.mapped('debit')
@@ -252,7 +272,8 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
                     'credit')
                 depreciation_debit_amt = depreciation_account_move_line_ids.mapped(
                     'debit')
-                depreciation_tot_amt = sum(depreciation_debit_amt) - sum(depreciation_credit_amt)
+                depreciation_tot_amt = sum(depreciation_debit_amt) - sum(
+                    depreciation_credit_amt)
                 net_rou = asset_tot_amt + depreciation_tot_amt
                 data.append({
                     'leasor_name': contract.name,
