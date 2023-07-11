@@ -209,10 +209,11 @@ class LLAgingReportWizard(models.Model):
         # Computation for Less than 1 year
         next_year_date = self.end_date + dateutil.relativedelta.relativedelta(
             years=1)
-        next_year_date = next_year_date - dateutil.relativedelta.relativedelta(
+        less_than_1_year_start_date = self.end_date + dateutil.relativedelta.relativedelta(
             days=1)
         domain_less_than_1_yr = [('move_id.date', '<=', next_year_date),
-                                 ('move_id.date', '>=', self.end_date),
+                                 ('move_id.date', '>=',
+                                  less_than_1_year_start_date),
                                  ('move_id.leasee_contract_id', '=',
                                   contract.id),
                                  ('account_id', '=',
@@ -224,16 +225,22 @@ class LLAgingReportWizard(models.Model):
                                      contract.asset_id.id)]
         journal_items_less_than_1_yr = self.env['account.move.line'].search(
             domain_less_than_1_yr, order='account_id')
-        total_liability_amt_less_than_1_year = sum(
+        installments_less_than_1_year = self.env['leasee.installment'].search(
+            [('id', 'in', contract.installment_ids.ids),
+             ('date', '<=', next_year_date),
+             ('date', '>=', less_than_1_year_start_date)]).mapped('amount')
+        installmet_amount_less_than_1_year = sum(installments_less_than_1_year)
+        total_liability_amt_less_than_1_year = installmet_amount_less_than_1_year - sum(
             journal_items_less_than_1_yr.mapped('amount_currency'))
 
         # Computation for 1.01 -2 years
         one_to_2year_start_date = self.end_date + dateutil.relativedelta.relativedelta(
             years=1)
-        one_to_2year_end_date = (
-                                        self.end_date + dateutil.relativedelta.relativedelta(
-                                    years=2)) - dateutil.relativedelta.relativedelta(
+        one_to_2year_start_date = one_to_2year_start_date + dateutil.relativedelta.relativedelta(
             days=1)
+        one_to_2year_end_date = (
+                self.end_date + dateutil.relativedelta.relativedelta(
+            years=2))
 
         domain_one_to_2_year = [('move_id.date', '<=', one_to_2year_end_date),
                                 ('move_id.date', '>=', one_to_2year_start_date),
@@ -249,16 +256,24 @@ class LLAgingReportWizard(models.Model):
 
         journal_items_one_to_2_year = self.env['account.move.line'].search(
             domain_one_to_2_year, order='account_id')
-        total_liability_amt_one_to_2_year = sum(
+
+        installments_one_to_2_year = self.env['leasee.installment'].search(
+            [('id', 'in', contract.installment_ids.ids),
+             ('date', '<=', one_to_2year_end_date),
+             ('date', '>=', one_to_2year_start_date)]).mapped('amount')
+
+        installmet_amount_one_to_2_year = sum(installments_one_to_2_year)
+        total_liability_amt_one_to_2_year = installmet_amount_one_to_2_year - sum(
             journal_items_one_to_2_year.mapped('amount_currency'))
 
         # Computation for 2.01 -5 years
         start_date_2_to_5_year = self.end_date + dateutil.relativedelta.relativedelta(
             years=2)
-        end_date_2_to_5_year = (
-                                       self.end_date + dateutil.relativedelta.relativedelta(
-                                   years=5)) - dateutil.relativedelta.relativedelta(
+        start_date_2_to_5_year = start_date_2_to_5_year + dateutil.relativedelta.relativedelta(
             days=1)
+        end_date_2_to_5_year = (
+                self.end_date + dateutil.relativedelta.relativedelta(
+            years=5))
         domain_2_to_5_year = [('move_id.date', '<=', end_date_2_to_5_year),
                               ('move_id.date', '>=', start_date_2_to_5_year),
                               ('move_id.leasee_contract_id', '=', contract.id),
@@ -270,12 +285,22 @@ class LLAgingReportWizard(models.Model):
 
         journal_items_2_to_5_year = self.env['account.move.line'].search(
             domain_2_to_5_year, order='account_id')
-        total_liability_amt_2_to_5_year = sum(
+
+        installments_2_to_5_year = self.env['leasee.installment'].search(
+            [('id', 'in', contract.installment_ids.ids),
+             ('date', '<=', end_date_2_to_5_year),
+             ('date', '>=', start_date_2_to_5_year)]).mapped('amount')
+
+        installmet_amount_2_to_5_year = sum(installments_2_to_5_year)
+
+        total_liability_amt_2_to_5_year = installmet_amount_2_to_5_year - sum(
             journal_items_2_to_5_year.mapped('amount_currency'))
 
         # Computation for more than 5 years
         start_date_5th_year = self.end_date + dateutil.relativedelta.relativedelta(
             years=5)
+        start_date_5th_year = start_date_5th_year + dateutil.relativedelta.relativedelta(
+            days=1)
         domain_more_than_5_year = [
             ('move_id.date', '>=', start_date_5th_year),
             ('move_id.leasee_contract_id', '=', contract.id),
@@ -285,7 +310,14 @@ class LLAgingReportWizard(models.Model):
 
         journal_items_more_than_5_year = self.env['account.move.line'].search(
             domain_more_than_5_year, order='account_id')
-        total_liability_amt_more_than_5_year = sum(
+
+        installments_more_than_5_year = self.env['leasee.installment'].search(
+            [('id', 'in', contract.installment_ids.ids),
+             ('date', '>=', start_date_5th_year)]).mapped('amount')
+
+        installmet_amount_more_than_5_year = sum(installments_more_than_5_year)
+
+        total_liability_amt_more_than_5_year = installmet_amount_more_than_5_year - sum(
             journal_items_more_than_5_year.mapped('amount_currency'))
 
         return {
