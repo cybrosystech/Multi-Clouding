@@ -111,7 +111,8 @@ class LeaseContractXlsxWizard(models.TransientModel):
         if self.lease_contract_ids:
             lease_contracts = self.lease_contract_ids
         else:
-            lease_contracts = self.env['leasee.contract'].search([('company_id', '=', self.env.company.id)])
+            lease_contracts = self.env['leasee.contract'].search(
+                [('company_id', '=', self.env.company.id)])
 
         # Less than 1 year
         next_year_date = self.end_date + dateutil.relativedelta.relativedelta(
@@ -140,41 +141,52 @@ class LeaseContractXlsxWizard(models.TransientModel):
 
         for contract in lease_contracts:
             # Bills less than 1year
-            move_ids_next_year = self.env['account.move'].search(
-                [('id', 'in', contract.account_move_ids.ids),
-                 ('invoice_date_due', '!=', False),
-                 ('invoice_date_due', '<=', next_year_date),
-                 ('invoice_date_due', '>=', self.end_date)])
+            total_amount_next_year = [{'sum': 0.0}]
+            total_amount_next_2years = [{'sum': 0.0}]
+            total_amount_next_5years = [{'sum': 0.0}]
+            total_amount_more_than_5_years = [{'sum': 0.0}]
 
-            # Bills from 1.01 - 2 years
+            if contract.account_move_ids:
+                self._cr.execute(
+                    'SELECT SUM(amount_total) FROM account_move WHERE id '
+                    'IN  %(contract_ids)s and invoice_date_due <= %(end_date)s '
+                    'and invoice_date_due >= %(start_date)s',
+                    {'contract_ids': tuple(contract.account_move_ids.ids),
+                     'end_date': next_year_date,
+                     'start_date': self.end_date})
+                move_ids_next_year = self._cr.dictfetchall()
+                total_amount_next_year = move_ids_next_year
 
-            move_ids_next_two_years = self.env['account.move'].search(
-                [('id', 'in', contract.account_move_ids.ids),
-                 ('invoice_date_due', '!=', False),
-                 ('invoice_date_due', '<=', next_2year_end_date),
-                 ('invoice_date_due', '>=', next_2year_start_date)])
-            # Bills from 2.01 - 5 years
+                # Bills from 1.01 - 2 years
+                self._cr.execute(
+                    'SELECT SUM(amount_total) FROM account_move WHERE id IN '
+                    ' %(contract_ids)s and invoice_date_due <= %(end_date)s and'
+                    ' invoice_date_due >= %(start_date)s',
+                    {'contract_ids': tuple(contract.account_move_ids.ids),
+                     'end_date': next_2year_end_date,
+                     'start_date': next_2year_start_date})
+                move_ids_next_two_years = self._cr.dictfetchall()
+                total_amount_next_2years = move_ids_next_two_years
 
-            move_ids_next_5_years = self.env['account.move'].search(
-                [('id', 'in', contract.account_move_ids.ids),
-                 ('invoice_date_due', '!=', False),
-                 ('invoice_date_due', '<=', end_date_5th_year),
-                 ('invoice_date_due', '>=', start_date_2nd_year)])
+                # Bills from 2.01 - 5 years
+                self._cr.execute(
+                    'SELECT SUM(amount_total) FROM account_move WHERE id IN'
+                    '  %(contract_ids)s and invoice_date_due <= %(end_date)s '
+                    'and invoice_date_due >= %(start_date)s',
+                    {'contract_ids': tuple(contract.account_move_ids.ids),
+                     'end_date': end_date_5th_year,
+                     'start_date': start_date_2nd_year})
+                move_ids_next_5_years = self._cr.dictfetchall()
+                total_amount_next_5years = move_ids_next_5_years
 
-            # Bills more than 5 years
-            move_ids_more_than_5_years = self.env['account.move'].search(
-                [('id', 'in', contract.account_move_ids.ids),
-                 ('invoice_date_due', '!=', False),
-                 ('invoice_date_due', '>=', start_date_5th_year)])
-
-            total_amount_next_year = sum(
-                move_ids_next_year.mapped('amount_total'))
-            total_amount_next_2years = sum(
-                move_ids_next_two_years.mapped('amount_total'))
-            total_amount_next_5years = sum(
-                move_ids_next_5_years.mapped('amount_total'))
-            total_amount_more_than_5_years = sum(
-                move_ids_more_than_5_years.mapped('amount_total'))
+                # Bills more than 5 years
+                self._cr.execute(
+                    'SELECT SUM(amount_total) FROM account_move WHERE id IN  '
+                    '%(contract_ids)s and invoice_date_due >= %(start_date)s',
+                    {'contract_ids': tuple(contract.account_move_ids.ids),
+                     'start_date': start_date_5th_year})
+                move_ids_more_than_5_years = self._cr.dictfetchall()
+                total_amount_more_than_5_years = move_ids_more_than_5_years
 
             data.append({
                 'leasor_name': contract.name,
@@ -228,16 +240,19 @@ class LeaseContractXlsxWizard(models.TransientModel):
             col += 1
             worksheet.write(row, col, line['project_site'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['total_amount_next_year'],
+            worksheet.write(row, col, line['total_amount_next_year'][0]['sum'],
                             STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['total_amount_next_2years'],
+            worksheet.write(row, col,
+                            line['total_amount_next_2years'][0]['sum'],
                             STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['total_amount_next_5years'],
+            worksheet.write(row, col,
+                            line['total_amount_next_5years'][0]['sum'],
                             STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['total_amount_more_than_5_years'],
+            worksheet.write(row, col,
+                            line['total_amount_more_than_5_years'][0]['sum'],
                             STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['currency'], STYLE_LINE_Data)
