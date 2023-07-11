@@ -114,49 +114,102 @@ class LeaseInterestAndAmortizationReportWizard(models.TransientModel):
 
     def get_report_data(self):
         data = []
-        move_line = self.env['account.move.line']
+        # move_line = self.env['account.move.line']
         if self.lease_contract_ids:
             lease_contract_ids = self.lease_contract_ids
         else:
             lease_contract_ids = self.env['leasee.contract'].search(
-                [('company_id', '=', self.env.company.id)], order='id ASC')
+                [('company_id', '=', self.env.company.id),
+                 ('account_move_ids', '!=', False)], order='id ASC')
 
         for contract in lease_contract_ids:
+            amortization_amount = 0.0
+            interest_amount = 0.0
+            amortization_move_line_ids = []
             # computation for the interest and amortization
             if self.state:
-                move_line_ids = move_line.search(
-                    [('move_id', 'in', contract.account_move_ids.ids), ('move_id.move_type', '=', 'entry'),
-                     ('move_id.date', '>=', self.start_date), ('move_id.date', '<=', self.end_date),
-                     ('move_id.state', '=', self.state),
-                     ('account_id', '=',
-                      contract.interest_expense_account_id.id)])
-                amortization_move_line_ids = move_line.search([(
-                    'move_id',
-                    'in',
-                    contract.asset_id.depreciation_move_ids.ids), (
-                    'account_id', '=',
-                    contract.asset_id.account_depreciation_expense_id.id),
-                    ('move_id.state', '=', self.state),
-                    ('move_id.date', '>=', self.start_date),
-                    ('move_id.date', '<=', self.end_date)])
-            else:
-                move_line_ids = move_line.search(
-                    [('move_id', 'in', contract.account_move_ids.ids), ('move_id.move_type', '=', 'entry'),
-                     ('move_id.date', '>=', self.start_date), ('move_id.date', '<=', self.end_date),
-                     ('account_id', '=',
-                      contract.interest_expense_account_id.id)])
-                amortization_move_line_ids = move_line.search([(
-                    'move_id',
-                    'in',
-                    contract.asset_id.depreciation_move_ids.ids), (
-                    'account_id', '=',
-                    contract.asset_id.account_depreciation_expense_id.id),
-                    ('move_id.date', '>=', self.start_date),
-                    ('move_id.date', '<=', self.end_date)])
+                self._cr.execute(
+                    'SELECT sum(credit) as credit,sum(debit) as debit FROM '
+                    'account_move_line WHERE move_id IN  %(move_ids)s and '
+                    'move_id in (select id from account_move where '
+                    'move_type=%(move_type)s and date >= %(start_date)s and '
+                    'date <= %(end_date)s and state=%(state)s) and '
+                    'account_id=%(account)s',
+                    {'move_ids': tuple(contract.account_move_ids.ids),
+                     'move_type': 'entry',
+                     'start_date': self.start_date,
+                     'end_date': self.end_date,
+                     'state': self.state,
+                     'account': contract.interest_expense_account_id.id})
+                move_line_ids = self._cr.dictfetchall()
+                if contract.asset_id.depreciation_move_ids:
+                    self._cr.execute(
+                        'SELECT sum(credit) as credit,sum(debit) as debit FROM '
+                        'account_move_line WHERE move_id IN  %(move_ids)s and '
+                        'move_id in (select id from account_move where '
+                        'date >= %(start_date)s and date <= %(end_date)s and '
+                        'state=%(state)s) and account_id=%(account)s',
+                        {'move_ids': tuple(
+                            contract.asset_id.depreciation_move_ids.ids),
+                            'start_date': self.start_date,
+                            'end_date': self.end_date,
+                            'state': self.state,
+                            'account': contract.asset_id.account_depreciation_expense_id.id})
+                    amortization_move_line_ids = self._cr.dictfetchall()
 
-            interest_amount = sum(move_line_ids.mapped('credit')) + sum(move_line_ids.mapped('debit'))
-            amortization_amount = sum(amortization_move_line_ids.mapped('debit')) + sum(
-                amortization_move_line_ids.mapped('credit'))
+            else:
+                self._cr.execute(
+                    'SELECT sum(credit) as credit,sum(debit) as debit FROM '
+                    'account_move_line WHERE move_id IN  %(move_ids)s and '
+                    'move_id in (select id from account_move where '
+                    'move_type=%(move_type)s and date >= %(start_date)s and '
+                    'date <= %(end_date)s) and account_id=%(account)s',
+                    {'move_ids': tuple(contract.account_move_ids.ids),
+                     'move_type': 'entry',
+                     'start_date': self.start_date,
+                     'end_date': self.end_date,
+                     'account': contract.interest_expense_account_id.id})
+                move_line_ids = self._cr.dictfetchall()
+
+                if contract.asset_id.depreciation_move_ids:
+                    self._cr.execute(
+                        'SELECT sum(credit) as credit,sum(debit) as debit FROM '
+                        'account_move_line WHERE move_id IN  %(move_ids)s and '
+                        'move_id in (select id from account_move where '
+                        'date >= %(start_date)s and date <= %(end_date)s) and '
+                        'account_id=%(account)s',
+                        {'move_ids': tuple(
+                            contract.asset_id.depreciation_move_ids.ids),
+                            'start_date': self.start_date,
+                            'end_date': self.end_date,
+                            'account': contract.asset_id.account_depreciation_expense_id.id})
+                    amortization_move_line_ids = self._cr.dictfetchall()
+
+            if move_line_ids[0]["credit"] and move_line_ids[0]["debit"]:
+                interest_amount = move_line_ids[0]["credit"] + \
+                                  move_line_ids[0]["debit"]
+            elif move_line_ids[0]["credit"]:
+                interest_amount = move_line_ids[0]["credit"]
+            elif move_line_ids[0]["debit"]:
+                interest_amount = move_line_ids[0]["debit"]
+            else:
+                interest_amount = 0.0
+
+            if len(amortization_move_line_ids) >0:
+                if amortization_move_line_ids[0]["credit"] and \
+                        amortization_move_line_ids[0]["debit"]:
+                    amortization_amount = amortization_move_line_ids[0][
+                                              "credit"] + \
+                                          amortization_move_line_ids[0]["debit"]
+                elif amortization_move_line_ids[0]["credit"]:
+                    amortization_amount = amortization_move_line_ids[0][
+                        "credit"]
+                elif amortization_move_line_ids[0]["debit"]:
+                    amortization_amount = amortization_move_line_ids[0]["debit"]
+                else:
+                    amortization_amount = 0.0
+            else:
+                amortization_amount = 0.0
 
             data.append({
                 'leasor_name': contract.name,
@@ -171,7 +224,8 @@ class LeaseInterestAndAmortizationReportWizard(models.TransientModel):
     def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data,
                        header_format, STYLE_LINE_HEADER):
         self.ensure_one()
-        worksheet = workbook.add_worksheet(_('Lease Interest and Amortization Report'))
+        worksheet = workbook.add_worksheet(
+            _('Lease Interest and Amortization Report'))
         lang = self.env.user.lang
         if lang.startswith('ar_'):
             worksheet.right_to_left()
