@@ -278,7 +278,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                                       sum(assets_sum) - sum(assets_budget_sum),
                                       2),
                                       'class': 'number'}]
-        bs_lines[1]['columns'] = [{'name': round(sum(liabilities_sum), 2),
+        bs_lines[1]['columns'] = [{'name': abs(round(sum(liabilities_sum), 2)),
                                    'class': 'number'},
                                   {'name': round(sum(liabilities_budget), 2),
                                    'class': 'number'},
@@ -288,7 +288,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                                       2),
                                       'class': 'number'}]
         bs_lines[2]['columns'] = [
-            {'name': round(sum(shareholders_equity_sum), 2),
+            {'name': abs(round(sum(shareholders_equity_sum), 2)),
              'class': 'number'},
             {'name': round(sum(shareholders_equity_budget), 2),
              'class': 'number'},
@@ -397,14 +397,14 @@ class TascBalanceSheetReport(models.AbstractModel):
         current_liabilities_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(balance_sheet_lines,
                                           current_liabilities,
-                                          current_liabilities_budget, dict_id)
+                                          current_liabilities_budget, dict_id, abs_of=True)
         current_liabilities_total = sum(
             list(map(lambda x: x['total'], current_liabilities)))
         current_liabilities_budget_total = sum(list(
             map(lambda x: x['planned'], current_liabilities_budget)))
         liabilities_sum.append(current_liabilities_total)
         liabilities_budget.append(current_liabilities_budget_total)
-        return [current_liabilities_total,
+        return [abs(current_liabilities_total),
                 current_liabilities_budget_total,
                 current_liabilities_total - current_liabilities_budget_total]
 
@@ -435,14 +435,14 @@ class TascBalanceSheetReport(models.AbstractModel):
         self._arrange_account_budget_line(balance_sheet_lines,
                                           non_current_liabilities,
                                           non_current_liabilities_budget,
-                                          dict_id)
+                                          dict_id, abs_of=True)
         non_current_liabilities_total = sum(
             list(map(lambda x: x['total'], non_current_liabilities)))
         non_current_liabilities_budget_total = sum(list(
             map(lambda x: x['planned'], non_current_liabilities_budget)))
         liabilities_sum.append(non_current_liabilities_total)
         liabilities_budget.append(non_current_liabilities_budget_total)
-        return [non_current_liabilities_total,
+        return [abs(non_current_liabilities_total),
                 non_current_liabilities_budget_total,
                 non_current_liabilities_total -
                 non_current_liabilities_budget_total]
@@ -474,7 +474,7 @@ class TascBalanceSheetReport(models.AbstractModel):
         self._arrange_account_budget_line(balance_sheet_lines,
                                           equity,
                                           equity_budget,
-                                          dict_id)
+                                          dict_id, abs_of=True)
         equity_total = sum(
             list(map(lambda x: x['total'], equity)))
         equity_budget_budget_total = sum(list(
@@ -623,7 +623,7 @@ class TascBalanceSheetReport(models.AbstractModel):
         return unallocated_earning_account
 
     def _arrange_account_budget_line(self, balance_sheet_lines, account_lines,
-                                     budget_lines, dict_id):
+                                     budget_lines, dict_id, abs_of=None):
         group_ids = self.env['account.group'].search(
             [('id', 'in', list(map(lambda x: x['group_id'], account_lines)))])
         for lines in account_lines:
@@ -644,11 +644,12 @@ class TascBalanceSheetReport(models.AbstractModel):
                 lines['group'] = False
                 lines['parent_id'] = ''
                 lines['count'] = 25
+            lines['abs_of'] = abs_of
         new_lines = self._arrange_account_groups(group_ids, account_lines,
-                                                 dict_id)
+                                                 dict_id, abs_of)
         balance_sheet_lines += new_lines
 
-    def _arrange_account_groups(self, group_ids, account_lines, dict_id):
+    def _arrange_account_groups(self, group_ids, account_lines, dict_id, abs_of):
         new_lines = []
         for group in group_ids:
             test_lines = list(filter(lambda x: x['group_id'] == group.id,
@@ -664,6 +665,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                                 list(map(lambda x: x['total'], test_lines))),
                             'planned': parent_line[0]['planned'] + sum(
                                 list(map(lambda x: x['planned'], test_lines))),
+                            'abs_of': abs_of
                         })
                         new_lines.append({
                             'id': str(group.id) + dict_id,
@@ -676,7 +678,8 @@ class TascBalanceSheetReport(models.AbstractModel):
                                 list(map(lambda x: x['planned'], test_lines))),
                             'dict_id': dict_id,
                             'parent_id': parent_line[0]['id'],
-                            'count': 20
+                            'count': 20,
+                            'abs_of': abs_of
                         })
                     else:
                         new_lines.append({
@@ -690,7 +693,8 @@ class TascBalanceSheetReport(models.AbstractModel):
                                 list(map(lambda x: x['planned'], test_lines))),
                             'dict_id': dict_id,
                             'parent_id': dict_id,
-                            'count': 15
+                            'count': 15,
+                            'abs_of': abs_of
                         })
                         new_lines.append({
                             'id': str(group.id) + dict_id,
@@ -703,7 +707,8 @@ class TascBalanceSheetReport(models.AbstractModel):
                                 list(map(lambda x: x['planned'], test_lines))),
                             'dict_id': dict_id,
                             'parent_id': str(group.parent_id.id) + dict_id,
-                            'count': 20
+                            'count': 20,
+                            'abs_of': abs_of
                         })
                 else:
                     new_lines.append({
@@ -717,7 +722,8 @@ class TascBalanceSheetReport(models.AbstractModel):
                             list(map(lambda x: x['planned'], test_lines))),
                         'dict_id': dict_id,
                         'parent_id': dict_id,
-                        'count': 15
+                        'count': 15,
+                        'abs_of': abs_of
                     })
                     new_lines.append({
                         'id': str(group.id) + dict_id,
@@ -730,7 +736,8 @@ class TascBalanceSheetReport(models.AbstractModel):
                             list(map(lambda x: x['planned'], test_lines))),
                         'dict_id': dict_id,
                         'parent_id': str(group.parent_id.id) + dict_id,
-                        'count': 20
+                        'count': 20,
+                        'abs_of': abs_of
                     })
             else:
                 new_lines.append({
@@ -743,7 +750,8 @@ class TascBalanceSheetReport(models.AbstractModel):
                         list(map(lambda x: x['planned'], test_lines))),
                     'dict_id': dict_id,
                     'parent_id': dict_id,
-                    'count': 15
+                    'count': 15,
+                    'abs_of': abs_of
                 })
             new_lines += test_lines
         no_group_lines = list(
@@ -759,7 +767,8 @@ class TascBalanceSheetReport(models.AbstractModel):
                     list(map(lambda x: x['planned'], no_group_lines))),
                 'dict_id': dict_id,
                 'parent_id': dict_id,
-                'count': 15
+                'count': 15,
+                'abs_of': abs_of
             })
             new_lines += no_group_lines
         return new_lines
@@ -850,9 +859,23 @@ class TascBalanceSheetReport(models.AbstractModel):
                                                   col_head_sub_24,
                                                   acc_ch_lines['code'] + ' ' +
                                                   acc_ch_lines['name'], sub_line_style1 if acc_ch_lines['group'] is True else sub_line_style2)
-                                sheet.merge_range(row_head, col_head_24 + 3, row_head,
-                                                  col_head_sub_24 + 3,
-                                                  acc_ch_lines['total'], sub_line_style)
+                                if acc_ch_lines['abs_of'] is True:
+                                    sheet.merge_range(row_head, col_head_24 + 3, row_head,
+                                                      col_head_sub_24 + 3,
+                                                      abs(acc_ch_lines['total']), sub_line_style)
+                                elif acc_ch_lines['abs_of'] is False:
+                                    sheet.merge_range(row_head, col_head_24 + 3,
+                                                      row_head,
+                                                      col_head_sub_24 + 3,
+                                                      -abs(acc_ch_lines[
+                                                              'total']),
+                                                      sub_line_style)
+                                else:
+                                    sheet.merge_range(row_head, col_head_24 + 3,
+                                                      row_head,
+                                                      col_head_sub_24 + 3,
+                                                      acc_ch_lines['total'],
+                                                      sub_line_style)
                                 sheet.merge_range(row_head, col_head_24 + 6, row_head,
                                                   col_head_sub_24 + 6,
                                                   acc_ch_lines['planned'], sub_line_style)
@@ -871,11 +894,24 @@ class TascBalanceSheetReport(models.AbstractModel):
                                           acc_line['name'],
                                           sub_line_style1 if acc_line[
                                                                  'group'] is True else sub_line_style2)
-                        sheet.merge_range(row_head, col_head_24 + 3,
-                                          row_head,
-                                          col_head_sub_24 + 3,
-                                          acc_line['total'],
-                                          sub_line_style)
+                        if acc_line['abs_of'] is True:
+                            sheet.merge_range(row_head, col_head_24 + 3,
+                                              row_head,
+                                              col_head_sub_24 + 3,
+                                              abs(acc_line['total']),
+                                              sub_line_style)
+                        elif acc_line['abs_of'] is False:
+                            sheet.merge_range(row_head, col_head_24 + 3,
+                                              row_head,
+                                              col_head_sub_24 + 3,
+                                              -abs(acc_line['total']),
+                                              sub_line_style)
+                        else:
+                            sheet.merge_range(row_head, col_head_24 + 3,
+                                              row_head,
+                                              col_head_sub_24 + 3,
+                                              acc_line['total'],
+                                              sub_line_style)
                         sheet.merge_range(row_head, col_head_24 + 6,
                                           row_head,
                                           col_head_sub_24 + 6,

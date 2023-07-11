@@ -62,7 +62,7 @@ class ProfitLossBalance(models.AbstractModel):
         }
         return info
 
-    def get_html_content(self, options):
+    def _clear_list_values(self):
         gross_profit_revenue.clear()
         gross_profit_budget.clear()
         indirect_cost_sum.clear()
@@ -75,6 +75,9 @@ class ProfitLossBalance(models.AbstractModel):
         finance_cost_budget_list.clear()
         taxes_sum.clear()
         taxes_budget_list.clear()
+
+    def get_html_content(self, options):
+        self._clear_list_values()
         templates = self._get_templates()
         template = templates['main_template']
         values = {'model': self}
@@ -138,7 +141,7 @@ class ProfitLossBalance(models.AbstractModel):
             {
                 'id': 'gross_profit',
                 'name': 'Gross Profit',
-                'columns': [{'name': round(sum(gross_profit_revenue), 2),
+                'columns': [{'name': abs(round(sum(gross_profit_revenue), 2)),
                              'class': 'number'},
                             {'name': round(sum(gross_profit_budget), 2),
                              'class': 'number'},
@@ -266,9 +269,8 @@ class ProfitLossBalance(models.AbstractModel):
             {
                 'id': 'ebitda',
                 'name': 'EBITDA',
-                'columns': [{'name': round(sum(
-                    gross_profit_revenue + indirect_cost_sum + other_income_sum),
-                    2),
+                'columns': [{'name': round(-abs(sum(
+                    gross_profit_revenue + indirect_cost_sum + other_income_sum)), 2),
                     'class': 'number'},
                     {'name': round(sum(
                         gross_profit_budget + indirect_cost_budget + other_income_budget),
@@ -300,9 +302,9 @@ class ProfitLossBalance(models.AbstractModel):
             {
                 'id': 'ebit',
                 'name': 'EBIT',
-                'columns': [{'name': round(sum(
-                    gross_profit_revenue + indirect_cost_sum + other_income_sum + depreciation_amortization_sum),
-                    2),
+                'columns': [{'name': round(-abs(sum(
+                    gross_profit_revenue + indirect_cost_sum + other_income_sum + depreciation_amortization_sum)
+                    ), 2),
                     'class': 'number'},
                     {'name': round(sum(
                         gross_profit_budget + indirect_cost_budget + other_income_budget + depreciation_amortization_budget),
@@ -332,9 +334,9 @@ class ProfitLossBalance(models.AbstractModel):
             {
                 'id': 'ebt',
                 'name': 'EBT',
-                'columns': [{'name': round(sum(
-                    gross_profit_revenue + indirect_cost_sum + other_income_sum + depreciation_amortization_sum + finance_cost_sum),
-                    2),
+                'columns': [{'name': round(-abs(sum(
+                    gross_profit_revenue + indirect_cost_sum + other_income_sum + depreciation_amortization_sum + finance_cost_sum)
+                    ), 2),
                     'class': 'number'},
                     {'name': round(sum(
                         gross_profit_budget + indirect_cost_budget + other_income_budget + depreciation_amortization_budget + finance_cost_budget_list),
@@ -380,7 +382,7 @@ class ProfitLossBalance(models.AbstractModel):
                 'account_lines': ''
             },
         ]
-        pf_lines[3]['columns'] = [{'name': round(sum(indirect_cost_sum), 2),
+        pf_lines[3]['columns'] = [{'name': round(-abs(sum(indirect_cost_sum)), 2),
                                    'class': 'number'},
                                   {'name': round(sum(indirect_cost_budget), 2),
                                    'class': 'number'},
@@ -425,14 +427,15 @@ class ProfitLossBalance(models.AbstractModel):
         operating_revenue_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           operating_revenue,
-                                          operating_revenue_budget, dict_id)
+                                          operating_revenue_budget, dict_id,
+                                          abs_of=True)
         operating_revenue_total = sum(
             list(map(lambda x: x['total'], operating_revenue)))
         operating_revenue_budget_total = sum(list(
             map(lambda x: x['planned'], operating_revenue_budget)))
         gross_profit_revenue.append(operating_revenue_total)
         gross_profit_budget.append(operating_revenue_budget_total)
-        return [operating_revenue_total, operating_revenue_budget_total,
+        return [abs(operating_revenue_total), operating_revenue_budget_total,
                 operating_revenue_total - operating_revenue_budget_total]
 
     def _get_direct_cost(self, states_args, query,
@@ -463,14 +466,14 @@ class ProfitLossBalance(models.AbstractModel):
         direct_cost_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           direct_cost,
-                                          direct_cost_budget, dict_id)
+                                          direct_cost_budget, dict_id, abs_of=True)
         direct_cost_total = sum(
             list(map(lambda x: x['total'], direct_cost)))
         direct_cost_budget_total = sum(list(
             map(lambda x: x['planned'], direct_cost_budget)))
         gross_profit_revenue.append(direct_cost_total)
         gross_profit_budget.append(direct_cost_budget_total)
-        return [direct_cost_total, direct_cost_budget_total,
+        return [abs(direct_cost_total), direct_cost_budget_total,
                 direct_cost_total - direct_cost_budget_total]
 
     def _get_staff_cost(self, states_args, query, query_budget, options,
@@ -501,14 +504,14 @@ class ProfitLossBalance(models.AbstractModel):
         staff_cost_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           staff_cost,
-                                          staff_cost_budget, dict_id)
+                                          staff_cost_budget, dict_id, abs_of=False)
         staff_cost_total = sum(
             list(map(lambda x: x['total'], staff_cost)))
         staff_cost_budget_total = sum(list(
             map(lambda x: x['planned'], staff_cost_budget)))
         indirect_cost_sum.append(staff_cost_total)
         indirect_cost_budget.append(staff_cost_budget_total)
-        return [staff_cost_total, staff_cost_budget_total,
+        return [-abs(staff_cost_total), staff_cost_budget_total,
                 staff_cost_total - staff_cost_budget_total]
 
     def _get_general_admin_expense(self, states_args, query, query_budget,
@@ -539,14 +542,15 @@ class ProfitLossBalance(models.AbstractModel):
         general_admin_expense_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           general_admin_expense,
-                                          general_admin_expense_budget, dict_id)
+                                          general_admin_expense_budget, dict_id,
+                                          abs_of=False)
         general_admin_total = sum(
             list(map(lambda x: x['total'], general_admin_expense)))
         general_admin_budget_total = sum(list(
             map(lambda x: x['planned'], general_admin_expense_budget)))
         indirect_cost_sum.append(general_admin_total)
         indirect_cost_budget.append(general_admin_budget_total)
-        return [general_admin_total,
+        return [-abs(general_admin_total),
                 general_admin_budget_total, general_admin_total -
                 general_admin_budget_total]
 
@@ -578,14 +582,15 @@ class ProfitLossBalance(models.AbstractModel):
         statutory_and_misc_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           statutory_and_misc,
-                                          statutory_and_misc_budget, dict_id)
+                                          statutory_and_misc_budget, dict_id,
+                                          abs_of=False)
         statutory_and_misc_total = sum(
             list(map(lambda x: x['total'], statutory_and_misc)))
         statutory_and_misc_budget_total = sum(list(
             map(lambda x: x['planned'], statutory_and_misc_budget)))
         indirect_cost_sum.append(statutory_and_misc_total)
         indirect_cost_budget.append(statutory_and_misc_budget_total)
-        return [statutory_and_misc_total, statutory_and_misc_budget_total,
+        return [-abs(statutory_and_misc_total), statutory_and_misc_budget_total,
                 statutory_and_misc_total - statutory_and_misc_budget_total]
 
     def _get_bank_changes(self, states_args, query, query_budget,
@@ -616,14 +621,15 @@ class ProfitLossBalance(models.AbstractModel):
         bank_changes_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           bank_changes,
-                                          bank_changes_budget, dict_id)
+                                          bank_changes_budget, dict_id,
+                                          abs_of=False)
         bank_changes_total = sum(
             list(map(lambda x: x['total'], bank_changes)))
         bank_changes_budget_total = sum(list(
             map(lambda x: x['planned'], bank_changes_budget)))
         indirect_cost_sum.append(bank_changes_total)
         indirect_cost_budget.append(bank_changes_budget_total)
-        return [bank_changes_total, bank_changes_budget_total,
+        return [-abs(bank_changes_total), bank_changes_budget_total,
                 bank_changes_total - bank_changes_budget_total]
 
     def _get_disposal_gain_loss(self, states_args, query, query_budget,
@@ -772,14 +778,14 @@ class ProfitLossBalance(models.AbstractModel):
         self._arrange_account_budget_line(test_child_lines,
                                           depreciation_amortization,
                                           depreciation_amortization_budget_val,
-                                          dict_id)
+                                          dict_id, abs_of=False)
         amortization_total = sum(
             list(map(lambda x: x['total'], depreciation_amortization)))
         amortization_budget_total = sum(list(
             map(lambda x: x['planned'], depreciation_amortization_budget_val)))
         depreciation_amortization_sum.append(amortization_total)
         depreciation_amortization_budget.append(amortization_budget_total)
-        return [amortization_total,
+        return [-abs(amortization_total),
                 amortization_budget_total, amortization_total -
                 amortization_budget_total]
 
@@ -811,13 +817,14 @@ class ProfitLossBalance(models.AbstractModel):
         finance_cost_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           finance_cost,
-                                          finance_cost_budget, dict_id)
+                                          finance_cost_budget, dict_id,
+                                          abs_of=False)
         finance_cost_total = sum(list(map(lambda x: x['total'], finance_cost)))
         finance_cost_budget_total = sum(
             list(map(lambda x: x['planned'], finance_cost_budget)))
         finance_cost_sum.append(finance_cost_total)
         finance_cost_budget_list.append(finance_cost_budget_total)
-        return [finance_cost_total,
+        return [-abs(finance_cost_total),
                 finance_cost_budget_total,
                 finance_cost_total - finance_cost_budget_total]
 
@@ -859,7 +866,7 @@ class ProfitLossBalance(models.AbstractModel):
                 taxes_budget_total, taxes_total - taxes_budget_total]
 
     def _arrange_account_budget_line(self, test_child_lines, account_lines,
-                                     budget_lines, dict_id):
+                                     budget_lines, dict_id, abs_of=None):
         group_ids = self.env['account.group'].search(
             [('id', 'in', list(map(lambda x: x['group_id'], account_lines)))])
         for lines in account_lines:
@@ -880,11 +887,12 @@ class ProfitLossBalance(models.AbstractModel):
                 lines['group'] = False
                 lines['parent_id'] = ''
                 lines['count'] = 25
-        new_lines = self._arrange_account_groups(group_ids, account_lines, dict_id)
+            lines['abs_of'] = abs_of
+        new_lines = self._arrange_account_groups(group_ids, account_lines, dict_id, abs_of)
 
         test_child_lines += new_lines
 
-    def _arrange_account_groups(self, group_ids, account_lines, dict_id):
+    def _arrange_account_groups(self, group_ids, account_lines, dict_id, abs_of):
         new_lines = []
         for group in group_ids:
             test_lines = list(
@@ -900,6 +908,7 @@ class ProfitLossBalance(models.AbstractModel):
                                 list(map(lambda x: x['total'], test_lines))),
                             'planned': parent_line[0]['planned'] + sum(
                                 list(map(lambda x: x['planned'], test_lines))),
+                            'abs_of': abs_of
                         })
                         new_lines.append({
                             'id': str(group.id) + dict_id,
@@ -912,7 +921,8 @@ class ProfitLossBalance(models.AbstractModel):
                                 list(map(lambda x: x['planned'], test_lines))),
                             'dict_id': dict_id,
                             'parent_id': parent_line[0]['id'],
-                            'count': 20
+                            'count': 20,
+                            'abs_of': abs_of
                         })
                     else:
                         new_lines.append({
@@ -926,7 +936,8 @@ class ProfitLossBalance(models.AbstractModel):
                                 list(map(lambda x: x['planned'], test_lines))),
                             'dict_id': dict_id,
                             'parent_id': dict_id,
-                            'count': 15
+                            'count': 15,
+                            'abs_of': abs_of
                         })
                         new_lines.append({
                             'id': str(group.id) + dict_id,
@@ -939,7 +950,8 @@ class ProfitLossBalance(models.AbstractModel):
                                 list(map(lambda x: x['planned'], test_lines))),
                             'dict_id': dict_id,
                             'parent_id': str(group.parent_id.id) + dict_id,
-                            'count': 20
+                            'count': 20,
+                            'abs_of': abs_of
                         })
                 else:
                     new_lines.append({
@@ -953,7 +965,8 @@ class ProfitLossBalance(models.AbstractModel):
                             list(map(lambda x: x['planned'], test_lines))),
                         'dict_id': dict_id,
                         'parent_id': dict_id,
-                        'count': 15
+                        'count': 15,
+                        'abs_of': abs_of
                     })
                     new_lines.append({
                         'id': str(group.id) + dict_id,
@@ -966,7 +979,8 @@ class ProfitLossBalance(models.AbstractModel):
                             list(map(lambda x: x['planned'], test_lines))),
                         'dict_id': dict_id,
                         'parent_id': str(group.parent_id.id) + dict_id,
-                        'count': 20
+                        'count': 20,
+                        'abs_of': abs_of
                     })
             else:
                 new_lines.append({
@@ -979,7 +993,8 @@ class ProfitLossBalance(models.AbstractModel):
                         list(map(lambda x: x['planned'], test_lines))),
                     'dict_id': dict_id,
                     'parent_id': dict_id,
-                    'count': 15
+                    'count': 15,
+                    'abs_of': abs_of
                 })
             new_lines += test_lines
         no_group_lines = list(
@@ -995,7 +1010,8 @@ class ProfitLossBalance(models.AbstractModel):
                     list(map(lambda x: x['planned'], no_group_lines))),
                 'dict_id': dict_id,
                 'parent_id': dict_id,
-                'count': 15
+                'count': 15,
+                'abs_of': abs_of
             })
             new_lines += no_group_lines
         return new_lines
@@ -1087,11 +1103,24 @@ class ProfitLossBalance(models.AbstractModel):
                                               acc_ch_lines['name'],
                                               sub_line_style1 if acc_ch_lines[
                                                                      'group'] is True else sub_line_style2)
-                            sheet.merge_range(row_head, col_head_24 + 3,
-                                              row_head,
-                                              col_head_sub_24 + 3,
-                                              acc_ch_lines['total'],
-                                              sub_line_style)
+                            if acc_ch_lines['abs_of'] is True:
+                                sheet.merge_range(row_head, col_head_24 + 3,
+                                                  row_head,
+                                                  col_head_sub_24 + 3,
+                                                  abs(acc_ch_lines['total']),
+                                                  sub_line_style)
+                            elif acc_ch_lines['abs_of'] is False:
+                                sheet.merge_range(row_head, col_head_24 + 3,
+                                                  row_head,
+                                                  col_head_sub_24 + 3,
+                                                  abs(acc_ch_lines['total']),
+                                                  sub_line_style)
+                            else:
+                                sheet.merge_range(row_head, col_head_24 + 3,
+                                                  row_head,
+                                                  col_head_sub_24 + 3,
+                                                  acc_ch_lines['total'],
+                                                  sub_line_style)
                             sheet.merge_range(row_head, col_head_24 + 6,
                                               row_head,
                                               col_head_sub_24 + 6,
@@ -1113,11 +1142,24 @@ class ProfitLossBalance(models.AbstractModel):
                                       acc_line['name'],
                                       sub_line_style1 if acc_line[
                                                              'group'] is True else sub_line_style2)
-                    sheet.merge_range(row_head, col_head_24 + 3,
-                                      row_head,
-                                      col_head_sub_24 + 3,
-                                      acc_line['total'],
-                                      sub_line_style)
+                    if acc_line['abs_of'] is True:
+                        sheet.merge_range(row_head, col_head_24 + 3,
+                                          row_head,
+                                          col_head_sub_24 + 3,
+                                          abs(acc_line['total']),
+                                          sub_line_style)
+                    elif acc_line['abs_of'] is False:
+                        sheet.merge_range(row_head, col_head_24 + 3,
+                                          row_head,
+                                          col_head_sub_24 + 3,
+                                          -abs(acc_line['total']),
+                                          sub_line_style)
+                    else:
+                        sheet.merge_range(row_head, col_head_24 + 3,
+                                          row_head,
+                                          col_head_sub_24 + 3,
+                                          acc_line['total'],
+                                          sub_line_style)
                     sheet.merge_range(row_head, col_head_24 + 6,
                                       row_head,
                                       col_head_sub_24 + 6,
