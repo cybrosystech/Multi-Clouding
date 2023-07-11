@@ -206,80 +206,88 @@ class LLAgingReportWizard(models.Model):
         Method to find out the liability amount for less than one year,
         1.01 - 2 years,2.01 - 5 years and more than 5 years.
         """
-        total_liability_amt_less_than_1_year = 0.0
-        total_liability_amt_one_to_2_year = 0.0
-        total_liability_amt_2_to_5_year = 0.0
-        total_liability_amt_more_than_5_year = 0.0
+        # Computation for Less than 1 year
+        next_year_date = self.end_date + dateutil.relativedelta.relativedelta(
+            years=1)
+        next_year_date = next_year_date - dateutil.relativedelta.relativedelta(
+            days=1)
+        domain_less_than_1_yr = [('move_id.date', '<=', next_year_date),
+                                 ('move_id.date', '>=', self.end_date),
+                                 ('move_id.leasee_contract_id', '=',
+                                  contract.id),
+                                 ('account_id', '=',
+                                  contract.interest_expense_account_id.id),
+                                 '|', ('move_id.leasee_contract_id', '=',
+                                       contract.id),
+                                 (
+                                     'move_id.asset_id', '=',
+                                     contract.asset_id.id)]
+        journal_items_less_than_1_yr = self.env['account.move.line'].search(
+            domain_less_than_1_yr, order='account_id')
+        total_liability_amt_less_than_1_year = sum(
+            journal_items_less_than_1_yr.mapped('amount_currency'))
 
-        for installment in contract.installment_ids:
-            # Computation for Less than 1 year
-            next_year_date = self.end_date + dateutil.relativedelta.relativedelta(
-                years=1)
-            next_year_date = next_year_date - dateutil.relativedelta.relativedelta(
-                days=1)
-            installments_next_year = self.env[
-                'leasee.installment'].search(
-                [('id', 'in', contract.installment_ids.ids),
-                 ('date', '!=', False),
-                 ('date', '<=', next_year_date),
-                 ('date', '>=', self.end_date)])
-            tot_liability_amt_less_than_1_year = 0.0
-            for inst in installments_next_year:
-                liability_amt = inst.amount - inst.subsequent_amount
-                tot_liability_amt_less_than_1_year = tot_liability_amt_less_than_1_year + liability_amt
-            total_liability_amt_less_than_1_year = tot_liability_amt_less_than_1_year
+        # Computation for 1.01 -2 years
+        one_to_2year_start_date = self.end_date + dateutil.relativedelta.relativedelta(
+            years=1)
+        one_to_2year_end_date = (
+                                        self.end_date + dateutil.relativedelta.relativedelta(
+                                    years=2)) - dateutil.relativedelta.relativedelta(
+            days=1)
 
-            # Computation for 1.01 -2 years
-            one_to_2year_start_date = self.end_date + dateutil.relativedelta.relativedelta(
-                years=1)
-            one_to_2year_end_date = (self.end_date + dateutil.relativedelta.relativedelta(
-                                        years=2)) - dateutil.relativedelta.relativedelta(
-                days=1)
-            installments_one_to_2_year = self.env[
-                'leasee.installment'].search(
-                [('id', 'in', contract.installment_ids.ids),
-                 ('date', '!=', False),
-                 ('date', '<=', one_to_2year_end_date),
-                 ('date', '>=', one_to_2year_start_date)])
-            tot_liability_amt_one_to_2_year = 0.0
-            for inst in installments_one_to_2_year:
-                liability_amt = inst.amount - inst.subsequent_amount
-                tot_liability_amt_one_to_2_year = tot_liability_amt_one_to_2_year + liability_amt
-            total_liability_amt_one_to_2_year = tot_liability_amt_one_to_2_year
+        domain_one_to_2_year = [('move_id.date', '<=', one_to_2year_end_date),
+                                ('move_id.date', '>=', one_to_2year_start_date),
+                                (
+                                    'move_id.leasee_contract_id', '=',
+                                    contract.id),
+                                ('account_id', '=',
+                                 contract.interest_expense_account_id.id),
+                                '|', (
+                                    'move_id.leasee_contract_id', '=',
+                                    contract.id),
+                                ('move_id.asset_id', '=', contract.asset_id.id)]
 
-            # Computation for 2.01 -5 years
-            start_date_2_to_5_year = self.end_date + dateutil.relativedelta.relativedelta(
-                years=2)
-            end_date_2_to_5_year = (self.end_date + dateutil.relativedelta.relativedelta(
-                                       years=5)) - dateutil.relativedelta.relativedelta(
-                days=1)
-            installments_2_to_5_year = self.env[
-                'leasee.installment'].search(
-                [('id', 'in', contract.installment_ids.ids),
-                 ('date', '!=', False),
-                 ('date', '<=', end_date_2_to_5_year),
-                 ('date', '>=', start_date_2_to_5_year)])
-            tot_liability_amt_2_to_5_year = 0.0
+        journal_items_one_to_2_year = self.env['account.move.line'].search(
+            domain_one_to_2_year, order='account_id')
+        total_liability_amt_one_to_2_year = sum(
+            journal_items_one_to_2_year.mapped('amount_currency'))
 
-            for inst in installments_2_to_5_year:
-                liability_amt = inst.amount - inst.subsequent_amount
-                tot_liability_amt_2_to_5_year = tot_liability_amt_2_to_5_year + liability_amt
-            total_liability_amt_2_to_5_year = tot_liability_amt_2_to_5_year
+        # Computation for 2.01 -5 years
+        start_date_2_to_5_year = self.end_date + dateutil.relativedelta.relativedelta(
+            years=2)
+        end_date_2_to_5_year = (
+                                       self.end_date + dateutil.relativedelta.relativedelta(
+                                   years=5)) - dateutil.relativedelta.relativedelta(
+            days=1)
+        domain_2_to_5_year = [('move_id.date', '<=', end_date_2_to_5_year),
+                              ('move_id.date', '>=', start_date_2_to_5_year),
+                              ('move_id.leasee_contract_id', '=', contract.id),
+                              ('account_id', '=',
+                               contract.interest_expense_account_id.id),
+                              '|',
+                              ('move_id.leasee_contract_id', '=', contract.id),
+                              ('move_id.asset_id', '=', contract.asset_id.id)]
 
-            # Computation for more than 5 years
-            start_date_5th_year = self.end_date + dateutil.relativedelta.relativedelta(
-                years=5)
-            installments_more_than_5_year = self.env[
-                'leasee.installment'].search(
-                [('id', 'in', contract.installment_ids.ids),
-                 ('date', '!=', False),
-                 ('date', '>=', start_date_5th_year)])
-            tot_liability_amt_more_than_5_year = 0.0
+        journal_items_2_to_5_year = self.env['account.move.line'].search(
+            domain_2_to_5_year, order='account_id')
+        total_liability_amt_2_to_5_year = sum(
+            journal_items_2_to_5_year.mapped('amount_currency'))
 
-            for inst in installments_more_than_5_year:
-                liability_amt = inst.amount - inst.subsequent_amount
-                tot_liability_amt_more_than_5_year = tot_liability_amt_more_than_5_year + liability_amt
-            total_liability_amt_more_than_5_year = tot_liability_amt_more_than_5_year
+        # Computation for more than 5 years
+        start_date_5th_year = self.end_date + dateutil.relativedelta.relativedelta(
+            years=5)
+        domain_more_than_5_year = [
+            ('move_id.date', '>=', start_date_5th_year),
+            ('move_id.leasee_contract_id', '=', contract.id),
+            ('account_id', '=', contract.interest_expense_account_id.id),
+            '|', ('move_id.leasee_contract_id', '=', contract.id),
+            ('move_id.asset_id', '=', contract.asset_id.id)]
+
+        journal_items_more_than_5_year = self.env['account.move.line'].search(
+            domain_more_than_5_year, order='account_id')
+        total_liability_amt_more_than_5_year = sum(
+            journal_items_more_than_5_year.mapped('amount_currency'))
+
         return {
             'tot_liability_amt_less_than_1_year': total_liability_amt_less_than_1_year,
             'tot_liability_amt_one_to_2_year': total_liability_amt_one_to_2_year,

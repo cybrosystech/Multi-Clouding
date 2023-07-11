@@ -114,125 +114,58 @@ class LeaseInterestAndAmortizationReportWizard(models.TransientModel):
 
     def get_report_data(self):
         data = []
+        move_line = self.env['account.move.line']
         if self.lease_contract_ids:
-            for contract in self.lease_contract_ids:
-                # computation for the interest
-                if self.state:
-                    move_ids = self.env['account.move'].search(
-                        [('id', 'in', contract.account_move_ids.ids),
-                         ('move_type', '=', 'entry'),
-                         ('date', '>=', self.start_date),
-                         ('date', '<=', self.end_date),
-                         ('state', '=', self.state)])
-                    move_line_ids = self.env['account.move.line'].search(
-                        [('move_id', 'in', move_ids.ids), ('account_id', '=',
-                                                           contract.interest_expense_account_id.id)])
-                else:
-                    move_ids = self.env['account.move'].search(
-                        [('id', 'in', contract.account_move_ids.ids),
-                         ('move_type', '=', 'entry'),
-                         ('date', '>=', self.start_date),
-                         ('date', '<=', self.end_date),
-                         ])
-                    move_line_ids = self.env['account.move.line'].search(
-                        [('move_id', 'in', move_ids.ids), ('account_id', '=',
-                                                           contract.interest_expense_account_id.id)])
-
-                credit_amt = move_line_ids.mapped('credit')
-                debit_amt = move_line_ids.mapped('debit')
-                interest_amount = sum(credit_amt) + sum(debit_amt)
-
-                # computation for the amortization
-                if self.state:
-                    move_line_ids = self.env['account.move.line'].search([(
-                        'move_id',
-                        'in',
-                        contract.asset_id.depreciation_move_ids.ids), (
-                        'account_id', '=',
-                        contract.asset_id.account_depreciation_expense_id.id),
-                        ('move_id.state', '=', self.state),
-                        ('move_id.date', '>=', self.start_date),
-                        ('move_id.date', '<=', self.end_date)])
-                else:
-                    move_line_ids = self.env['account.move.line'].search([(
-                        'move_id',
-                        'in',
-                        contract.asset_id.depreciation_move_ids.ids), (
-                        'account_id', '=',
-                        contract.asset_id.account_depreciation_expense_id.id),
-                        ('move_id.date', '>=', self.start_date),
-                        ('move_id.date', '<=', self.end_date)])
-
-                amortization_amount = sum(move_line_ids.mapped('debit')) + sum(
-                    move_line_ids.mapped('credit'))
-
-                data.append({
-                    'leasor_name': contract.name,
-                    'external_reference_number': contract.external_reference_number,
-                    'project_site': contract.project_site_id.name if contract.project_site_id else '',
-                    'interest': interest_amount,
-                    'amortization': amortization_amount,
-                    'currency': contract.leasee_currency_id.name,
-                })
+            lease_contract_ids = self.lease_contract_ids
         else:
             lease_contract_ids = self.env['leasee.contract'].search(
                 [('company_id', '=', self.env.company.id)], order='id ASC')
-            for contract in lease_contract_ids:
-                if self.state:
-                    move_ids = self.env['account.move'].search(
-                        [('id', 'in', contract.account_move_ids.ids),
-                         ('move_type', '=', 'entry'),
-                         ('date', '>=', self.start_date),
-                         ('date', '<=', self.end_date),
-                         ('state', '=', self.state)])
-                    move_line_ids = self.env['account.move.line'].search(
-                        [('move_id', 'in', move_ids.ids), ('account_id', '=',
-                                                           contract.interest_expense_account_id.id)])
-                else:
-                    move_ids = self.env['account.move'].search(
-                        [('id', 'in', contract.account_move_ids.ids),
-                         ('move_type', '=', 'entry'),
-                         ('date', '>=', self.start_date),
-                         ('date', '<=', self.end_date)])
-                    move_line_ids = self.env['account.move.line'].search(
-                        [('move_id', 'in', move_ids.ids), ('account_id', '=',
-                                                           contract.interest_expense_account_id.id)])
-                credit_amt = move_line_ids.mapped('credit')
-                debit_amt = move_line_ids.mapped('debit')
-                interest_amount = sum(credit_amt) + sum(debit_amt)
 
-                # computation for the amortization
-                if self.state:
-                    move_line_ids = self.env['account.move.line'].search([(
-                        'move_id',
-                        'in',
-                        contract.asset_id.depreciation_move_ids.ids), (
-                        'account_id', '=',
-                        contract.asset_id.account_depreciation_expense_id.id),
-                        ('move_id.state', '=', self.state),
-                        ('move_id.date', '>=', self.start_date),
-                        ('move_id.date', '<=', self.end_date)])
-                else:
-                    move_line_ids = self.env['account.move.line'].search([(
-                        'move_id',
-                        'in',
-                        contract.asset_id.depreciation_move_ids.ids), (
-                        'account_id', '=',
-                        contract.asset_id.account_depreciation_expense_id.id),
-                        ('move_id.date', '>=', self.start_date),
-                        ('move_id.date', '<=', self.end_date)])
+        for contract in lease_contract_ids:
+            # computation for the interest and amortization
+            if self.state:
+                move_line_ids = move_line.search(
+                    [('move_id', 'in', contract.account_move_ids.ids), ('move_id.move_type', '=', 'entry'),
+                     ('move_id.date', '>=', self.start_date), ('move_id.date', '<=', self.end_date),
+                     ('move_id.state', '=', self.state),
+                     ('account_id', '=',
+                      contract.interest_expense_account_id.id)])
+                amortization_move_line_ids = move_line.search([(
+                    'move_id',
+                    'in',
+                    contract.asset_id.depreciation_move_ids.ids), (
+                    'account_id', '=',
+                    contract.asset_id.account_depreciation_expense_id.id),
+                    ('move_id.state', '=', self.state),
+                    ('move_id.date', '>=', self.start_date),
+                    ('move_id.date', '<=', self.end_date)])
+            else:
+                move_line_ids = move_line.search(
+                    [('move_id', 'in', contract.account_move_ids.ids), ('move_id.move_type', '=', 'entry'),
+                     ('move_id.date', '>=', self.start_date), ('move_id.date', '<=', self.end_date),
+                     ('account_id', '=',
+                      contract.interest_expense_account_id.id)])
+                amortization_move_line_ids = move_line.search([(
+                    'move_id',
+                    'in',
+                    contract.asset_id.depreciation_move_ids.ids), (
+                    'account_id', '=',
+                    contract.asset_id.account_depreciation_expense_id.id),
+                    ('move_id.date', '>=', self.start_date),
+                    ('move_id.date', '<=', self.end_date)])
 
-                amortization_amount = sum(move_line_ids.mapped('debit')) + sum(
-                    move_line_ids.mapped('credit'))
-                data.append({
-                    'leasor_name': contract.name,
-                    'external_reference_number': contract.external_reference_number,
-                    'project_site': contract.project_site_id.name if contract.project_site_id else '',
-                    'interest': interest_amount,
-                    'amortization': amortization_amount,
-                    'currency': contract.leasee_currency_id.name,
-                })
+            interest_amount = sum(move_line_ids.mapped('credit')) + sum(move_line_ids.mapped('debit'))
+            amortization_amount = sum(amortization_move_line_ids.mapped('debit')) + sum(
+                amortization_move_line_ids.mapped('credit'))
 
+            data.append({
+                'leasor_name': contract.name,
+                'external_reference_number': contract.external_reference_number,
+                'project_site': contract.project_site_id.name if contract.project_site_id else '',
+                'interest': interest_amount,
+                'amortization': amortization_amount,
+                'currency': contract.leasee_currency_id.name,
+            })
         return data
 
     def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data,
