@@ -125,130 +125,130 @@ class LeaseInterestAndAmortizationReportWizard(models.TransientModel):
 
         # computation for the interest and amortization
         lease_names = []
-        if self.state:
-            self._cr.execute(
-                'select coalesce((sum(item.debit) + sum(item.credit)), 0) interest_total,'
-                ' leasee.name as lease_name,leasee.external_reference_number,currency.name as currency_name,'
-                'project_site.name '
-                'from leasee_contract as leasee inner join'
-                ' account_move as journal on '
-                'journal.leasee_contract_id=leasee.id inner join '
-                'account_move_line as item on journal.id= item.move_id '
-                'inner join res_currency as currency on '
-                'currency.id=leasee.leasee_currency_id '
-                'left join account_analytic_account as project_site on'
-                ' project_site.id=leasee.project_site_id  '
-                ' where '
-                'leasee.id in %(contract_ids)s and  '
-                'journal.move_type=%(move_type)s and journal.date >= %(start_date)s and'
-                ' journal.date <= %(end_date)s and journal.state=%(state)s and '
-                'item.account_id = leasee.interest_expense_account_id '
-                'group by lease_name,leasee.external_reference_number,'
-                'currency_name,project_site.name',
-                {'contract_ids': tuple(lease_contract_ids.ids),
-                 'move_type': 'entry',
-                 'start_date': self.start_date,
-                 'end_date': self.end_date,
-                 'state': self.state,
-                 }
-            )
-            interest_move_line_ids = self._cr.dictfetchall()
-            interest_lease_names = list(
-                map(itemgetter('lease_name'), interest_move_line_ids))
+        if lease_contract_ids:
+            if self.state:
+                self._cr.execute(
+                    'select coalesce((sum(item.debit) + sum(item.credit)), 0) interest_total,'
+                    ' leasee.name as lease_name,leasee.external_reference_number,currency.name as currency_name,'
+                    'project_site.name '
+                    'from leasee_contract as leasee inner join'
+                    ' account_move as journal on '
+                    'journal.leasee_contract_id=leasee.id inner join '
+                    'account_move_line as item on journal.id= item.move_id '
+                    'inner join res_currency as currency on '
+                    'currency.id=leasee.leasee_currency_id '
+                    'left join account_analytic_account as project_site on'
+                    ' project_site.id=leasee.project_site_id  '
+                    ' where '
+                    'leasee.id in %(contract_ids)s and  '
+                    'journal.move_type=%(move_type)s and journal.date >= %(start_date)s and'
+                    ' journal.date <= %(end_date)s and journal.state=%(state)s and '
+                    'item.account_id = leasee.interest_expense_account_id '
+                    'group by lease_name,leasee.external_reference_number,'
+                    'currency_name,project_site.name',
+                    {'contract_ids': tuple(lease_contract_ids.ids),
+                     'move_type': 'entry',
+                     'start_date': self.start_date,
+                     'end_date': self.end_date,
+                     'state': self.state,
+                     }
+                )
+                interest_move_line_ids = self._cr.dictfetchall()
+                interest_lease_names = list(
+                    map(itemgetter('lease_name'), interest_move_line_ids))
 
-            self._cr.execute(
-                'select coalesce((sum(item.debit) + sum(item.credit)), 0) '
-                'amortization_total, leasee.name as lease_name,leasee.external_reference_number,'
-                'currency.name as currency_name,project_site.name from '
-                'leasee_contract as leasee inner join account_asset '
-                'as asset on asset.id = leasee.asset_id inner join '
-                'account_move as journal on journal.asset_id=asset.id '
-                'inner join account_move_line as item '
-                'on journal.id= item.move_id '
-                'inner join res_currency as currency on '
-                'currency.id=leasee.leasee_currency_id '
-                'left join account_analytic_account as project_site'
-                ' on project_site.id=leasee.project_site_id  '
-                ' where '
-                'leasee.id in %(contract_ids)s and '
-                'journal.date >= %(start_date)s and '
-                'journal.date <= %(end_date)s  and '
-                'journal.state=%(state)s'
-                ' and item.account_id = asset.account_depreciation_expense_id '
-                'group by lease_name,'
-                'leasee.external_reference_number,'
-                'currency_name,project_site.name',
-                {'contract_ids': tuple(lease_contract_ids.ids),
-                 'start_date': self.start_date,
-                 'end_date': self.end_date,
-                 'state': self.state,
-                 }
-            )
-            amortization_move_line_ids = self._cr.dictfetchall()
-            amortization_lease_names = list(
-                map(itemgetter('lease_name'), amortization_move_line_ids))
-            lease_names = interest_lease_names + amortization_lease_names
-            lease_names = list(set(lease_names))
+                self._cr.execute(
+                    'select coalesce((sum(item.debit) + sum(item.credit)), 0) '
+                    'amortization_total, leasee.name as lease_name,leasee.external_reference_number,'
+                    'currency.name as currency_name,project_site.name from '
+                    'leasee_contract as leasee inner join account_asset '
+                    'as asset on asset.id = leasee.asset_id inner join '
+                    'account_move as journal on journal.asset_id=asset.id '
+                    'inner join account_move_line as item '
+                    'on journal.id= item.move_id '
+                    'inner join res_currency as currency on '
+                    'currency.id=leasee.leasee_currency_id '
+                    'left join account_analytic_account as project_site'
+                    ' on project_site.id=leasee.project_site_id  '
+                    ' where '
+                    'leasee.id in %(contract_ids)s and '
+                    'journal.date >= %(start_date)s and '
+                    'journal.date <= %(end_date)s  and '
+                    'journal.state=%(state)s'
+                    ' and item.account_id = asset.account_depreciation_expense_id '
+                    'group by lease_name,'
+                    'leasee.external_reference_number,'
+                    'currency_name,project_site.name',
+                    {'contract_ids': tuple(lease_contract_ids.ids),
+                     'start_date': self.start_date,
+                     'end_date': self.end_date,
+                     'state': self.state,
+                     }
+                )
+                amortization_move_line_ids = self._cr.dictfetchall()
+                amortization_lease_names = list(
+                    map(itemgetter('lease_name'), amortization_move_line_ids))
+                lease_names = interest_lease_names + amortization_lease_names
+                lease_names = list(set(lease_names))
+            else:
+                self._cr.execute(
+                    'select coalesce((sum(item.debit) + sum(item.credit)), 0) interest_total,'
+                    ' leasee.name as lease_name ,leasee.external_reference_number,currency.name as currency_name,'
+                    'project_site.name from leasee_contract as leasee inner join'
+                    ' account_move as journal on '
+                    'journal.leasee_contract_id=leasee.id inner join '
+                    'account_move_line as item on journal.id= item.move_id '
+                    'inner join res_currency as currency on '
+                    'currency.id=leasee.leasee_currency_id left join '
+                    'account_analytic_account as project_site '
+                    'on project_site.id=leasee.project_site_id '
+                    'where '
+                    'leasee.id in %(contract_ids)s and  '
+                    'journal.move_type=%(move_type)s and journal.date >= %(start_date)s and'
+                    ' journal.date <= %(end_date)s and '
+                    'item.account_id = leasee.interest_expense_account_id '
+                    'group by lease_name,leasee.external_reference_number,'
+                    'currency_name,project_site.name',
+                    {'contract_ids': tuple(lease_contract_ids.ids),
+                     'move_type': 'entry',
+                     'start_date': self.start_date,
+                     'end_date': self.end_date,
+                     }
+                )
 
-        else:
-            self._cr.execute(
-                'select coalesce((sum(item.debit) + sum(item.credit)), 0) interest_total,'
-                ' leasee.name as lease_name ,leasee.external_reference_number,currency.name as currency_name,'
-                'project_site.name from leasee_contract as leasee inner join'
-                ' account_move as journal on '
-                'journal.leasee_contract_id=leasee.id inner join '
-                'account_move_line as item on journal.id= item.move_id '
-                'inner join res_currency as currency on '
-                'currency.id=leasee.leasee_currency_id left join '
-                'account_analytic_account as project_site '
-                'on project_site.id=leasee.project_site_id '
-                'where '
-                'leasee.id in %(contract_ids)s and  '
-                'journal.move_type=%(move_type)s and journal.date >= %(start_date)s and'
-                ' journal.date <= %(end_date)s and '
-                'item.account_id = leasee.interest_expense_account_id '
-                'group by lease_name,leasee.external_reference_number,'
-                'currency_name,project_site.name',
-                {'contract_ids': tuple(lease_contract_ids.ids),
-                 'move_type': 'entry',
-                 'start_date': self.start_date,
-                 'end_date': self.end_date,
-                 }
-            )
-
-            interest_move_line_ids = self._cr.dictfetchall()
-            interest_lease_names = list(
-                map(itemgetter('lease_name'), interest_move_line_ids))
-            self._cr.execute(
-                'select coalesce((sum(item.debit) + sum(item.credit)), 0) '
-                'amortization_total, leasee.name as lease_name,leasee.external_reference_number,'
-                'currency.name as currency_name,project_site.name '
-                'from  '
-                'leasee_contract as leasee inner join account_asset '
-                'as asset on asset.id = leasee.asset_id inner join '
-                'account_move as journal on journal.asset_id=asset.id '
-                'inner join account_move_line as item '
-                'on journal.id= item.move_id  '
-                'inner join res_currency as currency on '
-                'currency.id=leasee.leasee_currency_id left join '
-                'account_analytic_account as project_site on '
-                'project_site.id=leasee.project_site_id  '
-                'where '
-                'leasee.id in %(contract_ids)s and '
-                'journal.date >= %(start_date)s and journal.date <= %(end_date)s'
-                ' and item.account_id = asset.account_depreciation_expense_id '
-                'group by lease_name,leasee.external_reference_number,'
-                'currency_name,project_site.name',
-                {'contract_ids': tuple(lease_contract_ids.ids),
-                 'start_date': self.start_date,
-                 'end_date': self.end_date,
-                 }
-            )
-            amortization_move_line_ids = self._cr.dictfetchall()
-            amortization_lease_names = list(
-                map(itemgetter('lease_name'), amortization_move_line_ids))
-            lease_names = interest_lease_names + amortization_lease_names
-            lease_names = list(set(lease_names))
+                interest_move_line_ids = self._cr.dictfetchall()
+                interest_lease_names = list(
+                    map(itemgetter('lease_name'), interest_move_line_ids))
+                self._cr.execute(
+                    'select coalesce((sum(item.debit) + sum(item.credit)), 0) '
+                    'amortization_total, leasee.name as lease_name,leasee.external_reference_number,'
+                    'currency.name as currency_name,project_site.name '
+                    'from  '
+                    'leasee_contract as leasee inner join account_asset '
+                    'as asset on asset.id = leasee.asset_id inner join '
+                    'account_move as journal on journal.asset_id=asset.id '
+                    'inner join account_move_line as item '
+                    'on journal.id= item.move_id  '
+                    'inner join res_currency as currency on '
+                    'currency.id=leasee.leasee_currency_id left join '
+                    'account_analytic_account as project_site on '
+                    'project_site.id=leasee.project_site_id  '
+                    'where '
+                    'leasee.id in %(contract_ids)s and '
+                    'journal.date >= %(start_date)s and journal.date <= %(end_date)s'
+                    ' and item.account_id = asset.account_depreciation_expense_id '
+                    'group by lease_name,leasee.external_reference_number,'
+                    'currency_name,project_site.name',
+                    {'contract_ids': tuple(lease_contract_ids.ids),
+                     'start_date': self.start_date,
+                     'end_date': self.end_date,
+                     }
+                )
+                amortization_move_line_ids = self._cr.dictfetchall()
+                amortization_lease_names = list(
+                    map(itemgetter('lease_name'), amortization_move_line_ids))
+                lease_names = interest_lease_names + amortization_lease_names
+                lease_names = list(set(lease_names))
         lease_names.sort()
         for lease in lease_names:
             test = list(filter(lambda x: x['lease_name'] == lease,
