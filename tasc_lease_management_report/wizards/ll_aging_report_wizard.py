@@ -1,6 +1,8 @@
 import base64
 import io
 import datetime
+from operator import itemgetter
+
 import xlsxwriter
 from odoo import fields, models, _
 from odoo.tools.safe_eval import dateutil
@@ -108,40 +110,362 @@ class LLAgingReportWizard(models.Model):
     def get_report_data(self):
         data = []
         if self.lease_contract_ids:
-            for contract in self.lease_contract_ids:
-                liabilities = self.find_liabilities(contract)
-                data.append({
-                    'leasor_name': contract.name,
-                    'external_reference_number': contract.external_reference_number,
-                    'project_site': contract.project_site_id.name if contract.project_site_id else '',
-                    'less_than_one_year': liabilities[
-                        'tot_liability_amt_less_than_1_year'],
-                    'one_to_two_year': liabilities[
-                        'tot_liability_amt_one_to_2_year'],
-                    'two_to_five_year': liabilities[
-                        'tot_liability_amt_2_to_5_year'],
-                    'more_than_five_year': liabilities[
-                        'tot_liability_amt_more_than_5_year'],
-                    'currency': contract.leasee_currency_id.name,
-                })
+            lease_contract_ids = self.lease_contract_ids
         else:
             lease_contract_ids = self.env['leasee.contract'].search([],
                                                                     order='id ASC')
-            for contract in lease_contract_ids:
-                liabilities = self.find_liabilities(contract)
+        if lease_contract_ids:
+
+            # Computation for Less than 1 year
+            next_year_date = self.end_date + dateutil.relativedelta.relativedelta(
+                years=1)
+            less_than_1_year_start_date = self.end_date + dateutil.relativedelta.relativedelta(
+                days=1)
+
+            self._cr.execute('select sum(item.amount_currency) as total, '
+                             'leasee.name as leasee_name,'
+                             'leasee.external_reference_number,'
+                             'currency.name as '
+                             'currency_name,project_site.name from '
+                             'leasee_contract as leasee inner '
+                             'join account_move '
+                             'as journal on '
+                             'journal.leasee_contract_id= leasee.id or '
+                             'journal.asset_id = leasee.asset_id inner join '
+                             'account_move_line as item on '
+                             'item.move_id = journal.id inner join '
+                             'res_currency as currency on'
+                             ' currency.id=leasee.leasee_currency_id left join '
+                             'account_analytic_account as project_site on '
+                             'project_site.id=leasee.project_site_id where '
+                             'leasee.id in %(contract)s and '
+                             'leasee.company_id=%(company)s and '
+                             'journal.date <= %(end_date)s and '
+                             'journal.date >= %(start_date)s and '
+                             'item.account_id=leasee.interest_expense_account_id'
+                             ' group by leasee_name,'
+                             'leasee.external_reference_number,'
+                             'currency_name,project_site.name',
+                             {
+                                 'contract': tuple(lease_contract_ids.ids),
+                                 'end_date': next_year_date,
+                                 'start_date': less_than_1_year_start_date,
+                                 'company': self.env.company.id,
+                             })
+            journal_items_less_than_1_yr_qry = self._cr.dictfetchall()
+            journal_items_less_than_1_year_lease_names = list(
+                map(itemgetter('leasee_name'),
+                    journal_items_less_than_1_yr_qry))
+            self._cr.execute('select sum(installment.amount) as total, '
+                             'leasee.name as leasee_name from '
+                             'leasee_contract as'
+                             ' leasee inner join leasee_installment as '
+                             'installment on '
+                             'installment.leasee_contract_id=leasee.id where  '
+                             'leasee.id in %(contract)s and '
+                             'leasee.company_id=%(company)s and '
+                             'installment.date <= %(end_date)s'
+                             ' and installment.date >= %(start_date)s '
+                             'group by leasee_name',
+                             {
+                                 'contract': tuple(lease_contract_ids.ids),
+                                 'end_date': next_year_date,
+                                 'start_date': less_than_1_year_start_date,
+                                 'company': self.env.company.id,
+                             })
+            installments_less_than_1_year_qry = self._cr.dictfetchall()
+
+            installments_less_than_1_year_lease_names = list(
+                map(itemgetter('leasee_name'),
+                    installments_less_than_1_year_qry))
+
+            # Computation for 1.01 -2 years
+            one_to_2year_start_date = self.end_date + dateutil.relativedelta.relativedelta(
+                years=1)
+            one_to_2year_start_date = one_to_2year_start_date + dateutil.relativedelta.relativedelta(
+                days=1)
+            one_to_2year_end_date = (
+                    self.end_date + dateutil.relativedelta.relativedelta(
+                years=2))
+
+            self._cr.execute('select sum(item.amount_currency) as total, '
+                             'leasee.name as leasee_name,'
+                             'leasee.external_reference_number,'
+                             'currency.name as '
+                             'currency_name,project_site.name from '
+                             'leasee_contract as leasee inner '
+                             'join account_move '
+                             'as journal on '
+                             'journal.leasee_contract_id= leasee.id or '
+                             'journal.asset_id = leasee.asset_id inner join '
+                             'account_move_line as item on '
+                             'item.move_id = journal.id inner join '
+                             'res_currency as currency on'
+                             ' currency.id=leasee.leasee_currency_id left join '
+                             'account_analytic_account as project_site on '
+                             'project_site.id=leasee.project_site_id where '
+                             'leasee.id in %(contract)s and '
+                             'leasee.company_id=%(company)s and '
+                             'journal.date <= %(end_date)s and '
+                             'journal.date >= %(start_date)s and '
+                             'item.account_id=leasee.interest_expense_account_id'
+                             ' group by leasee_name,'
+                             'leasee.external_reference_number,'
+                             'currency_name,project_site.name',
+                             {
+                                 'contract': tuple(lease_contract_ids.ids),
+                                 'end_date': one_to_2year_end_date,
+                                 'start_date': one_to_2year_start_date,
+                                 'company': self.env.company.id,
+                             })
+            journal_items_one_to_2_year_qry = self._cr.dictfetchall()
+
+            journal_items_one_to_2_year_lease_names = list(
+                map(itemgetter('leasee_name'), journal_items_one_to_2_year_qry))
+
+            self._cr.execute('select sum(installment.amount) as total, '
+                             'leasee.name as leasee_name from leasee_contract as'
+                             ' leasee inner join leasee_installment as '
+                             'installment on '
+                             'installment.leasee_contract_id=leasee.id where  '
+                             'leasee.id in %(contract)s and '
+                             'leasee.company_id=%(company)s and '
+                             'installment.date <= %(end_date)s'
+                             ' and installment.date >= %(start_date)s '
+                             'group by leasee_name',
+                             {
+                                 'contract': tuple(lease_contract_ids.ids),
+                                 'end_date': one_to_2year_end_date,
+                                 'start_date': one_to_2year_start_date,
+                                 'company': self.env.company.id,
+                             })
+            installments_one_to_2_year_qry = self._cr.dictfetchall()
+
+            installments_one_to_2_year_lease_names = list(
+                map(itemgetter('leasee_name'), installments_one_to_2_year_qry))
+
+            # Computation for 2.01 -5 years
+            start_date_2_to_5_year = self.end_date + dateutil.relativedelta.relativedelta(
+                years=2)
+            start_date_2_to_5_year = start_date_2_to_5_year + dateutil.relativedelta.relativedelta(
+                days=1)
+            end_date_2_to_5_year = (
+                    self.end_date + dateutil.relativedelta.relativedelta(
+                years=5))
+
+            self._cr.execute('select sum(item.amount_currency) as total, '
+                             'leasee.name as leasee_name,'
+                             'leasee.external_reference_number,'
+                             'currency.name as '
+                             'currency_name,project_site.name from '
+                             'leasee_contract as leasee inner '
+                             'join account_move '
+                             'as journal on '
+                             'journal.leasee_contract_id= leasee.id or '
+                             'journal.asset_id = leasee.asset_id inner join '
+                             'account_move_line as item on '
+                             'item.move_id = journal.id inner join '
+                             'res_currency as currency on'
+                             ' currency.id=leasee.leasee_currency_id left join '
+                             'account_analytic_account as project_site on '
+                             'project_site.id=leasee.project_site_id where '
+                             'leasee.id in %(contract)s and '
+                             'leasee.company_id=%(company)s and '
+                             'journal.date <= %(end_date)s and '
+                             'journal.date >= %(start_date)s and '
+                             'item.account_id=leasee.interest_expense_account_id'
+                             ' group by leasee_name,'
+                             'leasee.external_reference_number,'
+                             'currency_name,project_site.name',
+                             {
+                                 'contract': tuple(lease_contract_ids.ids),
+                                 'end_date': end_date_2_to_5_year,
+                                 'start_date': start_date_2_to_5_year,
+                                 'company': self.env.company.id,
+                             })
+            journal_items_2_to_5_year_qry = self._cr.dictfetchall()
+
+            journal_items_2_to_5_year_lease_names = list(
+                map(itemgetter('leasee_name'), journal_items_2_to_5_year_qry))
+
+            self._cr.execute('select sum(installment.amount) as total, '
+                             'leasee.name as leasee_name from leasee_contract as'
+                             ' leasee inner join leasee_installment as '
+                             'installment on '
+                             'installment.leasee_contract_id=leasee.id where  '
+                             'leasee.id in %(contract)s and '
+                             'leasee.company_id=%(company)s and '
+                             'installment.date <= %(end_date)s'
+                             ' and installment.date >= %(start_date)s '
+                             'group by leasee_name',
+                             {
+                                 'contract': tuple(lease_contract_ids.ids),
+                                 'end_date': end_date_2_to_5_year,
+                                 'start_date': start_date_2_to_5_year,
+                                 'company': self.env.company.id,
+                             })
+            installments_2_to_5_year_qry = self._cr.dictfetchall()
+
+            installments_2_to_5_year_lease_names = list(
+                map(itemgetter('leasee_name'), installments_2_to_5_year_qry))
+
+            # Computation for more than 5 years
+            start_date_5th_year = self.end_date + dateutil.relativedelta.relativedelta(
+                years=5)
+            start_date_5th_year = start_date_5th_year + dateutil.relativedelta.relativedelta(
+                days=1)
+
+            self._cr.execute('select sum(item.amount_currency) as total, '
+                             'leasee.name as leasee_name,'
+                             'leasee.external_reference_number,'
+                             'currency.name as '
+                             'currency_name,project_site.name from '
+                             'leasee_contract as leasee inner '
+                             'join account_move '
+                             'as journal on '
+                             'journal.leasee_contract_id= leasee.id or '
+                             'journal.asset_id = leasee.asset_id inner join '
+                             'account_move_line as item on '
+                             'item.move_id = journal.id inner join '
+                             'res_currency as currency on'
+                             ' currency.id=leasee.leasee_currency_id left join '
+                             'account_analytic_account as project_site on '
+                             'project_site.id=leasee.project_site_id where '
+                             'leasee.id in %(contract)s and '
+                             'leasee.company_id=%(company)s and '
+                             'journal.date >= %(start_date)s and '
+                             'item.account_id=leasee.interest_expense_account_id'
+                             ' group by leasee_name,'
+                             'leasee.external_reference_number,'
+                             'currency_name,project_site.name',
+                             {
+                                 'contract': tuple(lease_contract_ids.ids),
+                                 'start_date': start_date_5th_year,
+                                 'company': self.env.company.id,
+                             })
+            journal_items_more_than_5_year_qry = self._cr.dictfetchall()
+
+            journal_items_more_than_5_year_lease_names = list(
+                map(itemgetter('leasee_name'),
+                    journal_items_more_than_5_year_qry))
+
+            self._cr.execute('select sum(installment.amount) as total, '
+                             'leasee.name as leasee_name from '
+                             'leasee_contract as'
+                             ' leasee inner join leasee_installment as '
+                             'installment on '
+                             'installment.leasee_contract_id=leasee.id where  '
+                             'leasee.id in %(contract)s and '
+                             'leasee.company_id=%(company)s and '
+                             ' installment.date >= %(start_date)s '
+                             'group by leasee_name',
+                             {
+                                 'contract': tuple(lease_contract_ids.ids),
+                                 'start_date': start_date_5th_year,
+                                 'company': self.env.company.id,
+                             })
+            installments_more_than_5_year_qry = self._cr.dictfetchall()
+            installments_more_than_5_year_lease_names = list(
+                map(itemgetter('leasee_name'),
+                    installments_more_than_5_year_qry))
+
+            lease_names = list(
+                set(journal_items_less_than_1_year_lease_names + installments_less_than_1_year_lease_names + journal_items_one_to_2_year_lease_names + installments_one_to_2_year_lease_names + journal_items_2_to_5_year_lease_names + installments_2_to_5_year_lease_names + journal_items_more_than_5_year_lease_names + installments_more_than_5_year_lease_names))
+            lease_names.sort()
+            for lease in lease_names:
+                liability_less_than_1_year = list(
+                    filter(lambda x: x['leasee_name'] == lease,
+                           journal_items_less_than_1_yr_qry))
+                installment_less_than_1_year = list(
+                    filter(lambda x: x['leasee_name'] == lease,
+                           installments_less_than_1_year_qry))
+                if len(liability_less_than_1_year) >= 1 and len(
+                        installment_less_than_1_year) >= 1:
+                    tot_amt_less_1_yr = installment_less_than_1_year[0][
+                                            "total"] - \
+                                        liability_less_than_1_year[0]["total"]
+                elif len(installment_less_than_1_year) >= 1:
+                    tot_amt_less_1_yr = installment_less_than_1_year[0][
+                        "total"]
+                elif len(liability_less_than_1_year) >= 1:
+                    tot_amt_less_1_yr = - liability_less_than_1_year[0]["total"]
+                else:
+                    tot_amt_less_1_yr = 0.0
+
+                liability_1_to_2_yr = list(
+                    filter(lambda x: x['leasee_name'] == lease,
+                           journal_items_one_to_2_year_qry))
+                installment_1_to_2_yr = list(
+                    filter(lambda x: x['leasee_name'] == lease,
+                           installments_one_to_2_year_qry))
+
+                if len(liability_1_to_2_yr) >= 1 and len(
+                        installment_1_to_2_yr) >= 1:
+                    tot_amt_1_to_2_yr = installment_1_to_2_yr[0][
+                                            "total"] - \
+                                        liability_1_to_2_yr[0]["total"]
+                elif len(installment_1_to_2_yr) >= 1:
+                    tot_amt_1_to_2_yr = installment_1_to_2_yr[0][
+                        "total"]
+                elif len(liability_1_to_2_yr) >= 1:
+                    tot_amt_1_to_2_yr = - liability_1_to_2_yr[0]["total"]
+                else:
+                    tot_amt_1_to_2_yr = 0.0
+
+                liability_2_to_5_yr = list(
+                    filter(lambda x: x['leasee_name'] == lease,
+                           journal_items_2_to_5_year_qry))
+                installment_2_to_5_yr = list(
+                    filter(lambda x: x['leasee_name'] == lease,
+                           installments_2_to_5_year_qry))
+
+                if len(liability_2_to_5_yr) >= 1 and len(
+                        installment_2_to_5_yr) >= 1:
+                    tot_amt_2_to_5_yr = installment_2_to_5_yr[0][
+                                            "total"] - \
+                                        liability_2_to_5_yr[0]["total"]
+                elif len(installment_2_to_5_yr) >= 1:
+                    tot_amt_2_to_5_yr = installment_2_to_5_yr[0][
+                        "total"]
+                elif len(liability_2_to_5_yr) >= 1:
+                    tot_amt_2_to_5_yr = - liability_2_to_5_yr[0]["total"]
+                else:
+                    tot_amt_2_to_5_yr = 0.0
+
+                liability_more_5_yr = list(
+                    filter(lambda x: x['leasee_name'] == lease,
+                           journal_items_more_than_5_year_qry))
+                installment_more_5_yr = list(
+                    filter(lambda x: x['leasee_name'] == lease,
+                           installments_more_than_5_year_qry))
+
+                if len(liability_more_5_yr) >= 1 and len(
+                        installment_more_5_yr) >= 1:
+                    tot_amt_more_5_yr = installment_more_5_yr[0][
+                                            "total"] - \
+                                        liability_more_5_yr[0]["total"]
+                elif len(installment_more_5_yr) >= 1:
+                    tot_amt_more_5_yr = installment_more_5_yr[0][
+                        "total"]
+                elif len(liability_more_5_yr) >= 1:
+                    tot_amt_more_5_yr = - liability_more_5_yr[0]["total"]
+                else:
+                    tot_amt_more_5_yr = 0.0
+
+                liabilities = liability_less_than_1_year + liability_1_to_2_yr + liability_2_to_5_yr + liability_2_to_5_yr + liability_more_5_yr
                 data.append({
-                    'leasor_name': contract.name,
-                    'external_reference_number': contract.external_reference_number,
-                    'project_site': contract.project_site_id.name if contract.project_site_id else '',
-                    'less_than_one_year': liabilities[
-                        'tot_liability_amt_less_than_1_year'],
-                    'one_to_two_year': liabilities[
-                        'tot_liability_amt_one_to_2_year'],
-                    'two_to_five_year': liabilities[
-                        'tot_liability_amt_2_to_5_year'],
-                    'more_than_five_year': liabilities[
-                        'tot_liability_amt_more_than_5_year'],
-                    'currency': contract.leasee_currency_id.name,
+                    'leasor_name': lease,
+                    'external_reference_number': liabilities[0][
+                        'external_reference_number'] if len(
+                        liabilities) >= 1 else '',
+                    'project_site': liabilities[0]['name'] if len(
+                        liabilities) >= 1 else '',
+                    'less_than_one_year': tot_amt_less_1_yr,
+                    'one_to_two_year': tot_amt_1_to_2_yr,
+                    'two_to_five_year': tot_amt_2_to_5_yr,
+                    'more_than_five_year': tot_amt_more_5_yr,
+                    'currency': liabilities[0]['currency_name'] if len(
+                        liabilities) >= 1 else '',
                 })
         return data
 
@@ -200,129 +524,3 @@ class LLAgingReportWizard(models.Model):
                             STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['currency'], STYLE_LINE_Data)
-
-    def find_liabilities(self, contract):
-        """
-        Method to find out the liability amount for less than one year,
-        1.01 - 2 years,2.01 - 5 years and more than 5 years.
-        """
-        # Computation for Less than 1 year
-        next_year_date = self.end_date + dateutil.relativedelta.relativedelta(
-            years=1)
-        less_than_1_year_start_date = self.end_date + dateutil.relativedelta.relativedelta(
-            days=1)
-        domain_less_than_1_yr = [('move_id.date', '<=', next_year_date),
-                                 ('move_id.date', '>=',
-                                  less_than_1_year_start_date),
-                                 ('move_id.leasee_contract_id', '=',
-                                  contract.id),
-                                 ('account_id', '=',
-                                  contract.interest_expense_account_id.id),
-                                 '|', ('move_id.leasee_contract_id', '=',
-                                       contract.id),
-                                 (
-                                     'move_id.asset_id', '=',
-                                     contract.asset_id.id)]
-        journal_items_less_than_1_yr = self.env['account.move.line'].search(
-            domain_less_than_1_yr, order='account_id')
-        installments_less_than_1_year = self.env['leasee.installment'].search(
-            [('id', 'in', contract.installment_ids.ids),
-             ('date', '<=', next_year_date),
-             ('date', '>=', less_than_1_year_start_date)]).mapped('amount')
-        installmet_amount_less_than_1_year = sum(installments_less_than_1_year)
-        total_liability_amt_less_than_1_year = installmet_amount_less_than_1_year - sum(
-            journal_items_less_than_1_yr.mapped('amount_currency'))
-
-        # Computation for 1.01 -2 years
-        one_to_2year_start_date = self.end_date + dateutil.relativedelta.relativedelta(
-            years=1)
-        one_to_2year_start_date = one_to_2year_start_date + dateutil.relativedelta.relativedelta(
-            days=1)
-        one_to_2year_end_date = (
-                self.end_date + dateutil.relativedelta.relativedelta(
-            years=2))
-
-        domain_one_to_2_year = [('move_id.date', '<=', one_to_2year_end_date),
-                                ('move_id.date', '>=', one_to_2year_start_date),
-                                (
-                                    'move_id.leasee_contract_id', '=',
-                                    contract.id),
-                                ('account_id', '=',
-                                 contract.interest_expense_account_id.id),
-                                '|', (
-                                    'move_id.leasee_contract_id', '=',
-                                    contract.id),
-                                ('move_id.asset_id', '=', contract.asset_id.id)]
-
-        journal_items_one_to_2_year = self.env['account.move.line'].search(
-            domain_one_to_2_year, order='account_id')
-
-        installments_one_to_2_year = self.env['leasee.installment'].search(
-            [('id', 'in', contract.installment_ids.ids),
-             ('date', '<=', one_to_2year_end_date),
-             ('date', '>=', one_to_2year_start_date)]).mapped('amount')
-
-        installmet_amount_one_to_2_year = sum(installments_one_to_2_year)
-        total_liability_amt_one_to_2_year = installmet_amount_one_to_2_year - sum(
-            journal_items_one_to_2_year.mapped('amount_currency'))
-
-        # Computation for 2.01 -5 years
-        start_date_2_to_5_year = self.end_date + dateutil.relativedelta.relativedelta(
-            years=2)
-        start_date_2_to_5_year = start_date_2_to_5_year + dateutil.relativedelta.relativedelta(
-            days=1)
-        end_date_2_to_5_year = (
-                self.end_date + dateutil.relativedelta.relativedelta(
-            years=5))
-        domain_2_to_5_year = [('move_id.date', '<=', end_date_2_to_5_year),
-                              ('move_id.date', '>=', start_date_2_to_5_year),
-                              ('move_id.leasee_contract_id', '=', contract.id),
-                              ('account_id', '=',
-                               contract.interest_expense_account_id.id),
-                              '|',
-                              ('move_id.leasee_contract_id', '=', contract.id),
-                              ('move_id.asset_id', '=', contract.asset_id.id)]
-
-        journal_items_2_to_5_year = self.env['account.move.line'].search(
-            domain_2_to_5_year, order='account_id')
-
-        installments_2_to_5_year = self.env['leasee.installment'].search(
-            [('id', 'in', contract.installment_ids.ids),
-             ('date', '<=', end_date_2_to_5_year),
-             ('date', '>=', start_date_2_to_5_year)]).mapped('amount')
-
-        installmet_amount_2_to_5_year = sum(installments_2_to_5_year)
-
-        total_liability_amt_2_to_5_year = installmet_amount_2_to_5_year - sum(
-            journal_items_2_to_5_year.mapped('amount_currency'))
-
-        # Computation for more than 5 years
-        start_date_5th_year = self.end_date + dateutil.relativedelta.relativedelta(
-            years=5)
-        start_date_5th_year = start_date_5th_year + dateutil.relativedelta.relativedelta(
-            days=1)
-        domain_more_than_5_year = [
-            ('move_id.date', '>=', start_date_5th_year),
-            ('move_id.leasee_contract_id', '=', contract.id),
-            ('account_id', '=', contract.interest_expense_account_id.id),
-            '|', ('move_id.leasee_contract_id', '=', contract.id),
-            ('move_id.asset_id', '=', contract.asset_id.id)]
-
-        journal_items_more_than_5_year = self.env['account.move.line'].search(
-            domain_more_than_5_year, order='account_id')
-
-        installments_more_than_5_year = self.env['leasee.installment'].search(
-            [('id', 'in', contract.installment_ids.ids),
-             ('date', '>=', start_date_5th_year)]).mapped('amount')
-
-        installmet_amount_more_than_5_year = sum(installments_more_than_5_year)
-
-        total_liability_amt_more_than_5_year = installmet_amount_more_than_5_year - sum(
-            journal_items_more_than_5_year.mapped('amount_currency'))
-
-        return {
-            'tot_liability_amt_less_than_1_year': total_liability_amt_less_than_1_year,
-            'tot_liability_amt_one_to_2_year': total_liability_amt_one_to_2_year,
-            'tot_liability_amt_2_to_5_year': total_liability_amt_2_to_5_year,
-            'tot_liability_amt_more_than_5_year': total_liability_amt_more_than_5_year,
-        }
