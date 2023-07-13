@@ -1,6 +1,8 @@
 import base64
 import io
 import datetime
+from operator import itemgetter
+
 import xlsxwriter
 from odoo import fields, models, _
 from odoo.tools.safe_eval import dateutil
@@ -105,9 +107,6 @@ class LeaseContractXlsxWizard(models.TransientModel):
 
     def get_report_data(self):
         data = []
-        domain = [('move_type', '=', 'in_invoice'),
-                  ('leasee_contract_id', '!=', False),
-                  ('company_id', '=', self.env.company.id)]
         if self.lease_contract_ids:
             lease_contracts = self.lease_contract_ids
         else:
@@ -138,66 +137,158 @@ class LeaseContractXlsxWizard(models.TransientModel):
         # More than 5 years
         start_date_5th_year = self.end_date + dateutil.relativedelta.relativedelta(
             years=5)
+        if lease_contracts:
+            # Less than 1 year
+            self._cr.execute(
+                'select sum(journal.amount_total) total, leasee.name as lease_name,'
+                'leasee.external_reference_number,currency.name as currency_name,'
+                'project_site.name from leasee_contract as leasee inner'
+                ' join account_move  as journal on '
+                'journal.leasee_contract_id=leasee.id inner join '
+                'res_currency as currency on '
+                'currency.id=leasee.leasee_currency_id left join '
+                'account_analytic_account as project_site on '
+                'project_site.id=leasee.project_site_id where '
+                'leasee.id in %(contract)s and '
+                'journal.invoice_date_due <= %(end_date)s and ' \
+                'journal.invoice_date_due >=  %(start_date)s group by ' \
+                'lease_name,leasee.external_reference_number,' \
+                'currency_name,project_site.name ',
+                {'contract': tuple(lease_contracts.ids),
+                 'end_date': next_year_date,
+                 'start_date': self.end_date})
 
-        for contract in lease_contracts:
-            # Bills less than 1year
-            total_amount_next_year = [{'sum': 0.0}]
-            total_amount_next_2years = [{'sum': 0.0}]
-            total_amount_next_5years = [{'sum': 0.0}]
-            total_amount_more_than_5_years = [{'sum': 0.0}]
+            move_ids_next_year_qry = self._cr.dictfetchall()
+            less_than_1_year_lease_names = list(
+                map(itemgetter('lease_name'), move_ids_next_year_qry))
 
-            if contract.account_move_ids:
-                self._cr.execute(
-                    'SELECT SUM(amount_total) FROM account_move WHERE id '
-                    'IN  %(contract_ids)s and invoice_date_due <= %(end_date)s '
-                    'and invoice_date_due >= %(start_date)s',
-                    {'contract_ids': tuple(contract.account_move_ids.ids),
-                     'end_date': next_year_date,
-                     'start_date': self.end_date})
-                move_ids_next_year = self._cr.dictfetchall()
-                total_amount_next_year = move_ids_next_year
+            # 1.01 -  2years
+            self._cr.execute(
+                'select sum(journal.amount_total) total, leasee.name as lease_name,'
+                'leasee.external_reference_number,currency.name as currency_name,'
+                'project_site.name from leasee_contract as leasee inner'
+                ' join account_move  as journal on '
+                'journal.leasee_contract_id=leasee.id inner join '
+                'res_currency as currency on '
+                'currency.id=leasee.leasee_currency_id left join '
+                'account_analytic_account as project_site on '
+                'project_site.id=leasee.project_site_id where '
+                'leasee.id in %(contract)s and '
+                'journal.invoice_date_due <= %(end_date)s and ' \
+                'journal.invoice_date_due >=  %(start_date)s group by ' \
+                'lease_name,leasee.external_reference_number,' \
+                'currency_name,project_site.name ',
+                {'contract': tuple(lease_contracts.ids),
+                 'end_date': next_2year_end_date,
+                 'start_date': next_2year_start_date})
 
-                # Bills from 1.01 - 2 years
-                self._cr.execute(
-                    'SELECT SUM(amount_total) FROM account_move WHERE id IN '
-                    ' %(contract_ids)s and invoice_date_due <= %(end_date)s and'
-                    ' invoice_date_due >= %(start_date)s',
-                    {'contract_ids': tuple(contract.account_move_ids.ids),
-                     'end_date': next_2year_end_date,
-                     'start_date': next_2year_start_date})
-                move_ids_next_two_years = self._cr.dictfetchall()
-                total_amount_next_2years = move_ids_next_two_years
+            move_ids_next_two_years_qry = self._cr.dictfetchall()
+            one_to_2_year_lease_names = list(
+                map(itemgetter('lease_name'), move_ids_next_two_years_qry))
 
-                # Bills from 2.01 - 5 years
-                self._cr.execute(
-                    'SELECT SUM(amount_total) FROM account_move WHERE id IN'
-                    '  %(contract_ids)s and invoice_date_due <= %(end_date)s '
-                    'and invoice_date_due >= %(start_date)s',
-                    {'contract_ids': tuple(contract.account_move_ids.ids),
-                     'end_date': end_date_5th_year,
-                     'start_date': start_date_2nd_year})
-                move_ids_next_5_years = self._cr.dictfetchall()
-                total_amount_next_5years = move_ids_next_5_years
+            # 2.01 - 5 years
+            self._cr.execute(
+                'select sum(journal.amount_total) total, leasee.name as lease_name,'
+                'leasee.external_reference_number,currency.name as currency_name,'
+                'project_site.name from leasee_contract as leasee inner'
+                ' join account_move  as journal on '
+                'journal.leasee_contract_id=leasee.id inner join '
+                'res_currency as currency on '
+                'currency.id=leasee.leasee_currency_id left join '
+                'account_analytic_account as project_site on '
+                'project_site.id=leasee.project_site_id where '
+                'leasee.id in %(contract)s and '
+                'journal.invoice_date_due <= %(end_date)s and ' \
+                'journal.invoice_date_due >=  %(start_date)s group by ' \
+                'lease_name,leasee.external_reference_number,' \
+                'currency_name,project_site.name ',
+                {
+                    'contract': tuple(lease_contracts.ids),
+                    'end_date': end_date_5th_year,
+                    'start_date': start_date_2nd_year})
 
-                # Bills more than 5 years
-                self._cr.execute(
-                    'SELECT SUM(amount_total) FROM account_move WHERE id IN  '
-                    '%(contract_ids)s and invoice_date_due >= %(start_date)s',
-                    {'contract_ids': tuple(contract.account_move_ids.ids),
-                     'start_date': start_date_5th_year})
-                move_ids_more_than_5_years = self._cr.dictfetchall()
-                total_amount_more_than_5_years = move_ids_more_than_5_years
+            move_ids_next_5_years_qry = self._cr.dictfetchall()
+            two_to_5_year_lease_names = list(
+                map(itemgetter('lease_name'), move_ids_next_5_years_qry))
 
-            data.append({
-                'leasor_name': contract.name,
-                'external_reference_number': contract.external_reference_number,
-                'project_site': contract.project_site_id.name if contract.project_site_id else '',
-                'total_amount_next_year': total_amount_next_year,
-                'total_amount_next_2years': total_amount_next_2years,
-                'total_amount_next_5years': total_amount_next_5years,
-                'total_amount_more_than_5_years': total_amount_more_than_5_years,
-                'currency': contract.leasee_currency_id.name,
-            })
+            # More than 5 years
+            self._cr.execute(
+                'select sum(journal.amount_total) total, leasee.name as lease_name,'
+                'leasee.external_reference_number,currency.name as currency_name,'
+                'project_site.name from leasee_contract as leasee inner'
+                ' join account_move  as journal on '
+                'journal.leasee_contract_id=leasee.id inner join '
+                'res_currency as currency on '
+                'currency.id=leasee.leasee_currency_id left join '
+                'account_analytic_account as project_site on '
+                'project_site.id=leasee.project_site_id where '
+                'leasee.id in %(contract)s and '
+                'journal.invoice_date_due >=  %(start_date)s group by ' \
+                'lease_name,leasee.external_reference_number,' \
+                'currency_name,project_site.name ',
+                {
+                    'contract': tuple(lease_contracts.ids),
+                    'start_date': start_date_5th_year})
+            move_ids_more_than_5_years_qry = self._cr.dictfetchall()
+            more_than__5_year_lease_names = list(
+                map(itemgetter('lease_name'), move_ids_more_than_5_years_qry))
+            lease_names = list(
+                set(less_than_1_year_lease_names + one_to_2_year_lease_names + two_to_5_year_lease_names + more_than__5_year_lease_names))
+            lease_names.sort()
+
+            amount_lists = []
+            for lease in lease_names:
+                amount_less_than_1_year = list(
+                    filter(lambda x: x['lease_name'] == lease,
+                           move_ids_next_year_qry))
+                amount_1_to_2_year = list(
+                    filter(lambda x: x['lease_name'] == lease,
+                           move_ids_next_two_years_qry))
+                amount_2_to_5_year = list(
+                    filter(lambda x: x['lease_name'] == lease,
+                           move_ids_next_5_years_qry))
+                amount_more_than_5_years = list(
+                    filter(lambda x: x['lease_name'] == lease,
+                           move_ids_more_than_5_years_qry))
+
+                amount_lists = amount_less_than_1_year + amount_1_to_2_year + amount_2_to_5_year + amount_more_than_5_years
+                if len(amount_less_than_1_year) >= 1 and len(
+                        amount_1_to_2_year) >= 1 and len(
+                    amount_2_to_5_year) >= 1 and len(
+                    amount_more_than_5_years) >= 1:
+                    data.append({
+                        'leasor_name': lease,
+                        'external_reference_number': amount_less_than_1_year[0][
+                            "external_reference_number"],
+                        'project_site': amount_less_than_1_year[0]["name"],
+                        'total_amount_next_year': amount_less_than_1_year[0][
+                            "total"],
+                        'total_amount_next_2years': amount_1_to_2_year[0][
+                            "total"],
+                        'total_amount_next_5years': amount_2_to_5_year[0][
+                            "total"],
+                        'total_amount_more_than_5_years':
+                            amount_more_than_5_years[0]["total"],
+                        'currency': amount_less_than_1_year[0]["currency_name"],
+                    })
+                else:
+                    data.append({
+                        'leasor_name': lease,
+                        'external_reference_number': amount_lists[0][
+                            "external_reference_number"],
+                        'project_site': amount_lists[0]["name"],
+                        'total_amount_next_year': amount_less_than_1_year[0][
+                            "total"] if len(
+                            amount_less_than_1_year) >= 1 else 0.0,
+                        'total_amount_next_2years': amount_1_to_2_year[0][
+                            "total"] if len(amount_1_to_2_year) >= 1 else 0.0,
+                        'total_amount_next_5years': amount_2_to_5_year[0][
+                            "total"] if len(amount_2_to_5_year) >= 1 else 0.0,
+                        'total_amount_more_than_5_years':
+                            amount_more_than_5_years[0]["total"] if len(
+                                amount_more_than_5_years) >= 1 else 0.0,
+                        'currency': amount_lists[0]["currency_name"],
+                    })
         return data
 
     def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data,
@@ -240,19 +331,19 @@ class LeaseContractXlsxWizard(models.TransientModel):
             col += 1
             worksheet.write(row, col, line['project_site'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['total_amount_next_year'][0]['sum'],
+            worksheet.write(row, col, line['total_amount_next_year'],
                             STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col,
-                            line['total_amount_next_2years'][0]['sum'],
+                            line['total_amount_next_2years'],
                             STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col,
-                            line['total_amount_next_5years'][0]['sum'],
+                            line['total_amount_next_5years'],
                             STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col,
-                            line['total_amount_more_than_5_years'][0]['sum'],
+                            line['total_amount_more_than_5_years'],
                             STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['currency'], STYLE_LINE_Data)
