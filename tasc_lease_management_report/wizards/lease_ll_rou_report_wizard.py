@@ -1,6 +1,7 @@
 import base64
 import datetime
 import io
+from operator import itemgetter
 import xlsxwriter
 from odoo import fields, models, _
 
@@ -109,185 +110,346 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
     def get_report_data(self):
         data = []
         if self.lease_contract_ids:
-            for contract in self.lease_contract_ids:
-                if self.state:
-                    move_ids = self.env['account.move'].search(
-                        [('id', 'in', contract.account_move_ids.ids),
-                         ('date', '<=', self.end_date),
-                         ('state', '=', self.state),
-                         ('company_id', '=', self.env.company.id)])
-                    asset_move_ids = self.env['account.move'].search(
-                        ['|', ('id', 'in',
-                               contract.asset_id.depreciation_move_ids.ids),
-                         ('id', 'in', contract.account_move_ids.ids),
-                         ('date', '<=', self.end_date),
-                         ('state', '=', self.state),
-                         ('company_id', '=', self.env.company.id)])
-
-                    # computation for STLL
-
-                    stll_move_line_ids = self.find_stll_move_lines(move_ids,
-                                                                   contract)
-                    # computation for LTLL
-
-                    ltll_move_line_ids = self.find_ltll_move_lines(move_ids,
-                                                                   contract)
-
-                    # computation for Net ROU
-                    fixed_asset_account_move_line_ids = self.find_fixed_asset_account_move_lines(
-                        asset_move_ids, contract)
-
-                    depreciation_account_move_line_ids = self.find_depreciation_account_move_lines(
-                        asset_move_ids, contract)
-
-                else:
-                    move_ids = self.env['account.move'].search(
-                        [('id', 'in', contract.account_move_ids.ids),
-                         ('date', '<=', self.end_date),
-                         ('company_id', '=', self.env.company.id)
-                         ])
-                    asset_move_ids = self.env['account.move'].search(
-                        ['|', ('id', 'in',
-                               contract.asset_id.depreciation_move_ids.ids),
-                         ('id', 'in', contract.account_move_ids.ids),
-                         ('date', '<=', self.end_date),
-                         ('company_id', '=', self.env.company.id)])
-                    # computation for STLL
-
-                    stll_move_line_ids = self.find_stll_move_lines(move_ids,
-                                                                   contract)
-
-                    # computation for LTLL
-
-                    ltll_move_line_ids = self.find_ltll_move_lines(move_ids,
-                                                                   contract)
-
-                    # computation for Net ROU
-                    fixed_asset_account_move_line_ids = self.find_fixed_asset_account_move_lines(
-                        asset_move_ids, contract)
-                    depreciation_account_move_line_ids = self.find_depreciation_account_move_lines(
-                        asset_move_ids, contract)
-                stll_credit_amt = stll_move_line_ids.mapped('credit')
-                stll_debit_amt = stll_move_line_ids.mapped('debit')
-                stll_amount = sum(stll_debit_amt) - sum(stll_credit_amt)
-
-                ltll_credit_amt = ltll_move_line_ids.mapped('credit')
-                ltll_debit_amt = ltll_move_line_ids.mapped('debit')
-                ltll_amount = sum(ltll_debit_amt) - sum(ltll_credit_amt)
-                asset_credit_amt = fixed_asset_account_move_line_ids.mapped(
-                    'credit')
-                asset_debit_amt = fixed_asset_account_move_line_ids.mapped(
-                    'debit')
-                asset_tot_amt = sum(asset_debit_amt) - sum(asset_credit_amt)
-                depreciation_credit_amt = depreciation_account_move_line_ids.mapped(
-                    'credit')
-                depreciation_debit_amt = depreciation_account_move_line_ids.mapped(
-                    'debit')
-
-                depreciation_tot_amt = sum(
-                    depreciation_debit_amt) - sum(depreciation_credit_amt)
-                net_rou = asset_tot_amt + depreciation_tot_amt
-
-                data.append({
-                    'leasor_name': contract.name,
-                    'external_reference_number': contract.external_reference_number,
-                    'project_site': contract.project_site_id.name if contract.project_site_id else '',
-                    'stll': stll_amount,
-                    'ltll': ltll_amount,
-                    'net_rou': net_rou,
-                    'currency': contract.leasee_currency_id.name,
-                })
+            lease_contract_ids = self.lease_contract_ids
         else:
-            lease_contract_ids = self.env['leasee.contract'].search([],
-                                                                    order='id ASC')
-            for contract in lease_contract_ids:
-                if self.state:
-                    move_ids = self.env['account.move'].search(
-                        [('id', 'in', contract.account_move_ids.ids),
-                         ('date', '<=', self.end_date),
-                         ('state', '=', self.state),
-                         ('company_id', '=', self.env.company.id)])
-                    asset_move_ids = self.env['account.move'].search(
-                        ['|', ('id', 'in',
-                               contract.asset_id.depreciation_move_ids.ids),
-                         ('id', 'in', contract.account_move_ids.ids),
-                         ('date', '<=', self.end_date),
-                         ('state', '=', self.state),
-                         ('company_id', '=', self.env.company.id)])
+            lease_contract_ids = self.env['leasee.contract'].search(
+                [('company_id', '=', self.env.company.id)],
+                order='id ASC')
+        lease_names = []
+        stll_move_line_ids_qry = []
+        ltll_move_line_ids_qry = []
+        fixed_asset_account_move_line_ids_qry = []
+        depreciation_account_move_line_ids_qry = []
+        if lease_contract_ids:
+            if self.state:
+                # computation for STLL
+                self._cr.execute(
+                    'select coalesce((sum(item.debit) - sum(item.credit)), 0) '
+                    'total,leasee.name as lease_name,leasee.external_reference_number,currency.name as currency_name,'
+                    'project_site.name from leasee_contract '
+                    'as leasee inner join account_move as journal on '
+                    'journal.leasee_contract_id=leasee.id inner join '
+                    'account_move_line as item on item.move_id = journal.id '
+                    'inner join res_currency as currency on '
+                    'currency.id=leasee.leasee_currency_id left join '
+                    'account_analytic_account as project_site on '
+                    'project_site.id=leasee.project_site_id '
+                    'where leasee.id in %(contract)s and '
+                    'journal.date <= %(end_date)s'
+                    ' and journal.state=%(state)s and ' \
+                    'journal.company_id=%(company)s and '
+                    'item.account_id=leasee.lease_liability_account_id ' \
+                    'group by lease_name,leasee.external_reference_number,' \
+                    'currency_name,project_site.name', {
+                        'contract': tuple(lease_contract_ids.ids),
+                        'end_date': self.end_date,
+                        'state': self.state,
+                        'company': self.env.company.id,
+                    })
+                stll_move_line_ids_qry = self._cr.dictfetchall()
+                lease_names_stll = list(
+                    map(itemgetter('lease_name'), stll_move_line_ids_qry))
 
-                    # computation for STLL
-                    stll_move_line_ids = self.find_stll_move_lines(move_ids,
-                                                                   contract)
+                # computation for LTLL
 
-                    # computation for LTLL
+                self._cr.execute(
+                    'select coalesce((sum(item.debit) - sum(item.credit)), 0) total,'
+                    'leasee.name as lease_name,'
+                    'leasee.external_reference_number,'
+                    'currency.name as currency_name,'
+                    'project_site.name from leasee_contract as '
+                    'leasee inner join account_move'
+                    ' as journal on '
+                    'journal.leasee_contract_id=leasee.id  inner join '
+                    'account_move_line as item on '
+                    'item.move_id = journal.id inner join '
+                    'res_currency as currency on '
+                    'currency.id=leasee.leasee_currency_id left join '
+                    'account_analytic_account as project_site on '
+                    'project_site.id=leasee.project_site_id where '
+                    'leasee.id in %(contract)s and '
+                    'journal.date <= %(end_date)s and ' \
+                    'journal.state=%(state)s and '
+                    'journal.company_id=%(company)s and '
+                    'item.account_id=leasee.long_lease_liability_account_id '
+                    'group by lease_name,leasee.external_reference_number,'
+                    'currency_name,project_site.name', {
+                        'contract': tuple(lease_contract_ids.ids),
+                        'end_date': self.end_date,
+                        'state': self.state,
+                        'company': self.env.company.id, })
+                ltll_move_line_ids_qry = self._cr.dictfetchall()
+                lease_names_ltll = list(
+                    map(itemgetter('lease_name'), ltll_move_line_ids_qry))
 
-                    ltll_move_line_ids = self.find_ltll_move_lines(move_ids,
-                                                                   contract)
+                # computation for Net ROU
 
-                    # computation for Net ROU
-                    fixed_asset_account_move_line_ids = self.find_fixed_asset_account_move_lines(
-                        asset_move_ids, contract)
+                self._cr.execute(
+                    'select coalesce((sum(item.debit) - sum(item.credit)), 0) total,'
+                    'leasee.name as lease_name,'
+                    'leasee.external_reference_number,'
+                    'currency.name as currency_name,'
+                    'project_site.name from leasee_contract as '
+                    'leasee inner join account_asset as asset on '
+                    'asset.id = leasee.asset_id '
+                    'inner join account_move'
+                    ' as journal on journal.asset_id=asset.id or '
+                    'journal.leasee_contract_id=leasee.id  inner join '
+                    'account_move_line as item on item.move_id=journal.id inner'
+                    ' join res_currency as currency on '
+                    'currency.id=leasee.leasee_currency_id left join '
+                    'account_analytic_account as project_site on '
+                    'project_site.id=leasee.project_site_id '
+                    'where '
+                    'leasee.id in %(contract)s and '
+                    'journal.date <= %(end_date)s and '
+                    'journal.state=%(state)s and '
+                    'journal.company_id=%(company)s and '
+                    'item.account_id=asset.account_asset_id group by '
+                    'lease_name,leasee.external_reference_number,'
+                    'currency_name,project_site.name', {
+                        'contract': tuple(lease_contract_ids.ids),
+                        'end_date': self.end_date,
+                        'state': self.state,
+                        'company': self.env.company.id,
 
-                    depreciation_account_move_line_ids = self.find_depreciation_account_move_lines(
-                        asset_move_ids, contract)
-                else:
-                    move_ids = self.env['account.move'].search(
-                        [('id', 'in', contract.account_move_ids.ids),
-                         ('date', '<=', self.end_date),
-                         ('company_id', '=', self.env.company.id)
-                         ])
-                    asset_move_ids = self.env['account.move'].search(
-                        ['|', ('id', 'in',
-                               contract.asset_id.depreciation_move_ids.ids),
-                         ('id', 'in', contract.account_move_ids.ids),
-                         ('date', '<=', self.end_date),
-                         ('company_id', '=', self.env.company.id)])
-                    # computation for STLL
+                    })
+                fixed_asset_account_move_line_ids_qry = self._cr.dictfetchall()
+                lease_names_fixed_asset_account_move_line = list(
+                    map(itemgetter('lease_name'),
+                        fixed_asset_account_move_line_ids_qry))
 
-                    stll_move_line_ids = self.find_stll_move_lines(move_ids,
-                                                                   contract)
+                self._cr.execute(
+                    'select coalesce((sum(item.debit) - sum(item.credit)), 0) total,'
+                    'leasee.name as lease_name,'
+                    'leasee.external_reference_number,'
+                    'currency.name as currency_name,'
+                    'project_site.name from leasee_contract as '
+                    'leasee inner join account_asset as asset on '
+                    'asset.id = leasee.asset_id inner join account_move'
+                    ' as journal on journal.asset_id=asset.id or '
+                    'journal.leasee_contract_id=leasee.id  inner join '
+                    'account_move_line as item on '
+                    'item.move_id = journal.id inner join '
+                    'res_currency as currency on '
+                    'currency.id=leasee.leasee_currency_id left join '
+                    'account_analytic_account as project_site on '
+                    'project_site.id=leasee.project_site_id where '
+                    'leasee.id in %(contract)s and '
+                    'journal.date <= %(end_date)s and '
+                    'journal.state=%(state)s and '
+                    'journal.company_id=%(company)s and '
+                    'item.account_id=asset.account_depreciation_id '
+                    'group by lease_name,leasee.external_reference_number,'
+                    'currency_name,project_site.name',
+                    {
+                        'contract': tuple(lease_contract_ids.ids),
+                        'end_date': self.end_date,
+                        'state': self.state,
+                        'company': self.env.company.id,
 
-                    # computation for LTLL
+                    }
+                )
+                depreciation_account_move_line_ids_qry = self._cr.dictfetchall()
+                lease_names_depreciation_account_move_line = list(
+                    map(itemgetter('lease_name'),
+                        depreciation_account_move_line_ids_qry))
+            else:
+                # computation for STLL
+                self._cr.execute(
+                    'select coalesce((sum(item.debit) - sum(item.credit)), 0) '
+                    'total,leasee.name as lease_name,'
+                    'leasee.external_reference_number,'
+                    'currency.name as '
+                    'currency_name,'
+                    'project_site.name from leasee_contract '
+                    'as leasee inner join account_move as journal on '
+                    'journal.leasee_contract_id=leasee.id inner join '
+                    'account_move_line as item on item.move_id = journal.id '
+                    ' inner join '
+                    'res_currency as currency on '
+                    'currency.id=leasee.leasee_currency_id left join '
+                    'account_analytic_account as project_site on '
+                    'project_site.id=leasee.project_site_id where '
+                    'leasee.id in %(contract)s and '
+                    'journal.date <= %(end_date)s and ' \
+                    'journal.company_id=%(company)s and '
+                    'item.account_id=leasee.lease_liability_account_id ' \
+                    'group by lease_name,leasee.external_reference_number,' \
+                    'currency_name,project_site.name', {
+                        'contract': tuple(lease_contract_ids.ids),
+                        'end_date': self.end_date,
+                        'company': self.env.company.id,
+                    })
+                stll_move_line_ids_qry = self._cr.dictfetchall()
+                lease_names_stll = list(
+                    map(itemgetter('lease_name'), stll_move_line_ids_qry))
 
-                    ltll_move_line_ids = self.find_ltll_move_lines(move_ids,
-                                                                   contract)
+                # computation for LTLL
+                self._cr.execute(
+                    'select coalesce((sum(item.debit) - sum(item.credit)), 0) total,'
+                    'leasee.name as lease_name,'
+                    'leasee.external_reference_number,'
+                    'currency.name as currency_name,'
+                    'project_site.name from leasee_contract as '
+                    'leasee inner join account_move as journal on '
+                    'journal.leasee_contract_id=leasee.id  inner join '
+                    'account_move_line as item on item.move_id=journal.id'
+                    ' inner join '
+                    'res_currency as currency on '
+                    'currency.id=leasee.leasee_currency_id left join '
+                    'account_analytic_account as project_site on '
+                    'project_site.id=leasee.project_site_id where '
+                    'leasee.id in %(contract)s and '
+                    'journal.date <= %(end_date)s '
+                    'and journal.company_id=%(company)s and '
+                    'item.account_id=leasee.long_lease_liability_account_id '
+                    'group by lease_name,leasee.external_reference_number,' \
+                    'currency_name,project_site.name',
+                    {
+                        'contract': tuple(lease_contract_ids.ids),
+                        'end_date': self.end_date,
+                        'company': self.env.company.id, })
+                ltll_move_line_ids_qry = self._cr.dictfetchall()
+                lease_names_ltll = list(
+                    map(itemgetter('lease_name'), ltll_move_line_ids_qry))
+                # computation for Net ROU
 
-                    # computation for Net ROU
-                    fixed_asset_account_move_line_ids = self.find_fixed_asset_account_move_lines(
-                        asset_move_ids, contract)
+                self._cr.execute(
+                    'select coalesce((sum(item.debit) - sum(item.credit)), 0) total,'
+                    'leasee.name as lease_name,'
+                    'leasee.external_reference_number,'
+                    'currency.name as currency_name,'
+                    'project_site.name from leasee_contract as '
+                    'leasee inner join account_asset as asset on '
+                    'asset.id = leasee.asset_id '
+                    ' inner join account_move'
+                    ' as journal on journal.asset_id=asset.id or '
+                    'journal.leasee_contract_id=leasee.id  inner join '
+                    'account_move_line as item on item.move_id = journal.id '
+                    ' inner join '
+                    'res_currency as currency on '
+                    'currency.id=leasee.leasee_currency_id left join '
+                    'account_analytic_account as project_site on '
+                    'project_site.id=leasee.project_site_id where '
+                    'leasee.id in %(contract)s and '
+                    'journal.date <= %(end_date)s and '
+                    'journal.company_id=%(company)s and '
+                    'item.account_id=asset.account_asset_id group by '
+                    'lease_name,leasee.external_reference_number,'
+                    'currency_name,project_site.name', {
+                        'contract': tuple(lease_contract_ids.ids),
+                        'end_date': self.end_date,
+                        'company': self.env.company.id,
+                    })
+                fixed_asset_account_move_line_ids_qry = self._cr.dictfetchall()
+                lease_names_fixed_asset_account_move_line = list(
+                    map(itemgetter('lease_name'),
+                        fixed_asset_account_move_line_ids_qry))
 
-                    depreciation_account_move_line_ids = self.find_depreciation_account_move_lines(
-                        asset_move_ids, contract)
+                self._cr.execute(
+                    'select coalesce((sum(item.debit) - sum(item.credit)), 0) total,'
+                    'leasee.name as lease_name,'
+                    'leasee.external_reference_number,'
+                    'currency.name as currency_name,'
+                    'project_site.name from leasee_contract as '
+                    'leasee inner join account_asset as asset on '
+                    'asset.id = leasee.asset_id inner join account_move'
+                    ' as journal on journal.asset_id=asset.id or '
+                    'journal.leasee_contract_id=leasee.id  inner join '
+                    'account_move_line as item on '
+                    'item.move_id = journal.id inner join '
+                    'res_currency as currency on '
+                    'currency.id=leasee.leasee_currency_id left join '
+                    'account_analytic_account as project_site on '
+                    'project_site.id=leasee.project_site_id where '
+                    'leasee.id in %(contract)s and '
+                    'journal.date <= %(end_date)s and '
+                    'journal.company_id=%(company)s and '
+                    'item.account_id=asset.account_depreciation_id '
+                    'group by lease_name,leasee.external_reference_number,'
+                    'currency_name,project_site.name',
+                    {
+                        'contract': tuple(lease_contract_ids.ids),
+                        'end_date': self.end_date,
+                        'company': self.env.company.id,
+                    }
+                )
+                depreciation_account_move_line_ids_qry = self._cr.dictfetchall()
+                lease_names_depreciation_account_move_line = list(
+                    map(itemgetter('lease_name'),
+                        depreciation_account_move_line_ids_qry))
+            lease_names = lease_names_stll + lease_names_ltll + lease_names_fixed_asset_account_move_line + lease_names_depreciation_account_move_line
 
-                stll_credit_amt = stll_move_line_ids.mapped('credit')
-                stll_debit_amt = stll_move_line_ids.mapped('debit')
-                stll_amount = sum(stll_debit_amt) - sum(stll_credit_amt)
-
-                ltll_credit_amt = ltll_move_line_ids.mapped('credit')
-                ltll_debit_amt = ltll_move_line_ids.mapped('debit')
-                ltll_amount = sum(ltll_debit_amt) - sum(ltll_credit_amt)
-                asset_credit_amt = fixed_asset_account_move_line_ids.mapped(
-                    'credit')
-                asset_debit_amt = fixed_asset_account_move_line_ids.mapped(
-                    'debit')
-                asset_tot_amt = sum(asset_debit_amt) - sum(asset_credit_amt)
-                depreciation_credit_amt = depreciation_account_move_line_ids.mapped(
-                    'credit')
-                depreciation_debit_amt = depreciation_account_move_line_ids.mapped(
-                    'debit')
-                depreciation_tot_amt = sum(depreciation_debit_amt) - sum(
-                    depreciation_credit_amt)
-                net_rou = asset_tot_amt + depreciation_tot_amt
+        lease_names = list(set(lease_names))
+        lease_names.sort()
+        for lease in lease_names:
+            stll_amount = list(
+                filter(lambda x: x['lease_name'] == lease,
+                       stll_move_line_ids_qry))
+            ltll_amount = list(
+                filter(lambda x: x['lease_name'] == lease,
+                       ltll_move_line_ids_qry))
+            fixed_asset_amount = list(
+                filter(lambda x: x['lease_name'] == lease,
+                       fixed_asset_account_move_line_ids_qry))
+            depreciation_amount = list(
+                filter(lambda x: x['lease_name'] == lease,
+                       depreciation_account_move_line_ids_qry))
+            data_list = stll_amount + ltll_amount + fixed_asset_amount + depreciation_amount
+            if len(fixed_asset_amount) >= 1 and len(depreciation_amount) >= 1:
                 data.append({
-                    'leasor_name': contract.name,
-                    'external_reference_number': contract.external_reference_number,
-                    'project_site': contract.project_site_id.name if contract.project_site_id else '',
-                    'stll': stll_amount,
-                    'ltll': ltll_amount,
-                    'net_rou': net_rou,
-                    'currency': contract.leasee_currency_id.name,
+                    'leasor_name': lease,
+                    'external_reference_number': data_list[0][
+                        "external_reference_number"],
+                    'project_site': data_list[0]["name"],
+                    'stll': stll_amount[0]['total'] if len(
+                        stll_amount) >= 1 else 0.0,
+                    'ltll': ltll_amount[0]['total'] if len(
+                        ltll_amount) >= 1 else 0.0,
+                    'net_rou': fixed_asset_amount[0]["total"] +
+                               depreciation_amount[0]["total"],
+                    'currency': data_list[0]["currency_name"],
                 })
-
+            elif len(fixed_asset_amount) >= 1:
+                data.append({
+                    'leasor_name': lease,
+                    'external_reference_number': data_list[0][
+                        "external_reference_number"],
+                    'project_site': data_list[0]["name"],
+                    'stll': stll_amount[0]['total'] if len(
+                        stll_amount) >= 1 else 0.0,
+                    'ltll': ltll_amount[0]['total'] if len(
+                        ltll_amount) >= 1 else 0.0,
+                    'net_rou': fixed_asset_amount[0]["total"],
+                    'currency': data_list[0]["currency_name"],
+                })
+            elif len(depreciation_amount) >= 1:
+                data.append({
+                    'leasor_name': lease,
+                    'external_reference_number': data_list[0][
+                        "external_reference_number"],
+                    'project_site': data_list[0]["name"],
+                    'stll': stll_amount[0]['total'] if len(
+                        stll_amount) >= 1 else 0.0,
+                    'ltll': ltll_amount[0]['total'] if len(
+                        ltll_amount) >= 1 else 0.0,
+                    'net_rou': depreciation_amount[0]["total"],
+                    'currency': data_list[0]["currency_name"],
+                })
+            else:
+                data.append({
+                    'leasor_name': lease,
+                    'external_reference_number': data_list[0][
+                        "external_reference_number"],
+                    'project_site': data_list[0]["name"],
+                    'stll': stll_amount[0]['total'] if len(
+                        stll_amount) >= 1 else 0.0,
+                    'ltll': ltll_amount[0]['total'] if len(
+                        ltll_amount) >= 1 else 0.0,
+                    'net_rou': 0.0,
+                    'currency': data_list[0]["currency_name"],
+                })
         return data
 
     def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data,
@@ -339,33 +501,3 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
                             STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['currency'], STYLE_LINE_Data)
-
-    def find_stll_move_lines(self, move_ids, contract):
-        stll_move_line_ids = self.env['account.move.line'].search(
-            [('move_id', 'in', move_ids.ids), ('account_id', '=',
-                                               contract.lease_liability_account_id.id),
-             ('company_id', '=', self.env.company.id)])
-        return stll_move_line_ids
-
-    def find_ltll_move_lines(self, move_ids, contract):
-        ltll_move_line_ids = self.env['account.move.line'].search(
-            [('move_id', 'in', move_ids.ids), ('account_id', '=',
-                                               contract.long_lease_liability_account_id.id),
-             ('company_id', '=', self.env.company.id)])
-        return ltll_move_line_ids
-
-    def find_fixed_asset_account_move_lines(self, move_ids, contract):
-        fixed_asset_account_move_line_ids = self.env[
-            'account.move.line'].search(
-            [('move_id', 'in', move_ids.ids), ('account_id', '=',
-                                               contract.asset_model_id.account_asset_id.id),
-             ('company_id', '=', self.env.company.id)])
-        return fixed_asset_account_move_line_ids
-
-    def find_depreciation_account_move_lines(self, move_ids, contract):
-        depreciation_account_move_line_ids = self.env[
-            'account.move.line'].search(
-            [('move_id', 'in', move_ids.ids), ('account_id', '=',
-                                               contract.asset_model_id.account_depreciation_id.id),
-             ('company_id', '=', self.env.company.id)])
-        return depreciation_account_move_line_ids
