@@ -13,7 +13,7 @@ liabilities_budget = []
 shareholders_equity_sum = []
 shareholders_equity_budget = []
 report_json_bs = []
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 
 class TascBalanceSheetReport(models.AbstractModel):
@@ -539,24 +539,26 @@ class TascBalanceSheetReport(models.AbstractModel):
 
     def _get_unallocated_earning(self, states_args, query, query_budget,
                                  options, balance_sheet_lines, dict_id):
-        date_from = datetime.strptime(options['date']['date_to'],
-                                      "%Y-%m-%d")
-        static_date = date(day=31, month=12, year=date_from.year - 1)
+        date_to = datetime.strptime(options['date']['date_from'],
+                                      "%Y-%m-%d") - timedelta(days=1)
+        static_date = date(day=1, month=1, year=date_to.year)
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
                                                             and journal_item.company_id in %(company_ids)s
+                                                            and journal_item.date >= %(from_date)s
                                                             and journal_item.date <= %(to_date)s
                                                             and {states_args}
                                                             group by account.name, account.code, account.id, account.group_id
                                                             '''.format(
             states_args=states_args),
-                            {'to_date': static_date,
+                            {'from_date': static_date,
+                             'to_date': date_to,
                              'code_start': '400000', 'code_end': '899999',
                              'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         unallocated_earning = self.env.cr.dictfetchall()
-        unallocated_earning_account = self._get_unallocated_earning_account(
-            static_date,
-            states_args, query, query_budget,
-            options)
+        # unallocated_earning_account = self._get_unallocated_earning_account(
+        #     static_date,
+        #     states_args, query, query_budget,
+        #     options)
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                                                     and budget_line.company_id in %(company_ids)s
                                                                     and budget_line.date_from >= %(from_date)s 
@@ -568,7 +570,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                              'code_start': '420000', 'code_end': '429999',
                              'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         unallocated_earning_budget = self.env.cr.dictfetchall()
-        unallocated_earning += unallocated_earning_account
+        # unallocated_earning += unallocated_earning_account
         self._arrange_account_budget_line(balance_sheet_lines,
                                           unallocated_earning,
                                           unallocated_earning_budget,
