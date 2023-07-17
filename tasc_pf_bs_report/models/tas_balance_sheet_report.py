@@ -481,7 +481,7 @@ class TascBalanceSheetReport(models.AbstractModel):
             map(lambda x: x['planned'], equity_budget)))
         shareholders_equity_sum.append(equity_total)
         shareholders_equity_budget.append(equity_budget_budget_total)
-        return [equity_total, equity_budget_budget_total,
+        return [abs(equity_total), equity_budget_budget_total,
                 equity_total - equity_budget_budget_total]
 
     def _get_current_year_profit(self, states_args, query, query_budget,
@@ -521,7 +521,7 @@ class TascBalanceSheetReport(models.AbstractModel):
         self._arrange_account_budget_line(balance_sheet_lines,
                                           current_year_profit,
                                           current_year_profit_budget,
-                                          dict_id)
+                                          dict_id, abs_of='CU')
         current_year_profit_total = sum(
             list(map(lambda x: x['total'], current_year_profit)))
         current_year_profit_budget_total = sum(list(
@@ -574,7 +574,7 @@ class TascBalanceSheetReport(models.AbstractModel):
         self._arrange_account_budget_line(balance_sheet_lines,
                                           unallocated_earning,
                                           unallocated_earning_budget,
-                                          dict_id)
+                                          dict_id, abs_of='CU')
         unallocated_earning_total = sum(
             list(map(lambda x: x['total'], unallocated_earning)))
         unallocated_earning_budget_total = sum(list(
@@ -872,6 +872,13 @@ class TascBalanceSheetReport(models.AbstractModel):
                                                       -abs(acc_ch_lines[
                                                               'total']),
                                                       sub_line_style)
+                                elif acc_ch_lines['abs_of'] == 'CU':
+                                    sheet.merge_range(row_head, col_head_24 + 3,
+                                                      row_head,
+                                                      col_head_sub_24 + 3,
+                                                      -1 * (acc_ch_lines[
+                                                              'total']),
+                                                      sub_line_style)
                                 else:
                                     sheet.merge_range(row_head, col_head_24 + 3,
                                                       row_head,
@@ -907,6 +914,12 @@ class TascBalanceSheetReport(models.AbstractModel):
                                               row_head,
                                               col_head_sub_24 + 3,
                                               -abs(acc_line['total']),
+                                              sub_line_style)
+                        elif acc_line['abs_of'] == 'CU':
+                            sheet.merge_range(row_head, col_head_24 + 3,
+                                              row_head,
+                                              col_head_sub_24 + 3,
+                                              -1 * (acc_line['total']),
                                               sub_line_style)
                         else:
                             sheet.merge_range(row_head, col_head_24 + 3,
