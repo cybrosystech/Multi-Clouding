@@ -498,14 +498,14 @@ class TascBalanceSheetReport(models.AbstractModel):
                                                             '''.format(
             states_args=states_args),
                             {'to_date': options['date']['date_to'],
-                             'from_date': static_date,
+                             'from_date': options['date']['date_from'],
                              'code_start': '400000', 'code_end': '899999',
                              'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         current_year_profit = self.env.cr.dictfetchall()
-        current_year_profit_account = self._get_current_year_profit_account(
-            static_date,
-            states_args, query, query_budget,
-            options)
+        # current_year_profit_account = self._get_current_year_profit_account(
+        #     static_date,
+        #     states_args, query, query_budget,
+        #     options)
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                                                     and budget_line.company_id in %(company_ids)s
                                                                     and budget_line.date_from >= %(from_date)s 
@@ -517,7 +517,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                              'code_start': '400000', 'code_end': '899999',
                              'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         current_year_profit_budget = self.env.cr.dictfetchall()
-        current_year_profit += current_year_profit_account
+        # current_year_profit += current_year_profit_account
         self._arrange_account_budget_line(balance_sheet_lines,
                                           current_year_profit,
                                           current_year_profit_budget,
