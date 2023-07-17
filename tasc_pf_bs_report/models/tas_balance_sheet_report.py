@@ -237,7 +237,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                 'id': 'total_shareholders_equity',
                 'name': 'Total Shareholders Equity',
                 'columns': [
-                    {'name': round(sum(shareholders_equity_sum), 2),
+                    {'name': round(abs(sum(shareholders_equity_sum)), 2),
                      'class': 'number'},
                     {'name': round(sum(shareholders_equity_budget), 2),
                      'class': 'number'},
@@ -253,8 +253,8 @@ class TascBalanceSheetReport(models.AbstractModel):
             {
                 'id': 'total_tl_tse',
                 'name': 'Total Liability & Shareholder Equity',
-                'columns': [{'name': round(
-                    sum(liabilities_sum) + sum(shareholders_equity_sum), 2),
+                'columns': [{'name': round(abs(
+                    sum(liabilities_sum) + sum(shareholders_equity_sum)), 2),
                     'class': 'number'},
                     {'name': round(sum(liabilities_budget) + sum(
                         shareholders_equity_budget), 2),
@@ -486,6 +486,7 @@ class TascBalanceSheetReport(models.AbstractModel):
 
     def _get_current_year_profit(self, states_args, query, query_budget,
                                  options, balance_sheet_lines, dict_id):
+
         date_from = datetime.strptime(options['date']['date_to'],
                                       "%Y-%m-%d")
         static_date = date(day=1, month=1, year=date_from.year)
@@ -533,7 +534,7 @@ class TascBalanceSheetReport(models.AbstractModel):
         # })
         shareholders_equity_sum.append(current_year_profit_total)
         shareholders_equity_budget.append(current_year_profit_budget_total)
-        return [current_year_profit_total, current_year_profit_budget_total,
+        return [-1 * current_year_profit_total, current_year_profit_budget_total,
                 current_year_profit_total -
                 current_year_profit_budget_total]
 
@@ -585,7 +586,7 @@ class TascBalanceSheetReport(models.AbstractModel):
         # })
         shareholders_equity_sum.append(unallocated_earning_total)
         shareholders_equity_budget.append(unallocated_earning_budget_total)
-        return [unallocated_earning_total,
+        return [-1 * unallocated_earning_total,
                 unallocated_earning_budget_total,
                 unallocated_earning_total -
                 unallocated_earning_budget_total]
