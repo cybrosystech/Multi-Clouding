@@ -107,6 +107,9 @@
                                                         <t t-elif="account_line['abs_of'] == False">
                                                             <span t-esc="'{:20,.2f}'.format(-abs(account_line['total']))"/>
                                                         </t>
+                                                        <t t-elif="account_line['abs_of'] == CU">
+                                                            <span t-esc="'{:20,.2f}'.format(-1 * (account_line['total']))"/>
+                                                        </t>
                                                         <t t-else="">
                                                             <span t-esc="'{:20,.2f}'.format(account_line['total'])"/>
                                                         </t>
@@ -156,6 +159,9 @@
                                                 </t>
                                                 <t t-elif="account_line['abs_of'] == False">
                                                     <span t-esc="'{:20,.2f}'.format(-abs(account_line['total']))"/>
+                                                </t>
+                                                <t t-elif="account_line['abs_of'] == CU">
+                                                    <span t-esc="'{:20,.2f}'.format(-1 * (account_line['total']))"/>
                                                 </t>
                                                 <t t-else="">
                                                     <span t-esc="'{:20,.2f}'.format(account_line['total'])"/>
