@@ -239,7 +239,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                 'columns': [
                     {'name': round(abs(sum(shareholders_equity_sum)), 2),
                      'class': 'number'},
-                    {'name': round(sum(shareholders_equity_budget), 2),
+                    {'name': round(abs(sum(shareholders_equity_budget)), 2),
                      'class': 'number'},
                     {'name': round(
                         sum(shareholders_equity_sum) - sum(
@@ -256,8 +256,8 @@ class TascBalanceSheetReport(models.AbstractModel):
                 'columns': [{'name': round(abs(
                     sum(liabilities_sum) + sum(shareholders_equity_sum)), 2),
                     'class': 'number'},
-                    {'name': round(sum(liabilities_budget) + sum(
-                        shareholders_equity_budget), 2),
+                    {'name': round(abs(sum(liabilities_budget) + sum(
+                        shareholders_equity_budget)), 2),
                      'class': 'number'},
                     {'name': round(
                         (sum(liabilities_sum) + sum(
@@ -278,9 +278,9 @@ class TascBalanceSheetReport(models.AbstractModel):
                                       sum(assets_sum) - sum(assets_budget_sum),
                                       2),
                                       'class': 'number'}]
-        bs_lines[1]['columns'] = [{'name': abs(round(sum(liabilities_sum), 2)),
+        bs_lines[1]['columns'] = [{'name': round(abs(sum(liabilities_sum)), 2),
                                    'class': 'number'},
-                                  {'name': round(sum(liabilities_budget), 2),
+                                  {'name': round(abs(sum(liabilities_budget)), 2),
                                    'class': 'number'},
                                   {'name': round(
                                       sum(liabilities_sum) - sum(
@@ -288,9 +288,9 @@ class TascBalanceSheetReport(models.AbstractModel):
                                       2),
                                       'class': 'number'}]
         bs_lines[2]['columns'] = [
-            {'name': abs(round(sum(shareholders_equity_sum), 2)),
+            {'name': round(abs(sum(shareholders_equity_sum)), 2),
              'class': 'number'},
-            {'name': round(sum(shareholders_equity_budget), 2),
+            {'name': round(abs(sum(shareholders_equity_budget)), 2),
              'class': 'number'},
             {'name': round(
                 sum(shareholders_equity_sum) - sum(
@@ -405,7 +405,7 @@ class TascBalanceSheetReport(models.AbstractModel):
         liabilities_sum.append(current_liabilities_total)
         liabilities_budget.append(current_liabilities_budget_total)
         return [abs(current_liabilities_total),
-                current_liabilities_budget_total,
+                abs(current_liabilities_budget_total),
                 current_liabilities_total - current_liabilities_budget_total]
 
     def _get_non_current_liabilities(self, states_args, query, query_budget,
@@ -443,7 +443,7 @@ class TascBalanceSheetReport(models.AbstractModel):
         liabilities_sum.append(non_current_liabilities_total)
         liabilities_budget.append(non_current_liabilities_budget_total)
         return [abs(non_current_liabilities_total),
-                non_current_liabilities_budget_total,
+                abs(non_current_liabilities_budget_total),
                 non_current_liabilities_total -
                 non_current_liabilities_budget_total]
 
@@ -481,7 +481,7 @@ class TascBalanceSheetReport(models.AbstractModel):
             map(lambda x: x['planned'], equity_budget)))
         shareholders_equity_sum.append(equity_total)
         shareholders_equity_budget.append(equity_budget_budget_total)
-        return [abs(equity_total), equity_budget_budget_total,
+        return [abs(equity_total), abs(equity_budget_budget_total),
                 equity_total - equity_budget_budget_total]
 
     def _get_current_year_profit(self, states_args, query, query_budget,
@@ -534,7 +534,7 @@ class TascBalanceSheetReport(models.AbstractModel):
         # })
         shareholders_equity_sum.append(current_year_profit_total)
         shareholders_equity_budget.append(current_year_profit_budget_total)
-        return [-1 * current_year_profit_total, current_year_profit_budget_total,
+        return [-1 * current_year_profit_total, -1 * current_year_profit_budget_total,
                 current_year_profit_total -
                 current_year_profit_budget_total]
 
@@ -593,7 +593,7 @@ class TascBalanceSheetReport(models.AbstractModel):
         shareholders_equity_sum.append(unallocated_earning_total)
         shareholders_equity_budget.append(unallocated_earning_budget_total)
         return [-1 * unallocated_earning_total,
-                unallocated_earning_budget_total,
+                -1 * unallocated_earning_budget_total,
                 unallocated_earning_total -
                 unallocated_earning_budget_total]
 
@@ -916,11 +916,21 @@ class TascBalanceSheetReport(models.AbstractModel):
                                               col_head_sub_24 + 3,
                                               abs(acc_line['total']),
                                               sub_line_style)
+                            sheet.merge_range(row_head, col_head_24 + 6,
+                                              row_head,
+                                              col_head_sub_24 + 6,
+                                              abs(acc_line['planned']),
+                                              sub_line_style)
                         elif acc_line['abs_of'] is False:
                             sheet.merge_range(row_head, col_head_24 + 3,
                                               row_head,
                                               col_head_sub_24 + 3,
                                               -abs(acc_line['total']),
+                                              sub_line_style)
+                            sheet.merge_range(row_head, col_head_24 + 6,
+                                              row_head,
+                                              col_head_sub_24 + 6,
+                                              -abs(acc_line['planned']),
                                               sub_line_style)
                         elif acc_line['abs_of'] == 'CU':
                             sheet.merge_range(row_head, col_head_24 + 3,
@@ -928,17 +938,22 @@ class TascBalanceSheetReport(models.AbstractModel):
                                               col_head_sub_24 + 3,
                                               -1 * (acc_line['total']),
                                               sub_line_style)
+                            sheet.merge_range(row_head, col_head_24 + 6,
+                                              row_head,
+                                              col_head_sub_24 + 6,
+                                              -1 * (acc_line['planned']),
+                                              sub_line_style)
                         else:
                             sheet.merge_range(row_head, col_head_24 + 3,
                                               row_head,
                                               col_head_sub_24 + 3,
                                               acc_line['total'],
                                               sub_line_style)
-                        sheet.merge_range(row_head, col_head_24 + 6,
-                                          row_head,
-                                          col_head_sub_24 + 6,
-                                          acc_line['planned'],
-                                          sub_line_style)
+                            sheet.merge_range(row_head, col_head_24 + 6,
+                                              row_head,
+                                              col_head_sub_24 + 6,
+                                              acc_line['planned'],
+                                              sub_line_style)
                         sheet.merge_range(row_head, col_head_24 + 9,
                                           row_head,
                                           col_head_sub_24 + 9,

@@ -115,7 +115,18 @@
                                                         </t>
                                                     </td>
                                                     <td colspan="3">
-                                                        <span t-esc="'{:20,.2f}'.format(account_line['planned'])"/>
+                                                        <t t-if="account_line['abs_of'] == True">
+                                                            <span t-esc="'{:20,.2f}'.format(abs(account_line['planned']))"/>
+                                                        </t>
+                                                        <t t-elif="account_line['abs_of'] == False">
+                                                            <span t-esc="'{:20,.2f}'.format(-abs(account_line['planned']))"/>
+                                                        </t>
+                                                        <t t-elif="account_line['abs_of'] == 'CU'">
+                                                            <span t-esc="'{:20,.2f}'.format(-1 * (account_line['planned']))"/>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <span t-esc="'{:20,.2f}'.format(account_line['planned'])"/>
+                                                        </t>
                                                     </td>
                                                     <td colspan="3">
                                                         <span t-esc="'{:20,.2f}'.format(account_line['total'] - account_line['planned'])"/>
@@ -168,7 +179,18 @@
                                                 </t>
                                             </td>
                                             <td colspan="3">
-                                                <span t-esc="'{:20,.2f}'.format(account_line['planned'])"/>
+                                                <t t-if="account_line['abs_of'] == True">
+                                                    <span t-esc="'{:20,.2f}'.format(abs(account_line['planned']))"/>
+                                                </t>
+                                                <t t-elif="account_line['abs_of'] == False">
+                                                    <span t-esc="'{:20,.2f}'.format(-abs(account_line['planned']))"/>
+                                                </t>
+                                                <t t-elif="account_line['abs_of'] == 'CU'">
+                                                    <span t-esc="'{:20,.2f}'.format(-1 * (account_line['planned']))"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <span t-esc="'{:20,.2f}'.format(account_line['planned'])"/>
+                                                </t>
                                             </td>
                                             <td colspan="3">
                                                 <span t-esc="'{:20,.2f}'.format(account_line['total'] - account_line['planned'])"/>
