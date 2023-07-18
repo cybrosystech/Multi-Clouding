@@ -141,12 +141,13 @@ class ProfitLossBalance(models.AbstractModel):
             {
                 'id': 'gross_profit',
                 'name': 'Gross Profit',
-                'columns': [{'name': abs(round(sum(gross_profit_revenue), 2)),
+                'columns': [{'name': round(abs(sum(gross_profit_revenue)), 2),
                              'class': 'number'},
-                            {'name': round(sum(gross_profit_budget), 2),
+                            {'name': round(abs(sum(gross_profit_budget)), 2),
                              'class': 'number'},
-                            {'name': round(sum(gross_profit_revenue) - sum(
-                                gross_profit_budget), 2),
+                            {'name': round(sum(
+                                gross_profit_budget) - sum(
+                                gross_profit_revenue), 2),
                              'class': 'number'}],
                 'child_lines': '',
                 'account_lines': ''
@@ -270,17 +271,18 @@ class ProfitLossBalance(models.AbstractModel):
                 'id': 'ebitda',
                 'name': 'EBITDA',
                 'columns': [{'name': round(-abs(sum(
-                    gross_profit_revenue + indirect_cost_sum + other_income_sum)), 2),
-                    'class': 'number'},
-                    {'name': round(sum(
-                        gross_profit_budget + indirect_cost_budget + other_income_budget),
-                        2),
-                        'class': 'number'},
-                    {'name': round(sum(
-                        gross_profit_revenue + indirect_cost_sum + other_income_sum) - sum(
-                        gross_profit_budget + indirect_cost_budget + other_income_budget),
-                                   2),
-                     'class': 'number'}],
+                    gross_profit_revenue + indirect_cost_sum + other_income_sum)),
+                                           2),
+                             'class': 'number'},
+                            {'name': round(-abs(sum(
+                                gross_profit_budget + indirect_cost_budget + other_income_budget)),
+                                2),
+                                'class': 'number'},
+                            {'name': round(sum(
+                                gross_profit_budget + indirect_cost_budget + other_income_budget) - sum(
+                                gross_profit_revenue + indirect_cost_sum + other_income_sum),
+                                           2),
+                             'class': 'number'}],
                 'child_lines': '',
                 'account_lines': ''
             },
@@ -304,17 +306,17 @@ class ProfitLossBalance(models.AbstractModel):
                 'name': 'EBIT',
                 'columns': [{'name': round(-abs(sum(
                     gross_profit_revenue + indirect_cost_sum + other_income_sum + depreciation_amortization_sum)
-                    ), 2),
-                    'class': 'number'},
-                    {'name': round(sum(
-                        gross_profit_budget + indirect_cost_budget + other_income_budget + depreciation_amortization_budget),
-                        2),
-                        'class': 'number'},
-                    {'name': round(sum(
-                        gross_profit_revenue + indirect_cost_sum + other_income_sum + depreciation_amortization_sum) - sum(
-                        gross_profit_budget + indirect_cost_budget + other_income_budget + depreciation_amortization_budget),
-                                   2),
-                     'class': 'number'}],
+                ), 2),
+                             'class': 'number'},
+                            {'name': round(-abs(sum(
+                                gross_profit_budget + indirect_cost_budget + other_income_budget + depreciation_amortization_budget)),
+                                2),
+                                'class': 'number'},
+                            {'name': round(sum(
+                                gross_profit_budget + indirect_cost_budget + other_income_budget + depreciation_amortization_budget) - sum(
+                                gross_profit_revenue + indirect_cost_sum + other_income_sum + depreciation_amortization_sum),
+                                           2),
+                             'class': 'number'}],
                 'child_lines': '',
                 'account_lines': ''
             },
@@ -336,17 +338,17 @@ class ProfitLossBalance(models.AbstractModel):
                 'name': 'EBT',
                 'columns': [{'name': round(-abs(sum(
                     gross_profit_revenue + indirect_cost_sum + other_income_sum + depreciation_amortization_sum + finance_cost_sum)
-                    ), 2),
-                    'class': 'number'},
-                    {'name': round(sum(
-                        gross_profit_budget + indirect_cost_budget + other_income_budget + depreciation_amortization_budget + finance_cost_budget_list),
-                        2),
-                        'class': 'number'},
-                    {'name': round(sum(
-                        gross_profit_budget + indirect_cost_budget + other_income_budget + depreciation_amortization_budget + finance_cost_budget_list) - sum(
-                        gross_profit_budget + indirect_cost_budget + other_income_budget + depreciation_amortization_budget + finance_cost_budget_list),
-                                   2),
-                     'class': 'number'}],
+                ), 2),
+                             'class': 'number'},
+                            {'name': round(-abs(sum(
+                                gross_profit_budget + indirect_cost_budget + other_income_budget + depreciation_amortization_budget + finance_cost_budget_list)),
+                                2),
+                                'class': 'number'},
+                            {'name': round(sum(
+                                gross_profit_budget + indirect_cost_budget + other_income_budget + depreciation_amortization_budget + finance_cost_budget_list) - sum(
+                                gross_profit_budget + indirect_cost_budget + other_income_budget + depreciation_amortization_budget + finance_cost_budget_list),
+                                           2),
+                             'class': 'number'}],
                 'child_lines': '',
                 'account_lines': ''
             },
@@ -367,34 +369,35 @@ class ProfitLossBalance(models.AbstractModel):
                 'name': 'Net Profit - Loss',
                 'columns': [{'name': round(-abs(sum(
                     gross_profit_revenue + indirect_cost_sum + other_income_sum + depreciation_amortization_sum + finance_cost_sum + taxes_sum)),
-                    2),
-                    'class': 'number'},
-                    {'name': round(sum(
-                        gross_profit_budget + indirect_cost_budget + other_income_budget + depreciation_amortization_budget + finance_cost_budget_list + taxes_budget_list),
-                        2),
-                        'class': 'number'},
-                    {'name': round(sum(
-                        gross_profit_revenue + indirect_cost_sum + other_income_sum + depreciation_amortization_sum + finance_cost_sum + taxes_sum) - sum(
-                        gross_profit_budget + indirect_cost_budget + other_income_budget + depreciation_amortization_budget + finance_cost_budget_list + taxes_budget_list),
-                                   2),
-                     'class': 'number'}],
+                                           2),
+                             'class': 'number'},
+                            {'name': round(-abs(sum(
+                                gross_profit_budget + indirect_cost_budget + other_income_budget + depreciation_amortization_budget + finance_cost_budget_list + taxes_budget_list)),
+                                2),
+                                'class': 'number'},
+                            {'name': round(sum(
+                                gross_profit_budget + indirect_cost_budget + other_income_budget + depreciation_amortization_budget + finance_cost_budget_list + taxes_budget_list) - sum(
+                                gross_profit_revenue + indirect_cost_sum + other_income_sum + depreciation_amortization_sum + finance_cost_sum + taxes_sum),
+                                           2),
+                             'class': 'number'}],
                 'child_lines': '',
                 'account_lines': ''
             },
         ]
-        pf_lines[3]['columns'] = [{'name': round(-abs(sum(indirect_cost_sum)), 2),
-                                   'class': 'number'},
-                                  {'name': round(sum(indirect_cost_budget), 2),
-                                   'class': 'number'},
-                                  {'name': round(sum(indirect_cost_sum) - sum(
-                                      indirect_cost_budget), 2),
-                                   'class': 'number'}]
+        pf_lines[3]['columns'] = [
+            {'name': round(-abs(sum(indirect_cost_sum)), 2),
+             'class': 'number'},
+            {'name': round(-abs(sum(indirect_cost_budget)), 2),
+             'class': 'number'},
+            {'name': round(sum(
+                indirect_cost_budget) - sum(indirect_cost_sum), 2),
+             'class': 'number'}]
         pf_lines[4]['columns'] = [{'name': round(sum(other_income_sum), 2),
                                    'class': 'number'},
                                   {'name': round(sum(other_income_budget), 2),
                                    'class': 'number'},
-                                  {'name': round(sum(other_income_sum) - sum(
-                                      other_income_budget), 2),
+                                  {'name': round(sum(
+                                      other_income_budget) - sum(other_income_sum), 2),
                                    'class': 'number'}]
         return pf_lines
 
@@ -410,7 +413,9 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '410000', 'code_end': '419999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         operating_revenue = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                             and budget_line.company_id in %(company_ids)s
@@ -421,7 +426,9 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '410000', 'code_end': '419999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         operating_revenue_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           operating_revenue,
@@ -433,8 +440,9 @@ class ProfitLossBalance(models.AbstractModel):
             map(lambda x: x['planned'], operating_revenue_budget)))
         gross_profit_revenue.append(operating_revenue_total)
         gross_profit_budget.append(operating_revenue_budget_total)
-        return [abs(operating_revenue_total), operating_revenue_budget_total,
-                operating_revenue_total - operating_revenue_budget_total]
+        return [abs(operating_revenue_total),
+                abs(operating_revenue_budget_total),
+                operating_revenue_budget_total - operating_revenue_total]
 
     def _get_direct_cost(self, states_args, query,
                          query_budget,
@@ -449,7 +457,9 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '420000', 'code_end': '429999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         direct_cost = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                                     and budget_line.company_id in %(company_ids)s
@@ -460,19 +470,22 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '420000', 'code_end': '429999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         direct_cost_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           direct_cost,
-                                          direct_cost_budget, dict_id, abs_of=True)
+                                          direct_cost_budget, dict_id,
+                                          abs_of=True)
         direct_cost_total = sum(
             list(map(lambda x: x['total'], direct_cost)))
         direct_cost_budget_total = sum(list(
             map(lambda x: x['planned'], direct_cost_budget)))
         gross_profit_revenue.append(direct_cost_total)
         gross_profit_budget.append(direct_cost_budget_total)
-        return [abs(direct_cost_total), direct_cost_budget_total,
-                direct_cost_total - direct_cost_budget_total]
+        return [abs(direct_cost_total), abs(direct_cost_budget_total),
+                direct_cost_budget_total - direct_cost_total]
 
     def _get_staff_cost(self, states_args, query, query_budget, options,
                         test_child_lines, dict_id):
@@ -487,7 +500,9 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '510000', 'code_end': '549999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         staff_cost = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                                             and budget_line.company_id in %(company_ids)s
@@ -498,19 +513,22 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '510000', 'code_end': '549999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         staff_cost_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           staff_cost,
-                                          staff_cost_budget, dict_id, abs_of=False)
+                                          staff_cost_budget, dict_id,
+                                          abs_of=False)
         staff_cost_total = sum(
             list(map(lambda x: x['total'], staff_cost)))
         staff_cost_budget_total = sum(list(
             map(lambda x: x['planned'], staff_cost_budget)))
         indirect_cost_sum.append(staff_cost_total)
         indirect_cost_budget.append(staff_cost_budget_total)
-        return [-abs(staff_cost_total), staff_cost_budget_total,
-                staff_cost_total - staff_cost_budget_total]
+        return [-abs(staff_cost_total), -abs(staff_cost_budget_total),
+                staff_cost_budget_total - staff_cost_total]
 
     def _get_general_admin_expense(self, states_args, query, query_budget,
                                    options, test_child_lines, dict_id):
@@ -525,7 +543,9 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '550000', 'code_end': '552999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         general_admin_expense = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                                             and budget_line.company_id in %(company_ids)s
@@ -536,7 +556,9 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '550000', 'code_end': '552999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         general_admin_expense_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           general_admin_expense,
@@ -549,8 +571,8 @@ class ProfitLossBalance(models.AbstractModel):
         indirect_cost_sum.append(general_admin_total)
         indirect_cost_budget.append(general_admin_budget_total)
         return [-abs(general_admin_total),
-                general_admin_budget_total, general_admin_total -
-                general_admin_budget_total]
+                -abs(general_admin_budget_total), general_admin_budget_total -
+                general_admin_total]
 
     def _get_statutory_and_misc(self, states_args, query, query_budget,
                                 options, test_child_lines, dict_id):
@@ -565,7 +587,9 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '555000', 'code_end': '559999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         statutory_and_misc = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                                             and budget_line.company_id in %(company_ids)s
@@ -576,7 +600,9 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '555000', 'code_end': '559999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         statutory_and_misc_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           statutory_and_misc,
@@ -588,8 +614,9 @@ class ProfitLossBalance(models.AbstractModel):
             map(lambda x: x['planned'], statutory_and_misc_budget)))
         indirect_cost_sum.append(statutory_and_misc_total)
         indirect_cost_budget.append(statutory_and_misc_budget_total)
-        return [-abs(statutory_and_misc_total), statutory_and_misc_budget_total,
-                statutory_and_misc_total - statutory_and_misc_budget_total]
+        return [-abs(statutory_and_misc_total),
+                -abs(statutory_and_misc_budget_total),
+                statutory_and_misc_budget_total - statutory_and_misc_total]
 
     def _get_bank_changes(self, states_args, query, query_budget,
                           options, test_child_lines, dict_id):
@@ -604,7 +631,9 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '582100', 'code_end': '582299',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         bank_changes = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                                             and budget_line.company_id in %(company_ids)s
@@ -615,7 +644,9 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '582100', 'code_end': '582299',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         bank_changes_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           bank_changes,
@@ -627,8 +658,8 @@ class ProfitLossBalance(models.AbstractModel):
             map(lambda x: x['planned'], bank_changes_budget)))
         indirect_cost_sum.append(bank_changes_total)
         indirect_cost_budget.append(bank_changes_budget_total)
-        return [-abs(bank_changes_total), bank_changes_budget_total,
-                bank_changes_total - bank_changes_budget_total]
+        return [-abs(bank_changes_total), -abs(bank_changes_budget_total),
+                bank_changes_budget_total - bank_changes_total]
 
     def _get_disposal_gain_loss(self, states_args, query, query_budget,
                                 options, test_child_lines, dict_id):
@@ -643,7 +674,9 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '558100', 'code_end': '558199',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         disposal_gain_loss = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                                                 and budget_line.company_id in %(company_ids)s
@@ -654,7 +687,9 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '558100', 'code_end': '558199',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         disposal_gain_loss_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           disposal_gain_loss,
@@ -666,7 +701,7 @@ class ProfitLossBalance(models.AbstractModel):
         other_income_sum.append(disposal_gain_loss_total)
         other_income_budget.append(disposal_gain_loss_budget_total)
         return [disposal_gain_loss_total, disposal_gain_loss_budget_total,
-                disposal_gain_loss_total - disposal_gain_loss_budget_total]
+                disposal_gain_loss_budget_total - disposal_gain_loss_total]
 
     def _get_interest_income(self, states_args, query, query_budget,
                              options, test_child_lines, dict_id):
@@ -681,7 +716,9 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '581300', 'code_end': '581399',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         interest_income = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                                                     and budget_line.company_id in %(company_ids)s
@@ -692,7 +729,9 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '581300', 'code_end': '581399',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         interest_income_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           interest_income,
@@ -704,7 +743,7 @@ class ProfitLossBalance(models.AbstractModel):
         other_income_sum.append(interest_income_total)
         other_income_budget.append(interest_income_budget_total)
         return [interest_income_total, interest_income_budget_total,
-                interest_income_total - interest_income_budget_total]
+                interest_income_budget_total - interest_income_total]
 
     def _get_intra_group_interest_income(self, states_args, query, query_budget,
                                          options, test_child_lines, dict_id):
@@ -719,7 +758,9 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '570000', 'code_end': '579999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         intra_group_interest_income = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                                                         and budget_line.company_id in %(company_ids)s
@@ -730,7 +771,9 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '570000', 'code_end': '579999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         intra_group_interest_income_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           intra_group_interest_income,
@@ -744,8 +787,8 @@ class ProfitLossBalance(models.AbstractModel):
         other_income_budget.append(intra_group_interest_income_budget_total)
         return [intra_group_interest_income_total,
                 intra_group_interest_income_budget_total,
-                intra_group_interest_income_total -
-                intra_group_interest_income_budget_total]
+                intra_group_interest_income_budget_total -
+                intra_group_interest_income_total]
 
     def _get_depreciation_amortization(self, states_args, query, query_budget,
                                        options, test_child_lines, dict_id):
@@ -760,7 +803,9 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '553000', 'code_end': '554999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         depreciation_amortization = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                                                             and budget_line.company_id in %(company_ids)s
@@ -771,7 +816,9 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '553000', 'code_end': '554999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         depreciation_amortization_budget_val = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           depreciation_amortization,
@@ -784,8 +831,8 @@ class ProfitLossBalance(models.AbstractModel):
         depreciation_amortization_sum.append(amortization_total)
         depreciation_amortization_budget.append(amortization_budget_total)
         return [-abs(amortization_total),
-                amortization_budget_total, amortization_total -
-                amortization_budget_total]
+                -abs(amortization_budget_total),
+                amortization_budget_total - amortization_total]
 
     def _get_finance_cost(self, states_args, query, query_budget,
                           options, test_child_lines, dict_id):
@@ -800,7 +847,9 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '581100', 'code_end': '581299',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         finance_cost = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                                                                 and budget_line.company_id in %(company_ids)s
@@ -811,7 +860,9 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '581100', 'code_end': '581299',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         finance_cost_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           finance_cost,
@@ -823,8 +874,8 @@ class ProfitLossBalance(models.AbstractModel):
         finance_cost_sum.append(finance_cost_total)
         finance_cost_budget_list.append(finance_cost_budget_total)
         return [-abs(finance_cost_total),
-                finance_cost_budget_total,
-                finance_cost_total - finance_cost_budget_total]
+                -abs(finance_cost_budget_total),
+                finance_cost_budget_total - finance_cost_total]
 
     def _get_taxes(self, states_args, query, query_budget,
                    options, test_child_lines, dict_id):
@@ -839,7 +890,9 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '561100', 'code_end': '569999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         taxes = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                                                                 and budget_line.company_id in %(company_ids)s
@@ -850,7 +903,9 @@ class ProfitLossBalance(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '561100', 'code_end': '569999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         taxes_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(test_child_lines,
                                           taxes,
@@ -861,7 +916,7 @@ class ProfitLossBalance(models.AbstractModel):
         taxes_sum.append(taxes_total)
         taxes_budget_list.append(taxes_budget_total)
         return [taxes_total,
-                taxes_budget_total, taxes_total - taxes_budget_total]
+                taxes_budget_total, taxes_budget_total - taxes_total]
 
     def _arrange_account_budget_line(self, test_child_lines, account_lines,
                                      budget_lines, dict_id, abs_of=None):
@@ -886,11 +941,13 @@ class ProfitLossBalance(models.AbstractModel):
                 lines['parent_id'] = ''
                 lines['count'] = 25
             lines['abs_of'] = abs_of
-        new_lines = self._arrange_account_groups(group_ids, account_lines, dict_id, abs_of)
+        new_lines = self._arrange_account_groups(group_ids, account_lines,
+                                                 dict_id, abs_of)
 
         test_child_lines += new_lines
 
-    def _arrange_account_groups(self, group_ids, account_lines, dict_id, abs_of):
+    def _arrange_account_groups(self, group_ids, account_lines, dict_id,
+                                abs_of):
         new_lines = []
         for group in group_ids:
             test_lines = list(
@@ -1127,8 +1184,8 @@ class ProfitLossBalance(models.AbstractModel):
                             sheet.merge_range(row_head, col_head_24 + 9,
                                               row_head,
                                               col_head_sub_24 + 9,
-                                              acc_ch_lines['total'] -
-                                              acc_ch_lines['planned'],
+                                              acc_ch_lines['planned'] -
+                                              acc_ch_lines['total'],
                                               sub_line_style)
             if line['account_lines']:
                 col_head_24 = 1
@@ -1166,8 +1223,8 @@ class ProfitLossBalance(models.AbstractModel):
                     sheet.merge_range(row_head, col_head_24 + 9,
                                       row_head,
                                       col_head_sub_24 + 9,
-                                      acc_line['total'] -
-                                      acc_line['planned'],
+                                      acc_line['planned'] -
+                                      acc_line['total'],
                                       sub_line_style)
             row_head += 1
 
