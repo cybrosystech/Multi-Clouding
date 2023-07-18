@@ -365,8 +365,8 @@ class ProfitLossBalance(models.AbstractModel):
             {
                 'id': 'net_profit_loss',
                 'name': 'Net Profit - Loss',
-                'columns': [{'name': round(sum(
-                    gross_profit_revenue + indirect_cost_sum + other_income_sum + depreciation_amortization_sum + finance_cost_sum + taxes_sum),
+                'columns': [{'name': round(-abs(sum(
+                    gross_profit_revenue + indirect_cost_sum + other_income_sum + depreciation_amortization_sum + finance_cost_sum + taxes_sum)),
                     2),
                     'class': 'number'},
                     {'name': round(sum(
