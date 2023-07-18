@@ -556,6 +556,10 @@ class TascBalanceSheetReport(models.AbstractModel):
                              'code_start': '400000', 'code_end': '899999',
                              'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
         unallocated_earning = self.env.cr.dictfetchall()
+        if options['date_filter'] in ['this_year', 'last_year']:
+            for unallocated in unallocated_earning:
+                unallocated['total'] = 0
+        print('unallocated_earning', unallocated_earning)
         # unallocated_earning_account = self._get_unallocated_earning_account(
         #     static_date,
         #     states_args, query, query_budget,
