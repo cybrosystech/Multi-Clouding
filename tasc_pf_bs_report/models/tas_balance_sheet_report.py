@@ -241,11 +241,11 @@ class TascBalanceSheetReport(models.AbstractModel):
                      'class': 'number'},
                     {'name': round(abs(sum(shareholders_equity_budget)), 2),
                      'class': 'number'},
-                    {'name': round(
-                        sum(shareholders_equity_sum) - sum(
-                            shareholders_equity_budget),
-                        2),
-                        'class': 'number'}
+                    {'name': round(sum(
+                        shareholders_equity_budget) -
+                                   sum(shareholders_equity_sum),
+                                   2),
+                     'class': 'number'}
                 ],
                 'child_lines': '',
                 'account_lines': ''
@@ -259,13 +259,13 @@ class TascBalanceSheetReport(models.AbstractModel):
                     {'name': round(abs(sum(liabilities_budget) + sum(
                         shareholders_equity_budget)), 2),
                      'class': 'number'},
-                    {'name': round(
-                        (sum(liabilities_sum) + sum(
-                            shareholders_equity_sum)) - (
-                                sum(liabilities_budget) + sum(
-                            shareholders_equity_budget)),
-                        2),
-                        'class': 'number'}],
+                    {'name': round((
+                                           sum(liabilities_budget) + sum(
+                                       shareholders_equity_budget)) -
+                                   (sum(liabilities_sum) + sum(
+                                       shareholders_equity_sum)),
+                                   2),
+                     'class': 'number'}],
                 'child_lines': '',
                 'account_lines': ''
             }
@@ -275,16 +275,18 @@ class TascBalanceSheetReport(models.AbstractModel):
                                   {'name': round(sum(assets_budget_sum), 2),
                                    'class': 'number'},
                                   {'name': round(
-                                      sum(assets_sum) - sum(assets_budget_sum),
+                                      sum(assets_budget_sum) - sum(assets_sum),
                                       2),
                                       'class': 'number'}]
         bs_lines[1]['columns'] = [{'name': round(abs(sum(liabilities_sum)), 2),
                                    'class': 'number'},
-                                  {'name': round(abs(sum(liabilities_budget)), 2),
+                                  {'name': round(abs(sum(liabilities_budget)),
+                                                 2),
                                    'class': 'number'},
                                   {'name': round(
-                                      sum(liabilities_sum) - sum(
-                                          liabilities_budget),
+                                      sum(
+                                          liabilities_budget) -
+                                      sum(liabilities_sum),
                                       2),
                                       'class': 'number'}]
         bs_lines[2]['columns'] = [
@@ -293,8 +295,9 @@ class TascBalanceSheetReport(models.AbstractModel):
             {'name': round(abs(sum(shareholders_equity_budget)), 2),
              'class': 'number'},
             {'name': round(
-                sum(shareholders_equity_sum) - sum(
-                    shareholders_equity_budget),
+                sum(
+                    shareholders_equity_budget) -
+                sum(shareholders_equity_sum),
                 2),
                 'class': 'number'}]
         return bs_lines
@@ -310,7 +313,9 @@ class TascBalanceSheetReport(models.AbstractModel):
             states_args=states_args),
                             {'to_date': options['date']['date_to'],
                              'code_start': '110000', 'code_end': '119999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         current_assets = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                                             and budget_line.company_id in %(company_ids)s
@@ -321,7 +326,9 @@ class TascBalanceSheetReport(models.AbstractModel):
                             {'from_date': budget_date,
                              'to_date': options['date']['date_to'],
                              'code_start': '110000', 'code_end': '119999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         current_assets_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(balance_sheet_lines,
                                           current_assets,
@@ -333,10 +340,11 @@ class TascBalanceSheetReport(models.AbstractModel):
         assets_sum.append(current_assets_total)
         assets_budget_sum.append(current_assets_budget_total)
         return [current_assets_total, current_assets_budget_total,
-                current_assets_total - current_assets_budget_total]
+                current_assets_budget_total - current_assets_total]
 
     def _get_non_current_assets(self, states_args, query, query_budget,
-                                options, balance_sheet_lines, budget_date, dict_id):
+                                options, balance_sheet_lines, budget_date,
+                                dict_id):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
                                                     and journal_item.company_id in %(company_ids)s
                                                     and journal_item.date <= %(to_date)s
@@ -346,7 +354,9 @@ class TascBalanceSheetReport(models.AbstractModel):
             states_args=states_args),
                             {'to_date': options['date']['date_to'],
                              'code_start': '120000', 'code_end': '129999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         non_current_assets = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                                             and budget_line.company_id in %(company_ids)s
@@ -357,7 +367,9 @@ class TascBalanceSheetReport(models.AbstractModel):
                             {'from_date': budget_date,
                              'to_date': options['date']['date_to'],
                              'code_start': '120000', 'code_end': '129999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         non_current_assets_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(balance_sheet_lines,
                                           non_current_assets,
@@ -369,10 +381,11 @@ class TascBalanceSheetReport(models.AbstractModel):
         assets_sum.append(non_current_assets_total)
         assets_budget_sum.append(non_current_assets_budget_total)
         return [non_current_assets_total, non_current_assets_budget_total,
-                non_current_assets_total - non_current_assets_budget_total]
+                non_current_assets_budget_total - non_current_assets_total]
 
     def _get_current_liabilities(self, states_args, query, query_budget,
-                                 options, balance_sheet_lines, budget_date, dict_id):
+                                 options, balance_sheet_lines, budget_date,
+                                 dict_id):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
                                                         and journal_item.company_id in %(company_ids)s
                                                         and journal_item.date <= %(to_date)s
@@ -382,7 +395,9 @@ class TascBalanceSheetReport(models.AbstractModel):
             states_args=states_args),
                             {'to_date': options['date']['date_to'],
                              'code_start': '210000', 'code_end': '219999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         current_liabilities = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                                                 and budget_line.company_id in %(company_ids)s
@@ -393,11 +408,14 @@ class TascBalanceSheetReport(models.AbstractModel):
                             {'from_date': budget_date,
                              'to_date': options['date']['date_to'],
                              'code_start': '210000', 'code_end': '219999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         current_liabilities_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(balance_sheet_lines,
                                           current_liabilities,
-                                          current_liabilities_budget, dict_id, abs_of=True)
+                                          current_liabilities_budget, dict_id,
+                                          abs_of=True)
         current_liabilities_total = sum(
             list(map(lambda x: x['total'], current_liabilities)))
         current_liabilities_budget_total = sum(list(
@@ -406,10 +424,11 @@ class TascBalanceSheetReport(models.AbstractModel):
         liabilities_budget.append(current_liabilities_budget_total)
         return [abs(current_liabilities_total),
                 abs(current_liabilities_budget_total),
-                current_liabilities_total - current_liabilities_budget_total]
+                current_liabilities_budget_total - current_liabilities_total]
 
     def _get_non_current_liabilities(self, states_args, query, query_budget,
-                                     options, balance_sheet_lines, budget_date, dict_id):
+                                     options, balance_sheet_lines, budget_date,
+                                     dict_id):
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
                                                             and journal_item.company_id in %(company_ids)s
                                                             and journal_item.date <= %(to_date)s
@@ -419,7 +438,9 @@ class TascBalanceSheetReport(models.AbstractModel):
             states_args=states_args),
                             {'to_date': options['date']['date_to'],
                              'code_start': '220000', 'code_end': '299999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         non_current_liabilities = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                                                     and budget_line.company_id in %(company_ids)s
@@ -430,7 +451,9 @@ class TascBalanceSheetReport(models.AbstractModel):
                             {'from_date': budget_date,
                              'to_date': options['date']['date_to'],
                              'code_start': '220000', 'code_end': '299999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         non_current_liabilities_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(balance_sheet_lines,
                                           non_current_liabilities,
@@ -444,8 +467,8 @@ class TascBalanceSheetReport(models.AbstractModel):
         liabilities_budget.append(non_current_liabilities_budget_total)
         return [abs(non_current_liabilities_total),
                 abs(non_current_liabilities_budget_total),
-                non_current_liabilities_total -
-                non_current_liabilities_budget_total]
+                non_current_liabilities_budget_total -
+                non_current_liabilities_total]
 
     def _get_equity(self, states_args, query, query_budget,
                     options, balance_sheet_lines, budget_date, dict_id):
@@ -458,7 +481,9 @@ class TascBalanceSheetReport(models.AbstractModel):
             states_args=states_args),
                             {'to_date': options['date']['date_to'],
                              'code_start': '310000', 'code_end': '399999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         equity = self.env.cr.dictfetchall()
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                                                     and budget_line.company_id in %(company_ids)s
@@ -469,7 +494,9 @@ class TascBalanceSheetReport(models.AbstractModel):
                             {'from_date': budget_date,
                              'to_date': options['date']['date_to'],
                              'code_start': '310000', 'code_end': '399999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         equity_budget = self.env.cr.dictfetchall()
         self._arrange_account_budget_line(balance_sheet_lines,
                                           equity,
@@ -482,7 +509,7 @@ class TascBalanceSheetReport(models.AbstractModel):
         shareholders_equity_sum.append(equity_total)
         shareholders_equity_budget.append(equity_budget_budget_total)
         return [abs(equity_total), abs(equity_budget_budget_total),
-                equity_total - equity_budget_budget_total]
+                equity_budget_budget_total - equity_total]
 
     def _get_current_year_profit(self, states_args, query, query_budget,
                                  options, balance_sheet_lines, dict_id):
@@ -501,7 +528,9 @@ class TascBalanceSheetReport(models.AbstractModel):
                             {'to_date': options['date']['date_to'],
                              'from_date': options['date']['date_from'],
                              'code_start': '400000', 'code_end': '899999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         current_year_profit = self.env.cr.dictfetchall()
         # current_year_profit_account = self._get_current_year_profit_account(
         #     static_date,
@@ -516,7 +545,9 @@ class TascBalanceSheetReport(models.AbstractModel):
                             {'from_date': static_date,
                              'to_date': options['date']['date_to'],
                              'code_start': '400000', 'code_end': '899999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         current_year_profit_budget = self.env.cr.dictfetchall()
         # current_year_profit += current_year_profit_account
         self._arrange_account_budget_line(balance_sheet_lines,
@@ -534,14 +565,15 @@ class TascBalanceSheetReport(models.AbstractModel):
         # })
         shareholders_equity_sum.append(current_year_profit_total)
         shareholders_equity_budget.append(current_year_profit_budget_total)
-        return [-1 * current_year_profit_total, -1 * current_year_profit_budget_total,
-                current_year_profit_total -
-                current_year_profit_budget_total]
+        return [-1 * current_year_profit_total,
+                -1 * current_year_profit_budget_total,
+                current_year_profit_budget_total -
+                current_year_profit_total]
 
     def _get_unallocated_earning(self, states_args, query, query_budget,
                                  options, balance_sheet_lines, dict_id):
         date_to_demo = datetime.strptime(options['date']['date_from'],
-                                      "%Y-%m-%d")
+                                         "%Y-%m-%d")
         date_to = date_to_demo - timedelta(days=1)
         static_date = date(day=1, month=1, year=date_to.year)
         self.env.cr.execute(query + '''where account.code between %(code_start)s and %(code_end)s
@@ -555,10 +587,13 @@ class TascBalanceSheetReport(models.AbstractModel):
                             {'from_date': static_date,
                              'to_date': date_to,
                              'code_start': '400000', 'code_end': '899999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         unallocated_earning = self.env.cr.dictfetchall()
         print('options', options)
-        if options['date_filter'] in ['this_year', 'last_year', 'custom'] or date_to.month == 1:
+        if options['date_filter'] in ['this_year', 'last_year',
+                                      'custom'] or date_to.month == 1:
             for unallocated in unallocated_earning:
                 unallocated['total'] = 0
         print('unallocated_earning', unallocated_earning)
@@ -575,7 +610,9 @@ class TascBalanceSheetReport(models.AbstractModel):
                             {'from_date': options['date']['date_from'],
                              'to_date': options['date']['date_to'],
                              'code_start': '420000', 'code_end': '429999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         unallocated_earning_budget = self.env.cr.dictfetchall()
         # unallocated_earning += unallocated_earning_account
         self._arrange_account_budget_line(balance_sheet_lines,
@@ -594,8 +631,8 @@ class TascBalanceSheetReport(models.AbstractModel):
         shareholders_equity_budget.append(unallocated_earning_budget_total)
         return [-1 * unallocated_earning_total,
                 -1 * unallocated_earning_budget_total,
-                unallocated_earning_total -
-                unallocated_earning_budget_total]
+                unallocated_earning_budget_total -
+                unallocated_earning_total]
 
     def _get_current_year_profit_account(self, static_date, states_args, query,
                                          query_budget,
@@ -611,7 +648,9 @@ class TascBalanceSheetReport(models.AbstractModel):
                             {'to_date': options['date']['date_to'],
                              'from_date': static_date,
                              'code': '999999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         current_year_profit_account = self.env.cr.dictfetchall()
         return current_year_profit_account
 
@@ -627,7 +666,9 @@ class TascBalanceSheetReport(models.AbstractModel):
             states_args=states_args),
                             {'to_date': static_date,
                              'code': '999999',
-                             'company_ids': tuple([self.env.company.id] if options['multi-company'] is False else self.env.companies.ids)})
+                             'company_ids': tuple(
+                                 [self.env.company.id] if options[
+                                                              'multi-company'] is False else self.env.companies.ids)})
         unallocated_earning_account = self.env.cr.dictfetchall()
         return unallocated_earning_account
 
@@ -658,7 +699,8 @@ class TascBalanceSheetReport(models.AbstractModel):
                                                  dict_id, abs_of)
         balance_sheet_lines += new_lines
 
-    def _arrange_account_groups(self, group_ids, account_lines, dict_id, abs_of):
+    def _arrange_account_groups(self, group_ids, account_lines, dict_id,
+                                abs_of):
         new_lines = []
         for group in group_ids:
             test_lines = list(filter(lambda x: x['group_id'] == group.id,
@@ -864,27 +906,53 @@ class TascBalanceSheetReport(models.AbstractModel):
                         for acc_ch_lines in child['account_lines']:
                             if acc_ch_lines['dict_id'] == child['id']:
                                 row_head += 1
-                                sheet.merge_range(row_head, col_head_24, row_head,
+                                sheet.merge_range(row_head, col_head_24,
+                                                  row_head,
                                                   col_head_sub_24,
                                                   acc_ch_lines['code'] + ' ' +
-                                                  acc_ch_lines['name'], sub_line_style1 if acc_ch_lines['group'] is True else sub_line_style2)
+                                                  acc_ch_lines['name'],
+                                                  sub_line_style1 if
+                                                  acc_ch_lines[
+                                                      'group'] is True else sub_line_style2)
                                 if acc_ch_lines['abs_of'] is True:
-                                    sheet.merge_range(row_head, col_head_24 + 3, row_head,
+                                    sheet.merge_range(row_head, col_head_24 + 3,
+                                                      row_head,
                                                       col_head_sub_24 + 3,
-                                                      abs(acc_ch_lines['total']), sub_line_style)
+                                                      abs(acc_ch_lines[
+                                                              'total']),
+                                                      sub_line_style)
+                                    sheet.merge_range(row_head, col_head_24 + 6,
+                                                      row_head,
+                                                      col_head_sub_24 + 6,
+                                                      abs(acc_ch_lines[
+                                                              'planned']),
+                                                      sub_line_style)
                                 elif acc_ch_lines['abs_of'] is False:
                                     sheet.merge_range(row_head, col_head_24 + 3,
                                                       row_head,
                                                       col_head_sub_24 + 3,
                                                       -abs(acc_ch_lines[
-                                                              'total']),
+                                                               'total']),
+                                                      sub_line_style)
+                                    sheet.merge_range(row_head, col_head_24 + 6,
+                                                      row_head,
+                                                      col_head_sub_24 + 6,
+                                                      -abs(acc_ch_lines[
+                                                               'planned']),
                                                       sub_line_style)
                                 elif acc_ch_lines['abs_of'] == 'CU':
                                     sheet.merge_range(row_head, col_head_24 + 3,
                                                       row_head,
                                                       col_head_sub_24 + 3,
                                                       -1 * (acc_ch_lines[
-                                                              'total']),
+                                                          'total']),
+                                                      sub_line_style)
+                                    sheet.merge_range(row_head, col_head_24 + 6,
+                                                      row_head,
+                                                      col_head_sub_24 + 6,
+                                                      -1 * (
+                                                          acc_ch_lines[
+                                                              'planned']),
                                                       sub_line_style)
                                 else:
                                     sheet.merge_range(row_head, col_head_24 + 3,
@@ -892,12 +960,17 @@ class TascBalanceSheetReport(models.AbstractModel):
                                                       col_head_sub_24 + 3,
                                                       acc_ch_lines['total'],
                                                       sub_line_style)
-                                sheet.merge_range(row_head, col_head_24 + 6, row_head,
-                                                  col_head_sub_24 + 6,
-                                                  acc_ch_lines['planned'], sub_line_style)
-                                sheet.merge_range(row_head, col_head_24 + 9, row_head,
+                                    sheet.merge_range(row_head, col_head_24 + 6,
+                                                      row_head,
+                                                      col_head_sub_24 + 6,
+                                                      acc_ch_lines['planned'],
+                                                      sub_line_style)
+                                sheet.merge_range(row_head, col_head_24 + 9,
+                                                  row_head,
                                                   col_head_sub_24 + 9,
-                                                  acc_ch_lines['total'] - acc_ch_lines['planned'], sub_line_style)
+                                                  acc_ch_lines['planned'] -
+                                                  acc_ch_lines['total'],
+                                                  sub_line_style)
             if line['account_lines']:
                 col_head_24 = 1
                 col_head_sub_24 = 3
@@ -957,8 +1030,8 @@ class TascBalanceSheetReport(models.AbstractModel):
                         sheet.merge_range(row_head, col_head_24 + 9,
                                           row_head,
                                           col_head_sub_24 + 9,
-                                          acc_line['total'] -
-                                          acc_line['planned'],
+                                          acc_line['planned']
+                                          - acc_line['total'],
                                           sub_line_style)
             row_head += 1
 

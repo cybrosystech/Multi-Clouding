@@ -129,7 +129,7 @@
                                                         </t>
                                                     </td>
                                                     <td colspan="3">
-                                                        <span t-esc="'{:20,.2f}'.format(account_line['total'] - account_line['planned'])"/>
+                                                        <span t-esc="'{:20,.2f}'.format(account_line['planned'] - account_line['total'])"/>
                                                     </td>
                                                 </tr>
                                             </t>
@@ -193,7 +193,7 @@
                                                 </t>
                                             </td>
                                             <td colspan="3">
-                                                <span t-esc="'{:20,.2f}'.format(account_line['total'] - account_line['planned'])"/>
+                                                <span t-esc="'{:20,.2f}'.format(account_line['planned'] - account_line['total'])"/>
                                             </td>
                                         </tr>
                                     </t>
