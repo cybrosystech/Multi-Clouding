@@ -396,8 +396,6 @@ class ProfitLossBalance(models.AbstractModel):
                                   {'name': round(sum(other_income_sum) - sum(
                                       other_income_budget), 2),
                                    'class': 'number'}]
-        print('pf_lines', pf_lines)
-        print('test_child_lines', test_child_lines)
         return pf_lines
 
     def _get_operating_revenue(self, states_args, query, query_budget, options,
