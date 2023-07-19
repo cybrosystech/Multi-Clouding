@@ -1,7 +1,17 @@
 from odoo.addons.analytic_account_types.models.account_move_line import \
     AccountMove
 
-from odoo import api
+from odoo import api, models, fields
+
+
+class AccountMoveLineBudgetIndexing(models.Model):
+    _inherit = 'account.move.line'
+
+    budget_id = fields.Many2one(comodel_name="crossovered.budget",
+                                string="Budget", required=False, index=True)
+    budget_line_id = fields.Many2one(comodel_name="crossovered.budget.lines",
+                                     string="Budget Line", required=False,
+                                     index=True)
 
 
 @api.depends()

@@ -262,8 +262,8 @@ class AccountMove(models.Model):
 
     def button_approve_purchase_cycle(self):
         for journal in self:
-            if not journal.purchase_approval_cycle_ids:
-                journal.button_request_purchase_cycle()
+            # if not journal.purchase_approval_cycle_ids:
+            #     journal.button_request_purchase_cycle()
             min_seq_approval = min(
                 journal.purchase_approval_cycle_ids.filtered(lambda x: x.is_approved is not True).mapped('approval_seq'))
             last_approval = journal.purchase_approval_cycle_ids.filtered(
