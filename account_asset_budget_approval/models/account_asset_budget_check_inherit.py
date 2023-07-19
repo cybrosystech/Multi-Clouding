@@ -6,12 +6,12 @@ class AccountAssetBudget(models.Model):
 
     state = fields.Selection(selection_add=[('to_approve', 'To Approve')])
     asset_approval_cycle_ids = fields.One2many('purchase.approval.cycle',
-                                               'asset_id')
+                                               'asset_id', copy=False)
     life_cycle_id = fields.Many2one('purchase.approval.cycle')
     asset_approve_bool = fields.Boolean(
         compute='compute_approval_process')
     request_approval_bool = fields.Boolean(compute='_compute_request_approval')
-    approved_life_bool = fields.Boolean(default=False)
+    approved_life_bool = fields.Boolean(default=False, copy=False)
     button_validate_bool = fields.Boolean(default=False)
 
     def _compute_request_approval(self):
