@@ -14,6 +14,9 @@ class AccountAssetPartialInherit(models.Model):
         ('expansion_capex', 'Expansion CAPEX'),
         ('5g_capex', '5G CAPEX'),
         ('other_capex', 'Other CAPEX'), ])
+    partial_disposal = fields.Boolean(copy=False)
+    disposal_amount = fields.Float(default=0, readonly=True)
+    asset_net = fields.Float(default=0, readonly=True)
 
     def set_to_close(self, invoice_line_id, partial, partial_amount, date=None):
         self.ensure_one()

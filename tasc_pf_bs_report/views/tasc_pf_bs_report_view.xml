@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <template id="tasc_pf_bs_multi_companies">
+        <button type="button"
+                class="o_dropdown_toggler_btn btn btn-secondary dropdown-toggle"
+                data-toggle="dropdown">
+            <span class="fa fa-filter"/>
+            Multi-Company:
+            <t t-if="options['multi-company'] == False">
+                <span>Excluded</span>
+            </t>
+            <t t-else="">
+                <span>Include all companies</span>
+            </t>
+        </button>
+        <div class="dropdown-menu o_filter_menu" role="menu">
+            <a role="menuitem"
+               class="dropdown-item js_multi_companies_filter"
+               title="posted entry" data-filter="all-companies">Include all companies
+            </a>
+        </div>
+    </template>
+
+    <template id="tasc_pf_bs_search_view">
+        <div class="btn-group o_dropdown">
+            <t t-call="tasc_trail_balance_report.tasc_trail_balance_search_template_date_filter"/>
+        </div>
+        <div class="btn-group o_dropdown">
+            <t t-call="tasc_trail_balance_report.tasc_trail_balance_report_posted_filter"/>
+        </div>
+        <div class="btn-group o_dropdown">
+            <t t-call="tasc_pf_bs_report.tasc_pf_bs_multi_companies"/>
+        </div>
+    </template>
+
+    <template id="tasc_pf_bs_html_content_view">
+        <div class='o_account_reports_body'>
+            <div class="table-responsive" style="margin-top:20px;">
+                <table class="o_account_reports_table table-hover">
+                    <thead>
+                        <tr>
+                            <t t-foreach="lines['header']" t-as="header">
+                                <th t-esc="header" colspan="3"/>
+                            </t>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="lines['lines']" t-as="line_val">
+                            <tr class="parent_tr_pf_bs">
+                                <td colspan="3" t-attf-data-id="pf_#{line_val['id']}"
+                                    class="tr_budget" t-esc="line_val['name']"/>
+                                <t t-foreach="line_val['columns']"
+                                   t-as="column">
+                                    <td colspan="3">
+                                        <span t-esc="'{:20,.2f}'.format(column['name'])"/>
+                                    </td>
+                                </t>
+                            </tr>
+
+                            <t t-if="line_val['child_lines']">
+                                <t t-foreach="line_val['child_lines']"
+                                   t-as="child_lines">
+                                    <t t-set="trclass" t-value="line_val['id']"/>
+                                    <tr t-attf-class="pf_#{trclass} child_lines child_tr_pf_bs"
+                                        style="display: none;">
+                                        <td colspan="3">
+                                            <span t-esc="child_lines['name']"
+                                                  class="tr_budget"
+                                                  t-attf-data-id="pf_#{child_lines['id']}"
+                                                  style="margin-left: 10px;"/>
+                                        </td>
+                                        <t t-foreach="child_lines['columns']"
+                                           t-as="column">
+                                            <td colspan="3">
+                                                <span t-esc="'{:20,.2f}'.format(column['name'])"/>
+                                            </td>
+                                        </t>
+                                    </tr>
+                                    <t t-if="child_lines['account_lines']">
+                                        <t t-foreach="child_lines['account_lines']" t-as="account_line">
+                                            <t t-if="account_line['dict_id'] == child_lines['id']">
+                                                <t t-set="count" t-value="account_line['count']"/>
+                                                <t t-if="account_line['parent_id']">
+                                                    <t t-set="trclass1" t-value="account_line['parent_id']"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-set="trclass1" t-value="str(account_line['group_id']) + account_line['dict_id']"/>
+                                                </t>
+                                                <t t-if="account_line['group'] == True">
+                                                    <t t-set="sub_class" t-value="'main_lines_pf_bs'"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-set="sub_class" t-value="''"/>
+                                                </t>
+                                                <tr t-attf-class="pf_#{trclass1} child_lines #{sub_class}" style="display: none;">
+                                                    <td colspan="3">
+                                                        <span t-esc="account_line['code'] + ' ' +account_line['name']"
+                                                                  class="tr_budget"
+                                                                  t-attf-data-id="pf_#{account_line['id']}"
+                                                                  t-att-style="'margin-left: %spx;' %count"/>
+                                                    </td>
+                                                    <td colspan="3">
+                                                        <t t-if="account_line['abs_of'] == True">
+                                                            <span t-esc="'{:20,.2f}'.format(abs(account_line['total']))"/>
+                                                        </t>
+                                                        <t t-elif="account_line['abs_of'] == False">
+                                                            <span t-esc="'{:20,.2f}'.format(-abs(account_line['total']))"/>
+                                                        </t>
+                                                        <t t-elif="account_line['abs_of'] == 'CU'">
+                                                            <span t-esc="'{:20,.2f}'.format(-1 * (account_line['total']))"/>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <span t-esc="'{:20,.2f}'.format(account_line['total'])"/>
+                                                        </t>
+                                                    </td>
+                                                    <td colspan="3">
+                                                        <t t-if="account_line['abs_of'] == True">
+                                                            <span t-esc="'{:20,.2f}'.format(abs(account_line['planned']))"/>
+                                                        </t>
+                                                        <t t-elif="account_line['abs_of'] == False">
+                                                            <span t-esc="'{:20,.2f}'.format(-abs(account_line['planned']))"/>
+                                                        </t>
+                                                        <t t-elif="account_line['abs_of'] == 'CU'">
+                                                            <span t-esc="'{:20,.2f}'.format(-1 * (account_line['planned']))"/>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <span t-esc="'{:20,.2f}'.format(account_line['planned'])"/>
+                                                        </t>
+                                                    </td>
+                                                    <td colspan="3">
+                                                        <span t-esc="'{:20,.2f}'.format(account_line['planned'] - account_line['total'])"/>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </t>
+                                    </t>
+                                </t>
+                            </t>
+                            <t t-if="line_val['account_lines']">
+                                <t t-foreach="line_val['account_lines']" t-as="account_line">
+                                    <t t-if="account_line['dict_id'] == line_val['id']">
+                                        <t t-set="count" t-value="account_line['count']"/>
+                                        <t t-if="account_line['parent_id']">
+                                            <t t-set="trclass1"
+                                               t-value="account_line['parent_id']"/>
+                                        </t>
+                                        <t t-else="">
+                                            <t t-set="trclass1"
+                                               t-value="str(account_line['group_id']) + account_line['dict_id']"/>
+                                        </t>
+                                        <t t-if="account_line['group'] == True">
+                                            <t t-set="sub_class"
+                                               t-value="'main_lines_pf_bs'"/>
+                                        </t>
+                                        <t t-else="">
+                                            <t t-set="sub_class" t-value="''"/>
+                                        </t>
+                                        <tr t-attf-class="pf_#{trclass1} child_lines #{sub_class}"
+                                            style="display: none;">
+                                            <td colspan="3">
+                                                <span t-esc="account_line['code'] + ' ' +account_line['name']"
+                                                      class="tr_budget"
+                                                      t-attf-data-id="pf_#{account_line['id']}"
+                                                      t-att-style="'margin-left: %spx;' %count"/>
+                                            </td>
+                                            <td colspan="3">
+                                                <t t-if="account_line['abs_of'] == True">
+                                                    <span t-esc="'{:20,.2f}'.format(abs(account_line['total']))"/>
+                                                </t>
+                                                <t t-elif="account_line['abs_of'] == False">
+                                                    <span t-esc="'{:20,.2f}'.format(-abs(account_line['total']))"/>
+                                                </t>
+                                                <t t-elif="account_line['abs_of'] == 'CU'">
+                                                    <span t-esc="'{:20,.2f}'.format(-1 * (account_line['total']))"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <span t-esc="'{:20,.2f}'.format(account_line['total'])"/>
+                                                </t>
+                                            </td>
+                                            <td colspan="3">
+                                                <t t-if="account_line['abs_of'] == True">
+                                                    <span t-esc="'{:20,.2f}'.format(abs(account_line['planned']))"/>
+                                                </t>
+                                                <t t-elif="account_line['abs_of'] == False">
+                                                    <span t-esc="'{:20,.2f}'.format(-abs(account_line['planned']))"/>
+                                                </t>
+                                                <t t-elif="account_line['abs_of'] == 'CU'">
+                                                    <span t-esc="'{:20,.2f}'.format(-1 * (account_line['planned']))"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <span t-esc="'{:20,.2f}'.format(account_line['planned'])"/>
+                                                </t>
+                                            </td>
+                                            <td colspan="3">
+                                                <span t-esc="'{:20,.2f}'.format(account_line['planned'] - account_line['total'])"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </t>
+                            </t>
+
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </template>
+
+    <record id="action_pf_bs_tasc" model="ir.actions.client">
+        <field name="name">TASC Profit &amp; Loss Report</field>
+        <field name="tag">cash_flow</field>
+        <field name="context" eval="{'model': 'profit.loss.balance'}"/>
+    </record>
+
+    <menuitem id="menu_action_pf_bs_tasc" name="TASC Profit &amp; Loss"
+              action="action_pf_bs_tasc"
+              parent="cash_flow_statement_report.tasc_dynamic_reports"/>
+
+</odoo>

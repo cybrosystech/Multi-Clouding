@@ -120,7 +120,7 @@ class TascBudgetAnalysis(models.Model):
                 percent = round(-1 * ((obj.practical_amount / lines[
                     'planned_amount']) * 100))
             lines.update({
-                'practical_amount': obj.practical_amount,
+                'practical_amount': -(obj.practical_amount),
                 'remaining_amount': obj.remaining_amount,
                 'percentage':  percent,
             })

@@ -6,12 +6,12 @@ class AccountAssetBudget(models.Model):
 
     state = fields.Selection(selection_add=[('to_approve', 'To Approve')])
     asset_approval_cycle_ids = fields.One2many('purchase.approval.cycle',
-                                               'asset_id')
-    life_cycle_id = fields.Many2one('purchase.approval.cycle')
+                                               'asset_id', copy=False)
+    life_cycle_id = fields.Many2one('purchase.approval.cycle', copy=False)
     asset_approve_bool = fields.Boolean(
         compute='compute_approval_process')
     request_approval_bool = fields.Boolean(compute='_compute_request_approval')
-    approved_life_bool = fields.Boolean(default=False)
+    approved_life_bool = fields.Boolean(default=False, copy=False)
     button_validate_bool = fields.Boolean(default=False)
 
     def _compute_request_approval(self):
@@ -49,7 +49,8 @@ class AccountAssetBudget(models.Model):
 
     def send_asset_user_notification(self, user_ids):
         for user in user_ids:
-            email_template_id = self.env.ref('account_asset_budget_approval.email_template_send_mail_approval_asset_acc')
+            email_template_id = self.env.ref(
+                'account_asset_budget_approval.email_template_send_mail_approval_asset_acc')
             if email_template_id:
                 email_template_id.sudo().write({'email_to': user.email})
                 email_template_id.with_context(name=user.name).sudo().send_mail(
