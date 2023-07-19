@@ -542,8 +542,8 @@ class TascBalanceSheetReport(models.AbstractModel):
                                                                     and budget_line.date_to <= %(to_date)s
                                                                     group by account.name, account.code
                                                                     ''',
-                            {'from_date': static_date,
-                             'to_date': options['date']['date_to'],
+                            {'to_date': options['date']['date_to'],
+                             'from_date': options['date']['date_from'],
                              'code_start': '400000', 'code_end': '899999',
                              'company_ids': tuple(
                                  [self.env.company.id] if options[
@@ -591,12 +591,10 @@ class TascBalanceSheetReport(models.AbstractModel):
                                  [self.env.company.id] if options[
                                                               'multi-company'] is False else self.env.companies.ids)})
         unallocated_earning = self.env.cr.dictfetchall()
-        print('options', options)
-        if options['date_filter'] in ['this_year', 'last_year',
-                                      'custom'] or date_to.month == 1:
-            for unallocated in unallocated_earning:
-                unallocated['total'] = 0
-        print('unallocated_earning', unallocated_earning)
+        # if options['date_filter'] in ['this_year', 'last_year',
+        #                               'custom'] or (date_to.month == 1 and date.today().year <= date_to.year):
+        #     for unallocated in unallocated_earning:
+        #         unallocated['total'] = 0
         # unallocated_earning_account = self._get_unallocated_earning_account(
         #     static_date,
         #     states_args, query, query_budget,
@@ -607,14 +605,21 @@ class TascBalanceSheetReport(models.AbstractModel):
                                                                     and budget_line.date_to <= %(to_date)s
                                                                     group by account.name, account.code
                                                                     ''',
-                            {'from_date': options['date']['date_from'],
-                             'to_date': options['date']['date_to'],
+                            {'from_date': static_date,
+                             'to_date': date_to,
                              'code_start': '420000', 'code_end': '429999',
                              'company_ids': tuple(
                                  [self.env.company.id] if options[
                                                               'multi-company'] is False else self.env.companies.ids)})
         unallocated_earning_budget = self.env.cr.dictfetchall()
-        # unallocated_earning += unallocated_earning_account
+        duplicate_vals = [unallocated_earning, unallocated_earning_budget]
+        if options['date_filter'] in ['this_year', 'last_year',
+                                      ] or (
+                date_to_demo.month == 1 and date.today().year <= date_to_demo.year):
+            for lst in duplicate_vals:
+                lst[:] = [
+                    {'total': 0, 'name': item['name']} for item in
+                    lst]
         self._arrange_account_budget_line(balance_sheet_lines,
                                           unallocated_earning,
                                           unallocated_earning_budget,
