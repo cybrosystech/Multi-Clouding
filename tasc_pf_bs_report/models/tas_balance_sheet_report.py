@@ -607,19 +607,20 @@ class TascBalanceSheetReport(models.AbstractModel):
                                                                     ''',
                             {'from_date': static_date,
                              'to_date': date_to,
-                             'code_start': '420000', 'code_end': '429999',
+                             'code_start': '400000', 'code_end': '429999',
                              'company_ids': tuple(
                                  [self.env.company.id] if options[
                                                               'multi-company'] is False else self.env.companies.ids)})
         unallocated_earning_budget = self.env.cr.dictfetchall()
-        duplicate_vals = [unallocated_earning, unallocated_earning_budget]
         if options['date_filter'] in ['this_year', 'last_year',
                                       ] or (
                 date_to_demo.month == 1 and date.today().year <= date_to_demo.year):
-            for lst in duplicate_vals:
-                lst[:] = [
-                    {'total': 0, 'name': item['name']} for item in
-                    lst]
+            if len(unallocated_earning) > 0:
+                for earnings in unallocated_earning:
+                    earnings['total'] = 0
+            if len(unallocated_earning_budget) > 0:
+                for budget_earnings in unallocated_earning_budget:
+                    budget_earnings['total'] = 0
         self._arrange_account_budget_line(balance_sheet_lines,
                                           unallocated_earning,
                                           unallocated_earning_budget,
