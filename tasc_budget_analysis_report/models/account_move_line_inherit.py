@@ -88,7 +88,7 @@ def request_approval_button(self):
     self.configure_budget_line()
     lines = self.line_ids.filtered(
         lambda x: x.remaining_amount < x.debit or x.remaining_amount < x.credit)
-    self.budget_collect_copy_ids = [(6, 0, [])]
+    self.budget_collect_copy_ids = [(5, 0, 0)]
     for line in lines:
         if line.budget_id:
             self.env['budget.collect.copy'].create({
