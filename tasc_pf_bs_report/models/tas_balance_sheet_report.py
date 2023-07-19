@@ -607,7 +607,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                                                                     ''',
                             {'from_date': static_date,
                              'to_date': date_to,
-                             'code_start': '400000', 'code_end': '429999',
+                             'code_start': '400000', 'code_end': '899999',
                              'company_ids': tuple(
                                  [self.env.company.id] if options[
                                                               'multi-company'] is False else self.env.companies.ids)})
