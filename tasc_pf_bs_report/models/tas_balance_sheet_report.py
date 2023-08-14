@@ -31,8 +31,11 @@ class TascBalanceSheetReport(models.AbstractModel):
     @api.model
     def get_button_balance_sheet(self):
         return [
-            {'name': _('Export (XLSX)'), 'sequence': 2,
+            {'name': _('Export Detailed (XLSX)'), 'sequence': 2,
              'action': 'print_xlsx_tasc_balance_sheet',
+             'file_export_type': _('XLSX')},
+            {'name': _('Export Summary (XLSX)'), 'sequence': 3,
+             'action': 'print_xlsx_tasc_balance_sheet_2',
              'file_export_type': _('XLSX')},
         ]
 
@@ -549,7 +552,6 @@ class TascBalanceSheetReport(models.AbstractModel):
                                  [self.env.company.id] if options[
                                                               'multi-company'] is False else self.env.companies.ids)})
         current_year_profit_budget = self.env.cr.dictfetchall()
-        # current_year_profit += current_year_profit_account
         self._arrange_account_budget_line(balance_sheet_lines,
                                           current_year_profit,
                                           current_year_profit_budget,
@@ -559,10 +561,7 @@ class TascBalanceSheetReport(models.AbstractModel):
         current_year_profit_budget_total = sum(list(
             map(lambda x: x['planned'], current_year_profit_budget)))
 
-        # current_year_profit[0].update({
-        #     'total': current_year_profit[0]['total'] +
-        #              current_year_profit_account[0]
-        # })
+
         shareholders_equity_sum.append(current_year_profit_total)
         shareholders_equity_budget.append(current_year_profit_budget_total)
         return [-1 * current_year_profit_total,
@@ -591,14 +590,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                                  [self.env.company.id] if options[
                                                               'multi-company'] is False else self.env.companies.ids)})
         unallocated_earning = self.env.cr.dictfetchall()
-        # if options['date_filter'] in ['this_year', 'last_year',
-        #                               'custom'] or (date_to.month == 1 and date.today().year <= date_to.year):
-        #     for unallocated in unallocated_earning:
-        #         unallocated['total'] = 0
-        # unallocated_earning_account = self._get_unallocated_earning_account(
-        #     static_date,
-        #     states_args, query, query_budget,
-        #     options)
+
         self.env.cr.execute(query_budget + '''where account.code between %(code_start)s and %(code_end)s
                                                                     and budget_line.company_id in %(company_ids)s
                                                                     and budget_line.date_from >= %(from_date)s 
@@ -845,9 +837,24 @@ class TascBalanceSheetReport(models.AbstractModel):
             'report_type': 'xlsx'
         }
 
+    def print_xlsx_tasc_balance_sheet_2(self, options, params):
+        options["print_xlsx_tasc_balance_sheet_new"] = True
+        return {
+            'type': 'ir.actions.report',
+            'data': {'model': self.env.context.get('model'),
+                     'options': json.dumps(options,
+                                           default=date_utils.json_default),
+                     'output_format': 'xlsx',
+                     'financial_id': self.env.context.get('id'),
+                     'allowed_company_ids': self.env.context.get(
+                         'allowed_company_ids'),
+                     'report_name': 'Tasc Balance Sheet Report',
+                     },
+            'report_type': 'xlsx'
+        }
+
     @api.model
     def get_xlsx(self, options, response=None):
-        print('report_json_bs', report_json_bs)
         headers = self._get_header()
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
@@ -879,167 +886,384 @@ class TascBalanceSheetReport(models.AbstractModel):
         row_head = 4
         col_head = 1
         col_head_sub = 3
-        for line in report_json_bs[0]:
-            print('line', line)
-            sheet.merge_range(row_head, col_head, row_head, col_head_sub,
-                              line['name'], line_style)
-            col_head_1 = 4
-            col_head_2 = 6
-            for column in line['columns']:
-                sheet.merge_range(row_head, col_head_1, row_head, col_head_2,
-                                  column['name'], line_style)
-                col_head_1 += 3
-                col_head_2 += 3
-            if line['child_lines']:
-                col_head_23 = 1
-                col_head_sub_23 = 3
-                for child in line['child_lines']:
-                    row_head += 1
-                    sheet.merge_range(row_head, col_head_23, row_head,
-                                      col_head_sub_23,
-                                      child['name'], line_style_sub)
-                    col_head_11 = 4
-                    col_head_22 = 6
-                    for column in child['columns']:
-                        sheet.merge_range(row_head, col_head_11, row_head,
-                                          col_head_22,
+        if options.get('print_xlsx_tasc_balance_sheet_new'):
+            if options["print_xlsx_tasc_balance_sheet_new"]:
+                for line in report_json_bs[0]:
+                    sheet.merge_range(row_head, col_head, row_head,
+                                      col_head_sub,
+                                      line['name'], line_style)
+                    col_head_1 = 4
+                    col_head_2 = 6
+                    for column in line['columns']:
+                        sheet.merge_range(row_head, col_head_1, row_head,
+                                          col_head_2,
                                           column['name'], line_style)
-                        col_head_11 += 3
-                        col_head_22 += 3
-                    if child['account_lines']:
+                        col_head_1 += 3
+                        col_head_2 += 3
+                    if line['child_lines']:
+                        col_head_23 = 1
+                        col_head_sub_23 = 3
+                        for child in line['child_lines']:
+                            row_head += 1
+                            sheet.merge_range(row_head, col_head_23, row_head,
+                                              col_head_sub_23,
+                                              child['name'], line_style_sub)
+                            col_head_11 = 4
+                            col_head_22 = 6
+                            for column in child['columns']:
+                                sheet.merge_range(row_head, col_head_11,
+                                                  row_head,
+                                                  col_head_22,
+                                                  column['name'], line_style)
+                                col_head_11 += 3
+                                col_head_22 += 3
+                            if child['account_lines']:
+                                col_head_24 = 1
+                                col_head_sub_24 = 3
+                                for acc_ch_lines in child['account_lines']:
+                                    if acc_ch_lines['dict_id'] == child['id']:
+                                        if acc_ch_lines['group']:
+                                            row_head += 1
+                                            sheet.merge_range(row_head,
+                                                              col_head_24,
+                                                              row_head,
+                                                              col_head_sub_24,
+                                                              acc_ch_lines[
+                                                                  'code'] + ' ' +
+                                                              acc_ch_lines[
+                                                                  'name'],
+                                                              sub_line_style1 if
+                                                              acc_ch_lines[
+                                                                  'group'] is True else sub_line_style2)
+                                            if acc_ch_lines['abs_of'] is True:
+                                                sheet.merge_range(row_head,
+                                                                  col_head_24 + 3,
+                                                                  row_head,
+                                                                  col_head_sub_24 + 3,
+                                                                  abs(
+                                                                      acc_ch_lines[
+                                                                          'total']),
+                                                                  sub_line_style)
+                                                sheet.merge_range(row_head,
+                                                                  col_head_24 + 6,
+                                                                  row_head,
+                                                                  col_head_sub_24 + 6,
+                                                                  abs(
+                                                                      acc_ch_lines[
+                                                                          'planned']),
+                                                                  sub_line_style)
+                                            elif acc_ch_lines[
+                                                'abs_of'] is False:
+                                                sheet.merge_range(row_head,
+                                                                  col_head_24 + 3,
+                                                                  row_head,
+                                                                  col_head_sub_24 + 3,
+                                                                  -abs(
+                                                                      acc_ch_lines[
+                                                                          'total']),
+                                                                  sub_line_style)
+                                                sheet.merge_range(row_head,
+                                                                  col_head_24 + 6,
+                                                                  row_head,
+                                                                  col_head_sub_24 + 6,
+                                                                  -abs(
+                                                                      acc_ch_lines[
+                                                                          'planned']),
+                                                                  sub_line_style)
+                                            elif acc_ch_lines['abs_of'] == 'CU':
+                                                sheet.merge_range(row_head,
+                                                                  col_head_24 + 3,
+                                                                  row_head,
+                                                                  col_head_sub_24 + 3,
+                                                                  -1 * (
+                                                                      acc_ch_lines[
+                                                                          'total']),
+                                                                  sub_line_style)
+                                                sheet.merge_range(row_head,
+                                                                  col_head_24 + 6,
+                                                                  row_head,
+                                                                  col_head_sub_24 + 6,
+                                                                  -1 * (
+                                                                      acc_ch_lines[
+                                                                          'planned']),
+                                                                  sub_line_style)
+                                            else:
+                                                sheet.merge_range(row_head,
+                                                                  col_head_24 + 3,
+                                                                  row_head,
+                                                                  col_head_sub_24 + 3,
+                                                                  acc_ch_lines[
+                                                                      'total'],
+                                                                  sub_line_style)
+                                                sheet.merge_range(row_head,
+                                                                  col_head_24 + 6,
+                                                                  row_head,
+                                                                  col_head_sub_24 + 6,
+                                                                  acc_ch_lines[
+                                                                      'planned'],
+                                                                  sub_line_style)
+                                            sheet.merge_range(row_head,
+                                                              col_head_24 + 9,
+                                                              row_head,
+                                                              col_head_sub_24 + 9,
+                                                              acc_ch_lines[
+                                                                  'planned'] -
+                                                              acc_ch_lines[
+                                                                  'total'],
+                                                              sub_line_style)
+                    if line['account_lines']:
                         col_head_24 = 1
                         col_head_sub_24 = 3
-                        for acc_ch_lines in child['account_lines']:
-                            if acc_ch_lines['dict_id'] == child['id']:
-                                row_head += 1
-                                sheet.merge_range(row_head, col_head_24,
-                                                  row_head,
-                                                  col_head_sub_24,
-                                                  acc_ch_lines['code'] + ' ' +
-                                                  acc_ch_lines['name'],
-                                                  sub_line_style1 if
-                                                  acc_ch_lines[
-                                                      'group'] is True else sub_line_style2)
-                                if acc_ch_lines['abs_of'] is True:
-                                    sheet.merge_range(row_head, col_head_24 + 3,
+                        for acc_line in line['account_lines']:
+                            if acc_line['dict_id'] == line['id']:
+                                if acc_line['group']:
+                                    row_head += 1
+                                    sheet.merge_range(row_head, col_head_24,
                                                       row_head,
-                                                      col_head_sub_24 + 3,
-                                                      abs(acc_ch_lines[
+                                                      col_head_sub_24,
+                                                      acc_line['code'] + ' ' +
+                                                      acc_line['name'],
+                                                      sub_line_style1 if
+                                                      acc_line[
+                                                          'group'] is True else sub_line_style2)
+                                    if acc_line['abs_of'] is True:
+                                        sheet.merge_range(row_head,
+                                                          col_head_24 + 3,
+                                                          row_head,
+                                                          col_head_sub_24 + 3,
+                                                          abs(acc_line[
+                                                                  'total']),
+                                                          sub_line_style)
+                                        sheet.merge_range(row_head,
+                                                          col_head_24 + 6,
+                                                          row_head,
+                                                          col_head_sub_24 + 6,
+                                                          abs(acc_line[
+                                                                  'planned']),
+                                                          sub_line_style)
+                                    elif acc_line['abs_of'] is False:
+                                        sheet.merge_range(row_head,
+                                                          col_head_24 + 3,
+                                                          row_head,
+                                                          col_head_sub_24 + 3,
+                                                          -abs(acc_line[
+                                                                   'total']),
+                                                          sub_line_style)
+                                        sheet.merge_range(row_head,
+                                                          col_head_24 + 6,
+                                                          row_head,
+                                                          col_head_sub_24 + 6,
+                                                          -abs(acc_line[
+                                                                   'planned']),
+                                                          sub_line_style)
+                                    elif acc_line['abs_of'] == 'CU':
+                                        sheet.merge_range(row_head,
+                                                          col_head_24 + 3,
+                                                          row_head,
+                                                          col_head_sub_24 + 3,
+                                                          -1 * (
+                                                          acc_line['total']),
+                                                          sub_line_style)
+                                        sheet.merge_range(row_head,
+                                                          col_head_24 + 6,
+                                                          row_head,
+                                                          col_head_sub_24 + 6,
+                                                          -1 * (
+                                                              acc_line[
+                                                                  'planned']),
+                                                          sub_line_style)
+                                    else:
+                                        sheet.merge_range(row_head,
+                                                          col_head_24 + 3,
+                                                          row_head,
+                                                          col_head_sub_24 + 3,
+                                                          acc_line['total'],
+                                                          sub_line_style)
+                                        sheet.merge_range(row_head,
+                                                          col_head_24 + 6,
+                                                          row_head,
+                                                          col_head_sub_24 + 6,
+                                                          acc_line['planned'],
+                                                          sub_line_style)
+                                    sheet.merge_range(row_head, col_head_24 + 9,
+                                                      row_head,
+                                                      col_head_sub_24 + 9,
+                                                      acc_line['planned']
+                                                      - acc_line['total'],
+                                                      sub_line_style)
+                    row_head += 1
+        else:
+            for line in report_json_bs[0]:
+                sheet.merge_range(row_head, col_head, row_head, col_head_sub,
+                                  line['name'], line_style)
+                col_head_1 = 4
+                col_head_2 = 6
+                for column in line['columns']:
+                    sheet.merge_range(row_head, col_head_1, row_head,
+                                      col_head_2,
+                                      column['name'], line_style)
+                    col_head_1 += 3
+                    col_head_2 += 3
+                if line['child_lines']:
+                    col_head_23 = 1
+                    col_head_sub_23 = 3
+                    for child in line['child_lines']:
+                        row_head += 1
+                        sheet.merge_range(row_head, col_head_23, row_head,
+                                          col_head_sub_23,
+                                          child['name'], line_style_sub)
+                        col_head_11 = 4
+                        col_head_22 = 6
+                        for column in child['columns']:
+                            sheet.merge_range(row_head, col_head_11, row_head,
+                                              col_head_22,
+                                              column['name'], line_style)
+                            col_head_11 += 3
+                            col_head_22 += 3
+                        if child['account_lines']:
+                            col_head_24 = 1
+                            col_head_sub_24 = 3
+                            for acc_ch_lines in child['account_lines']:
+                                if acc_ch_lines['dict_id'] == child['id']:
+                                    row_head += 1
+                                    sheet.merge_range(row_head, col_head_24,
+                                                      row_head,
+                                                      col_head_sub_24,
+                                                      acc_ch_lines[
+                                                          'code'] + ' ' +
+                                                      acc_ch_lines['name'],
+                                                      sub_line_style1 if
+                                                      acc_ch_lines[
+                                                          'group'] is True else sub_line_style2)
+                                    if acc_ch_lines['abs_of'] is True:
+                                        sheet.merge_range(row_head,
+                                                          col_head_24 + 3,
+                                                          row_head,
+                                                          col_head_sub_24 + 3,
+                                                          abs(acc_ch_lines[
+                                                                  'total']),
+                                                          sub_line_style)
+                                        sheet.merge_range(row_head,
+                                                          col_head_24 + 6,
+                                                          row_head,
+                                                          col_head_sub_24 + 6,
+                                                          abs(acc_ch_lines[
+                                                                  'planned']),
+                                                          sub_line_style)
+                                    elif acc_ch_lines['abs_of'] is False:
+                                        sheet.merge_range(row_head,
+                                                          col_head_24 + 3,
+                                                          row_head,
+                                                          col_head_sub_24 + 3,
+                                                          -abs(acc_ch_lines[
+                                                                   'total']),
+                                                          sub_line_style)
+                                        sheet.merge_range(row_head,
+                                                          col_head_24 + 6,
+                                                          row_head,
+                                                          col_head_sub_24 + 6,
+                                                          -abs(acc_ch_lines[
+                                                                   'planned']),
+                                                          sub_line_style)
+                                    elif acc_ch_lines['abs_of'] == 'CU':
+                                        sheet.merge_range(row_head,
+                                                          col_head_24 + 3,
+                                                          row_head,
+                                                          col_head_sub_24 + 3,
+                                                          -1 * (acc_ch_lines[
                                                               'total']),
-                                                      sub_line_style)
-                                    sheet.merge_range(row_head, col_head_24 + 6,
-                                                      row_head,
-                                                      col_head_sub_24 + 6,
-                                                      abs(acc_ch_lines[
-                                                              'planned']),
-                                                      sub_line_style)
-                                elif acc_ch_lines['abs_of'] is False:
-                                    sheet.merge_range(row_head, col_head_24 + 3,
-                                                      row_head,
-                                                      col_head_sub_24 + 3,
-                                                      -abs(acc_ch_lines[
-                                                               'total']),
-                                                      sub_line_style)
-                                    sheet.merge_range(row_head, col_head_24 + 6,
-                                                      row_head,
-                                                      col_head_sub_24 + 6,
-                                                      -abs(acc_ch_lines[
-                                                               'planned']),
-                                                      sub_line_style)
-                                elif acc_ch_lines['abs_of'] == 'CU':
-                                    sheet.merge_range(row_head, col_head_24 + 3,
-                                                      row_head,
-                                                      col_head_sub_24 + 3,
-                                                      -1 * (acc_ch_lines[
-                                                          'total']),
-                                                      sub_line_style)
-                                    sheet.merge_range(row_head, col_head_24 + 6,
-                                                      row_head,
-                                                      col_head_sub_24 + 6,
-                                                      -1 * (
+                                                          sub_line_style)
+                                        sheet.merge_range(row_head,
+                                                          col_head_24 + 6,
+                                                          row_head,
+                                                          col_head_sub_24 + 6,
+                                                          -1 * (
+                                                              acc_ch_lines[
+                                                                  'planned']),
+                                                          sub_line_style)
+                                    else:
+                                        sheet.merge_range(row_head,
+                                                          col_head_24 + 3,
+                                                          row_head,
+                                                          col_head_sub_24 + 3,
+                                                          acc_ch_lines['total'],
+                                                          sub_line_style)
+                                        sheet.merge_range(row_head,
+                                                          col_head_24 + 6,
+                                                          row_head,
+                                                          col_head_sub_24 + 6,
                                                           acc_ch_lines[
-                                                              'planned']),
-                                                      sub_line_style)
-                                else:
-                                    sheet.merge_range(row_head, col_head_24 + 3,
+                                                              'planned'],
+                                                          sub_line_style)
+                                    sheet.merge_range(row_head, col_head_24 + 9,
                                                       row_head,
-                                                      col_head_sub_24 + 3,
+                                                      col_head_sub_24 + 9,
+                                                      acc_ch_lines['planned'] -
                                                       acc_ch_lines['total'],
                                                       sub_line_style)
-                                    sheet.merge_range(row_head, col_head_24 + 6,
-                                                      row_head,
-                                                      col_head_sub_24 + 6,
-                                                      acc_ch_lines['planned'],
-                                                      sub_line_style)
-                                sheet.merge_range(row_head, col_head_24 + 9,
+                if line['account_lines']:
+                    col_head_24 = 1
+                    col_head_sub_24 = 3
+                    for acc_line in line['account_lines']:
+                        if acc_line['dict_id'] == line['id']:
+                            row_head += 1
+                            sheet.merge_range(row_head, col_head_24, row_head,
+                                              col_head_sub_24,
+                                              acc_line['code'] + ' ' +
+                                              acc_line['name'],
+                                              sub_line_style1 if acc_line[
+                                                                     'group'] is True else sub_line_style2)
+                            if acc_line['abs_of'] is True:
+                                sheet.merge_range(row_head, col_head_24 + 3,
                                                   row_head,
-                                                  col_head_sub_24 + 9,
-                                                  acc_ch_lines['planned'] -
-                                                  acc_ch_lines['total'],
+                                                  col_head_sub_24 + 3,
+                                                  abs(acc_line['total']),
                                                   sub_line_style)
-            if line['account_lines']:
-                col_head_24 = 1
-                col_head_sub_24 = 3
-                for acc_line in line['account_lines']:
-                    if acc_line['dict_id'] == line['id']:
-                        row_head += 1
-                        sheet.merge_range(row_head, col_head_24, row_head,
-                                          col_head_sub_24,
-                                          acc_line['code'] + ' ' +
-                                          acc_line['name'],
-                                          sub_line_style1 if acc_line[
-                                                                 'group'] is True else sub_line_style2)
-                        if acc_line['abs_of'] is True:
-                            sheet.merge_range(row_head, col_head_24 + 3,
+                                sheet.merge_range(row_head, col_head_24 + 6,
+                                                  row_head,
+                                                  col_head_sub_24 + 6,
+                                                  abs(acc_line['planned']),
+                                                  sub_line_style)
+                            elif acc_line['abs_of'] is False:
+                                sheet.merge_range(row_head, col_head_24 + 3,
+                                                  row_head,
+                                                  col_head_sub_24 + 3,
+                                                  -abs(acc_line['total']),
+                                                  sub_line_style)
+                                sheet.merge_range(row_head, col_head_24 + 6,
+                                                  row_head,
+                                                  col_head_sub_24 + 6,
+                                                  -abs(acc_line['planned']),
+                                                  sub_line_style)
+                            elif acc_line['abs_of'] == 'CU':
+                                sheet.merge_range(row_head, col_head_24 + 3,
+                                                  row_head,
+                                                  col_head_sub_24 + 3,
+                                                  -1 * (acc_line['total']),
+                                                  sub_line_style)
+                                sheet.merge_range(row_head, col_head_24 + 6,
+                                                  row_head,
+                                                  col_head_sub_24 + 6,
+                                                  -1 * (acc_line['planned']),
+                                                  sub_line_style)
+                            else:
+                                sheet.merge_range(row_head, col_head_24 + 3,
+                                                  row_head,
+                                                  col_head_sub_24 + 3,
+                                                  acc_line['total'],
+                                                  sub_line_style)
+                                sheet.merge_range(row_head, col_head_24 + 6,
+                                                  row_head,
+                                                  col_head_sub_24 + 6,
+                                                  acc_line['planned'],
+                                                  sub_line_style)
+                            sheet.merge_range(row_head, col_head_24 + 9,
                                               row_head,
-                                              col_head_sub_24 + 3,
-                                              abs(acc_line['total']),
+                                              col_head_sub_24 + 9,
+                                              acc_line['planned']
+                                              - acc_line['total'],
                                               sub_line_style)
-                            sheet.merge_range(row_head, col_head_24 + 6,
-                                              row_head,
-                                              col_head_sub_24 + 6,
-                                              abs(acc_line['planned']),
-                                              sub_line_style)
-                        elif acc_line['abs_of'] is False:
-                            sheet.merge_range(row_head, col_head_24 + 3,
-                                              row_head,
-                                              col_head_sub_24 + 3,
-                                              -abs(acc_line['total']),
-                                              sub_line_style)
-                            sheet.merge_range(row_head, col_head_24 + 6,
-                                              row_head,
-                                              col_head_sub_24 + 6,
-                                              -abs(acc_line['planned']),
-                                              sub_line_style)
-                        elif acc_line['abs_of'] == 'CU':
-                            sheet.merge_range(row_head, col_head_24 + 3,
-                                              row_head,
-                                              col_head_sub_24 + 3,
-                                              -1 * (acc_line['total']),
-                                              sub_line_style)
-                            sheet.merge_range(row_head, col_head_24 + 6,
-                                              row_head,
-                                              col_head_sub_24 + 6,
-                                              -1 * (acc_line['planned']),
-                                              sub_line_style)
-                        else:
-                            sheet.merge_range(row_head, col_head_24 + 3,
-                                              row_head,
-                                              col_head_sub_24 + 3,
-                                              acc_line['total'],
-                                              sub_line_style)
-                            sheet.merge_range(row_head, col_head_24 + 6,
-                                              row_head,
-                                              col_head_sub_24 + 6,
-                                              acc_line['planned'],
-                                              sub_line_style)
-                        sheet.merge_range(row_head, col_head_24 + 9,
-                                          row_head,
-                                          col_head_sub_24 + 9,
-                                          acc_line['planned']
-                                          - acc_line['total'],
-                                          sub_line_style)
-            row_head += 1
+                row_head += 1
 
         workbook.close()
         output.seek(0)
