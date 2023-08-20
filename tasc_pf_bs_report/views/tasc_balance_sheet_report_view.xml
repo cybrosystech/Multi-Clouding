@@ -7,9 +7,8 @@
         <field name="context" eval="{'model': 'tasc.balance.sheet.report'}"/>
     </record>
 
-
     <menuitem id="menu_action_tasc_balance_sheet" name="TASC Balance Sheet"
-                  action="action_tasc_balance_sheet"
-                  parent="cash_flow_statement_report.tasc_dynamic_reports"/>
+              action="action_tasc_balance_sheet"
+              parent="cash_flow_statement_report.tasc_dynamic_reports"/>
 
 </odoo>

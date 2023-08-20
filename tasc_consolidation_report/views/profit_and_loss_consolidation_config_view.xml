@@ -24,6 +24,10 @@
                                        widget="many2many_tags" attrs="{'invisible': [('line_type', '==', 'total_config')]}"/>
                                 <field name="profit_loss_config_id"
                                        invisible="1"/>
+<!--                                <field name="is_abs" string="Show absolute"/>-->
+<!--                                <field name="is_show_negative"/>-->
+                                <field name="multiply_factor" />
+                                <field name="not_show_on_report"/>
                             </tree>
                         </field>
                     </group>
