@@ -164,3 +164,4 @@ class AccountMoveReferenceInherit(models.Model):
             if rec.state != 'draft':
                 raise ValidationError('Cannot cancel the posted entries')
             rec.button_cancel()
+
