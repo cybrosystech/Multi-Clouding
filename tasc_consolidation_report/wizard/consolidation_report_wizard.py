@@ -77,7 +77,6 @@ class ConsolidationReportWizard(models.Model):
 
     def _total_config_lines_generate(self, consolidation_conf, period,
                                      total_list, main_list):
-        print('test', total_list)
         test_ab = []
         for journals in period.mapped('journal_ids').ids:
             total = 0
@@ -115,7 +114,6 @@ class ConsolidationReportWizard(models.Model):
         main_list = []
         for parent_group in self.consolidation_config_id.profit_loss_related_ids:
             test = []
-            # group_name.append(parent_group.consolidation_parent_group_id.name)
             if parent_group.line_type == 'main_lines':
                 group_name.append(
                     {'name': parent_group.consolidation_parent_group_id.name,
@@ -123,13 +121,17 @@ class ConsolidationReportWizard(models.Model):
                                 'font_color': 'black',
                                 'bold': True,
                                 },
-                     'formatting': 2})
+                     'formatting': 2,
+                     'multiply_factor': parent_group.multiply_factor,
+                     'not_show_on_report': parent_group.not_show_on_report, })
                 for child in parent_group.consolidation_child_group_ids:
-                    # group_name.append(child.name)
                     group_name.append({'name': child.name,
                                        'format': {'valign': 'vcenter',
                                                   'font_color': 'black'},
-                                       'formatting': 1})
+                                       'formatting': 1,
+                                       'multiply_factor': parent_group.multiply_factor,
+                                       'not_show_on_report': parent_group.not_show_on_report,
+                                       })
                     sql_accounts = '''select account.id from consolidation_group as group1
                                               inner join consolidation_account as account on group1.id = account.group_id
                                               where group1.id = %(name)s'''
@@ -153,20 +155,25 @@ class ConsolidationReportWizard(models.Model):
                     'format': {'valign': 'vcenter',
                                'font_color': 'black',
                                'bold': True},
-                    'formatting': 1})
+                    'formatting': 1,
+                    'multiply_factor': parent_group.multiply_factor,
+                    'not_show_on_report': parent_group.not_show_on_report,
+                })
             else:
                 group_name.append({
                     'name': parent_group.config_name,
                     'format': {'valign': 'vcenter',
                                'font_color': 'black',
                                'bold': True},
-                    'formatting': 2})
+                    'formatting': 2,
+                    'multiply_factor': parent_group.multiply_factor,
+                    'not_show_on_report': parent_group.not_show_on_report,
+                })
                 total_config = self._total_config_lines_generate(parent_group,
                                                                  self.consolidation_period_id,
                                                                  total_list,
                                                                  main_list)
                 demo_list.append(total_config)
-        # print('demo_list', demo_list)
 
         data = {
             'ids': self.ids,
@@ -215,10 +222,13 @@ class ConsolidationReportWizard(models.Model):
         for head in data['group_name']:
             total_comp = 0
             col = 0
-            row += head['formatting']
-            head_format = workbook.add_format(head['format'])
-            sheet.set_column(row, col, 20)
-            sheet.write(row, col, head['name'], head_format)
+            if not head['not_show_on_report']:
+                row += head['formatting']
+                head_format = workbook.add_format(head['format'])
+                sheet.set_column(row, col, 20)
+                sheet.write(row, col, head['name'], head_format)
+            else:
+                pass
             for demo in data['demo_list']:
                 list_data = list(
                     filter(lambda x: x['name'] == head['name'], demo))
@@ -228,14 +238,34 @@ class ConsolidationReportWizard(models.Model):
                             filter(lambda x: x['id'] == rec['journal_id'],
                                    journal_ids))
                         dynamic_format = workbook.add_format(rec['format'])
-                        sheet.write(row, filter_demo[0]['col'], rec['case'],
-                                    dynamic_format)
+                        if not head['not_show_on_report']:
+                            if head['multiply_factor'] != 0:
+                                sheet.write(row, filter_demo[0]['col'],
+                                            head['multiply_factor'] * rec[
+                                                'case'],
+                                            dynamic_format)
+                            else:
+                                sheet.write(row, filter_demo[0]['col'],
+                                            rec['case'],
+                                            dynamic_format)
+                        else:
+                            pass
             final_comp_list = list(
                 filter(lambda x: x['name'] == head['name'], data['main_list']))
             if final_comp_list:
                 for cmp_list in final_comp_list:
                     total_comp += cmp_list['case']
-                sheet.write(row, len(journal_ids) + 1, total_comp, sub_heading)
+                if not head['not_show_on_report']:
+                    if head['multiply_factor'] != 0:
+                        sheet.write(row, len(journal_ids) + 1,
+                                    head['multiply_factor'] * total_comp,
+                                    sub_heading)
+
+                    else:
+                        sheet.write(row, len(journal_ids) + 1, total_comp,
+                                    sub_heading)
+                else:
+                    pass
 
         workbook.close()
         output.seek(0)

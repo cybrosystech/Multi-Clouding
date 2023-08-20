@@ -31,7 +31,13 @@ class ProfitLossConsolidationRelation(models.Model):
                                             domain=[('parent_id', '=',
                                                      False)])
     config_name = fields.Char()
-    sequence = fields.Integer(string='Sequence', required=True,)
+    sequence = fields.Integer(string='Sequence', required=True, )
+    # is_abs = fields.Boolean(string="Show Absolute")
+    # is_show_negative = fields.Boolean(string="Show as negative")
+    multiply_factor = fields.Integer(string="Multiply Factor")
+    not_show_on_report = fields.Boolean(string="Not Show on report",
+                                        help="If enabled this lines "
+                                             "will not show on the report")
 
     @api.onchange('consolidation_parent_group_id')
     def onchange_parent_group_consolidation(self):
