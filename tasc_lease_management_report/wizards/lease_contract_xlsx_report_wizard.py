@@ -139,8 +139,10 @@ class LeaseContractXlsxWizard(models.TransientModel):
             years=5)
         if lease_contracts:
             # Less than 1 year
+
             self._cr.execute(
-                'select sum(journal.amount_total) total, leasee.name as lease_name,'
+                'select sum(journal.amount_total) total, leasee.id as lease_id,'
+                'leasee.name as lease_name,'
                 'leasee.external_reference_number,currency.name as currency_name,'
                 'project_site.name from leasee_contract as leasee inner'
                 ' join account_move  as journal on '
@@ -152,7 +154,7 @@ class LeaseContractXlsxWizard(models.TransientModel):
                 'leasee.id in %(contract)s and '
                 'journal.invoice_date_due <= %(end_date)s and ' \
                 'journal.invoice_date_due >=  %(start_date)s group by ' \
-                'lease_name,leasee.external_reference_number,' \
+                'lease_id,leasee.external_reference_number,' \
                 'currency_name,project_site.name ',
                 {'contract': tuple(lease_contracts.ids),
                  'end_date': next_year_date,
@@ -164,7 +166,8 @@ class LeaseContractXlsxWizard(models.TransientModel):
 
             # 1.01 -  2years
             self._cr.execute(
-                'select sum(journal.amount_total) total, leasee.name as lease_name,'
+                'select sum(journal.amount_total) total, leasee.id as lease_id,'
+                'leasee.name as lease_name,'
                 'leasee.external_reference_number,currency.name as currency_name,'
                 'project_site.name from leasee_contract as leasee inner'
                 ' join account_move  as journal on '
@@ -176,7 +179,7 @@ class LeaseContractXlsxWizard(models.TransientModel):
                 'leasee.id in %(contract)s and '
                 'journal.invoice_date_due <= %(end_date)s and ' \
                 'journal.invoice_date_due >=  %(start_date)s group by ' \
-                'lease_name,leasee.external_reference_number,' \
+                'lease_id,leasee.external_reference_number,' \
                 'currency_name,project_site.name ',
                 {'contract': tuple(lease_contracts.ids),
                  'end_date': next_2year_end_date,
@@ -188,7 +191,8 @@ class LeaseContractXlsxWizard(models.TransientModel):
 
             # 2.01 - 5 years
             self._cr.execute(
-                'select sum(journal.amount_total) total, leasee.name as lease_name,'
+                'select sum(journal.amount_total) total, leasee.id as lease_id,'
+                'leasee.name as lease_name,'
                 'leasee.external_reference_number,currency.name as currency_name,'
                 'project_site.name from leasee_contract as leasee inner'
                 ' join account_move  as journal on '
@@ -200,7 +204,7 @@ class LeaseContractXlsxWizard(models.TransientModel):
                 'leasee.id in %(contract)s and '
                 'journal.invoice_date_due <= %(end_date)s and ' \
                 'journal.invoice_date_due >=  %(start_date)s group by ' \
-                'lease_name,leasee.external_reference_number,' \
+                'lease_id,leasee.external_reference_number,' \
                 'currency_name,project_site.name ',
                 {
                     'contract': tuple(lease_contracts.ids),
@@ -213,7 +217,8 @@ class LeaseContractXlsxWizard(models.TransientModel):
 
             # More than 5 years
             self._cr.execute(
-                'select sum(journal.amount_total) total, leasee.name as lease_name,'
+                'select sum(journal.amount_total) total, leasee.id as lease_id,'
+                'leasee.name as lease_name,'
                 'leasee.external_reference_number,currency.name as currency_name,'
                 'project_site.name from leasee_contract as leasee inner'
                 ' join account_move  as journal on '
@@ -224,7 +229,7 @@ class LeaseContractXlsxWizard(models.TransientModel):
                 'project_site.id=leasee.project_site_id where '
                 'leasee.id in %(contract)s and '
                 'journal.invoice_date_due >=  %(start_date)s group by ' \
-                'lease_name,leasee.external_reference_number,' \
+                'lease_id,leasee.external_reference_number,' \
                 'currency_name,project_site.name ',
                 {
                     'contract': tuple(lease_contracts.ids),

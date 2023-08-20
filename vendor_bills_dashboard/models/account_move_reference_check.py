@@ -127,28 +127,20 @@ class AccountMoveReferenceInherit(models.Model):
                 WHERE move.id IN %s
             ''', [tuple(moves.ids)])
         duplicated_moves = self.browse([r[0] for r in self._cr.fetchall()])
-        # if duplicated_moves:
-        #     raise ValidationError(
-        #         _('Duplicated vendor reference detected. You probably encoded twice the same vendor bill/credit note:\n%s') % "\n".join(
-        #             duplicated_moves.mapped(
-        #                 lambda m: "%(partner)s - %(ref)s - %(date)s" % {
-        #                     'ref': m.ref,
-        #                     'partner': m.partner_id.display_name,
-        #                     'date': format_date(self.env, m.invoice_date),
-        #                 })
-        #         ))
 
     def request_approval_button(self):
         """inherit of the function from account. Move to check the validation of
         payment reference"""
         res = super(AccountMoveReferenceInherit, self).request_approval_button()
         journal = self.env['account.journal'].search([('name', '=',
-                                                       'Vendor Bills')])
+                                                       'Vendor Bills')],
+                                                     limit=1)
         for rec in journal:
             if self.journal_id.id == rec.id:
                 if not self.payment_reference:
                     raise ValidationError(
-                        'please provide a Invoice no / payment reference for Vendor Bill')
+                        'please provide a Invoice no / payment reference for '
+                        'Vendor Bill')
             return res
 
     def action_post(self):
@@ -156,12 +148,14 @@ class AccountMoveReferenceInherit(models.Model):
         payment reference"""
         res = super(AccountMoveReferenceInherit, self).action_post()
         journal = self.env['account.journal'].search([('name', '=',
-                                                       'Vendor Bills')])
+                                                       'Vendor Bills')],
+                                                     limit=1)
         for rec in journal:
             if self.journal_id.id == rec.id:
                 if not self.payment_reference:
                     raise ValidationError(
-                        'please provide a Invoice no / payment reference for Vendor Bill')
+                        'please provide a Invoice no / payment reference for'
+                        ' Vendor Bill')
         return res
 
     def action_cancel_draft_entries(self):
