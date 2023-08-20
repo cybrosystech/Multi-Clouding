@@ -32,15 +32,20 @@ class AccountJournalInherit(models.Model):
         (journal_to_approve,
          journal_sum_to_approve) = self._count_results_and_sum_amounts(
             journal_query_results_to_approve, currency, curr_cache=curr_cache)
+
         if self.name.lower().find('ifrs') == 0:
             (query, query_args) = self.get_lease_contract_draft()
             self.env.cr.execute(query, query_args)
             query_results_lease_draft = self.env.cr.dictfetchall()
-            (lease_drafts, lease_drafts_amount) = self._count_results_and_sum_amounts(query_results_lease_draft, currency,curr_cache=curr_cache)
+            (lease_drafts,
+             lease_drafts_amount) = self._count_results_and_sum_amounts(
+                query_results_lease_draft, currency, curr_cache=curr_cache)
             (query, query_args) = self.get_lease_contract_active()
             self.env.cr.execute(query, query_args)
             query_results_lease_active = self.env.cr.dictfetchall()
-            (lease_active, lease_active_amount) = self._count_results_and_sum_amounts(query_results_lease_active, currency,curr_cache=curr_cache)
+            (lease_active,
+             lease_active_amount) = self._count_results_and_sum_amounts(
+                query_results_lease_active, currency, curr_cache=curr_cache)
             (query, query_args) = self.get_lease_contract_extended()
             self.env.cr.execute(query, query_args)
             query_results_lease_extended = self.env.cr.dictfetchall()
@@ -123,51 +128,53 @@ class AccountJournalInherit(models.Model):
 
     def get_lease_contract_draft(self):
         """Lease entries in IFRS jornal """
-        return ('''select lease.original_rou as amount_total,
-                    lease.leasee_currency_id as currency,
-                    lease.company_id
-                from leasee_contract lease
-                WHERE lease.state = 'draft' 
-                and lease.company_id = %(company)s''', {'company': self.env.company.id})
+        return ('''select (CASE WHEN lease.original_rou!=0 THEN lease.original_rou ELSE 0 END) as amount_total,
+                           lease.leasee_currency_id as currency,
+                           lease.company_id
+                       from leasee_contract lease
+                       WHERE lease.state = 'draft' 
+                       and lease.company_id = %(company)s''',
+                {'company': self.env.company.id})
 
     def get_lease_contract_active(self):
         """Lease entries in IFRS jornal on active state"""
-        return ('''select lease.original_rou as amount_total,
-                            lease.leasee_currency_id as currency,
-                            lease.company_id
-                        from leasee_contract lease
-                        WHERE lease.state = 'active' 
-                        and lease.company_id = %(company)s''',
+        return ('''select (CASE WHEN lease.original_rou!=0 THEN lease.original_rou ELSE 0 END) as amount_total,
+                                    lease.leasee_currency_id as currency,
+                                    lease.company_id
+                                from leasee_contract lease
+                                WHERE lease.state = 'active' 
+                                and lease.company_id = %(company)s''',
                 {'company': self.env.company.id})
 
     def get_lease_contract_extended(self):
         """Lease entries in IFRS jornal on extended state"""
-        return ('''select lease.original_rou as amount_total,
-                                    lease.leasee_currency_id as currency,
-                                    lease.company_id
-                                from leasee_contract lease
-                                WHERE lease.state = 'extended' 
-                                and lease.company_id = %(company)s''',
+
+        return ('''select (CASE WHEN lease.original_rou!=0 THEN lease.original_rou ELSE 0 END) as amount_total,
+                                            lease.leasee_currency_id as currency,
+                                            lease.company_id
+                                        from leasee_contract lease
+                                        WHERE lease.state = 'extended' 
+                                        and lease.company_id = %(company)s''',
                 {'company': self.env.company.id})
 
     def get_lease_contract_expired(self):
         """Lease entries in IFRS jornal on expired state"""
-        return ('''select lease.original_rou as amount_total,
-                                            lease.leasee_currency_id as currency,
-                                            lease.company_id
-                                        from leasee_contract lease
-                                        WHERE lease.state = 'expired' 
-                                        and lease.company_id = %(company)s''',
+        return ('''select (CASE WHEN lease.original_rou!=0 THEN lease.original_rou ELSE 0 END) as amount_total,
+                                                    lease.leasee_currency_id as currency,
+                                                    lease.company_id
+                                                from leasee_contract lease
+                                                WHERE lease.state = 'expired' 
+                                                and lease.company_id = %(company)s''',
                 {'company': self.env.company.id})
 
     def get_lease_contract_terminated(self):
         """Lease entries in IFRS jornal on terminated state"""
-        return ('''select lease.original_rou as amount_total,
-                                                    lease.leasee_currency_id as currency,
-                                                    lease.company_id
-                                                from leasee_contract lease
-                                                WHERE lease.state = 'terminated' 
-                                                and lease.company_id = %(company)s''',
+        return ('''select (CASE WHEN lease.original_rou!=0 THEN lease.original_rou ELSE 0 END) as amount_total,
+                                                            lease.leasee_currency_id as currency,
+                                                            lease.company_id
+                                                        from leasee_contract lease
+                                                        WHERE lease.state = 'terminated' 
+                                                        and lease.company_id = %(company)s''',
                 {'company': self.env.company.id})
 
     def open_leasee_contract(self):
