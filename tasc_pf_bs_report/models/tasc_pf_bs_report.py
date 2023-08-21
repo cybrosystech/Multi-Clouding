@@ -1165,7 +1165,7 @@ class ProfitLossBalance(models.AbstractModel):
                                 sheet.merge_range(row_head, col_head_11,
                                                   row_head,
                                                   col_head_22,
-                                                  column['name'], line_style)
+                                                  column['name'], sub_line_style2)
                                 col_head_11 += 3
                                 col_head_22 += 3
                             if child['account_lines']:
@@ -1178,9 +1178,7 @@ class ProfitLossBalance(models.AbstractModel):
                                                           row_head,
                                                           col_head_sub_24,
                                                           acc_ch_lines['name'],
-                                                          sub_line_style1 if
-                                                          acc_ch_lines[
-                                                              'group'] is True else sub_line_style2)
+                                                          sub_line_style2)
                                         if acc_ch_lines['abs_of'] is True:
                                             sheet.merge_range(row_head,
                                                               col_head_24 + 3,
@@ -1188,7 +1186,7 @@ class ProfitLossBalance(models.AbstractModel):
                                                               col_head_sub_24 + 3,
                                                               abs(acc_ch_lines[
                                                                       'total']),
-                                                              sub_line_style)
+                                                              sub_line_style2)
                                         elif acc_ch_lines['abs_of'] is False:
                                             sheet.merge_range(row_head,
                                                               col_head_24 + 3,
@@ -1196,25 +1194,25 @@ class ProfitLossBalance(models.AbstractModel):
                                                               col_head_sub_24 + 3,
                                                               abs(acc_ch_lines[
                                                                       'total']),
-                                                              sub_line_style)
+                                                              sub_line_style2)
                                         else:
                                             sheet.merge_range(row_head,
                                                               col_head_24 + 3,
                                                               row_head,
                                                               col_head_sub_24 + 3,
                                                               acc_ch_lines['total'],
-                                                              sub_line_style)
+                                                              sub_line_style2)
                                         sheet.merge_range(row_head, col_head_24 + 6,
                                                           row_head,
                                                           col_head_sub_24 + 6,
                                                           acc_ch_lines['planned'],
-                                                          sub_line_style)
+                                                          sub_line_style2)
                                         sheet.merge_range(row_head, col_head_24 + 9,
                                                           row_head,
                                                           col_head_sub_24 + 9,
                                                           acc_ch_lines['planned'] -
                                                           acc_ch_lines['total'],
-                                                          sub_line_style)
+                                                          sub_line_style2)
                     if line['account_lines']:
                         col_head_24 = 1
                         col_head_sub_24 = 3
@@ -1224,37 +1222,36 @@ class ProfitLossBalance(models.AbstractModel):
                                 sheet.merge_range(row_head, col_head_24, row_head,
                                                   col_head_sub_24,
                                                   acc_line['name'],
-                                                  sub_line_style1 if acc_line[
-                                                                         'group'] is True else sub_line_style2)
+                                                  sub_line_style2)
                                 if acc_line['abs_of'] is True:
                                     sheet.merge_range(row_head, col_head_24 + 3,
                                                       row_head,
                                                       col_head_sub_24 + 3,
                                                       abs(acc_line['total']),
-                                                      sub_line_style)
+                                                      sub_line_style2)
                                 elif acc_line['abs_of'] is False:
                                     sheet.merge_range(row_head, col_head_24 + 3,
                                                       row_head,
                                                       col_head_sub_24 + 3,
                                                       -abs(acc_line['total']),
-                                                      sub_line_style)
+                                                      sub_line_style2)
                                 else:
                                     sheet.merge_range(row_head, col_head_24 + 3,
                                                       row_head,
                                                       col_head_sub_24 + 3,
                                                       acc_line['total'],
-                                                      sub_line_style)
+                                                      sub_line_style2)
                                 sheet.merge_range(row_head, col_head_24 + 6,
                                                   row_head,
                                                   col_head_sub_24 + 6,
                                                   acc_line['planned'],
-                                                  sub_line_style)
+                                                  sub_line_style2)
                                 sheet.merge_range(row_head, col_head_24 + 9,
                                                   row_head,
                                                   col_head_sub_24 + 9,
                                                   acc_line['planned'] -
                                                   acc_line['total'],
-                                                  sub_line_style)
+                                                  sub_line_style2)
                     row_head += 1
 
         else:
