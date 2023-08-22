@@ -932,9 +932,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                                                                   'code'] + ' ' +
                                                               acc_ch_lines[
                                                                   'name'],
-                                                              sub_line_style1 if
-                                                              acc_ch_lines[
-                                                                  'group'] is True else sub_line_style2)
+                                                               sub_line_style2)
                                             if acc_ch_lines['abs_of'] is True:
                                                 sheet.merge_range(row_head,
                                                                   col_head_24 + 3,
@@ -1023,9 +1021,7 @@ class TascBalanceSheetReport(models.AbstractModel):
                                                       col_head_sub_24,
                                                       acc_line['code'] + ' ' +
                                                       acc_line['name'],
-                                                      sub_line_style1 if
-                                                      acc_line[
-                                                          'group'] is True else sub_line_style2)
+                                                      sub_line_style2)
                                     if acc_line['abs_of'] is True:
                                         sheet.merge_range(row_head,
                                                           col_head_24 + 3,
