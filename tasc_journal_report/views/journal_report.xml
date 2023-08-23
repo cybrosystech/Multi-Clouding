@@ -13,7 +13,7 @@
                             </div>
                             <div class="col-6">
                                 <h6><strong>Journal :</strong> <t t-esc="o.journal_id.name"/></h6>
-                                <h6><strong>Currency :</strong> <t t-esc="o.company_id.currency_id.name"/></h6>
+                                <h6><strong>Currency :</strong> <t t-esc="o.currency_id.name"/></h6>
                                 <t t-if="o.partner_id">
                                     <h6><strong>Vendor :</strong> <t t-esc="o.partner_id.name"/></h6>
                                 </t>
