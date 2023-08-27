@@ -6,12 +6,14 @@ import re
 from operator import itemgetter
 import xlsxwriter
 from odoo import models, fields, _, api
+from itertools import zip_longest
 from odoo.tools.safe_eval import dateutil
 
 
 class LeaseManagementReport(models.Model):
     _name = "leasee.management.report"
 
+    name = fields.Char(default="Lease Reports")
     lease_contract_ids = fields.Many2many('leasee.contract',
                                           string="Lease Contract")
     payment_aging_as_of_date = fields.Date(string="Date To",
@@ -51,6 +53,21 @@ class LeaseManagementReport(models.Model):
     report_values_ll_aging = fields.Text(string="Report Values LL Aging")
     report_values_ll_rou = fields.Text(string="Report Values - LL and ROU ")
     company_id = fields.Many2one('res.company', string="Company")
+    end_limit = fields.Integer(string="End Limit", compute='compute_end_limit')
+
+    # @api.depends('lease_contract_ids')
+    def compute_end_limit(self):
+        for rec in self:
+            if rec.lease_contract_ids:
+                length = self.env['leasee.contract'].search_count(
+                    [('id', 'in',
+                      rec.lease_contract_ids.ids),
+                     ('parent_id', '=', False)
+                     ])
+            else:
+                length = self.env['leasee.contract'].search_count(
+                    [('parent_id', '=', False)])
+            rec.end_limit = length
 
     def action_schedule_ll_rou_report(self):
         date = fields.Datetime.now()
@@ -90,8 +107,7 @@ class LeaseManagementReport(models.Model):
 
     def action_schedule_lease_report(self):
         date = fields.Datetime.now()
-        schedule_action = self.env.ref(
-            'tasc_lease_management_report.action_lease_reports')
+        schedule_action = self.env.ref('tasc_lease_management_report.action_lease_reports')
         schedule_action.update({
             'nextcall': date + datetime.timedelta(seconds=1)
         })
@@ -177,7 +193,10 @@ class LeaseManagementReport(models.Model):
         STYLE_LINE_Data.num_format_str = '#,##0.00_);(#,##0.00)'
 
         if final_list:
-            self.add_payment_aging_xlsx_sheet(final_list, workbook,
+            report_values_list = list(
+                filter(lambda x: x['company_id'] == self.company_id.id,
+                       final_list))
+            self.add_payment_aging_xlsx_sheet(report_values_list, workbook,
                                               STYLE_LINE_Data,
                                               header_format, STYLE_LINE_HEADER)
 
@@ -271,7 +290,10 @@ class LeaseManagementReport(models.Model):
         STYLE_LINE_Data.num_format_str = '#,##0.00_);(#,##0.00)'
 
         if final_list:
-            self.add_xlsx_sheet(final_list, workbook, STYLE_LINE_Data,
+            report_values_list = list(
+                filter(lambda x: x['company_id'] == self.company_id.id and (x['amortization'] !=0 or x['interest']!=0),
+                       final_list))
+            self.add_xlsx_sheet(report_values_list, workbook, STYLE_LINE_Data,
                                 header_format, STYLE_LINE_HEADER)
 
         self.excel_sheet_name = 'Lease interest and amortization report'
@@ -364,7 +386,10 @@ class LeaseManagementReport(models.Model):
         STYLE_LINE_Data.num_format_str = '#,##0.00_);(#,##0.00)'
 
         if final_list:
-            self.add_ll_aging_xlsx_sheet(final_list, workbook, STYLE_LINE_Data,
+            report_values_list = list(
+                filter(lambda x: x['company_id'] == self.company_id.id,
+                       final_list))
+            self.add_ll_aging_xlsx_sheet(report_values_list, workbook, STYLE_LINE_Data,
                                          header_format, STYLE_LINE_HEADER)
 
         self.excel_sheet_name = 'LL Aging report'
@@ -457,7 +482,9 @@ class LeaseManagementReport(models.Model):
         STYLE_LINE_Data.num_format_str = '#,##0.00_);(#,##0.00)'
 
         if final_list:
-            self.add_ll_rou_xlsx_sheet(final_list, workbook, STYLE_LINE_Data,
+            report_values_list = list(
+                filter(lambda x: x['company_id'] == self.company_id.id, final_list))
+            self.add_ll_rou_xlsx_sheet(report_values_list, workbook, STYLE_LINE_Data,
                                        header_format, STYLE_LINE_HEADER)
 
         self.excel_sheet_name = 'LL ROU report'
@@ -476,28 +503,34 @@ class LeaseManagementReport(models.Model):
     def lease_reports_cron(self, end_limit):
         lease_management_report = self.env['leasee.management.report'].search(
             [], limit=1)
+
         limit = lease_management_report.interest_amort_limit
         if lease_management_report.lease_contract_ids:
             lease_contract_ids = self.env['leasee.contract'].search(
                 [('id', 'in', lease_management_report.lease_contract_ids.ids),
-                 ('parent_id', '=', False)
-                 ])
+                 ('parent_id', '=', False),
+                 ], order='id ASC',
+                offset=lease_management_report.interest_amort_limit,
+                limit=end_limit)
         else:
             lease_contract_ids = self.env['leasee.contract'].search(
-                [('company_id', '=', self.env.company.id),
-                 ('parent_id', '=', False)],
+                [('parent_id', '=', False)],
                 order='id ASC',
                 offset=lease_management_report.interest_amort_limit,
                 limit=end_limit)
-
         # compute interest and amortization report values
         amortization_datas = self.get_interest_amortization_datas(
             lease_contract_ids, lease_management_report.interest_amort_state,
             lease_management_report.interest_amort_start_date,
             lease_management_report.interest_amort_end_date)
         lease_management_report.report_values_interest_and_amortization += " " + amortization_datas
-        limit += end_limit
-        lease_management_report.interest_amort_limit = limit
+
+        if lease_management_report.interest_amort_limit < lease_management_report.end_limit:
+            limit += end_limit
+            lease_management_report.interest_amort_limit = limit
+            self.lease_reports_cron(end_limit)
+        else:
+            lease_management_report.interest_amort_limit = lease_management_report.end_limit
 
     def action_ll_rou_reports_cron(self, end_limit):
         lease_management_report = self.env['leasee.management.report'].search(
@@ -511,25 +544,27 @@ class LeaseManagementReport(models.Model):
                  ])
         else:
             lease_contract_ids = self.env['leasee.contract'].search(
-                [('company_id', '=', self.env.company.id),
-                 ('parent_id', '=', False)],
+                [('parent_id', '=', False)],
                 order='id ASC',
                 offset=lease_management_report.ll_rou_limit,
                 limit=end_limit)
-
         # compute ll and rou report
         ll_rou_datas = self.get_ll_rou_datas(
             lease_contract_ids, lease_management_report.ll_rou_state,
             lease_management_report.ll_rou_as_of_date)
         lease_management_report.report_values_ll_rou += ll_rou_datas
-        ll_rou_limit += end_limit
-        lease_management_report.ll_rou_limit = ll_rou_limit
+        if lease_management_report.ll_rou_limit < lease_management_report.end_limit:
+            ll_rou_limit += end_limit
+            lease_management_report.ll_rou_limit = ll_rou_limit
+            self.action_ll_rou_reports_cron(end_limit)
+        else:
+            lease_management_report.ll_rou_limit = lease_management_report.end_limit
 
     def action_payment_aging_reports_cron(self, end_limit):
         lease_management_report = self.env['leasee.management.report'].search(
             [], limit=1)
 
-        payment_aging_limit = lease_management_report.payment_aging_limit
+        # payment_aging_limit = lease_management_report.payment_aging_limit
         if lease_management_report.lease_contract_ids:
             lease_contract_ids = self.env['leasee.contract'].search(
                 [('id', 'in', lease_management_report.lease_contract_ids.ids),
@@ -537,8 +572,7 @@ class LeaseManagementReport(models.Model):
                  ])
         else:
             lease_contract_ids = self.env['leasee.contract'].search(
-                [('company_id', '=', self.env.company.id),
-                 ('parent_id', '=', False)],
+                [('parent_id', '=', False)],
                 order='id ASC',
                 offset=lease_management_report.payment_aging_limit,
                 limit=end_limit)
@@ -548,8 +582,16 @@ class LeaseManagementReport(models.Model):
             lease_contract_ids,
             lease_management_report.payment_aging_as_of_date)
         lease_management_report.report_values_payment_aging += payment_aging_datas
-        payment_aging_limit += end_limit
-        lease_management_report.payment_aging_limit = payment_aging_limit
+
+        if lease_management_report.payment_aging_limit < lease_management_report.end_limit:
+            rem = lease_management_report.end_limit - lease_management_report.payment_aging_limit
+            if rem < end_limit:
+                lease_management_report.payment_aging_limit += rem
+            else:
+                lease_management_report.payment_aging_limit += end_limit
+            self.action_payment_aging_reports_cron(end_limit)
+        else:
+            lease_management_report.payment_aging_limit = lease_management_report.end_limit
 
     def action_ll_aging_reports_cron(self, end_limit):
         lease_management_report = self.env['leasee.management.report'].search(
@@ -563,8 +605,7 @@ class LeaseManagementReport(models.Model):
                  ])
         else:
             lease_contract_ids = self.env['leasee.contract'].search(
-                [('company_id', '=', self.env.company.id),
-                 ('parent_id', '=', False)],
+                [('parent_id', '=', False)],
                 order='id ASC',
                 offset=lease_management_report.ll_aging_limit,
                 limit=end_limit)
@@ -574,8 +615,14 @@ class LeaseManagementReport(models.Model):
             lease_contract_ids,
             lease_management_report.ll_aging_as_of_date)
         lease_management_report.report_values_ll_aging += ll_aging_datas
-        ll_aging_limit += end_limit
-        lease_management_report.ll_aging_limit = ll_aging_limit
+
+
+        if lease_management_report.ll_aging_limit < lease_management_report.end_limit:
+            ll_aging_limit += end_limit
+            lease_management_report.ll_aging_limit = ll_aging_limit
+            self.action_ll_aging_reports_cron(end_limit)
+        else:
+            lease_management_report.ll_aging_limit = lease_management_report.end_limit
 
     def get_ll_rou_datas(self, lease_contract_ids, state,
                          end_date):
@@ -587,7 +634,7 @@ class LeaseManagementReport(models.Model):
                 # computation for STLL
                 self._cr.execute(
                     'select coalesce((sum(item.debit) - sum(item.credit)), 0) '
-                    'total,leasee.name as lease_name,'
+                    'total,leasee.name as lease_name,leasee.company_id,'
                     'leasee.external_reference_number,'
                     'currency.name as currency_name,'
                     'project_site.name from leasee_contract '
@@ -601,21 +648,19 @@ class LeaseManagementReport(models.Model):
                     'where leasee.id in %(contract)s and '
                     'journal.date <= %(end_date)s'
                     ' and journal.state=%(state)s and '
-                    'journal.company_id=%(company)s and '
                     'item.account_id=leasee.lease_liability_account_id '
                     'group by lease_name,leasee.external_reference_number,'
-                    'currency_name,project_site.name', {
+                    'currency_name,project_site.name,leasee.company_id', {
                         'contract': tuple(lease_contract_ids.ids),
                         'end_date': end_date,
                         'state': state,
-                        'company': self.env.company.id,
                     })
                 stll_move_line_ids_qry = self._cr.dictfetchall()
 
                 # computation for LTLL
                 self._cr.execute(
                     'select coalesce((sum(item.debit) - sum(item.credit)), 0) total,'
-                    'leasee.name as lease_name,'
+                    'leasee.name as lease_name,leasee.company_id,'
                     'leasee.external_reference_number,'
                     'currency.name as currency_name,'
                     'project_site.name from leasee_contract as '
@@ -631,14 +676,12 @@ class LeaseManagementReport(models.Model):
                     'leasee.id in %(contract)s and '
                     'journal.date <= %(end_date)s and '
                     'journal.state=%(state)s and '
-                    'journal.company_id=%(company)s and '
                     'item.account_id=leasee.long_lease_liability_account_id '
                     'group by lease_name,leasee.external_reference_number,'
-                    'currency_name,project_site.name', {
+                    'currency_name,project_site.name,leasee.company_id', {
                         'contract': tuple(lease_contract_ids.ids),
                         'end_date': end_date,
-                        'state': state,
-                        'company': self.env.company.id, })
+                        'state': state, })
                 ltll_move_line_ids_qry = self._cr.dictfetchall()
 
                 # computation for Net ROU
@@ -696,6 +739,7 @@ class LeaseManagementReport(models.Model):
                     ltll_amount = list(
                         filter(lambda x: x['lease_name'] == contract.name,
                                ltll_move_line_ids_qry))
+
                     if net_rou:
                         data.append({
                             'leasor_name': contract.name,
@@ -707,6 +751,7 @@ class LeaseManagementReport(models.Model):
                                 ltll_amount) >= 1 else 0.0,
                             'net_rou': net_rou,
                             'currency': contract.leasee_currency_id.name if contract.leasee_currency_id.name else '',
+                            'company_id': contract.company_id.id if contract.company_id else '',
                         })
 
                     else:
@@ -720,13 +765,14 @@ class LeaseManagementReport(models.Model):
                                 ltll_amount) >= 1 else 0.0,
                             'net_rou': 0.0,
                             'currency': contract.leasee_currency_id.name if contract.leasee_currency_id.name else '',
+                            'company_id': contract.company_id.id if contract.company_id else '',
                         })
 
             else:
                 # computation for STLL
                 self._cr.execute(
                     'select coalesce((sum(item.debit) - sum(item.credit)), 0) '
-                    'total,leasee.name as lease_name,'
+                    'total,leasee.name as lease_name,leasee.company_id,'
                     'leasee.external_reference_number,'
                     'currency.name as '
                     'currency_name,'
@@ -741,20 +787,18 @@ class LeaseManagementReport(models.Model):
                     'project_site.id=leasee.project_site_id where '
                     'leasee.id in %(contract)s and '
                     'journal.date <= %(end_date)s and '
-                    'journal.company_id=%(company)s and '
                     'item.account_id=leasee.lease_liability_account_id '
                     'group by lease_name,leasee.external_reference_number,'
-                    'currency_name,project_site.name', {
+                    'currency_name,project_site.name,leasee.company_id', {
                         'contract': tuple(lease_contract_ids.ids),
                         'end_date': end_date,
-                        'company': self.env.company.id,
                     })
                 stll_move_line_ids_qry = self._cr.dictfetchall()
 
                 # computation for LTLL
                 self._cr.execute(
                     'select coalesce((sum(item.debit) - sum(item.credit)), 0) total,'
-                    'leasee.name as lease_name,'
+                    'leasee.name as lease_name,leasee.company_id,'
                     'leasee.external_reference_number,'
                     'currency.name as currency_name,'
                     'project_site.name from leasee_contract as '
@@ -768,14 +812,14 @@ class LeaseManagementReport(models.Model):
                     'project_site.id=leasee.project_site_id where '
                     'leasee.id in %(contract)s and '
                     'journal.date <= %(end_date)s '
-                    'and journal.company_id=%(company)s and '
+                    'and '
                     'item.account_id=leasee.long_lease_liability_account_id '
                     'group by lease_name,leasee.external_reference_number,'
-                    'currency_name,project_site.name',
+                    'currency_name,project_site.name,leasee.company_id',
                     {
                         'contract': tuple(lease_contract_ids.ids),
                         'end_date': end_date,
-                        'company': self.env.company.id, })
+                        })
                 ltll_move_line_ids_qry = self._cr.dictfetchall()
                 # computation for Net ROU
 
@@ -843,6 +887,7 @@ class LeaseManagementReport(models.Model):
                                 ltll_amount) >= 1 else 0.0,
                             'net_rou': net_rou,
                             'currency': contract.leasee_currency_id.name if contract.leasee_currency_id.name else '',
+                            'company_id': contract.company_id.id if contract.company_id else '',
                         })
 
                     else:
@@ -856,6 +901,7 @@ class LeaseManagementReport(models.Model):
                                 ltll_amount) >= 1 else 0.0,
                             'net_rou': 0.0,
                             'currency': contract.leasee_currency_id.name if contract.leasee_currency_id.name else '',
+                            'company_id': contract.company_id.id if contract.company_id else '',
                         })
         str1 = ' '.join(map(str, data))
         return str1
@@ -891,7 +937,7 @@ class LeaseManagementReport(models.Model):
 
             self._cr.execute(
                 'select sum(journal.amount_total) total, leasee.id as lease_id,'
-                'leasee.name as lease_name,'
+                'leasee.name as lease_name,leasee.company_id,'
                 'leasee.external_reference_number,currency.name as currency_name,'
                 'project_site.name from leasee_contract as leasee inner'
                 ' join account_move  as journal on '
@@ -916,7 +962,7 @@ class LeaseManagementReport(models.Model):
             # 1.01 -  2years
             self._cr.execute(
                 'select sum(journal.amount_total) total, leasee.id as lease_id,'
-                'leasee.name as lease_name,'
+                'leasee.name as lease_name,leasee.company_id,'
                 'leasee.external_reference_number,currency.name as currency_name,'
                 'project_site.name from leasee_contract as leasee inner'
                 ' join account_move  as journal on '
@@ -941,7 +987,7 @@ class LeaseManagementReport(models.Model):
             # 2.01 - 5 years
             self._cr.execute(
                 'select sum(journal.amount_total) total, leasee.id as lease_id,'
-                'leasee.name as lease_name,'
+                'leasee.name as lease_name,leasee.company_id,'
                 'leasee.external_reference_number,currency.name as currency_name,'
                 'project_site.name from leasee_contract as leasee inner'
                 ' join account_move  as journal on '
@@ -967,7 +1013,7 @@ class LeaseManagementReport(models.Model):
             # More than 5 years
             self._cr.execute(
                 'select sum(journal.amount_total) total, leasee.id as lease_id,'
-                'leasee.name as lease_name,'
+                'leasee.name as lease_name,leasee.company_id,'
                 'leasee.external_reference_number,currency.name as currency_name,'
                 'project_site.name from leasee_contract as leasee inner'
                 ' join account_move  as journal on '
@@ -1024,6 +1070,7 @@ class LeaseManagementReport(models.Model):
                         'total_amount_more_than_5_years':
                             amount_more_than_5_years[0]["total"],
                         'currency': amount_less_than_1_year[0]["currency_name"],
+                        'company_id': amount_less_than_1_year[0]["company_id"],
                     })
                 else:
                     data.append({
@@ -1042,9 +1089,10 @@ class LeaseManagementReport(models.Model):
                             amount_more_than_5_years[0]["total"] if len(
                                 amount_more_than_5_years) >= 1 else 0.0,
                         'currency': amount_lists[0]["currency_name"],
+                        'company_id': amount_lists[0]["company_id"],
                     })
-        str1 = ' '.join(map(str, data))
-        return str1
+        str4 = ' '.join(map(str, data))
+        return str4
 
     def get_ll_aging_datas(self, lease_contract_ids, end_date):
         """Method to compute LL Aging Report data."""
@@ -1102,13 +1150,12 @@ class LeaseManagementReport(models.Model):
 
                     self._cr.execute('select sum(installment.amount) as total, '
                                      'leasee.id as leasee_id,'
-                                     'leasee.name as leasee_name from '
+                                     'leasee.name as leasee_name,leasee.company_id from '
                                      'leasee_contract as'
                                      ' leasee inner join leasee_installment as '
                                      'installment on '
                                      'installment.leasee_contract_id=leasee.id where  '
                                      'leasee.id = %(contract)s and '
-                                     'leasee.company_id=%(company)s and '
                                      'installment.date <= %(end_date)s'
                                      ' and installment.date >= %(start_date)s '
                                      'group by leasee_id',
@@ -1116,7 +1163,6 @@ class LeaseManagementReport(models.Model):
                                          'contract': contract.id,
                                          'end_date': next_year_date,
                                          'start_date': less_than_1_year_start_date,
-                                         'company': self.env.company.id,
                                      })
                     installments_less_than_1_year_qry = self._cr.dictfetchall()
 
@@ -1143,12 +1189,11 @@ class LeaseManagementReport(models.Model):
 
                     self._cr.execute('select sum(installment.amount) as total, '
                                      'leasee.id as leasee_id,'
-                                     'leasee.name as leasee_name from leasee_contract as'
+                                     'leasee.name as leasee_name,leasee.company_id from leasee_contract as'
                                      ' leasee inner join leasee_installment as '
                                      'installment on '
                                      'installment.leasee_contract_id=leasee.id where  '
                                      'leasee.id = %(contract)s and '
-                                     'leasee.company_id=%(company)s and '
                                      'installment.date <= %(end_date)s'
                                      ' and installment.date >= %(start_date)s '
                                      'group by leasee_id',
@@ -1156,7 +1201,6 @@ class LeaseManagementReport(models.Model):
                                          'contract': contract.id,
                                          'end_date': one_to_2year_end_date,
                                          'start_date': one_to_2year_start_date,
-                                         'company': self.env.company.id,
                                      })
                     installments_one_to_2_year_qry = self._cr.dictfetchall()
 
@@ -1182,12 +1226,11 @@ class LeaseManagementReport(models.Model):
 
                     self._cr.execute('select sum(installment.amount) as total, '
                                      'leasee.id as leasee_id,'
-                                     'leasee.name as leasee_name from leasee_contract as'
+                                     'leasee.name as leasee_name,leasee.company_id from leasee_contract as'
                                      ' leasee inner join leasee_installment as '
                                      'installment on '
                                      'installment.leasee_contract_id=leasee.id where  '
                                      'leasee.id = %(contract)s and '
-                                     'leasee.company_id=%(company)s and '
                                      'installment.date <= %(end_date)s'
                                      ' and installment.date >= %(start_date)s '
                                      'group by leasee_id',
@@ -1195,7 +1238,6 @@ class LeaseManagementReport(models.Model):
                                          'contract': contract.id,
                                          'end_date': end_date_2_to_5_year,
                                          'start_date': start_date_2_to_5_year,
-                                         'company': self.env.company.id,
                                      })
                     installments_2_to_5_year_qry = self._cr.dictfetchall()
 
@@ -1222,19 +1264,17 @@ class LeaseManagementReport(models.Model):
 
                     self._cr.execute('select sum(installment.amount) as total, '
                                      'leasee.id as leasee_id,'
-                                     'leasee.name as leasee_name from '
+                                     'leasee.name as leasee_name,leasee.company_id from '
                                      'leasee_contract as'
                                      ' leasee inner join leasee_installment as '
                                      'installment on '
                                      'installment.leasee_contract_id=leasee.id where  '
                                      'leasee.id = %(contract)s and '
-                                     'leasee.company_id=%(company)s and '
                                      ' installment.date >= %(start_date)s '
                                      'group by leasee_id',
                                      {
                                          'contract': contract.id,
                                          'start_date': start_date_5th_year,
-                                         'company': self.env.company.id,
                                      })
                     installments_more_than_5_year_qry = self._cr.dictfetchall()
 
@@ -1308,13 +1348,15 @@ class LeaseManagementReport(models.Model):
                             'two_to_five_year': total_two_to_five_year,
                             'more_than_five_year': total_more_than_five_year,
                             'currency': contract.leasee_currency_id.name,
+                            'company_id': contract.company_id.id,
+
                         })
                 else:
                     # Computation for Less than 1 year
                     self._cr.execute(
                         'select sum(item.amount_currency) as total, '
                         'leasee.id as leasee_id,'
-                        'leasee.name as leasee_name,'
+                        'leasee.name as leasee_name,leasee.company_id,'
                         'leasee.external_reference_number,'
                         'currency.name as '
                         'currency_name,project_site.name from '
@@ -1330,7 +1372,6 @@ class LeaseManagementReport(models.Model):
                         'account_analytic_account as project_site on '
                         'project_site.id=leasee.project_site_id where '
                         'leasee.id = %(contract)s and '
-                        'leasee.company_id=%(company)s and '
                         'journal.date <= %(end_date)s and '
                         'journal.date >= %(start_date)s and '
                         'item.account_id=leasee.interest_expense_account_id'
@@ -1341,19 +1382,17 @@ class LeaseManagementReport(models.Model):
                             'contract': contract.id,
                             'end_date': next_year_date,
                             'start_date': less_than_1_year_start_date,
-                            'company': self.env.company.id,
                         })
                     journal_items_less_than_1_yr_qry = self._cr.dictfetchall()
 
                     self._cr.execute('select sum(installment.amount) as total, '
                                      'leasee.id as leasee_id,'
-                                     'leasee.name as leasee_name from '
+                                     'leasee.name as leasee_name,leasee.company_id from '
                                      'leasee_contract as'
                                      ' leasee inner join leasee_installment as '
                                      'installment on '
                                      'installment.leasee_contract_id=leasee.id where  '
                                      'leasee.id = %(contract)s and '
-                                     'leasee.company_id=%(company)s and '
                                      'installment.date <= %(end_date)s'
                                      ' and installment.date >= %(start_date)s '
                                      'group by leasee_id',
@@ -1361,7 +1400,6 @@ class LeaseManagementReport(models.Model):
                                          'contract': contract.id,
                                          'end_date': next_year_date,
                                          'start_date': less_than_1_year_start_date,
-                                         'company': self.env.company.id,
                                      })
                     installments_less_than_1_year_qry = self._cr.dictfetchall()
 
@@ -1370,7 +1408,7 @@ class LeaseManagementReport(models.Model):
                     self._cr.execute(
                         'select sum(item.amount_currency) as total, '
                         'leasee.id as leasee_id,'
-                        'leasee.name as leasee_name,'
+                        'leasee.name as leasee_name,leasee.company_id,'
                         'leasee.external_reference_number,'
                         'currency.name as '
                         'currency_name,project_site.name from '
@@ -1386,7 +1424,6 @@ class LeaseManagementReport(models.Model):
                         'account_analytic_account as project_site on '
                         'project_site.id=leasee.project_site_id where '
                         'leasee.id = %(contract)s and '
-                        'leasee.company_id=%(company)s and '
                         'journal.date <= %(end_date)s and '
                         'journal.date >= %(start_date)s and '
                         'item.account_id=leasee.interest_expense_account_id'
@@ -1397,17 +1434,15 @@ class LeaseManagementReport(models.Model):
                             'contract': contract.id,
                             'end_date': one_to_2year_end_date,
                             'start_date': one_to_2year_start_date,
-                            'company': self.env.company.id,
                         })
                     journal_items_one_to_2_year_qry = self._cr.dictfetchall()
                     self._cr.execute('select sum(installment.amount) as total, '
                                      'leasee.id as leasee_id,'
-                                     'leasee.name as leasee_name from leasee_contract as'
+                                     'leasee.name as leasee_name,leasee.company_id from leasee_contract as'
                                      ' leasee inner join leasee_installment as '
                                      'installment on '
                                      'installment.leasee_contract_id=leasee.id where  '
                                      'leasee.id = %(contract)s and '
-                                     'leasee.company_id=%(company)s and '
                                      'installment.date <= %(end_date)s'
                                      ' and installment.date >= %(start_date)s '
                                      'group by leasee_id',
@@ -1415,7 +1450,6 @@ class LeaseManagementReport(models.Model):
                                          'contract': contract.id,
                                          'end_date': one_to_2year_end_date,
                                          'start_date': one_to_2year_start_date,
-                                         'company': self.env.company.id,
                                      })
                     installments_one_to_2_year_qry = self._cr.dictfetchall()
 
@@ -1424,8 +1458,7 @@ class LeaseManagementReport(models.Model):
                     self._cr.execute(
                         'select sum(item.amount_currency) as total, '
                         'leasee.id as leasee_id,'
-
-                        'leasee.name as leasee_name,'
+                        'leasee.name as leasee_name,leasee.company_id,'
                         'leasee.external_reference_number,'
                         'currency.name as '
                         'currency_name,project_site.name from '
@@ -1441,7 +1474,6 @@ class LeaseManagementReport(models.Model):
                         'account_analytic_account as project_site on '
                         'project_site.id=leasee.project_site_id where '
                         'leasee.id = %(contract)s and '
-                        'leasee.company_id=%(company)s and '
                         'journal.date <= %(end_date)s and '
                         'journal.date >= %(start_date)s and '
                         'item.account_id=leasee.interest_expense_account_id'
@@ -1452,18 +1484,16 @@ class LeaseManagementReport(models.Model):
                             'contract': contract.id,
                             'end_date': end_date_2_to_5_year,
                             'start_date': start_date_2_to_5_year,
-                            'company': self.env.company.id,
                         })
                     journal_items_2_to_5_year_qry = self._cr.dictfetchall()
 
                     self._cr.execute('select sum(installment.amount) as total, '
                                      'leasee.id as leasee_id,'
-                                     'leasee.name as leasee_name from leasee_contract as'
+                                     'leasee.name as leasee_name,leasee.company_id from leasee_contract as'
                                      ' leasee inner join leasee_installment as '
                                      'installment on '
                                      'installment.leasee_contract_id=leasee.id where  '
                                      'leasee.id = %(contract)s and '
-                                     'leasee.company_id=%(company)s and '
                                      'installment.date <= %(end_date)s'
                                      ' and installment.date >= %(start_date)s '
                                      'group by leasee_id',
@@ -1471,7 +1501,6 @@ class LeaseManagementReport(models.Model):
                                          'contract': contract.id,
                                          'end_date': end_date_2_to_5_year,
                                          'start_date': start_date_2_to_5_year,
-                                         'company': self.env.company.id,
                                      })
                     installments_2_to_5_year_qry = self._cr.dictfetchall()
 
@@ -1480,7 +1509,7 @@ class LeaseManagementReport(models.Model):
                     self._cr.execute(
                         'select sum(item.amount_currency) as total, '
                         'leasee.id as leasee_id,'
-                        'leasee.name as leasee_name,'
+                        'leasee.name as leasee_name,leasee.company_id,'
                         'leasee.external_reference_number,'
                         'currency.name as '
                         'currency_name,project_site.name from '
@@ -1496,7 +1525,6 @@ class LeaseManagementReport(models.Model):
                         'account_analytic_account as project_site on '
                         'project_site.id=leasee.project_site_id where '
                         'leasee.id = %(contract)s and '
-                        'leasee.company_id=%(company)s and '
                         'journal.date >= %(start_date)s and '
                         'item.account_id=leasee.interest_expense_account_id'
                         ' group by leasee_id,'
@@ -1505,25 +1533,22 @@ class LeaseManagementReport(models.Model):
                         {
                             'contract': contract.id,
                             'start_date': start_date_5th_year,
-                            'company': self.env.company.id,
                         })
                     journal_items_more_than_5_year_qry = self._cr.dictfetchall()
 
                     self._cr.execute('select sum(installment.amount) as total, '
                                      'leasee.id as leasee_id,'
-                                     'leasee.name as leasee_name from '
+                                     'leasee.name as leasee_name,leasee.company_id from '
                                      'leasee_contract as'
                                      ' leasee inner join leasee_installment as '
                                      'installment on '
                                      'installment.leasee_contract_id=leasee.id where  '
                                      'leasee.id = %(contract)s and '
-                                     'leasee.company_id=%(company)s and '
                                      ' installment.date >= %(start_date)s '
                                      'group by leasee_id',
                                      {
                                          'contract': contract.id,
                                          'start_date': start_date_5th_year,
-                                         'company': self.env.company.id,
                                      })
                     installments_more_than_5_year_qry = self._cr.dictfetchall()
 
@@ -1597,9 +1622,10 @@ class LeaseManagementReport(models.Model):
                             'two_to_five_year': total_two_to_five_year,
                             'more_than_five_year': total_more_than_five_year,
                             'currency': contract.leasee_currency_id.name,
+                            'company_id': contract.company_id.id,
                         })
-        str1 = ' '.join(map(str, data))
-        return str1
+        str2 = ' '.join(map(str, data))
+        return str2
 
     def get_interest_amortization_datas(self, lease_contract_ids, state,
                                         start_date, end_date):
@@ -1664,7 +1690,8 @@ class LeaseManagementReport(models.Model):
                                                'amortization_total': amortization_amount,
                                                'external_reference_number': contract.external_reference_number,
                                                'name': contract.project_site_id.name,
-                                               'currency_name': contract.leasee_currency_id.name})
+                                               'currency_name': contract.leasee_currency_id.name,
+                                               'company_id': contract.company_id.id})
 
                 amortization_lease_names = list(
                     map(itemgetter('lease_id'), amortization_datas))
@@ -1674,7 +1701,7 @@ class LeaseManagementReport(models.Model):
                 self._cr.execute(
                     'select coalesce((sum(item.debit) + sum(item.credit)), 0) interest_total,'
                     ' leasee.id as lease_id ,leasee.external_reference_number,currency.name as currency_name,'
-                    'project_site.name,leasee.name as lease_name'
+                    'project_site.name,leasee.name as lease_name, leasee.company_id'
                     ' from leasee_contract as leasee inner join'
                     ' account_move as journal on '
                     'journal.leasee_contract_id=leasee.id inner join '
@@ -1725,7 +1752,8 @@ class LeaseManagementReport(models.Model):
                                                'amortization_total': amortization_amount,
                                                'external_reference_number': contract.external_reference_number,
                                                'name': contract.project_site_id.name,
-                                               'currency_name': contract.leasee_currency_id.name})
+                                               'currency_name': contract.leasee_currency_id.name,
+                                               'company_id': contract.company_id.id})
 
                 amortization_lease_names = list(
                     map(itemgetter('lease_id'), amortization_datas))
@@ -1749,6 +1777,7 @@ class LeaseManagementReport(models.Model):
                     'amortization': test[0]["amortization_total"] if test[
                         0] else 0.0,
                     'currency': test[0]["currency_name"],
+                    'company_id': test[0]["company_id"] if test[0]["company_id"] else '',
                 })
             elif len(test) >= 1:
                 data.append({
@@ -1761,6 +1790,8 @@ class LeaseManagementReport(models.Model):
                     'interest': 0.0,
                     'amortization': test[0]["amortization_total"],
                     'currency': test[0]["currency_name"],
+                    'company_id': test[0]["company_id"] if test[0][
+                        "company_id"] else '',
                 })
             elif len(test1) >= 1:
                 data.append({
@@ -1773,6 +1804,8 @@ class LeaseManagementReport(models.Model):
                     'interest': test1[0]["interest_total"] if test1[0] else 0.0,
                     'amortization': 0.0,
                     'currency': test1[0]["currency_name"],
+                    'company_id': test1[0]["company_id"] if test[0][
+                        "company_id"] else '',
                 })
             else:
                 pass
@@ -1992,19 +2025,21 @@ class LeaseManagementReport(models.Model):
                 col += 1
                 worksheet.write(row, col, line['currency'], STYLE_LINE_Data)
 
-    @api.onchange('ll_rou_as_of_date', 'll_rou_state')
-    def onchange_ll_rou_as_of_date_and_ll_rou_state(self):
-        self.action_schedule_ll_rou_report()
+    # @api.onchange('ll_rou_as_of_date', 'll_rou_state')
+    # def onchange_ll_rou_as_of_date_and_ll_rou_state(self):
+    #     self.action_schedule_ll_rou_report()
+    #
+    # @api.onchange('interest_amort_start_date', 'interest_amort_end_date',
+    #               'interest_amort_state')
+    # def onchange_interest_amort_start_date(self):
+    #     self.action_schedule_lease_report()
+    #
+    # @api.onchange('ll_aging_as_of_date')
+    # def onchange_ll_aging_as_of_date(self):
+    #     self.action_schedule_ll_aging_report()
+    #
+    # @api.onchange('payment_aging_as_of_date')
+    # def onchange_payment_aging_as_of_date(self):
+    #     self.action_schedule_payment_aging_report()
 
-    @api.onchange('interest_amort_start_date', 'interest_amort_end_date',
-                  'interest_amort__state')
-    def onchange_interest_amort_start_date(self):
-        self.action_schedule_lease_report()
 
-    @api.onchange('ll_aging_as_of_date')
-    def onchange_ll_aging_as_of_date(self):
-        self.action_schedule_ll_aging_report()
-
-    @api.onchange('payment_aging_as_of_date')
-    def onchange_payment_aging_as_of_date(self):
-        self.action_schedule_payment_aging_report()
