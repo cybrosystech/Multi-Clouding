@@ -12,6 +12,8 @@
     'depends': ['lease_management'],
     'data': [
         'security/ir.model.access.csv',
+        'data/leasee_contract_data.xml',
+        'views/lease_management_report.xml',
         'wizards/lease_contract_xlsx_report_wizard_views.xml',
         'wizards/lease_interest_amortization_report_wizard_views.xml',
         'wizards/lease_ll_rou_report_wizard_views.xml',
