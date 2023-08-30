@@ -46,13 +46,13 @@
                     <group string="Payment Aging Report">
                         <field name="payment_aging_as_of_date"/>
                         <field name="payment_aging_limit"/>
-                        <field name="report_values_payment_aging" invisible="1"
+                        <field name="report_values_payment_aging" 
                         />
                     </group>
                     <group string="LL Aging Report">
                         <field name="ll_aging_as_of_date"/>
                         <field name="ll_aging_limit"/>
-                        <field name="report_values_ll_aging" invisible="1"/>
+                        <field name="report_values_ll_aging" />
 
                     </group>
                     <group string="Interest and Amortization Report">
@@ -60,7 +60,7 @@
                         <field name="interest_amort_end_date"/>
                         <field name="interest_amort_state"/>
                         <field name="interest_amort_limit"/>
-                        <field name="report_values_interest_and_amortization" invisible="1"
+                        <field name="report_values_interest_and_amortization" 
                         />
 
                     </group>
@@ -68,7 +68,7 @@
                         <field name="ll_rou_as_of_date"/>
                         <field name="ll_rou_state"/>
                         <field name="ll_rou_limit"/>
-                        <field name="report_values_ll_rou" invisible="1"/>
+                        <field name="report_values_ll_rou" />
                     </group>
                 </group>
                 <group>
