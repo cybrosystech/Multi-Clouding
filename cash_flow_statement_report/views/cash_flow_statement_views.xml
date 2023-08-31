@@ -4,6 +4,9 @@
             <t t-call="cash_flow_statement_report.cash_flow_search_template_date_filter"/>
         </div>
         <div class="btn-group o_dropdown">
+            <t t-call="cash_flow_statement_report.cash_flow_comparison_filter_template"/>
+        </div>
+        <div class="btn-group o_dropdown">
             <t t-call="cash_flow_statement_report.cashflow_report_posted_filter"/>
         </div>
     </template>
@@ -13,12 +16,14 @@
             <div class="o_account_reports_page o_account_reports_no_print">
                 <div class="table-responsive">
                     <table class="o_account_reports_table table-hover">
-                        <th>
-
-                        </th>
-                        <th>
-                            <span><t t-esc="lines['header']['name']"/></span>
-                        </th>
+                        <th></th>
+                        <t t-foreach="lines['header']" t-as="header_column">
+                            <th>
+                                <span>
+                                    <t t-esc="header_column"/>
+                                </span>
+                            </th>
+                        </t>
                         <tbody>
                             <t t-if="lines.get('lines')">
                                 <t t-call="{{model._get_templates()['line_template']}}"/>
@@ -50,19 +55,23 @@
             </t>
             <tr t-att-class="line['class']">
                 <td t-attf-class="#{tdclass}">
-                    <span t-attf-class="#{spanclass}"><t t-esc="line['name']"/></span>
+                    <span t-attf-class="#{spanclass}">
+                        <t t-esc="line['name']"/>
+                    </span>
                 </td>
                 <t t-foreach="line.get('columns')" t-as="cell">
-                    <td t-attf-class="#{tdclass}">
-                        <t t-if="cell['name']">
-                            <t t-esc="lines['currency_symbol']"/>
-                            <t t-esc="'{:20,.2f}'.format(cell['name'])"/>
+                        <t t-foreach="cell['name']" t-as="col">
+                             <td t-attf-class="#{tdclass}">
+                            <t t-if="col">
+                                <t t-esc="lines['currency_symbol']"/>
+                                <t t-esc="'{:20,.2f}'.format(col)"/>
+                            </t>
+                            <t t-else="">
+                                <t t-esc="lines['currency_symbol']"/>
+                                <t t-esc="col"/>
+                            </t>
+                             </td>
                         </t>
-                        <t t-else="">
-                            <t t-esc="lines['currency_symbol']"/>
-                            <t t-esc="cell['name']"/>
-                        </t>
-                    </td>
                 </t>
             </tr>
         </t>
@@ -74,10 +83,11 @@
         <field name="context" eval="{'model': 'cash.flow.statement'}"/>
     </record>
 
-    <menuitem id="tasc_dynamic_reports" name="Tasc Reports" sequence="0" parent="account.menu_finance_reports"/>
+    <menuitem id="tasc_dynamic_reports" name="Tasc Reports" sequence="0"
+              parent="account.menu_finance_reports"/>
 
 
     <menuitem id="menu_action_cash_flow_statement" name="TASC Cash Flow Report"
-                  action="action_cash_flow_statement"
-                  parent="cash_flow_statement_report.tasc_dynamic_reports"/>
+              action="action_cash_flow_statement"
+              parent="cash_flow_statement_report.tasc_dynamic_reports"/>
 </odoo>
