@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
-    <data>
+    <data noupdate="1">
 
         <record model="ir.cron" id="action_lease_reports">
             <field name="name">Report - Lease Interest Amortization</field>
