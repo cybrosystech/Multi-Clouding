@@ -1,0 +1,56 @@
+<odoo>
+    <template id="cash_flow_comparison_filter_template">
+        <button type="button"
+                class="o_dropdown_toggler_btn btn btn-secondary dropdown-toggle"
+                data-toggle="dropdown">
+            <span class="fa fa-bar-chart"/>
+            Comparison:
+            <t t-esc="options['comparison']['comparison_type']"/>
+
+        </button>
+        <div class="dropdown-menu o_filter_menu" role="menu">
+            <a role="menuitem" title="No Comparison" data-filter="no_comparison"
+               class="dropdown-item js_cashflow_report_comparison_filter">No
+                Comparison
+            </a>
+            <div role="separator" class="dropdown-divider"></div>
+            <a role="menuitem"
+               class="dropdown-item js_foldable_trigger o_closed_menu inner_click_previous_period"
+               data-filter='previous_period'>Previous Period
+            </a>
+            <div class="o_foldable_menu o_closed_menu o_account_report_search"
+                 id="cmp_previous_period">
+                <label for="periods_number">Number of periods :</label>
+                <br/>
+                <input type="number" name="periods_number" id="periods_number"
+                       t-att-value="options['comparison'].get('number_period')"/>
+                <br/>
+                <button type="button"
+                        class="btn btn-primary comparison_previous_period_filter_btn"
+                >Apply
+                </button>
+            </div>
+
+
+            <div role="separator" class="dropdown-divider"></div>
+            <a role="menuitem"
+               class="dropdown-item js_foldable_trigger o_closed_menu inner_click_last_year_previous_period"
+               data-filter='same_last_year_filter'>Same Period Last Year
+            </a>
+            <li class="o_foldable_menu o_closed_menu o_account_report_search"
+                data-filter='same_last_year_filter'
+                id="cmp_last_year_previous_period">
+                <label for="periods_number">Number of periods :</label>
+                <br/>
+                <input type="number" name="periods_number" id="last_year_periods_number"
+                       t-att-value="options['comparison'].get('number_period')"/>
+                <br/>
+                <button type="button"
+                        class="btn btn-primary comparison_same_period_last_year_filter_btn"
+                        data-filter='same_period_last_year'>Apply
+                </button>
+            </li>
+        </div>
+    </template>
+</odoo>
+

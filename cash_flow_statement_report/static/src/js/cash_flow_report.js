@@ -12,10 +12,15 @@ var cashFlowReportWidget = AbstractAction.extend({
 
     events: {
         'click .js_cashflow_report_date_filter': 'filter_click',
+        'click .js_cashflow_report_comparison_filter': 'comparison_click',
         'click .js_cashflow_report_journal_filter': 'posted_click',
         'click [action]': 'trigger_action',
         'click .inner_click': 'prevent_menu',
         'click #custom_filter_btn': 'custom_filter_apply',
+        'click .comparison_previous_period_filter_btn': 'comparison_previous_period_filter_apply',
+        'click .comparison_same_period_last_year_filter_btn': 'comparison_same_period_last_year_filter_apply',
+        'click .inner_click_previous_period': 'prevent_menu_previous_click',
+        'click .inner_click_last_year_previous_period': 'prevent_menu_last_year_previous_click',
     },
 
     init: function(parent, action) {
@@ -38,6 +43,7 @@ var cashFlowReportWidget = AbstractAction.extend({
         return this._super.apply(this, arguments);
     },
     willStart: async function () {
+    console.log("lllllllllllll",this)
         const reportsInfoPromise = this._rpc({
             model: this.report_model,
             method: 'get_cash_flow_information',
@@ -58,6 +64,7 @@ var cashFlowReportWidget = AbstractAction.extend({
         this.render_template();
     },
     parse_reports_informations: function(values) {
+        console.log("values",values);
         this.buttons = values.buttons;
         this.$searchview_buttons = $(values.searchview_html);
         this.main_html = values.main_html;
@@ -82,7 +89,17 @@ var cashFlowReportWidget = AbstractAction.extend({
         this.render_values()
     },
 
+    comparison_click: function(e) {
+    console.log("ooooooooooooo",this);
+    console.log("fghjk",e.target.attributes['data-filter']);
+    var comparison_filter = e.target.attributes['data-filter'].value;
+    console.log("llllllllllllllllllllllllfffffffff",comparison_filter);
+    this.report_options['comparison'] = comparison_filter;
+    this.render_values()
+    },
+
     prevent_menu: function(e){
+        console.log("hhhhhhhhhhh");
         e.stopPropagation();
         var panel_custom = this.$('#custom_date')
         if (panel_custom[0].style.display === "block") {
@@ -91,13 +108,64 @@ var cashFlowReportWidget = AbstractAction.extend({
           panel_custom[0].style.display = "block";
         }
     },
+        prevent_menu_previous_click: function(e){
+        console.log("uuuuuuuuuuuuu");
+        e.stopPropagation();
+        var panel_custom = this.$('#cmp_previous_period')
+        if (panel_custom[0].style.display === "block") {
+          panel_custom[0].style.display = "none";
+        } else {
+          panel_custom[0].style.display = "block";
+        }
+    },
+
+    prevent_menu_last_year_previous_click: function(e){
+        console.log("yyyyyyyyyy");
+        e.stopPropagation();
+        var panel_custom = this.$('#cmp_last_year_previous_period')
+        if (panel_custom[0].style.display === "block") {
+          panel_custom[0].style.display = "none";
+        } else {
+          panel_custom[0].style.display = "block";
+        }
+    },
+//    comparison_custom_click: function(e){
+//        console.log("rrrrrrrrrr");
+//        e.stopPropagation();
+//        var panel_custom = this.$('#comparison_custom_date')
+//        if (panel_custom[0].style.display === "block") {
+//          panel_custom[0].style.display = "none";
+//        } else {
+//          panel_custom[0].style.display = "block";
+//        }
+//    },
 
     custom_filter_apply: function(e){
+        console.log("uuuuuuuuuuuuuuuuuu");
         var from_date = this.$('#from_date')
         var to_date = this.$('#to_date')
         this.report_options['date_filter'] = 'custom';
         this.report_options['custom_from'] = from_date.val();
         this.report_options['custom_to'] = to_date.val();
+        this.render_values()
+    },
+    comparison_previous_period_filter_apply: function(e){
+        console.log("wwwwwwwwwww",this);
+        var number_period = this.$('#periods_number')
+        console.log("qqqqqqqqqqqq",number_period.val());
+        this.report_options['comparison'] = 'previous_period';
+        this.report_options['number_period'] = number_period.val();
+        console.log("hhhhhhhhhhhhhh");
+        this.render_values()
+    },
+    comparison_same_period_last_year_filter_apply: function(e){
+        console.log("iiiiiiiiiiiiiiiiii",this);
+        var number_period = this.$('#last_year_periods_number')
+        console.log("qqqqqqqqqqqq",number_period.val());
+        this.report_options['comparison'] = 'same_period_last_year';
+
+        this.report_options['number_period'] = number_period.val();
+        console.log("hhhhhhhhhhhhhh");
         this.render_values()
     },
 
@@ -159,6 +227,7 @@ var cashFlowReportWidget = AbstractAction.extend({
 
     render_values: function() {
         var self = this;
+        console.log("pppppppppppp",self)
         return this._rpc({
                 model: this.report_model,
                 method: 'get_cash_flow_information',
