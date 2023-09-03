@@ -146,6 +146,7 @@ class ProfitabilityReportOwned(models.Model):
             'limit': limit
         }
         report_values = profitability_owned.get_profitability_owned(data, profitability_owned_report, profitability_owned)
+        print("report_values_profitability",type(report_values),report_values)
         profitability_owned.json_report_values = json.dumps(report_values)
         profitability_owned.current_filter = Current_months
 

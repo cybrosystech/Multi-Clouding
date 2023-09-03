@@ -118,9 +118,9 @@ class ProfitabilityReportManaged(models.Model):
         if profitability_managed.from_date and profitability_managed.to_date:
             if profitability_managed.from_date > profitability_managed.to_date:
                 raise UserError("Start date should be less than end date")
-        group = self.env['account.analytic.group'].search(
-            [('name', 'ilike', 'managed'),
-             ('company_id', '=', profitability_managed.company_id.id)])
+        # group = self.env['account.analytic.group'].search(
+        #     [('name', 'ilike', 'managed'),
+        #      ])
         data = {
             'ids': self.ids,
             'model': self._name,
@@ -139,10 +139,9 @@ class ProfitabilityReportManaged(models.Model):
             'service_level_credit_ids': profitability_managed.service_level_credits.ids,
             'from': from_date if from_date else profitability_managed.from_date,
             'to': to_date if to_date else profitability_managed.to_date,
-            'company_id': profitability_managed.company_id.id,
-            'analytic_account_group': group.id,
+            # 'analytic_account_group': group.id,
             'Current_months': Current_months,
-            'limit': limit
+            'limit': limit,
         }
         report_values = profitability_managed.get_profitability_managed(data,
                                                                         profitability_managed_report,
@@ -154,15 +153,15 @@ class ProfitabilityReportManaged(models.Model):
                                   profitability_managed):
         projects = ''
         if profitability_managed_report:
-            profitability_managed_report_load = json.loads(profitability_managed_report)
+            profitability_managed_report_load = json.loads(
+                profitability_managed_report)
             query = '''
-                                    select id,name from account_analytic_account as analatyc_account
-                                    WHERE analatyc_account.analytic_account_type = 'project_site'
-                                    and analatyc_account.company_id = ''' + str(
-                data['company_id']) + '''
-                                    and analatyc_account.group_id = ''' + str(
-                data['analytic_account_group'])
-
+                                    select id,name,analatyc_account.company_id,
+                                    analatyc_account.group_id from 
+                                    account_analytic_account as analatyc_account
+                                    WHERE 
+                                    analatyc_account.analytic_account_type = 'project_site' 
+                                    '''
             cr = self._cr
             cr.execute(query)
             project_site = cr.dictfetchall()
@@ -170,16 +169,19 @@ class ProfitabilityReportManaged(models.Model):
             profitability_managed.end_limit = end_limit
             for i in project_site[
                      profitability_managed.limits_pr: end_limit]:
+                company_id = i["company_id"]
                 prof_rep = {}
                 prof_rep.update({
                     'project': i['name'],
+                    'group': i['group_id'],
+
                 })
                 projects = self.env['account.move.line'].search(
                     [('project_site_id', '=', i['id']),
                      ('move_id.date', '<=', data['to']),
                      ('move_id.date', '>=', data['from']),
                      ('parent_state', '=', 'posted'),
-                     ('company_id', '=', profitability_managed.company_id.id)])
+                     ])
                 lease_anchor_tenant = projects.filtered(
                     lambda x: x.account_id.id in data[
                         'lease_anchor_tenant_ids'])
@@ -314,7 +316,9 @@ class ProfitabilityReportManaged(models.Model):
                     'jdo': abs(jdo),
                     '%': total_percent if total_percent else 0
                 })
-                profitability_managed_report_load.append(prof_rep)
+                profitability_datas = profitability_managed_report_load[0].get(
+                    str(i["company_id"]))
+                profitability_datas.append(prof_rep)
             profitability_managed.limits_pr = end_limit
             if end_limit <= len(project_site):
                 date = fields.Datetime.now()
@@ -327,12 +331,11 @@ class ProfitabilityReportManaged(models.Model):
         else:
             dummy_prof_list = []
             query = '''
-                                            select id,name from account_analytic_account as analatyc_account 
-                                            WHERE analatyc_account.analytic_account_type = 'project_site'
-                                            and analatyc_account.company_id = ''' + str(
-                data['company_id']) + ''' 
-                                            and analatyc_account.group_id = ''' + str(
-                data['analytic_account_group'])
+                        select id,name,
+                        analatyc_account.company_id,
+                        analatyc_account.group_id 
+                        from account_analytic_account as analatyc_account 
+                        WHERE analatyc_account.analytic_account_type = 'project_site' '''
 
             cr = self._cr
             cr.execute(query)
@@ -349,7 +352,7 @@ class ProfitabilityReportManaged(models.Model):
                      ('move_id.date', '<=', data['to']),
                      ('move_id.date', '>=', data['from']),
                      ('parent_state', '=', 'posted'),
-                     ('company_id', '=', profitability_managed.company_id.id)])
+                     ])
                 lease_anchor_tenant = projects.filtered(
                     lambda x: x.account_id.id in data[
                         'lease_anchor_tenant_ids'])
@@ -484,7 +487,9 @@ class ProfitabilityReportManaged(models.Model):
                     'jdo': abs(jdo),
                     '%': total_percent if total_percent else 0
                 })
-                dummy_prof_list.append(prof_rep)
+                dummy_prof_data = dummy_prof_list[0].get(
+                    str(i["company_id"]))
+                dummy_prof_data.append(prof_rep)
             profitability_managed.limits_pr = end_limit
             if end_limit <= len(project_site):
                 date = fields.Datetime.now()
@@ -509,16 +514,23 @@ class ProfitabilityReportManaged(models.Model):
             'data': {'model': 'profitability.report.managed',
                      'options': json.dumps(self.json_report_values,
                                            default=date_utils.json_default),
+
                      'output_format': 'xlsx',
                      'report_name': 'Profitability Managed Report',
+                     'company_id': self.company_id,
+
                      },
-            'report_type': 'xlsx'
+            'report_type': 'xlsx',
         }
 
     def get_xlsx(self, data, response):
         profitability_managed_report = json.loads(data)
         profitability_managed_object = self.env[
             'profitability.report.managed'].search([])
+        group = self.env['account.analytic.group'].search(
+            [('name', 'ilike', 'managed'),
+             ('company_id', '=', profitability_managed_object.company_id.id)
+             ])
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
 
@@ -578,8 +590,11 @@ class ProfitabilityReportManaged(models.Model):
         row_num = 3
         col_num = 1
         sln_no = 1
-
-        for i in profitability_managed_report:
+        report_datas = profitability_managed_report[0].get(
+            str(profitability_managed_object.company_id.id))
+        rep_values = list(
+            filter(lambda d: d['group'] in group.ids, report_datas))
+        for i in rep_values:
             sheet.write(row_num + 1, col_num, sln_no)
             sheet.write(row_num + 1, col_num + 1, i.get('project'))
             sheet.write(row_num + 1, col_num + 2, i.get('lease_anchor_tenant'))
@@ -611,14 +626,20 @@ class ProfitabilityReportManaged(models.Model):
         output.close()
 
     def schedule_managed_cron(self):
+        company_ids = self.env['res.company'].search([]).ids
+        dt = {}
+        for i in company_ids:
+            dt[i] = []
         date = fields.Datetime.now()
-        schedule_action = self.env.ref('profitability_report_xlsx.action_profitability_managed_cron')
+        schedule_action = self.env.ref(
+            'profitability_report_xlsx.action_profitability_managed_cron')
         schedule_action.update({
             'nextcall': date + timedelta(minutes=1)
         })
+        company_dats = list()
+        company_dats.append(dt)
         self.update({
             'limits_pr': 0,
             'end_limit': 0,
-            'json_report_values': ''
+            'json_report_values': json.dumps(company_dats)
         })
-
