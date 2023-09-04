@@ -346,6 +346,7 @@ class ProfitabilityReportManaged(models.Model):
                 prof_rep = {}
                 prof_rep.update({
                     'project': i['name'],
+                    'group': i['group_id'],
                 })
                 projects = self.env['account.move.line'].search(
                     [('project_site_id', '=', i['id']),
