@@ -5,6 +5,7 @@ from datetime import datetime, date, timedelta
 
 class AccountMoveConfig(models.Model):
     _name = 'account.move.config'
+    _description = 'Journal Posting Configuration'
 
     name = fields.Char()
     company_id = fields.Many2one('res.company')

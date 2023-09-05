@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="journal_entry_posting_config_view_form" model="ir.ui.view">
+        <field name="name">journal.entry.posting.config.form</field>
+        <field name="model">journal.entry.posting.config</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible=""/>
+                    <button name="schedule_journal_action" string="Schedule Journal Action"
+                            type="object" />
+                </header>
+                <group>
+                    <group>
+                        <field name="name"/>
+                        <field name="active"/>
+                    </group>
+                    <group>
+                        <field name="company_ids" widget="many2many_tags"/>
+                        <field name="scheduled_user" string="User"/>
+                        <field name="journals" widget="many2many_tags"/>
+                    </group>
+                    <group>
+                        <field name="from_date"/>
+                        <field name="to_date"/>
+                    </group>
+                    <group>
+                        <field name="limit"/>
+                    </group>
+                </group>
+            </form>
+        </field>
+    </record>
+
+    <record id="journal_entry_posting_config_view_tree" model="ir.ui.view">
+        <field name="name">journal.entry.posting.config.tree</field>
+        <field name="model">journal.entry.posting.config</field>
+        <field name="arch" type="xml">
+            <tree string="">
+                <field name="name"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+
+    <record id="action_journal_entry_managed" model="ir.actions.act_window">
+        <field name="name">Journal Entry Posting</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">journal.entry.posting.config</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+
+            </p>
+            <p>
+
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_journal_entry_managed" name="Journal Entry Posting"
+                  parent="journal_tab_accounting" action="action_journal_entry_managed"
+                  sequence="100"/>
+
+
+</odoo>
