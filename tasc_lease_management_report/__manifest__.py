@@ -18,6 +18,7 @@
         'wizards/lease_interest_amortization_report_wizard_views.xml',
         'wizards/lease_ll_rou_report_wizard_views.xml',
         'wizards/ll_aging_report_wizard_views.xml',
+        'wizards/leasee_contract_extension_xlsx_report_wizard_views.xml',
     ],
     'license': 'AGPL-3',
     'installable': True,

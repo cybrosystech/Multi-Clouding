@@ -6,7 +6,6 @@ import re
 from operator import itemgetter
 import xlsxwriter
 from odoo import models, fields, _, api
-from itertools import zip_longest
 from odoo.tools.safe_eval import dateutil
 
 
@@ -55,7 +54,6 @@ class LeaseManagementReport(models.Model):
     company_id = fields.Many2one('res.company', string="Company")
     end_limit = fields.Integer(string="End Limit", compute='compute_end_limit')
 
-    # @api.depends('lease_contract_ids')
     def compute_end_limit(self):
         for rec in self:
             if rec.lease_contract_ids:
