@@ -1,2 +1,3 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_account_move_config,access.account.move.config,model_account_move_config,base.group_user,1,1,1,1
+access_journal_entry_posting_config,access.journal.entry.posting.config,model_journal_entry_posting_config,base.group_user,1,1,1,1

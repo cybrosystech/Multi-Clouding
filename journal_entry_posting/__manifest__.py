@@ -14,6 +14,7 @@
         [
             'security/ir.model.access.csv',
             'data/journal_draft_cron.xml',
-            'views/account_move_config_view.xml'
+            'views/account_move_config_view.xml',
+            'views/journal_entry_posting_view.xml',
         ]
 }
