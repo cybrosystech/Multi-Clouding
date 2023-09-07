@@ -1,6 +1,6 @@
 import base64
 import io
-
+import random
 import xlsxwriter
 from odoo import fields, models, _
 
@@ -156,7 +156,6 @@ class LeaseContractExtensionXlsxWizard(models.TransientModel):
         head_col = col
         sub_head_row = 2
         for line in report_data:
-
             ext = 0
             col = 0
             row += 1
@@ -167,10 +166,25 @@ class LeaseContractExtensionXlsxWizard(models.TransientModel):
             col += 1
             worksheet.write(row, col, line.project_site_id.name,
                             STYLE_LINE_Data)
-            self.add_extension_data(workbook, worksheet, line, row, col,
-                                    head_col, STYLE_LINE_Data, ext,
-                                    sub_head_row, header_format,date_format)
+            col += 1
+            worksheet.write(row, col, line.inception_date,
+                            date_format)
+            col += 1
+            worksheet.write(row, col, line.estimated_ending_date,
+                            date_format)
+            col += 1
+            worksheet.write(row, col, line.installment_amount,
+                            STYLE_LINE_Data)
+            col += 1
+            worksheet.write(row, col, line.lease_contract_period,
+                            STYLE_LINE_Data)
+            col += 1
+            worksheet.write(row, col, line.leasor_type,
+                            STYLE_LINE_Data)
             if line.child_ids:
+                hexadecimal = ["#" + ''.join(
+                    [random.choice('ABCDEF0123456789') for i in range(6)])]
+
                 header_format_ext = workbook.add_format({
                     'bold': 1,
                     'font_name': 'Aharoni',
@@ -179,7 +193,7 @@ class LeaseContractExtensionXlsxWizard(models.TransientModel):
                     'align': 'center',
                     'valign': 'vcenter',
                     'font_color': 'black',
-                    'bg_color': 'green',
+                    'bg_color': hexadecimal[0],
                 })
                 row2 = 1
                 ext += 1
@@ -201,6 +215,7 @@ class LeaseContractExtensionXlsxWizard(models.TransientModel):
             extension_text = 'Original Leasee'
         else:
             extension_text = 'Extended Leasee ' + str(ext)
+        hexadecimal = ["#" + ''.join([random.choice('ABCDEF0123456789') for i in range(6)])]
         header_format_subhead = workbook.add_format({
             'bold': 1,
             'font_name': 'Aharoni',
@@ -209,7 +224,7 @@ class LeaseContractExtensionXlsxWizard(models.TransientModel):
             'align': 'center',
             'valign': 'vcenter',
             'font_color': 'black',
-            'bg_color': 'yellow',
+            'bg_color': hexadecimal[0],
         })
 
         col += 1
