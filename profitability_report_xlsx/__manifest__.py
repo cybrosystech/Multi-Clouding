@@ -13,8 +13,6 @@
     'data':
         [
             'security/ir.model.access.csv',
-            'security/profitability_managed_security.xml',
-            'security/profitability_owned_security.xml',
             'data/profitability_cron_jobs.xml',
             'views/assets.xml',
             'views/profitability_report_managed_view.xml',
