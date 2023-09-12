@@ -57,6 +57,7 @@ class LeaseePeriodExtend(models.TransientModel):
             'initial_direct_cost': self.initial_direct_cost,
             'increasement_rate': self.increasement_rate,
             'increasement_frequency': self.increasement_frequency,
+            'company_id': self.env.company.id,
         })
         contract.state = 'extended'
         new_contract.action_activate()
