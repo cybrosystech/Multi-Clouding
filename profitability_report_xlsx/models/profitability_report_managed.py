@@ -76,6 +76,86 @@ class ProfitabilityReportManaged(models.Model):
          """This scheduled action is already selected on another!."""),
     ]
 
+    def profitability_managed_report_general(self, limit):
+        cron_id = self.env.ref(
+            'profitability_report_xlsx.action_profitability_managed_cron_general').id
+        profitability_managed = self.env['profitability.report.managed'].search(
+            [('cron_id', '=', cron_id)])
+        current_date = fields.Date.today()
+        profitability_managed_report = profitability_managed.json_report_values
+        from_date = ''
+        to_date = ''
+        Current_months = ''
+        if profitability_managed.period == 'this_financial_year':
+            first, last = calendar.monthrange(current_date.year,
+                                              12)
+            from_date = datetime.date(current_date.year, 1, 1)
+            to_date = datetime.date(current_date.year, 12, last)
+            Current_months = from_date.year
+        if profitability_managed.period == 'last_financial_year':
+            last_financial_year = current_date.year - 1
+            first, last = calendar.monthrange(last_financial_year,
+                                              12)
+            from_date = datetime.date(last_financial_year, 1, 1)
+            to_date = datetime.date(last_financial_year, 12, last)
+            Current_months = from_date.year
+        if profitability_managed.period == 'this_quarter':
+            current_quarter = (current_date.month - 1) // 3 + 1
+            first, last = calendar.monthrange(current_date.year,
+                                              3 * current_quarter)
+            from_date = datetime.date(current_date.year,
+                                      3 * current_quarter - 2, 1)
+            to_date = datetime.date(current_date.year, 3 * current_quarter,
+                                    last)
+            from_month = from_date.strftime("%B")
+            to_month = to_date.strftime("%B")
+            Current_months = from_month + ' - ' + to_month
+        if profitability_managed.period == 'last_quarter':
+            last_quarter = ((current_date.month - 1) // 3 + 1) - 1
+            first, last = calendar.monthrange(current_date.year,
+                                              3 * last_quarter)
+            from_date = datetime.date(current_date.year,
+                                      3 * last_quarter - 2, 1)
+            to_date = datetime.date(current_date.year, 3 * last_quarter,
+                                    last)
+            from_month = from_date.strftime("%B")
+            to_month = to_date.strftime("%B")
+            Current_months = from_month + ' - ' + to_month
+        if profitability_managed.from_date and profitability_managed.to_date:
+            if profitability_managed.from_date > profitability_managed.to_date:
+                raise UserError("Start date should be less than end date")
+        group = self.env['account.analytic.group'].search(
+            [('name', 'ilike', 'managed'),
+             ('company_id', '=', profitability_managed.company_id.id)])
+        data = {
+            'ids': self.ids,
+            'model': self._name,
+            'lease_anchor_tenant_ids': profitability_managed.lease_anchor_tenant.ids,
+            'lease_colo_tenant_ids': profitability_managed.lease_colo_tenant.ids,
+            'additional_space_revenue_ids': profitability_managed.additional_space_revenue.ids,
+            'bts_revenue_ids': profitability_managed.bts_revenue.ids,
+            'active_sharing_fees_ids': profitability_managed.active_sharing_fees.ids,
+            'discount_ids': profitability_managed.discount.ids,
+            'rou_depreciation_ids': profitability_managed.rou_depreciation.ids,
+            'fa_depreciation_ids': profitability_managed.fa_depreciation.ids,
+            'lease_finance_cost_ids': profitability_managed.lease_finance_cost.ids,
+            'site_maintenance_ids': profitability_managed.site_maintenance_managed.ids,
+            'site_rent_ids': profitability_managed.site_rent.ids,
+            'security_ids': profitability_managed.security.ids,
+            'service_level_credit_ids': profitability_managed.service_level_credits.ids,
+            'from': from_date if from_date else profitability_managed.from_date,
+            'to': to_date if to_date else profitability_managed.to_date,
+            'company_id': profitability_managed.company_id.id,
+            'analytic_account_group': group.id,
+            'Current_months': Current_months,
+            'limit': limit
+        }
+        report_values = profitability_managed.get_profitability_managed(data,
+                                                                        profitability_managed_report,
+                                                                        profitability_managed)
+        profitability_managed.json_report_values = json.dumps(report_values)
+        profitability_managed.current_filter = Current_months
+
     def profitability_managed_report(self, limit):
         cron_id = self.env.ref(
             'profitability_report_xlsx.action_profitability_managed_cron').id
@@ -508,6 +588,13 @@ class ProfitabilityReportManaged(models.Model):
                     schedule.update({
                         'nextcall': date + timedelta(seconds=10),
                     })
+                elif xml_id.get(
+                        profitability_managed.cron_id.id) == 'profitability_report_xlsx.action_profitability_managed_cron_general':
+                    schedule = self.env.ref(
+                        'profitability_report_xlsx.action_profitability_managed_cron_update_general')
+                    schedule.update({
+                        'nextcall': date + timedelta(seconds=10),
+                    })
                 else:
                     pass
             return profitability_managed_report_load
@@ -699,9 +786,24 @@ class ProfitabilityReportManaged(models.Model):
                     schedule.update({
                         'nextcall': date + timedelta(seconds=10),
                     })
+                elif xml_id.get(
+                        profitability_managed.cron_id.id) == 'profitability_report_xlsx.action_profitability_managed_cron_general':
+                    schedule = self.env.ref(
+                        'profitability_report_xlsx.action_profitability_managed_cron_update_general')
+                    schedule.update({
+                        'nextcall': date + timedelta(seconds=10),
+                    })
                 else:
                     pass
             return dummy_prof_list
+
+    def profitability_managed_cron_update_general(self):
+        date = fields.Datetime.now()
+        schedule = self.env.ref(
+            'profitability_report_xlsx.action_profitability_managed_cron_general')
+        schedule.update({
+            'nextcall': date + timedelta(seconds=10)
+        })
 
     def profitability_managed_cron_update(self):
         date = fields.Datetime.now()

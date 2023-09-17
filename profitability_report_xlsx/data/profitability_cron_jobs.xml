@@ -1,6 +1,54 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
 <data>
+    <record model="ir.cron" id="action_profitability_managed_cron_general">
+        <field name="name">Profitability Managed Cron : General</field>
+        <field name="model_id" ref="model_profitability_report_managed"/>
+        <field name="state">code</field>
+        <field name="code">model.profitability_managed_report_general(limit="50")</field>
+        <field name="active">True</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+    </record>
+
+    <record model="ir.cron" id="action_profitability_owned_cron_general">
+        <field name="name">Profitability Owned Cron : General</field>
+        <field name="model_id" ref="model_profitability_report_owned"/>
+        <field name="state">code</field>
+        <field name="code">model.profitability_owned_report_general(limit="50")</field>
+        <field name="active">True</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+    </record>
+
+     <record model="ir.cron" id="action_profitability_managed_cron_update_general">
+        <field name="name">Profitability Managed Cron Update : General</field>
+        <field name="model_id" ref="model_profitability_report_managed"/>
+        <field name="state">code</field>
+        <field name="code">model.profitability_managed_cron_update_general()</field>
+        <field name="active">True</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+    </record>
+
+    <record model="ir.cron" id="action_profitability_owned_cron_update_general">
+        <field name="name">Profitability Owned Cron Update : General</field>
+        <field name="model_id" ref="model_profitability_report_owned"/>
+        <field name="state">code</field>
+        <field name="code">model.profitability_owned_cron_update_general()</field>
+        <field name="active">True</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+    </record>
+
     <record model="ir.cron" id="action_profitability_managed_cron">
         <field name="name">Profitability Managed Cron : Al- Masar</field>
         <field name="model_id" ref="model_profitability_report_managed"/>
@@ -42,7 +90,7 @@
         <field name="model_id" ref="model_profitability_report_owned"/>
         <field name="state">code</field>
         <field name="code">model.profitability_owned_cron_update()</field>
-        <field name="active">False</field>
+        <field name="active">True</field>
         <field name="interval_number">1</field>
         <field name="interval_type">days</field>
         <field name="numbercall">-1</field>
