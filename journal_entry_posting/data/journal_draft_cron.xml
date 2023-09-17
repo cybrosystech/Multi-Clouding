@@ -26,12 +26,36 @@
             <field name="doall" eval="False"/>
         </record>
 
-                <record model="ir.cron" id="journal_entry_posting_config_cron">
-            <field name="name">Account Journal Entry Posting</field>
+                <record model="ir.cron" id="journal_entry_posting_config_cron_general">
+            <field name="name">Account Journal Entry Posting : General</field>
             <field name="model_id" ref="model_journal_entry_posting_config"/>
             <field name="state">code</field>
             <field name="active">True</field>
-            <field name="code">model.journal_entry_posting(journal_conf=False)</field>
+            <field name="code">model.journal_entry_posting_general()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+        </record>
+
+        <record model="ir.cron" id="journal_entry_posting_config_cron_update_general">
+            <field name="name">Account Journal Entry Posting Cron Update : General</field>
+            <field name="model_id" ref="model_journal_entry_posting_config"/>
+            <field name="state">code</field>
+            <field name="active">True</field>
+            <field name="code">model.journal_entry_posting_cron_update_general()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+        </record>
+
+        <record model="ir.cron" id="journal_entry_posting_config_cron">
+            <field name="name">Account Journal Entry Posting : Al-Masar</field>
+            <field name="model_id" ref="model_journal_entry_posting_config"/>
+            <field name="state">code</field>
+            <field name="active">True</field>
+            <field name="code">model.journal_entry_posting()</field>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
             <field name="numbercall">-1</field>
@@ -39,16 +63,65 @@
         </record>
 
         <record model="ir.cron" id="journal_entry_posting_config_cron_update">
-            <field name="name">Account Journal Entry Posting Cron Update</field>
+            <field name="name">Account Journal Entry Posting Cron Update : Al-Masar</field>
             <field name="model_id" ref="model_journal_entry_posting_config"/>
             <field name="state">code</field>
             <field name="active">True</field>
-            <field name="code">model.journal_entry_posting_cron_update(journal_conf=False)</field>
+            <field name="code">model.journal_entry_posting_cron_update()</field>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
             <field name="numbercall">-1</field>
             <field name="doall" eval="False"/>
         </record>
+
+            <record model="ir.cron" id="journal_entry_posting_config_cron_baghdad">
+            <field name="name">Account Journal Entry Posting : Baghdad</field>
+            <field name="model_id" ref="model_journal_entry_posting_config"/>
+            <field name="state">code</field>
+            <field name="active">True</field>
+            <field name="code">model.journal_entry_posting_baghdad()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+        </record>
+
+        <record model="ir.cron" id="journal_entry_posting_config_cron_update_baghdad">
+            <field name="name">Account Journal Entry Posting Cron Update : Baghdad</field>
+            <field name="model_id" ref="model_journal_entry_posting_config"/>
+            <field name="state">code</field>
+            <field name="active">True</field>
+            <field name="code">model.journal_entry_posting_cron_update_baghdad()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+        </record>
+
+            <record model="ir.cron" id="journal_entry_posting_config_cron_erbill">
+            <field name="name">Account Journal Entry Posting : Erbill</field>
+            <field name="model_id" ref="model_journal_entry_posting_config"/>
+            <field name="state">code</field>
+            <field name="active">True</field>
+            <field name="code">model.journal_entry_posting_erbill()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+        </record>
+
+        <record model="ir.cron" id="journal_entry_posting_config_cron_update_erbill">
+            <field name="name">Account Journal Entry Posting Cron Update : Erbill</field>
+            <field name="model_id" ref="model_journal_entry_posting_config"/>
+            <field name="state">code</field>
+            <field name="active">True</field>
+            <field name="code">model.journal_entry_posting_cron_update_erbill()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+        </record>
+
 
     </data>
 </odoo>

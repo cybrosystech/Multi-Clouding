@@ -29,8 +29,6 @@ class ProfitabilityReportOwned(models.Model):
                                 string='Discount')
     site_maintenance = fields.Many2many('account.account',
                                         'site_owned_maintenance')
-    # site_maintenance_lim = fields.Many2many('account.account',
-    #                                         'site_maintenance_owned_lim')
     insurance = fields.Many2many('account.account', 'insurance_owned_',
                                  string="Insurance")
     energy_cost = fields.Many2many('account.account', 'energy_owned_cost',
@@ -69,10 +67,19 @@ class ProfitabilityReportOwned(models.Model):
     to_date = fields.Date('To')
     end_limit = fields.Integer('end limit', default=0)
     current_filter = fields.Char('Selected Filter')
+    cron_id = fields.Many2one('ir.cron', String="Scheduled Action",
+                              domain=[('name', 'ilike',
+                                       'Profitability Owned Cron :')])
+    _sql_constraints = [
+        ('cron_uniq', 'unique (cron_id)',
+         """This scheduled action is already selected on another!."""),
+    ]
 
-    def profitability_owned_report(self, limit):
+    def profitability_owned_report_general(self, limit):
+        cron_id = self.env.ref(
+            'profitability_report_xlsx.action_profitability_owned_cron_general').id
         profitability_owned = self.env['profitability.report.owned'].search(
-            [])
+            [('cron_id', '=', cron_id)])
         current_date = fields.Date.today()
         profitability_owned_report = profitability_owned.json_report_values
         from_date = ''
@@ -129,7 +136,6 @@ class ProfitabilityReportOwned(models.Model):
             'active_sharing_fees_ids': profitability_owned.active_sharing_fees.ids,
             'discount_ids': profitability_owned.discount.ids,
             'site_maintenance_ids': profitability_owned.site_maintenance.ids,
-            # 'site_maintenance_lim_code': self.site_maintenance_lim.code,
             'insurance_ids': profitability_owned.insurance.ids,
             'energy_cost_ids': profitability_owned.energy_cost.ids,
             'security_ids': profitability_owned.security.ids,
@@ -145,14 +151,264 @@ class ProfitabilityReportOwned(models.Model):
             'Current_months': Current_months,
             'limit': limit
         }
-        report_values = profitability_owned.get_profitability_owned(data, profitability_owned_report, profitability_owned)
+        report_values = profitability_owned.get_profitability_owned(data,
+                                                                    profitability_owned_report,
+                                                                    profitability_owned)
         profitability_owned.json_report_values = json.dumps(report_values)
         profitability_owned.current_filter = Current_months
 
-    def get_profitability_owned(self, data, profitability_owned_report, profitability_owned):
+    def profitability_owned_report(self, limit):
+        cron_id = self.env.ref(
+            'profitability_report_xlsx.action_profitability_owned_cron').id
+        profitability_owned = self.env['profitability.report.owned'].search(
+            [('cron_id', '=', cron_id)])
+        current_date = fields.Date.today()
+        profitability_owned_report = profitability_owned.json_report_values
+        from_date = ''
+        to_date = ''
+        Current_months = ''
+        if profitability_owned.period == 'this_financial_year':
+            first, last = calendar.monthrange(current_date.year,
+                                              12)
+            from_date = datetime.date(current_date.year, 1, 1)
+            to_date = datetime.date(current_date.year, 12, last)
+            Current_months = from_date.year
+        if profitability_owned.period == 'last_financial_year':
+            last_financial_year = current_date.year - 1
+            first, last = calendar.monthrange(last_financial_year,
+                                              12)
+            from_date = datetime.date(last_financial_year, 1, 1)
+            to_date = datetime.date(last_financial_year, 12, last)
+            Current_months = from_date.year
+        if profitability_owned.period == 'this_quarter':
+            current_quarter = (current_date.month - 1) // 3 + 1
+            first, last = calendar.monthrange(current_date.year,
+                                              3 * current_quarter)
+            from_date = datetime.date(current_date.year,
+                                      3 * current_quarter - 2, 1)
+            to_date = datetime.date(current_date.year, 3 * current_quarter,
+                                    last)
+            from_month = from_date.strftime("%B")
+            to_month = to_date.strftime("%B")
+            Current_months = from_month + ' - ' + to_month
+        if profitability_owned.period == 'last_quarter':
+            last_quarter = ((current_date.month - 1) // 3 + 1) - 1
+            first, last = calendar.monthrange(current_date.year,
+                                              3 * last_quarter)
+            from_date = datetime.date(current_date.year,
+                                      3 * last_quarter - 2, 1)
+            to_date = datetime.date(current_date.year, 3 * last_quarter,
+                                    last)
+            from_month = from_date.strftime("%B")
+            to_month = to_date.strftime("%B")
+            Current_months = from_month + ' - ' + to_month
+        if profitability_owned.from_date and profitability_owned.to_date:
+            if profitability_owned.from_date > profitability_owned.to_date:
+                raise UserError("Start date should be less than end date")
+        group = self.env['account.analytic.group'].search(
+            [('name', 'ilike', 'owned'),
+             ('company_id', '=', profitability_owned.company_id.id)])
+        data = {
+            'ids': self.ids,
+            'model': self._name,
+            'service_revenue_ids': profitability_owned.service_revenue.ids,
+            'investment_revenue_ids': profitability_owned.investment_revenue.ids,
+            'colocation_ids': profitability_owned.colocation.ids,
+            'pass_through_energy_ids': profitability_owned.pass_through_energy.ids,
+            'active_sharing_fees_ids': profitability_owned.active_sharing_fees.ids,
+            'discount_ids': profitability_owned.discount.ids,
+            'site_maintenance_ids': profitability_owned.site_maintenance.ids,
+            'insurance_ids': profitability_owned.insurance.ids,
+            'energy_cost_ids': profitability_owned.energy_cost.ids,
+            'security_ids': profitability_owned.security.ids,
+            'service_level_credit_ids': profitability_owned.service_level_credit.ids,
+            'rou_depreciation_ids': profitability_owned.rou_depreciation.ids,
+            'fa_depreciation_code': profitability_owned.fa_depreciation.code,
+            'fa_depreciation_lim_code': profitability_owned.fa_depreciation_lim.code,
+            'lease_finance_cost_ids': profitability_owned.lease_finance_cost.ids,
+            'from': from_date if from_date else profitability_owned.from_date,
+            'to': to_date if to_date else profitability_owned.to_date,
+            'company_id': profitability_owned.company_id.id,
+            'analatyc_account_group': group.id,
+            'Current_months': Current_months,
+            'limit': limit
+        }
+        report_values = profitability_owned.get_profitability_owned(data,
+                                                                    profitability_owned_report,
+                                                                    profitability_owned)
+        profitability_owned.json_report_values = json.dumps(report_values)
+        profitability_owned.current_filter = Current_months
+
+    def profitability_owned_report_baghdad(self, limit):
+        cron_id = self.env.ref(
+            'profitability_report_xlsx.action_profitability_owned_cron_baghdad').id
+        profitability_owned = self.env['profitability.report.owned'].search(
+            [('cron_id', '=', cron_id)])
+        current_date = fields.Date.today()
+        profitability_owned_report = profitability_owned.json_report_values
+        from_date = ''
+        to_date = ''
+        Current_months = ''
+        if profitability_owned.period == 'this_financial_year':
+            first, last = calendar.monthrange(current_date.year,
+                                              12)
+            from_date = datetime.date(current_date.year, 1, 1)
+            to_date = datetime.date(current_date.year, 12, last)
+            Current_months = from_date.year
+        if profitability_owned.period == 'last_financial_year':
+            last_financial_year = current_date.year - 1
+            first, last = calendar.monthrange(last_financial_year,
+                                              12)
+            from_date = datetime.date(last_financial_year, 1, 1)
+            to_date = datetime.date(last_financial_year, 12, last)
+            Current_months = from_date.year
+        if profitability_owned.period == 'this_quarter':
+            current_quarter = (current_date.month - 1) // 3 + 1
+            first, last = calendar.monthrange(current_date.year,
+                                              3 * current_quarter)
+            from_date = datetime.date(current_date.year,
+                                      3 * current_quarter - 2, 1)
+            to_date = datetime.date(current_date.year, 3 * current_quarter,
+                                    last)
+            from_month = from_date.strftime("%B")
+            to_month = to_date.strftime("%B")
+            Current_months = from_month + ' - ' + to_month
+        if profitability_owned.period == 'last_quarter':
+            last_quarter = ((current_date.month - 1) // 3 + 1) - 1
+            first, last = calendar.monthrange(current_date.year,
+                                              3 * last_quarter)
+            from_date = datetime.date(current_date.year,
+                                      3 * last_quarter - 2, 1)
+            to_date = datetime.date(current_date.year, 3 * last_quarter,
+                                    last)
+            from_month = from_date.strftime("%B")
+            to_month = to_date.strftime("%B")
+            Current_months = from_month + ' - ' + to_month
+        if profitability_owned.from_date and profitability_owned.to_date:
+            if profitability_owned.from_date > profitability_owned.to_date:
+                raise UserError("Start date should be less than end date")
+        group = self.env['account.analytic.group'].search(
+            [('name', 'ilike', 'owned'),
+             ('company_id', '=', profitability_owned.company_id.id)])
+        data = {
+            'ids': self.ids,
+            'model': self._name,
+            'service_revenue_ids': profitability_owned.service_revenue.ids,
+            'investment_revenue_ids': profitability_owned.investment_revenue.ids,
+            'colocation_ids': profitability_owned.colocation.ids,
+            'pass_through_energy_ids': profitability_owned.pass_through_energy.ids,
+            'active_sharing_fees_ids': profitability_owned.active_sharing_fees.ids,
+            'discount_ids': profitability_owned.discount.ids,
+            'site_maintenance_ids': profitability_owned.site_maintenance.ids,
+            'insurance_ids': profitability_owned.insurance.ids,
+            'energy_cost_ids': profitability_owned.energy_cost.ids,
+            'security_ids': profitability_owned.security.ids,
+            'service_level_credit_ids': profitability_owned.service_level_credit.ids,
+            'rou_depreciation_ids': profitability_owned.rou_depreciation.ids,
+            'fa_depreciation_code': profitability_owned.fa_depreciation.code,
+            'fa_depreciation_lim_code': profitability_owned.fa_depreciation_lim.code,
+            'lease_finance_cost_ids': profitability_owned.lease_finance_cost.ids,
+            'from': from_date if from_date else profitability_owned.from_date,
+            'to': to_date if to_date else profitability_owned.to_date,
+            'company_id': profitability_owned.company_id.id,
+            'analatyc_account_group': group.id,
+            'Current_months': Current_months,
+            'limit': limit
+        }
+        report_values = profitability_owned.get_profitability_owned(data,
+                                                                    profitability_owned_report,
+                                                                    profitability_owned)
+        profitability_owned.json_report_values = json.dumps(report_values)
+        profitability_owned.current_filter = Current_months
+
+    def profitability_owned_report_erbill(self, limit):
+        cron_id = self.env.ref(
+            'profitability_report_xlsx.action_profitability_owned_cron_erbill').id
+        profitability_owned = self.env['profitability.report.owned'].search(
+            [('cron_id', '=', cron_id)])
+        current_date = fields.Date.today()
+        profitability_owned_report = profitability_owned.json_report_values
+        from_date = ''
+        to_date = ''
+        Current_months = ''
+        if profitability_owned.period == 'this_financial_year':
+            first, last = calendar.monthrange(current_date.year,
+                                              12)
+            from_date = datetime.date(current_date.year, 1, 1)
+            to_date = datetime.date(current_date.year, 12, last)
+            Current_months = from_date.year
+        if profitability_owned.period == 'last_financial_year':
+            last_financial_year = current_date.year - 1
+            first, last = calendar.monthrange(last_financial_year,
+                                              12)
+            from_date = datetime.date(last_financial_year, 1, 1)
+            to_date = datetime.date(last_financial_year, 12, last)
+            Current_months = from_date.year
+        if profitability_owned.period == 'this_quarter':
+            current_quarter = (current_date.month - 1) // 3 + 1
+            first, last = calendar.monthrange(current_date.year,
+                                              3 * current_quarter)
+            from_date = datetime.date(current_date.year,
+                                      3 * current_quarter - 2, 1)
+            to_date = datetime.date(current_date.year, 3 * current_quarter,
+                                    last)
+            from_month = from_date.strftime("%B")
+            to_month = to_date.strftime("%B")
+            Current_months = from_month + ' - ' + to_month
+        if profitability_owned.period == 'last_quarter':
+            last_quarter = ((current_date.month - 1) // 3 + 1) - 1
+            first, last = calendar.monthrange(current_date.year,
+                                              3 * last_quarter)
+            from_date = datetime.date(current_date.year,
+                                      3 * last_quarter - 2, 1)
+            to_date = datetime.date(current_date.year, 3 * last_quarter,
+                                    last)
+            from_month = from_date.strftime("%B")
+            to_month = to_date.strftime("%B")
+            Current_months = from_month + ' - ' + to_month
+        if profitability_owned.from_date and profitability_owned.to_date:
+            if profitability_owned.from_date > profitability_owned.to_date:
+                raise UserError("Start date should be less than end date")
+        group = self.env['account.analytic.group'].search(
+            [('name', 'ilike', 'owned'),
+             ('company_id', '=', profitability_owned.company_id.id)])
+        data = {
+            'ids': self.ids,
+            'model': self._name,
+            'service_revenue_ids': profitability_owned.service_revenue.ids,
+            'investment_revenue_ids': profitability_owned.investment_revenue.ids,
+            'colocation_ids': profitability_owned.colocation.ids,
+            'pass_through_energy_ids': profitability_owned.pass_through_energy.ids,
+            'active_sharing_fees_ids': profitability_owned.active_sharing_fees.ids,
+            'discount_ids': profitability_owned.discount.ids,
+            'site_maintenance_ids': profitability_owned.site_maintenance.ids,
+            'insurance_ids': profitability_owned.insurance.ids,
+            'energy_cost_ids': profitability_owned.energy_cost.ids,
+            'security_ids': profitability_owned.security.ids,
+            'service_level_credit_ids': profitability_owned.service_level_credit.ids,
+            'rou_depreciation_ids': profitability_owned.rou_depreciation.ids,
+            'fa_depreciation_code': profitability_owned.fa_depreciation.code,
+            'fa_depreciation_lim_code': profitability_owned.fa_depreciation_lim.code,
+            'lease_finance_cost_ids': profitability_owned.lease_finance_cost.ids,
+            'from': from_date if from_date else profitability_owned.from_date,
+            'to': to_date if to_date else profitability_owned.to_date,
+            'company_id': profitability_owned.company_id.id,
+            'analatyc_account_group': group.id,
+            'Current_months': Current_months,
+            'limit': limit
+        }
+        report_values = profitability_owned.get_profitability_owned(data,
+                                                                    profitability_owned_report,
+                                                                    profitability_owned)
+        profitability_owned.json_report_values = json.dumps(report_values)
+        profitability_owned.current_filter = Current_months
+
+    def get_profitability_owned(self, data, profitability_owned_report,
+                                profitability_owned):
         if profitability_owned_report:
             account_fa_depreciation_ids = []
-            profitability_owned_report_load = json.loads(profitability_owned_report)
+            profitability_owned_report_load = json.loads(
+                profitability_owned_report)
             query = '''
                                         select id,name from account_analytic_account as analatyc_account 
                                         WHERE analatyc_account.analytic_account_type = 'project_site'
@@ -184,6 +440,7 @@ class ProfitabilityReportOwned(models.Model):
                 prof_rep = {}
                 prof_rep.update({
                     'project': i['name'],
+                    'company_id': profitability_owned.company_id.id,
                 })
                 projects = self.env['account.move.line'].search(
                     [('project_site_id', '=', i['id']),
@@ -342,11 +599,37 @@ class ProfitabilityReportOwned(models.Model):
             profitability_owned.limits_pr = end_limit
             if end_limit <= len(project_site):
                 date = fields.Datetime.now()
-                schedule = self.env.ref(
-                    'profitability_report_xlsx.action_profitability_owned_cron_update')
-                schedule.update({
-                    'nextcall': date + timedelta(seconds=10),
-                })
+                xml_id = profitability_owned.cron_id.get_xml_id()
+                if xml_id.get(
+                        profitability_owned.cron_id.id) == 'profitability_report_xlsx.action_profitability_owned_cron':
+                    schedule = self.env.ref(
+                        'profitability_report_xlsx.action_profitability_owned_cron_update')
+                    schedule.update({
+                        'nextcall': date + timedelta(seconds=10),
+                    })
+                elif xml_id.get(
+                        profitability_owned.cron_id.id) == 'profitability_report_xlsx.action_profitability_owned_cron_baghdad':
+                    schedule = self.env.ref(
+                        'profitability_report_xlsx.action_profitability_owned_cron_update_baghdad')
+                    schedule.update({
+                        'nextcall': date + timedelta(seconds=10),
+                    })
+                elif xml_id.get(
+                        profitability_owned.cron_id.id) == 'profitability_report_xlsx.action_profitability_owned_cron_erbill':
+                    schedule = self.env.ref(
+                        'profitability_report_xlsx.action_profitability_owned_cron_update_erbill')
+                    schedule.update({
+                        'nextcall': date + timedelta(seconds=10),
+                    })
+                elif xml_id.get(
+                        profitability_owned.cron_id.id) == 'profitability_report_xlsx.action_profitability_owned_cron_general':
+                    schedule = self.env.ref(
+                        'profitability_report_xlsx.action_profitability_owned_cron_update_general')
+                    schedule.update({
+                        'nextcall': date + timedelta(seconds=10),
+                    })
+                else:
+                    pass
             return profitability_owned_report_load
         else:
             account_fa_depreciation_ids = []
@@ -379,10 +662,13 @@ class ProfitabilityReportOwned(models.Model):
                 account_fa_depreciation_ids = []
             end_limit = profitability_owned.limits_pr + int(data['limit'])
             profitability_owned.end_limit = end_limit
-            for i in project_site[profitability_owned.limits_pr: int(data['limit'])]:
+            for i in project_site[
+                     profitability_owned.limits_pr: int(data['limit'])]:
                 prof_rep = {}
                 prof_rep.update({
                     'project': i['name'],
+                    'company_id': profitability_owned.company_id.id,
+
                 })
                 projects = self.env['account.move.line'].search(
                     [('project_site_id', '=', i['id']),
@@ -541,11 +827,37 @@ class ProfitabilityReportOwned(models.Model):
             profitability_owned.limits_pr = end_limit
             if end_limit <= len(project_site):
                 date = fields.Datetime.now()
-                schedule = self.env.ref(
-                    'profitability_report_xlsx.action_profitability_owned_cron_update')
-                schedule.update({
-                    'nextcall': date + timedelta(seconds=10),
-                })
+                xml_id = profitability_owned.cron_id.get_xml_id()
+                if xml_id.get(
+                        profitability_owned.cron_id.id) == 'profitability_report_xlsx.action_profitability_owned_cron':
+                    schedule = self.env.ref(
+                        'profitability_report_xlsx.action_profitability_owned_cron_update')
+                    schedule.update({
+                        'nextcall': date + timedelta(seconds=10),
+                    })
+                elif xml_id.get(
+                        profitability_owned.cron_id.id) == 'profitability_report_xlsx.action_profitability_owned_cron_baghdad':
+                    schedule = self.env.ref(
+                        'profitability_report_xlsx.action_profitability_owned_cron_update_baghdad')
+                    schedule.update({
+                        'nextcall': date + timedelta(seconds=10),
+                    })
+                elif xml_id.get(
+                        profitability_owned.cron_id.id) == 'profitability_report_xlsx.action_profitability_owned_cron_erbill':
+                    schedule = self.env.ref(
+                        'profitability_report_xlsx.action_profitability_owned_cron_update_erbill')
+                    schedule.update({
+                        'nextcall': date + timedelta(seconds=10),
+                    })
+                elif xml_id.get(
+                        profitability_owned.cron_id.id) == 'profitability_report_xlsx.action_profitability_owned_cron_general':
+                    schedule = self.env.ref(
+                        'profitability_report_xlsx.action_profitability_owned_cron_update_general')
+                    schedule.update({
+                        'nextcall': date + timedelta(seconds=10),
+                    })
+                else:
+                    pass
             return dummy_prof_list
 
     def action_get_report(self):
@@ -562,7 +874,8 @@ class ProfitabilityReportOwned(models.Model):
 
     def get_xlsx(self, data, response):
         profitability_owned_report = json.loads(data)
-        profitability_object = self.env['profitability.report.owned'].search([])
+        profitability_object = self.env['profitability.report.owned'].search(
+            [('company_id', '=', profitability_owned_report[0]['company_id'])])
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
 
@@ -614,7 +927,8 @@ class ProfitabilityReportOwned(models.Model):
         sheet.write('V4', 'FA Depreciation', sub_heading1)
         sheet.write('W4', 'Leases Finance Cost', sub_heading1)
 
-        sheet.merge_range('B2:S2', profitability_object.current_filter, main_head)
+        sheet.merge_range('B2:S2', profitability_object.current_filter,
+                          main_head)
         sheet.merge_range('U2:W2', '', main_head)
         sheet.merge_range('D3:J3', 'Revenues', head)
         sheet.merge_range('K3:Q3', 'Costs', head)
@@ -656,6 +970,14 @@ class ProfitabilityReportOwned(models.Model):
         response.stream.write(output.read())
         output.close()
 
+    def profitability_owned_cron_update_general(self):
+        date = fields.Datetime.now()
+        schedule = self.env.ref(
+            'profitability_report_xlsx.action_profitability_owned_cron_general')
+        schedule.update({
+            'nextcall': date + timedelta(seconds=10)
+        })
+
     def profitability_owned_cron_update(self):
         date = fields.Datetime.now()
         schedule = self.env.ref(
@@ -664,12 +986,27 @@ class ProfitabilityReportOwned(models.Model):
             'nextcall': date + timedelta(seconds=10)
         })
 
+    def profitability_owned_cron_update_baghdad(self):
+        date = fields.Datetime.now()
+        schedule = self.env.ref(
+            'profitability_report_xlsx.action_profitability_owned_cron_baghdad')
+        schedule.update({
+            'nextcall': date + timedelta(seconds=10)
+        })
+
+    def profitability_owned_cron_update_erbill(self):
+        date = fields.Datetime.now()
+        schedule = self.env.ref(
+            'profitability_report_xlsx.action_profitability_owned_cron_erbill')
+        schedule.update({
+            'nextcall': date + timedelta(seconds=10)
+        })
+
     def schedule_owned_cron(self):
         date = fields.Datetime.now()
-        schedule_action = self.env.ref(
-            'profitability_report_xlsx.action_profitability_owned_cron')
+        schedule_action = self.cron_id
         schedule_action.update({
-            'nextcall': date + timedelta(minutes=1)
+            'nextcall': date + timedelta(seconds=1)
         })
         self.update({
             'limits_pr': 0,
