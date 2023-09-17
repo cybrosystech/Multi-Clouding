@@ -27,6 +27,40 @@ class JournalEntryPostingConfig(models.Model):
                               domain=[('name', 'ilike',
                                        'Account Journal Entry Posting :')])
 
+    def journal_entry_posting_general(self):
+        cron_id = self.env.ref(
+            'journal_entry_posting.journal_entry_posting_config_cron_general').id
+        journal = self.env['journal.entry.posting.config'].search(
+            [('cron_id', '=', cron_id)], limit=1)
+        journals = self.env['account.move.line'].search(
+            [('move_id.state', '=', 'draft'),
+             ('move_id.date', '>=', journal.from_date),
+             ('move_id.date', '<=', journal.to_date),
+             ('move_id.company_id', 'in', journal.company_ids.ids),
+             ('move_id.journal_id', 'in', journal.journals.ids),
+             ], limit=journal.limit).mapped('move_id')
+        for rec in journals:
+            rec.auto_post = False
+            rec.sudo().action_post()
+            msg = _('This move posted by: %(user)s',
+                    user=journal.scheduled_user.name)
+            rec.message_post(body=msg)
+        journals_lim = self.env['account.move'].search(
+            [('state', '=', 'draft'),
+             ('date', '>=', journal.from_date),
+             ('date', '<=', journal.to_date),
+             ('company_id', 'in', journal.company_ids.ids),
+             ('journal_id', 'in', journal.journals.ids)])
+        schedule = self.env.ref(
+            'journal_entry_posting.journal_entry_posting_config_cron_update_general')
+        if journals_lim and schedule.active:
+            date = fields.Datetime.now()
+            schedule.update({
+                'nextcall': date + timedelta(seconds=20)
+            })
+        else:
+            journal.state = 'draft'
+
     def journal_entry_posting(self):
         cron_id = self.env.ref(
             'journal_entry_posting.journal_entry_posting_config_cron').id
@@ -127,6 +161,16 @@ class JournalEntryPostingConfig(models.Model):
             })
         else:
             journal.state = 'draft'
+
+    def journal_entry_posting_cron_update_general(self):
+        schedule = self.env.ref(
+            'journal_entry_posting.journal_entry_posting_config_cron_general')
+        if schedule.active:
+            date = fields.Datetime.now()
+
+            schedule.update({
+                'nextcall': date + timedelta(seconds=20)
+            })
 
     def journal_entry_posting_cron_update(self):
         schedule = self.env.ref(

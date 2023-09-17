@@ -26,7 +26,31 @@
             <field name="doall" eval="False"/>
         </record>
 
-                <record model="ir.cron" id="journal_entry_posting_config_cron">
+                <record model="ir.cron" id="journal_entry_posting_config_cron_general">
+            <field name="name">Account Journal Entry Posting : General</field>
+            <field name="model_id" ref="model_journal_entry_posting_config"/>
+            <field name="state">code</field>
+            <field name="active">True</field>
+            <field name="code">model.journal_entry_posting_general()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+        </record>
+
+        <record model="ir.cron" id="journal_entry_posting_config_cron_update_general">
+            <field name="name">Account Journal Entry Posting Cron Update : General</field>
+            <field name="model_id" ref="model_journal_entry_posting_config"/>
+            <field name="state">code</field>
+            <field name="active">True</field>
+            <field name="code">model.journal_entry_posting_cron_update_general()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+        </record>
+
+        <record model="ir.cron" id="journal_entry_posting_config_cron">
             <field name="name">Account Journal Entry Posting : Al-Masar</field>
             <field name="model_id" ref="model_journal_entry_posting_config"/>
             <field name="state">code</field>
