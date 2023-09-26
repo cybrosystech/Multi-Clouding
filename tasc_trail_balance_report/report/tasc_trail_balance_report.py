@@ -88,7 +88,7 @@ class TascTrailBalance(models.Model):
 
     def get_trail_balance_line(self, options, to_currency):
         company_conversion_id = self.env['res.company'].search([
-            ('name', '=', 'My Company (San Francisco)')])
+            ('id', '=', self.env.company.id)])
         accounts = self.get_chart_accounts(options)
         currencies = self.get_currency_dict(options)
         lines = []
@@ -110,7 +110,6 @@ class TascTrailBalance(models.Model):
                 'debit': 0,
                 'credit': 0}}
             for currency in currencies:
-                print(account, currency, self.env.company.id)
                 from_currency = self.env['res.currency'].browse(currency['id'])
                 if options['date_filter'] == 'this_month':
                     query = '''select coalesce(sum(move_line.credit), 0)as credit, coalesce(sum(move_line.debit), 0) as debit
@@ -333,7 +332,6 @@ class TascTrailBalance(models.Model):
         sheet.merge_range('K6:L6', 'Credit', sub_head)
         sheet.merge_range('M6:N6', 'Debit', sub_head)
         sheet.merge_range('O6:P6', 'Debit', sub_head)
-        print('lines', lines)
         for line in lines:
             if line['initial']['debit'] != 0 or line['initial']['credit'] != 0 or line['monthly']['debit'] != 0 or line['monthly']['credit'] != 0:
                 sheet.merge_range(row_head, col_head, row_head, col_head + 2,
