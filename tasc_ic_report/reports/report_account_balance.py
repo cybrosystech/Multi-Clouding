@@ -11,7 +11,7 @@ class ReportAccountBalance(models.AbstractModel):
             data['context']['active_id'])
         self._cr.execute(
             'select account.name,'
-            'ABS(coalesce((sum(item.debit) -sum(item.credit)), 0)) as balance '
+            'ABS(coalesce((sum(item.debit) - sum(item.credit)), 0)) as balance '
             'from account_move_line as item inner join account_account as '
             'account on account.id=item.account_id where '
             'item.account_id in %(accounts)s  and '
