@@ -33,8 +33,8 @@
         <field name="target">new</field>
     </record>
 
-    <menuitem id="menu_account_balance_report" name="Account Balance Report"
-              parent="account.menu_finance_reports"
+    <menuitem id="menu_account_balance_report" name="TASC IC Report"
+              parent="cash_flow_statement_report.tasc_dynamic_reports"
               action="action_account_balance_report_wizard"
     />
 

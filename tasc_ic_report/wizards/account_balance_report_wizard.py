@@ -8,7 +8,8 @@ class AccountBalanceReportWizard(models.TransientModel):
     company_id = fields.Many2one('res.company', string="Company", required=True,
                                  default=lambda self: self.env.company)
     account_ids = fields.Many2many('account.account', string="Accounts",
-                                   domain="[('company_id', '=', company_id)]")
+                                   domain="[('company_id', '=', company_id)]",
+                                   required=True)
     ending_balance_date = fields.Date(string="Ending Balance Date",
                                       default=lambda
                                           self: fields.Datetime.now().date(),
