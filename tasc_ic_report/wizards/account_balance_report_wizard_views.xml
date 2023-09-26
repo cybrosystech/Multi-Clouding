@@ -25,7 +25,7 @@
 
     <record id="action_account_balance_report_wizard"
             model="ir.actions.act_window">
-        <field name="name">Account Balance Report Wizard</field>
+        <field name="name">Account IC Balance Report Wizard</field>
         <field name="type">ir.actions.act_window</field>
         <field name="res_model">account.ic.balance.report.wizard</field>
         <field name="view_mode">form</field>

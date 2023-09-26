@@ -19,7 +19,7 @@ class ReportAccountBalance(models.AbstractModel):
             'item.parent_state=%(state)s group by account.id',
             {'accounts': tuple(docs.ids),
              'to_date': data["ending_balance_date"],
-             'company': wizard.company_id.id,
+             'company': self.env.company.id,
              'state': 'posted'})
         qry = self._cr.dictfetchall()
         return {

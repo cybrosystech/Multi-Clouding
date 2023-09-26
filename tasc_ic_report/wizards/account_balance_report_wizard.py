@@ -1,21 +1,28 @@
-from odoo import models, fields
+from odoo import api, models, fields
 
 
 class AccountBalanceReportWizard(models.TransientModel):
     _name = 'account.ic.balance.report.wizard'
     _description = 'Account Ending Balance Report'
 
+    @api.model
+    def _default_account_domain(self):
+        return [('company_id', '=', self.env.company.id)]
+
     company_id = fields.Many2one('res.company', string="Company", required=True,
                                  default=lambda self: self.env.company)
     account_ids = fields.Many2many('account.account', string="Accounts",
-                                   domain="[('company_id', '=', company_id)]",
+                                   domain=lambda
+                                       self: self._default_account_domain(),
                                    required=True)
     ending_balance_date = fields.Date(string="Ending Balance Date",
                                       default=lambda
                                           self: fields.Datetime.now().date(),
                                       required=True)
     currency_id = fields.Many2one('res.currency', string="Currency",
-                                  related='company_id.currency_id')
+                                  default=lambda
+                                      self: self.env.company.currency_id,
+                                  readonly=True)
 
     def generate_pdf_report(self):
         docids = self.env['account.account'].search(
