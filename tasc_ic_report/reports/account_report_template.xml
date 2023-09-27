@@ -185,15 +185,11 @@
                         </span>
                     </div>
                     <div class="col-3">
-                        <!--                            <t t-set="amount_untaxed"-->
-                        <!--                               t-value="'{:20,.2f}'.format(doc.amount_untaxed)"/>-->
                         <span t-esc="env.company.currency_id.symbol"/>
                         <span style="font-weight:bold"
                               t-esc="'{:20,.2f}'.format(tot)"/>
                         <br/>
                         <span t-esc="env.company.currency_id.symbol"/>
-
-                        <!--                            <span t-esc="doc.currency_id.symbol"/>-->
                         <span style="font-weight:bold"
                               t-esc="'{:20,.2f}'.format(0)"/>
                         <br/>
@@ -211,8 +207,110 @@
                              alt="Stamp"/>
                     </div>
                 </div>
+
+                <br/>
+                <br/>
+                <div class="page">
+                    <div class="oe_structure"/>
+                    <p style="text-align:center;font-weight:bold;font-size:18px;">
+                        Transaction Details
+
+                    </p>
+                    <br/>
+                    <t t-foreach="res" t-as="line">
+                        <br/>
+                        <span style="text-align:center;font-weight:bold;font-size:18px;"
+                              t-esc="line['name']"/>
+                        -
+                        <span style="text-align:center;font-weight:bold;font-size:18px;"
+                              t-esc="line['code']"/>
+
+                        <br/>
+                        <table class="custom_table_lines" width="100%">
+                            <thead>
+                                <tr>
+                                    <th>No.</th>
+                                    <th>Date</th>
+                                    <th>Journal</th>
+                                    <th>Partner
+                                    </th>
+                                    <th>Label
+                                    </th>
+                                    <th>Debit
+                                    </th>
+                                    <th>Credit
+                                    </th>
+                                    <th>Amount in Currency
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-set="totall" t-value="0"/>
+                                <t t-set="line_index" t-value="0"/>
+                                <t t-foreach="result" t-as="lines">
+                                    <t t-if="lines['account_id']==line['id']">
+                                        <tr>
+                                            <td>
+                                                <span t-set="line_index"
+                                                      t-value="line_index+1"/>
+
+                                                <span t-esc="line_index"/>
+                                            </td>
+                                            <td>
+                                                <span t-esc="lines['date']"/>
+                                            </td>
+                                            <td>
+
+                                                <span t-esc="lines['journal']"/>
+                                            </td>
+                                            <td>
+
+                                                <span t-esc="lines['partner_name']"/>
+
+                                            </td>
+                                            <td>
+                                                <span t-esc="lines['label']"/>
+                                            </td>
+                                            <td>
+                                                <span t-esc="lines['debit']"/>
+                                            </td>
+                                            <td>
+                                                <span t-esc="lines['credit']"/>
+                                            </td>
+                                            <td>
+
+                                                <span t-esc="lines['amount_currency']"/>
+
+                                            </td>
+                                            <span t-set="totall"
+                                                  t-value="totall+lines['debit']-lines['credit']"/>
+                                        </tr>
+                                    </t>
+
+                                </t>
+                            </tbody>
+                        </table>
+                        <br/>
+                        <div class="row">
+                            <div class="col-10 text-right">
+                                <span style="font-weight:bold">Total :
+                                </span>
+                            </div>
+                            <div class="col-3">
+                                <span t-esc="env.company.currency_id.symbol"/>
+                                <span style="font-weight:bold"
+                                      t-esc="'{:20,.2f}'.format(abs(totall))"/>
+                                <br/>
+                            </div>
+                        </div>
+
+                    </t>
+                </div>
+
+                <br/>
+                <br/>
                 <div class="row"
-                     style="position:fixed;top:1100px;line-break:avoid;width:1000px;">
+                     style="position:fixed;end:10px;line-break:avoid;width:1000px;">
                     <div class="col-lg">
                         <span style="font-weight:bold;">This is an
                             automated
@@ -220,6 +318,7 @@
                         </span>
                     </div>
                 </div>
+
             </t>
         </t>
     </template>
