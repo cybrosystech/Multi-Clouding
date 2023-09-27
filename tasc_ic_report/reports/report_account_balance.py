@@ -27,14 +27,16 @@ class ReportAccountBalance(models.AbstractModel):
             'item.date,journal.name as journal,'
             '(select name as partner_name from res_partner '
             'where id=journal.partner_id),item.name as label,'
-            'item.amount_currency as amount_currency ,item.credit,abs(item.debit) as debit '
+            'item.amount_currency as amount_currency ,'
+            'item.credit,abs(item.debit) as debit '
             'from account_move_line as item '
             'inner join account_account as account on '
             'account.id=item.account_id'
             ' inner join account_move as journal on journal.id=item.move_id '
             ' where item.account_id in %(accounts)s  '
             'and item.date<=%(to_date)s '
-            'and item.company_id=1 and item.parent_state=%(state)s group by '
+            'and item.company_id=%(company)s and '
+            'item.parent_state=%(state)s group by '
             'account.id,journal.id,'
             'item.id',
             {'accounts': tuple(docs.ids),
