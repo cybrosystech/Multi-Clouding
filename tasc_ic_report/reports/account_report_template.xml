@@ -208,13 +208,21 @@
                     </div>
                 </div>
 
+                <div class="row" style="position:fixed;top:985px;line-break:avoid;width:1000px;">
+                        <div class="col-lg">
+                            <span style="font-weight:bold;">This is an
+                                automated
+                                Debit Note and no signature required.
+                            </span>
+                        </div>
+                </div>
+
                 <br/>
                 <br/>
                 <div class="page" style="page-break-before:always;">
                     <div class="oe_structure"/>
                     <p style="text-align:center;font-weight:bold;font-size:18px;">
                         Transaction Details
-
                     </p>
                     <br/>
                     <t t-foreach="res" t-as="line">
@@ -306,19 +314,6 @@
 
                     </t>
                 </div>
-
-                <br/>
-                <br/>
-                <div class="row"
-                     style="position:fixed;end:10px;line-break:avoid;width:1000px;">
-                    <div class="col-lg">
-                        <span style="font-weight:bold;">This is an
-                            automated
-                            Debit Note and no signature required.
-                        </span>
-                    </div>
-                </div>
-
             </t>
         </t>
     </template>
