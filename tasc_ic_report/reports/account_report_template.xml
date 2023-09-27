@@ -208,7 +208,7 @@
                     </div>
                 </div>
 
-                <div class="row" style="position:fixed;top:1100px;line-break:avoid;width:1000px;">
+                <div class="row" style="position:fixed;top:990px;line-break:avoid;width:1000px;">
                         <div class="col-lg">
                             <span style="font-weight:bold;">This is an
                                 automated
