@@ -4,6 +4,7 @@ import math
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 from odoo.tools import float_compare, float_round
+from datetime import timedelta
 from odoo.tools.misc import formatLang
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
@@ -525,8 +526,50 @@ class AccountMoveLine(models.Model):
                                      string="Budget Line", required=False, )
 
     remaining_amount = fields.Float(string="Remaining Amount", required=False,
-                                    )
+                                    compute='get_budget_remaining_amount', store=True)
     local_subtotal = fields.Float(compute='compute_local_subtotal', store=True)
+    is_set_remaining_amount = fields.Boolean(string="",
+                                             help="This field is used for the scheduled action (set remaining amount) to check the remaining is set for old account.move.line records (Note :This field will not required in further)")
+
+    def action_set_remaining_amount(self, limit):
+        move_lines = self.env['account.move.line'].search(
+            [('is_set_remaining_amount', '=', False), ('company_id', '=', 3),
+             '|', '|', ('purchase_line_id', '!=', False),
+             ('sale_line_ids', '!=', False),
+             ('budget_line_id', '!=', False),
+             ('move_id.state', 'in', ['posted', 'to_approve'])],
+            limit=limit).filtered(lambda
+                                      l: l.move_id.invoice_date.year == 2023 if l.move_id.invoice_date else True)
+        if move_lines:
+            total_lines = len(move_lines.ids)
+        else:
+            total_lines = 0
+        print("total_lines", total_lines)
+        for line in move_lines:
+            line.remaining_amount = 0.0
+            if line.purchase_line_id:
+                line.remaining_amount = line.purchase_line_id.remaining_amount
+            elif line.sale_line_ids:
+                line.remaining_amount = line.sale_line_ids[0].remaining_amount
+            else:
+                line.remaining_amount = line.budget_line_id.remaining_amount
+            line.is_set_remaining_amount = True
+
+        if limit <= total_lines:
+            date = fields.Datetime.now()
+            schedule = self.env.ref(
+                'analytic_account_types.action_set_remaining_amount_cron_update')
+            schedule.update({
+                'nextcall': date + timedelta(seconds=10),
+            })
+
+    def action_set_remaining_amount_cron_update(self):
+        date = fields.Datetime.now()
+        schedule = self.env.ref(
+            'analytic_account_types.action_set_remaining_amount')
+        schedule.update({
+            'nextcall': date + timedelta(seconds=10)
+        })
 
     @api.onchange('budget_id')
     def onchange_budget_id(self):
@@ -545,16 +588,16 @@ class AccountMoveLine(models.Model):
             else:
                 rec.local_subtotal = 0
 
-    # @api.depends('budget_id', 'purchase_line_id')
-    # def get_budget_remaining_amount(self):
-    #     for rec in self:
-    #         rec.remaining_amount = 0.0
-    #         if rec.purchase_line_id:
-    #             rec.remaining_amount = rec.purchase_line_id.remaining_amount
-    #         elif rec.sale_line_ids:
-    #             rec.remaining_amount = rec.sale_line_ids[0].remaining_amount
-    #         else:
-    #             rec.remaining_amount = rec.budget_line_id.remaining_amount
+    @api.depends('budget_id', 'purchase_line_id', 'sale_line_ids', 'budget_line_id')
+    def get_budget_remaining_amount(self):
+        for rec in self:
+            rec.remaining_amount = 0.0
+            if rec.purchase_line_id:
+                rec.remaining_amount = rec.purchase_line_id.remaining_amount
+            elif rec.sale_line_ids:
+                rec.remaining_amount = rec.sale_line_ids[0].remaining_amount
+            else:
+                rec.remaining_amount = rec.budget_line_id.remaining_amount
 
     @api.onchange('project_site_id')
     def get_location_and_types(self):
