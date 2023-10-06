@@ -7458,7 +7458,7 @@ class CashFlowStatement(models.Model):
         number_period = int(number_period)
         states_args = """ parent_state = 'posted'"""
         if options['entry'] != 'posted':
-            states_args = """ parent_state in ('posted', 'draft')"""
+            states_args = """ parent_state in ('to_approve','posted', 'draft')"""
         cash_flow_lines = [
             {
                 'id': 'Cash flows from operating activities',

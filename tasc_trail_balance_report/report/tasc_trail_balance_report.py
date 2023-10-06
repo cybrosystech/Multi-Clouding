@@ -95,7 +95,7 @@ class TascTrailBalance(models.Model):
         lines_demo = []
         states_args = """ parent_state = 'posted'"""
         if options['entry'] != 'posted':
-            states_args = """ parent_state in ('posted', 'draft')"""
+            states_args = """ parent_state in ('to_approve','posted', 'draft')"""
         demo_date = datetime.strptime(options['date']['date_from'], "%Y-%m-%d")
         for account in accounts:
             test_move_dict = {
