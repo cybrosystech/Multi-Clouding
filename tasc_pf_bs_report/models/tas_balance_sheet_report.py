@@ -84,13 +84,14 @@ class TascBalanceSheetReport(models.AbstractModel):
         return ['Account', 'Balance', 'Budget', 'Variance']
 
     def _get_balance_sheet_line(self, options):
+        print("hhhhhhhhhhhhh")
         date_to_demo = fields.Date.to_date(options['date']['date_to'])
         budget_date = date(day=1, month=date_to_demo.month,
                            year=date_to_demo.year)
         balance_sheet_lines = []
         states_args = """ parent_state = 'posted'"""
         if options['entry'] != 'posted':
-            states_args = """ parent_state in ('posted', 'draft')"""
+            states_args = """ parent_state in ('to_approve','posted','draft')"""
         query = '''select coalesce((sum(journal_item.debit) - sum(journal_item.credit)), 0) total,
                             account.name, account.code, account.id, account.group_id
                             from account_move_line as journal_item
@@ -672,6 +673,7 @@ class TascBalanceSheetReport(models.AbstractModel):
 
     def _arrange_account_budget_line(self, balance_sheet_lines, account_lines,
                                      budget_lines, dict_id, abs_of=None):
+        print("pppppppppppp")
         group_ids = self.env['account.group'].search(
             [('id', 'in', list(map(lambda x: x['group_id'], account_lines)))])
         for lines in account_lines:

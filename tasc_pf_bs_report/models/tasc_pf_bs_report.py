@@ -98,7 +98,7 @@ class ProfitLossBalance(models.AbstractModel):
         test_child_lines = []
         states_args = """ parent_state = 'posted'"""
         if options['entry'] != 'posted':
-            states_args = """ parent_state in ('posted', 'draft')"""
+            states_args = """ parent_state in ('to_approve','posted', 'draft')"""
         query = '''select coalesce((sum(journal_item.debit) - sum(journal_item.credit)), 0) total,
                     account.name, account.code, account.id, account.group_id
                     from account_move_line as journal_item
@@ -922,6 +922,7 @@ class ProfitLossBalance(models.AbstractModel):
 
     def _arrange_account_budget_line(self, test_child_lines, account_lines,
                                      budget_lines, dict_id, abs_of=None):
+        print("ooooooooooooooo")
         group_ids = self.env['account.group'].search(
             [('id', 'in', list(map(lambda x: x['group_id'], account_lines)))])
         for lines in account_lines:
