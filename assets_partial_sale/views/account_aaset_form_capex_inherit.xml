@@ -8,6 +8,7 @@
         <field name="arch" type="xml">
             <field name="asset_sub_model_id" position="after">
                 <field name="capex_type" string="Capex Type"/>
+                <field name="serial_no"/>
                 <field name="partial_disposal" invisible="1"/>
                 <field name="disposal_amount" string="Disposal Amount"/>
                 <field name="asset_net" string="Net Amount"/>
