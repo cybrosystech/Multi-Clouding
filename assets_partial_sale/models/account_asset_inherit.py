@@ -17,6 +17,7 @@ class AccountAssetPartialInherit(models.Model):
     partial_disposal = fields.Boolean(copy=False)
     disposal_amount = fields.Float(default=0, readonly=True)
     asset_net = fields.Float(default=0, readonly=True)
+    serial_no = fields.Char(string="Serial Number",help="Serial Number")
 
     def set_to_close(self, invoice_line_id, partial, partial_amount, date=None):
         self.ensure_one()
