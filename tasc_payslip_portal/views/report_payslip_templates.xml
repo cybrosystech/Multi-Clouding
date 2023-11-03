@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_payslip_portal_template">
+        <t t-call="web.html_container">
+            <t t-foreach="inside_foreach_docs or docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-set="o"
+                       t-value="o.with_context(lang=o.employee_id.address_home_id.lang or o.env.lang)"/>
+                    <div class="page">
+                        <h2 t-field="o.name"/>
+                        <table name="employee-infos"
+                               class="table table-sm table-bordered">
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Employee Pay Summary</strong>
+                                </td>
+                                <td>Payslip for the month</td>
+                                <td rowspan="3">Employee Net Pay</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Employee</strong>
+                                </td>
+                                <td>
+                                    <span t-field="o.employee_id"/>
+                                </td>
+                                <!--                                <td colspn="2"></td>-->
+
+                            </tr>
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Designation</strong>
+                                </td>
+                                <td>
+                                    <span t-field="o.employee_id.job_title"/>
+                                </td>
+                                <!--                                <td colspn="2"></td>-->
+
+                            </tr>
+                            <tr>
+
+                                <td class="w-25">
+                                    <strong>Date of Joining</strong>
+                                </td>
+                                <td>
+                                    <span t-field="o.contract_id.date_start"/>
+                                </td>
+                                <td colspan="2">
+                                    <span t-field="o.contract_id.currency_id"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Pay Date</strong>
+                                </td>
+                                <td>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">
+                                    <strong>EARNINGS</strong>
+                                </td>
+                                <td>
+                                    AMOUNT
+                                </td>
+                                <td>
+                                    DEDUCTIONS
+                                </td>
+                                <td>
+                                    AMOUNT
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Basic Salary</strong>
+                                </td>
+                                <td style="color:#875A7B" class="w-25">
+                                    <span t-esc="o.line_ids.filtered(lambda line: line.code == 'BASIC').total"
+                                          t-options='{"widget": "monetary", "display_currency": o.contract_id.currency_id}'/>
+                                </td>
+                                <td class="w-25">PF</td>
+                                <td class="w-25"></td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Allowances</strong>
+                                </td>
+                                <td>
+                                </td>
+                                <td>
+                                    Loan
+                                </td>
+                                <td>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Other Benefits</strong>
+                                </td>
+                                <td>
+                                </td>
+                                <td>
+                                    Advance
+                                </td>
+                                <td>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Bonus</strong>
+                                </td>
+                                <td>
+                                </td>
+                                <td>
+                                    Other Deductions
+                                </td>
+                                <td>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Gross Earnings</strong>
+                                </td>
+                                <td>
+                                </td>
+                                <td>
+                                    Total Deductions
+                                </td>
+                                <td>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="w-25" colspan="4">
+                                    <strong>Reimbursements</strong>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td class="w-25" colspan="2">
+                                    <strong>Reimbursement1</strong>
+                                </td>
+                                <td colspan="2"></td>
+
+                            </tr>
+                            <tr>
+                                <td class="w-25" colspan="2">
+                                    <strong>Reimbursement2</strong>
+                                    <td colspan="2"></td>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td class="w-25" colspan="2">
+                                    <strong>Total Reimbursement</strong>
+                                    <td colspan="2"></td>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td class="w-25" colspan="2">
+                                    <strong>Net Pay</strong>
+                                    <td colspan="2"></td>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td class="w-25" colspan="2">
+                                    <strong>Total Gross Earnings</strong>
+                                    <td colspan="2"></td>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td class="w-25" colspan="2">
+                                    <strong>Total Deductions</strong>
+                                    <td colspan="2"></td>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td class="w-25" colspan="2">
+                                    <strong>Total Reimbursements</strong>
+                                    <td colspan="2"></td>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td class="w-25" colspan="2">
+                                    <strong>Total Net Payable</strong>
+                                    <td colspan="2"></td>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Total Net Payable</strong>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td class="w-25 text-center" colspan="4">
+                                    <strong>**Total Net Payable = Gross Earnings
+                                        - Total Deductions + Total
+                                        Reimbursements
+                                    </strong>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td class="w-25 text-center" colspan="4">
+                                    <strong>TASC Towers Holding Limited | Level
+                                        7, Gate Village Bldg.05, DIFC, Ddubai,
+                                        U.A.E.
+                                    </strong>
+                                </td>
+
+                            </tr>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_payslip_portal">
+        <t t-foreach="docs" t-as="o">
+            <t t-set="inside_foreach_docs" t-value="o"/>
+            <t t-call="tasc_payslip_portal.report_payslip_portal_template"
+               t-lang="o.employee_id.sudo().address_home_id.lang"/>
+        </t>
+    </template>
+</odoo>
