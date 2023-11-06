@@ -60,9 +60,11 @@
                                     <strong>Employee Pay Summary</strong>
                                 </td>
                                 <td style="width:40%;">
-                                    <t t-esc="o.name"/>
+
                                 </td>
-                                <td align="center" rowspan="3" colspan="2" style="text-align:center;padding:50px;">Employee Net Pay :
+                                <td align="center" rowspan="3" colspan="2"
+                                    style="text-align:center;padding:50px;">
+                                    Employee Net Pay :
                                     <t t-esc="net_salary"/>
                                 </td>
                             </tr>
@@ -105,13 +107,13 @@
                                     <strong>EARNINGS</strong>
                                 </th>
                                 <th>
-                                    <strong> AMOUNT</strong>
+                                    <strong>AMOUNT</strong>
                                 </th>
                                 <th>
-                                    <strong> DEDUCTIONS</strong>
+                                    <strong>DEDUCTIONS</strong>
                                 </th>
                                 <th>
-                                    <strong>  AMOUNT</strong>
+                                    <strong>AMOUNT</strong>
                                 </th>
                             </tr>
                             <tr>
@@ -131,7 +133,7 @@
                             </tr>
                             <tr>
                                 <th class="w-25">
-                                    <strong>Allowances</strong>
+                                    Allowances
                                 </th>
                                 <td>
                                     <t t-esc="allowance_amount"/>
@@ -145,7 +147,7 @@
                             </tr>
                             <tr>
                                 <th class="w-25">
-                                    <strong>Other Benefits</strong>
+                                    Other Benefits
                                 </th>
                                 <td>
 
@@ -200,7 +202,7 @@
                                     <t t-esc="tot_earnings"/>
                                 </td>
                                 <th>
-                                   <strong> Total Deductions</strong>
+                                    <strong>Total Deductions</strong>
                                 </th>
                                 <td>
                                     <t t-set="tot_deduction"
@@ -257,7 +259,7 @@
                             </tr>
                             <tr>
                                 <th class="w-25" colspan="2">
-                                    <strong>Net Pay</strong>
+                                    <strong>NET PAY</strong>
                                     <td colspan="2">
                                         <t t-set="net_pay"
                                            t-value="0"/>
@@ -284,14 +286,14 @@
 
                                 </th>
                                 <td colspan="2">
-                                        <t t-esc="tot_earnings"/>
+                                    <t t-esc="tot_earnings"/>
 
-                                    </td>
+                                </td>
 
                             </tr>
                             <tr>
                                 <th class="w-25" colspan="2">
-                                   Total Deductions
+                                    Total Deductions
                                 </th>
                                 <td colspan="2">
                                     <t t-esc="tot_deduction"/>
