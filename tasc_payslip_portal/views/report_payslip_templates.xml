@@ -5,7 +5,7 @@
             <t t-foreach="inside_foreach_docs or docs" t-as="o">
                 <t t-call="tasc_payslip_portal.external_layout_standard_payslip_portal">
                     <div class="page">
-                        <h2 style="text-align:center;" t-field="o.name"/>
+                        <h4 style="text-align:center;" t-field="o.name"/>
                         <t t-set="allowance_amount" t-value="0"/>
                         <t t-set="provident_fund" t-value="0"/>
                         <t t-set="net_salary" t-value="0"/>
@@ -59,10 +59,10 @@
                                 <td class="w-25">
                                     <strong>Employee Pay Summary</strong>
                                 </td>
-                                <td>
+                                <td style="width:40%;">
                                     <t t-esc="o.name"/>
                                 </td>
-                                <td rowspan="3" colspan="2">Employee Net Pay :
+                                <td align="center" rowspan="3" colspan="2" style="text-align:center;padding:50px;">Employee Net Pay :
                                     <t t-esc="net_salary"/>
                                 </td>
                             </tr>
@@ -89,7 +89,7 @@
                                 <td>
                                     <span t-field="o.contract_id.date_start"/>
                                 </td>
-                                <td colspan="2">
+                                <td colspan="2" style="text-align:center;">
                                     <span t-field="o.contract_id.currency_id"/>
                                 </td>
                             </tr>
@@ -101,23 +101,23 @@
                                 </td>
                             </tr>
                             <tr>
-                                <td class="w-25">
+                                <th class="w-25">
                                     <strong>EARNINGS</strong>
-                                </td>
-                                <th>
-                                    AMOUNT
                                 </th>
                                 <th>
-                                    DEDUCTIONS
+                                    <strong> AMOUNT</strong>
                                 </th>
                                 <th>
-                                    AMOUNT
+                                    <strong> DEDUCTIONS</strong>
+                                </th>
+                                <th>
+                                    <strong>  AMOUNT</strong>
                                 </th>
                             </tr>
                             <tr>
-                                <th class="w-25">
+                                <td class="w-25">
                                     <strong>Basic Salary</strong>
-                                </th>
+                                </td>
                                 <td class="w-25">
                                     <t t-set="basic"
                                        t-value="o.line_ids.filtered(lambda line: line.code == 'BASIC').total"/>
@@ -200,7 +200,7 @@
                                     <t t-esc="tot_earnings"/>
                                 </td>
                                 <th>
-                                    Total Deductions
+                                   <strong> Total Deductions</strong>
                                 </th>
                                 <td>
                                     <t t-set="tot_deduction"
@@ -225,9 +225,9 @@
                                 </td>
                             </tr>
                             <tr>
-                                <td class="w-25" colspan="4">
-                                    <strong>Reimbursements</strong>
-                                </td>
+                                <th class="w-25" colspan="4">
+                                    <strong>REIMBURSEMENTS</strong>
+                                </th>
 
                             </tr>
                             <tr>
@@ -256,7 +256,7 @@
 
                             </tr>
                             <tr>
-                                <td class="w-25" colspan="2">
+                                <th class="w-25" colspan="2">
                                     <strong>Net Pay</strong>
                                     <td colspan="2">
                                         <t t-set="net_pay"
@@ -275,26 +275,26 @@
                                         </t>
                                         <t t-esc="net_pay"/>
                                     </td>
-                                </td>
+                                </th>
 
                             </tr>
                             <tr>
-                                <td class="w-25" colspan="2">
+                                <th class="w-25" colspan="2">
                                     <strong>Total Gross Earnings</strong>
-                                    <td colspan="2">
+
+                                </th>
+                                <td colspan="2">
                                         <t t-esc="tot_earnings"/>
 
                                     </td>
-                                </td>
 
                             </tr>
                             <tr>
-                                <td class="w-25" colspan="2">
-                                    <strong>Total Deductions</strong>
-                                    <td colspan="2">
-                                        <t t-esc="tot_deduction"/>
-
-                                    </td>
+                                <th class="w-25" colspan="2">
+                                   Total Deductions
+                                </th>
+                                <td colspan="2">
+                                    <t t-esc="tot_deduction"/>
                                 </td>
 
                             </tr>
