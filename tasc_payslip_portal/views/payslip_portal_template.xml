@@ -12,7 +12,7 @@
                 <t t-else="">Payslips</t>
             </li>
             <li t-if="payslip" class="breadcrumb-item active">
-                <t t-esc="payslip.name"/>
+                <t style="text-align:center;" t-esc="payslip.name"/>
             </li>
         </xpath>
     </template>
@@ -74,10 +74,6 @@
                 <!-- Sidebar -->
                 <t t-call="portal.portal_record_sidebar">
                     <t t-set="classes" t-value="'col-lg-auto d-print-none'"/>
-
-                    <!--                    <t t-set="title">-->
-                    <!--                        <h2 class="mb-0"><b t-field="sale_order.amount_total" data-id="total_amount"/> </h2>-->
-                    <!--                    </t>-->
                     <t t-set="entries">
                         <ul class="list-group list-group-flush flex-wrap flex-row flex-lg-column">
                             <li class="list-group-item flex-grow-1">
@@ -117,23 +113,28 @@
         <!-- Intro -->
         <div id="introduction"
              t-attf-class="pb-2 pt-3 #{'card-header bg-white' if report_type == 'html' else ''}">
-            <h2 class="my-0">
-                <t t-esc="payslip.name"/>
+            <h2 class="my-0" style="text-align:center;">
+                <t  t-esc="payslip.name"/>
             </h2>
         </div>
 
         <section id="details" style="page-break-inside: auto;" class="mt32">
             <div class="table-responsive">
+
                 <table t-att-data-order-id="payslip.id"
                        t-att-data-token="payslip.access_token"
                        class="table table-sm" id="payslip_table">
                     <thead class="bg-100">
                         <tr>
-                            <th class="text-left col-3" colspan="2">Employee Pay
+                            <th class="text-left col-3">Employee Pay
                                 Summary
                             </th>
+                            <td>
+                                <t t-esc="payslip.name"/>
+                            </td>
                             <th rowspan="3" colspan="2">
-                                Employee Net Pay
+                                Employee Net Pay :
+                                <t t-esc="net_salary"/>
                             </th>
                         </tr>
                         <tr>
@@ -219,7 +220,13 @@
                             </td>
                             <th>Other Deduction</th>
                             <td class="text-left col-3">
-                                <t t-esc="other_deduction"/>
+                                <t t-if="other_deduction!=0">
+                                    <t t-esc="other_deduction"/>
+
+                                </t>
+                                <t t-else="">
+                                    <t t-esc="0"/>
+                                </t>
                             </td>
                         </tr>
                         <tr>
@@ -297,7 +304,6 @@
                             <th class="text-left col-3" colspan="2">
                                 Total Reimbursement
                             </th>
-
                             <td class="text-left col-3" colspan="2">
                                 <t t-esc="reimbursement"/>
                             </td>
@@ -382,18 +388,14 @@
                                 Deductions + Total Reimbursements
                             </th>
                         </tr>
-                        <tr>
-                            <th class="text-center col-3" colspan="4">
-                                TASC Towers Holding Limited | Level 7, Gate
-                                Village Bldg.05, DIFC, Ddubai, U.A.E.
-                            </th>
-                        </tr>
+
                     </thead>
                     <tbody class="sale_tbody">
 
                     </tbody>
                 </table>
             </div>
+
         </section>
     </template>
 </odoo>
