@@ -1,0 +1,448 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_payslip_portal_template">
+        <t t-call="web.html_container">
+            <t t-foreach="inside_foreach_docs or docs" t-as="o">
+                <t t-call="tasc_payslip_portal.external_layout_standard_payslip_portal">
+                    <div class="page">
+                        <h4 style="text-align:center;" t-field="o.name"/>
+                        <t t-set="allowance_amount" t-value="0"/>
+                        <t t-set="provident_fund" t-value="0"/>
+                        <t t-set="net_salary" t-value="0"/>
+                        <t t-set="bonus_amt" t-value="0"/>
+                        <t t-set="loan_amt" t-value="0"/>
+                        <t t-set="other_benefits" t-value="0"/>
+                        <t t-set="advance_amt" t-value="0"/>
+                        <t t-set="other_deduction" t-value="0"/>
+                        <t t-set="reimbursement_amt" t-value="0"/>
+                        <t t-foreach="o.line_ids" t-as="line">
+                            <t t-if="line.category_id.name == 'Allowance'">
+                                <t t-set="allowance_amount"
+                                   t-value="allowance_amount+line.amount"/>
+                            </t>
+                            <t t-if="line.category_id.name == 'Deduction' and line.name == 'Provident Fund'">
+                                <t t-set="provident_fund"
+                                   t-value="provident_fund+line.amount"/>
+                            </t>
+                            <t t-if="line.category_id.name == 'Net'">
+                                <t t-set="net_salary"
+                                   t-value="net_salary+line.amount"/>
+                            </t>
+                            <t t-if="line.name == 'Other Benefits'">
+                                <t t-set="other_benefits"
+                                   t-value="other_benefits+line.amount"/>
+                            </t>
+                            <t t-if="line.name == 'Bonus'">
+                                <t t-set="bonus_amt"
+                                   t-value="bonus_amt+line.amount"/>
+                            </t>
+                            <t t-if="line.name == 'Loan'">
+                                <t t-set="loan_amt"
+                                   t-value="loan_amt+line.amount"/>
+                            </t>
+                            <t t-if="line.name == 'Advance'">
+                                <t t-set="advance_amt"
+                                   t-value="advance_amt+line.amount"/>
+                            </t>
+                            <t t-if="line.name == 'Other Deduction'">
+                                <t t-set="other_deduction"
+                                   t-value="other_deduction+line.amount"/>
+                            </t>
+                            <t t-if="line.name == 'Reimbursement'">
+                                <t t-set="reimbursement_amt"
+                                   t-value="reimbursement_amt+line.amount"/>
+                            </t>
+                        </t>
+                        <table name="employee-infos"
+                               class="table table-sm table-bordered">
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Employee Pay Summary</strong>
+                                </td>
+                                <td style="width:40%;">
+
+                                </td>
+                                <td align="center" rowspan="3" colspan="2"
+                                    style="text-align:center;padding:50px;">
+                                    Employee Net Pay :
+                                    <t t-esc="net_salary"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Employee</strong>
+                                </td>
+                                <td>
+                                    <span t-field="o.employee_id"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Designation</strong>
+                                </td>
+                                <td>
+                                    <span t-field="o.employee_id.job_title"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Date of Joining</strong>
+                                </td>
+                                <td>
+                                    <span t-field="o.contract_id.date_start"/>
+                                </td>
+                                <td colspan="2" style="text-align:center;">
+                                    <span t-field="o.contract_id.currency_id"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Pay Date</strong>
+                                </td>
+                                <td>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="w-25">
+                                    <strong>EARNINGS</strong>
+                                </th>
+                                <th>
+                                    <strong>AMOUNT</strong>
+                                </th>
+                                <th>
+                                    <strong>DEDUCTIONS</strong>
+                                </th>
+                                <th>
+                                    <strong>AMOUNT</strong>
+                                </th>
+                            </tr>
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Basic Salary</strong>
+                                </td>
+                                <td class="w-25">
+                                    <t t-set="basic"
+                                       t-value="o.line_ids.filtered(lambda line: line.code == 'BASIC').total"/>
+                                    <span t-esc="basic"
+                                          t-options='{"widget": "monetary", "display_currency": o.contract_id.currency_id}'/>
+                                </td>
+                                <th class="w-25">PF</th>
+                                <td class="w-25">
+                                    <t t-esc="provident_fund"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="w-25">
+                                    Allowances
+                                </th>
+                                <td>
+                                    <t t-esc="allowance_amount"/>
+                                </td>
+                                <th>
+                                    Loan
+                                </th>
+                                <td>
+                                    <t t-esc="loan_amt"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="w-25">
+                                    Other Benefits
+                                </th>
+                                <td>
+
+                                    <t t-esc="other_benefits"/>
+                                </td>
+                                <th>
+                                    Advance
+                                </th>
+                                <td>
+                                    <t t-esc="advance_amt"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Bonus</strong>
+                                </td>
+
+                                <td>
+                                    <t t-esc="bonus_amt"/>
+                                </td>
+                                <th>
+                                    Other Deductions
+                                </th>
+                                <td>
+                                    <t t-esc="other_deduction"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Gross Earnings</strong>
+                                </td>
+                                <td>
+                                    <t t-set="tot_earnings"
+                                       t-value="0.0"/>
+                                    <t t-if="basic">
+                                        <t t-set="tot_earnings"
+                                           t-value="tot_earnings+basic"/>
+                                    </t>
+                                    <t t-if="allowance_amount">
+                                        <t t-set="tot_earnings"
+                                           t-value="tot_earnings+allowance_amount"/>
+                                    </t>
+                                    <t t-if="bonus_amt">
+                                        <t t-set="tot_earnings"
+                                           t-value="tot_earnings+bonus_amt"/>
+                                        <t t-if="other_benefits">
+                                        </t>
+                                        <t t-set="tot_earnings"
+                                           t-value="tot_earnings+other_benefits"/>
+                                    </t>
+
+                                    <t t-esc="tot_earnings"/>
+                                </td>
+                                <th>
+                                    <strong>Total Deductions</strong>
+                                </th>
+                                <td>
+                                    <t t-set="tot_deduction"
+                                       t-value="0.0"/>
+                                    <t t-if="other_deduction">
+                                        <t t-set="tot_deduction"
+                                           t-value="tot_deduction+other_deduction"/>
+                                    </t>
+                                    <t t-if="loan_amt">
+                                        <t t-set="tot_deduction"
+                                           t-value="tot_deduction+loan_amt"/>
+                                    </t>
+                                    <t t-if="provident_fund">
+                                        <t t-set="tot_deduction"
+                                           t-value="tot_deduction+provident_fund"/>
+                                    </t>
+                                    <t t-if="advance_amt">
+                                        <t t-set="tot_deduction"
+                                           t-value="tot_deduction+advance_amt"/>
+                                    </t>
+                                    <t t-esc="tot_deduction"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="w-25" colspan="4">
+                                    <strong>REIMBURSEMENTS</strong>
+                                </th>
+
+                            </tr>
+                            <tr>
+                                <td class="w-25" colspan="2">
+                                    <strong>Reimbursement1</strong>
+                                </td>
+                                <td colspan="2">
+                                    <t t-esc="reimbursement_amt"/>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td class="w-25" colspan="2">
+                                    <strong>Reimbursement2</strong>
+                                    <td colspan="2"></td>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td class="w-25" colspan="2">
+                                    <strong>Total Reimbursement</strong>
+                                    <td colspan="2">
+                                        <t t-esc="reimbursement_amt"/>
+                                    </td>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <th class="w-25" colspan="2">
+                                    <strong>NET PAY</strong>
+                                    <td colspan="2">
+                                        <t t-set="net_pay"
+                                           t-value="0"/>
+                                        <t t-if="tot_earnings">
+                                            <t t-set="net_pay"
+                                               t-value="net_pay+tot_earnings"/>
+                                        </t>
+                                        <t t-if="reimbursement">
+                                            <t t-set="net_pay"
+                                               t-value="net_pay+reimbursement"/>
+                                        </t>
+                                        <t t-if="tot_deduction">
+                                            <t t-set="net_pay"
+                                               t-value="net_pay-tot_deduction"/>
+                                        </t>
+                                        <t t-esc="net_pay"/>
+                                    </td>
+                                </th>
+
+                            </tr>
+                            <tr>
+                                <th class="w-25" colspan="2">
+                                    <strong>Total Gross Earnings</strong>
+
+                                </th>
+                                <td colspan="2">
+                                    <t t-esc="tot_earnings"/>
+
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <th class="w-25" colspan="2">
+                                    Total Deductions
+                                </th>
+                                <td colspan="2">
+                                    <t t-esc="tot_deduction"/>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td class="w-25" colspan="2">
+                                    <strong>Total Reimbursements</strong>
+                                    <td colspan="2">
+                                        <t t-esc="reimbursement_amt"/>
+                                    </td>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td class="w-25" colspan="2">
+                                    <strong>Total Net Payable</strong>
+                                    <td colspan="2">
+                                        <t t-esc="net_pay"/>
+                                    </td>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Total Net Payable</strong>
+                                    <td>
+                                        <t t-esc="o.contract_id.currency_id.symbol"/>
+                                        <t t-esc="net_pay"/>
+                                    </td>
+                                    <td colspan="2">
+                                        <t t-esc="o.qty_to_text(net_pay)"/>
+                                    </td>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td class="w-25 text-center" colspan="4">
+                                    <strong>**Total Net Payable = Gross Earnings
+                                        - Total Deductions + Total
+                                        Reimbursements
+                                    </strong>
+                                </td>
+
+                            </tr>
+                            <!--                            <tr>-->
+                            <!--                                <td class="w-25 text-center" colspan="4">-->
+                            <!--                                    <strong>TASC Towers Holding Limited | Level-->
+                            <!--                                        7, Gate Village Bldg.05, DIFC, Ddubai,-->
+                            <!--                                        U.A.E.-->
+                            <!--                                    </strong>-->
+                            <!--                                </td>-->
+
+                            <!--                            </tr>-->
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_payslip_portal">
+        <t t-foreach="docs" t-as="o">
+            <t t-set="inside_foreach_docs" t-value="o"/>
+            <t t-call="tasc_payslip_portal.report_payslip_portal_template"
+               t-lang="o.employee_id.sudo().address_home_id.lang"/>
+        </t>
+    </template>
+
+    <template id="external_layout_standard_payslip_portal">
+        <div t-attf-class="header o_company_#{o.company_id.id}_layout"
+             t-att-style="report_header_style">
+            <div class="row">
+                <div class="col-3 mb4">
+                    <img t-if="o.company_id.logo"
+                         t-att-src="image_data_uri(o.company_id.logo)"
+                         style="max-height: 45px;" alt="Logo"/>
+                </div>
+                <div class="col-9 text-right" style="margin-top:10px;"
+                     t-field="o.company_id.report_header" name="moto"/>
+            </div>
+            <div t-if="o.company_id.logo or o.company_id.report_header"
+                 class="row zero_min_height">
+                <div class="col-12">
+                    <div style="border-bottom: 1px solid black;"/>
+                </div>
+            </div>
+        </div>
+
+        <div t-attf-class="article o_report_layout_standard o_company_#{o.company_id.id}_layout"
+             t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id"
+             t-att-data-oe-lang="o and o.env.context.get('lang')">
+            <t t-raw="0"/>
+        </div>
+
+        <div t-attf-class="footer o_standard_footer o_company_#{o.company_id.id}_layout">
+            <div class="text-center" style="border-top: 1px solid black;">
+                <ul class="list-inline mb4">
+                    <!-- using the list-inline-item class from bootstrap causes weird behaviours in pdf report
+                         adding d-inline class fixes the problem-->
+                    <li t-if="o.company_id.name"
+                        class="list-inline-item d-inline">
+                        <span class="o_force_ltr" t-field="o.company_id.name"/>
+                        <t t-esc="','"/>
+                    </li>
+                    <li t-if="o.company_id.street"
+                        class="list-inline-item d-inline">
+                        <span t-field="o.company_id.street"/>
+                        <t t-esc="','"/>
+                    </li>
+                    <li t-if="o.company_id.street2"
+                        class="list-inline-item d-inline">
+                        <span t-field="o.company_id.street2"/>
+                        <t t-esc="','"/>
+                    </li>
+                    <li t-if="o.company_id.city"
+                        class="list-inline-item d-inline">
+                        <span t-field="o.company_id.city"/>
+                        <t t-esc="','"/>
+                    </li>
+                    <li t-if="o.company_id.state_id.name"
+                        class="list-inline-item d-inline">
+                        <span t-field="o.company_id.state_id.name"/>
+                        <t t-esc="','"/>
+                    </li>
+                    <li t-if="o.company_id.country_id.name"
+                        class="list-inline-item d-inline">
+                        <span t-field="o.company_id.country_id.name"/>
+                        <t t-esc="','"/>
+                    </li>
+
+                </ul>
+
+                <div name="financial_infos">
+                    <span t-field="o.company_id.report_footer"/>
+                </div>
+
+                <div t-if="report_type == 'pdf'" class="text-muted">
+                    Page:
+                    <span class="page"/>
+                    /
+                    <span class="topage"/>
+                </div>
+                <div t-if="report_type == 'pdf' and display_name_in_footer"
+                     class="text-muted">
+                    <span t-field="o.name"/>
+                </div>
+            </div>
+        </div>
+    </template>
+</odoo>

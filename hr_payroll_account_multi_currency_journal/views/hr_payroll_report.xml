@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="payroll_report_search_inherit" model="ir.ui.view">
+            <field name="name">payroll.report.search.inherit</field>
+            <field name="model">hr.payroll.report</field>
+            <field name="inherit_id" ref="hr_payroll.payroll_report_view_search"/>
+            <field name="arch" type="xml">
+                <field name="company_id" position="after">
+                    <field name="currency_id" filter_domain="[('currency_id', 'ilike', self)]" groups="base.group_multi_currency"/>
+                </field>
+                <filter name="company" position="after">
+                    <filter string="Currency" name="currency_id" context="{'group_by':'currency_id'}" groups="base.group_multi_currency"/>
+                </filter>
+            </field>
+        </record>
+    </data>
+</odoo>

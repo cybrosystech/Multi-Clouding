@@ -9,10 +9,11 @@ class AccountMoveLineBudgetIndexing(models.Model):
     _inherit = 'account.move.line'
 
     budget_id = fields.Many2one(comodel_name="crossovered.budget",
-                                string="Budget", required=False, index=True)
+                                string="Budget", required=False, index=True,
+                                copy=False)
     budget_line_id = fields.Many2one(comodel_name="crossovered.budget.lines",
                                      string="Budget Line", required=False,
-                                     index=True)
+                                     index=True, copy=False)
 
 
 @api.depends()
