@@ -1,7 +1,9 @@
-from odoo import http
+from odoo import http, SUPERUSER_ID, _
+from odoo.exceptions import AccessError, MissingError
 from odoo.http import request
 from odoo.addons.portal.controllers.portal import CustomerPortal, \
     pager as portal_pager, get_records_pager
+from odoo.tools import consteq
 
 
 class PayslipPortal(CustomerPortal):
@@ -12,7 +14,11 @@ class PayslipPortal(CustomerPortal):
                                   access_token=None,
                                   message=False, download=False, **kw):
 
-        order_sudo = request.env['hr.payslip'].browse(order_id).sudo()
+        try:
+            order_sudo = self._document_check_access('hr.payslip', order_id,
+                                                     access_token=access_token)
+        except (AccessError, MissingError):
+            return request.redirect('/my')
 
         if report_type in ('html', 'pdf', 'text'):
             return self._show_report(model=order_sudo, report_type=report_type,
