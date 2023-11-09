@@ -52,13 +52,11 @@ class AccountAssetPartialInherit(models.Model):
                     'location_id': asset.location_id.id,
                 })
             else:
-                print('amount1111111', amount)
                 base_amount = amount
                 amount = asset.currency_id._convert(round(amount, 2),
                                                     asset.company_id.currency_id,
                                                     asset.company_id,
                                                     disposal_date)
-                print('amount2222222', amount)
                 return (0, 0, {
                     'name': asset.name,
                     'account_id': account.id,
@@ -102,7 +100,6 @@ class AccountAssetPartialInherit(models.Model):
                     self.create_last_termination_move(disposal_date)
                 unposted_depreciation_move_ids = asset.depreciation_move_ids.filtered(
                     lambda x: x.state == 'draft')
-
                 old_values = {
                     'method_number': asset.method_number,
                 }
@@ -312,8 +309,6 @@ class AccountAssetPartialInherit(models.Model):
             if record.currency_id != record.env.company.currency_id:
                 posted_depreciation_move_ids = record.depreciation_move_ids.filtered(
                     lambda x: x.state == 'posted')
-                print('jjjj',
-                      sum(posted_depreciation_move_ids.mapped('amount_total')))
                 record.value_residual = (
                         record.original_value
                         - record.salvage_value

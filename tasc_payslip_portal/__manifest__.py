@@ -9,9 +9,12 @@
     'website': 'https://www.cybrosys.com',
     'category': 'Website',
     'version': '14.0.1.0.0',
-    'depends': ['portal', 'hr_payroll'],
+    'depends': ['base', 'portal', 'hr_payroll'],
     'data':
         [
+            'security/tasc_payslip_portal_groups.xml',
+            'security/hr_payslip_security.xml',
+            'security/ir.model.access.csv',
             'views/payslip_portal_template.xml',
             'views/report_payslip_templates.xml',
             'views/hr_payroll_report.xml',

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <record id="hr_payslip_rule_hr_payslip_group_user_portal"
+                model="ir.rule">
+            <field name="name">Payslip Portal Personal Access</field>
+            <field ref="model_hr_payslip" name="model_id"/>
+            <field name="domain_force">[('employee_id.user_id','=',user.id)]</field>
+            <field name="groups"
+                   eval="[(4, ref('tasc_payslip_portal.hr_payslip_group_user_portal'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+    </data>
+</odoo>

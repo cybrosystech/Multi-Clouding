@@ -1,8 +1,9 @@
-from odoo import http, _
+from odoo import http, SUPERUSER_ID, _
 from odoo.exceptions import AccessError, MissingError
 from odoo.http import request
 from odoo.addons.portal.controllers.portal import CustomerPortal, \
     pager as portal_pager, get_records_pager
+from odoo.tools import consteq
 
 
 class PayslipPortal(CustomerPortal):
@@ -12,6 +13,7 @@ class PayslipPortal(CustomerPortal):
     def payslip_portal_order_page(self, order_id, report_type=None,
                                   access_token=None,
                                   message=False, download=False, **kw):
+
         try:
             order_sudo = self._document_check_access('hr.payslip', order_id,
                                                      access_token=access_token)
@@ -35,9 +37,9 @@ class PayslipPortal(CustomerPortal):
             'payslip': order,
             'token': access_token,
             'bootstrap_formatting': True,
-            'employee_id': order.employee_id.id,
+            'employee_id': order.sudo().employee_id.id,
             'report_type': 'html',
-            'action': order._get_portal_return_action(),
+            'action': order.sudo()._get_portal_return_action(),
         }
         values.update(
             {'basic': 0.0,
@@ -52,7 +54,7 @@ class PayslipPortal(CustomerPortal):
              'provident_fund': 0.0
              }
         )
-        for line in order.line_ids:
+        for line in order.sudo().line_ids:
             if line.category_id.name == 'Basic':
                 if 'basic' in values:
                     amt = values.get('basic')
@@ -155,9 +157,8 @@ class PayslipPortal(CustomerPortal):
         PaySlip = request.env['hr.payslip']
         domain = self._prepare_payslip_domain(partner)
 
-        searchbar_sortings = self._get_payslip_searchbar_sortings()
         # count for pager
-        payslip_count = PaySlip.search_count(domain)
+        payslip_count = PaySlip.sudo().search_count(domain)
         # make pager
         pager = portal_pager(
             url="/my/payslips",
@@ -166,8 +167,8 @@ class PayslipPortal(CustomerPortal):
             step=self._items_per_page
         )
         # search the count to display, according to the pager data
-        payslips = PaySlip.search(domain, limit=self._items_per_page,
-                                  offset=pager['offset'])
+        payslips = PaySlip.sudo().search(domain, limit=self._items_per_page,
+                                         offset=pager['offset'])
         values.update({
             'payslips': payslips.sudo(),
             'page_name': 'payslip',
@@ -181,18 +182,14 @@ class PayslipPortal(CustomerPortal):
         partner = request.env.user.partner_id
         PaySlip = request.env['hr.payslip']
         if 'payslip_count' in counters:
-            values['payslip_count'] = PaySlip.search_count(
+            values['payslip_count'] = PaySlip.sudo().search_count(
                 self._prepare_payslip_domain(partner)) \
-                if PaySlip.check_access_rights('read',
-                                               raise_exception=False) else 0
+                if PaySlip.sudo().check_access_rights('read',
+                                                      raise_exception=False) else 0
         return values
 
     def _prepare_payslip_domain(self, partner):
         return [
-            ('employee_id.address_home_id.id', '=', partner.id)
+            ('employee_id.address_home_id.id', '=', partner.id),
+            ('state', 'not in', ['draft', 'cancel'])
         ]
-
-    def _get_payslip_searchbar_sortings(self):
-        return {
-            'name': {'label': _('Reference'), 'order': 'number'},
-        }

@@ -12,7 +12,7 @@
                 <t t-else="">Payslips</t>
             </li>
             <li t-if="payslip" class="breadcrumb-item active">
-                <t style="text-align:center;" t-esc="payslip.name"/>
+                <t style="text-align:center;" t-esc="payslip.sudo().name"/>
             </li>
         </xpath>
     </template>
@@ -49,8 +49,8 @@
                 <t t-foreach="payslips" t-as="payslip">
                     <tr>
                         <td>
-                            <a t-attf-href="/my/payslips/#{payslip.id}">
-                                <t t-esc="payslip.name"/>
+                            <a t-attf-href="/my/payslips/#{payslip.sudo().id}">
+                                <t t-esc="payslip.sudo().name"/>
                             </a>
                         </td>
                     </tr>
@@ -66,7 +66,7 @@
             <t t-set="o_portal_fullwidth_alert">
                 <t t-call="portal.portal_back_in_edit_mode">
                     <t t-set="backend_url"
-                       t-value="'/web#model=%s&amp;id=%s&amp;action=%s&amp;view_type=form' % (payslip._name, payslip.id, action.id)"/>
+                       t-value="'/web#model=%s&amp;id=%s&amp;action=%s&amp;view_type=form' % (payslip.sudo()._name, payslip.sudo().id, action.id)"/>
                 </t>
             </t>
 
@@ -80,7 +80,7 @@
                                 <div class="o_download_pdf btn-toolbar flex-sm-nowrap">
                                     <div class="btn-group flex-grow-1 mr-1 mb-1">
                                         <a class="btn btn-secondary btn-block o_download_btn"
-                                           t-attf-href="/my/payslips/#{payslip.id}?download=true&amp;report_type=pdf"
+                                           t-attf-href="/my/payslips/#{payslip.sudo().id}?download=true&amp;report_type=pdf"
                                            title="Download">
                                             <i class="fa fa-download"/>
                                             Download
@@ -114,15 +114,15 @@
         <div id="introduction"
              t-attf-class="pb-2 pt-3 #{'card-header bg-white' if report_type == 'html' else ''}">
             <h2 class="my-0" style="text-align:center;">
-                <t  t-esc="payslip.name"/>
+                <t  t-esc="payslip.sudo().name"/>
             </h2>
         </div>
 
         <section id="details" style="page-break-inside: auto;" class="mt32">
             <div class="table-responsive">
 
-                <table t-att-data-order-id="payslip.id"
-                       t-att-data-token="payslip.access_token"
+                <table t-att-data-order-id="payslip.sudo().id"
+                       t-att-data-token="payslip.sudo().access_token"
                        class="table table-sm" id="payslip_table">
                     <thead class="bg-100">
                         <tr>
@@ -130,7 +130,7 @@
                                 Summary
                             </th>
                             <td>
-                                <t t-esc="payslip.name"/>
+                                <t t-esc="payslip.sudo().name"/>
                             </td>
                             <th rowspan="3" colspan="2">
                                 Employee Net Pay :
@@ -142,7 +142,7 @@
                                 Name
                             </th>
                             <td>
-                                <span t-field="payslip.employee_id.name"/>
+                                <span t-field="payslip.sudo().employee_id.name"/>
                             </td>
                         </tr>
                         <tr>
@@ -150,7 +150,7 @@
                                 Designation
                             </th>
                             <td>
-                                <span t-field="payslip.employee_id.job_title"/>
+                                <span t-field="payslip.sudo().employee_id.job_title"/>
                             </td>
                         </tr>
                         <tr>
@@ -158,10 +158,10 @@
                                 Joining
                             </th>
                             <td>
-                                <span t-field="payslip.contract_id.date_start"/>
+                                <span t-field="payslip.sudo().contract_id.date_start"/>
                             </td>
                             <td colspan="2" class="text-center col-3">
-                                <span t-field="payslip.contract_id.currency_id.name"/>
+                                <span t-field="payslip.sudo().contract_id.currency_id.name"/>
                             </td>
                         </tr>
                         <tr>
@@ -375,11 +375,11 @@
                                 Total Net Payable
                             </th>
                             <td class="text-left col-3">
-                                <t t-esc="payslip.contract_id.currency_id.symbol"/>
+                                <t t-esc="payslip.sudo().contract_id.currency_id.symbol"/>
                                 <t t-esc="net_pay"/>
                             </td>
                             <td class="text-left col-3" colspan="2">
-                                <t t-esc="payslip.qty_to_text(net_pay)"/>
+                                <t t-esc="payslip.sudo().qty_to_text(net_pay)"/>
                             </td>
                         </tr>
                         <tr>

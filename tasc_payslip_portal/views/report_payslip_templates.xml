@@ -5,7 +5,7 @@
             <t t-foreach="inside_foreach_docs or docs" t-as="o">
                 <t t-call="tasc_payslip_portal.external_layout_standard_payslip_portal">
                     <div class="page">
-                        <h4 style="text-align:center;" t-field="o.name"/>
+                        <h4 style="text-align:center;" t-field="o.sudo().name"/>
                         <t t-set="allowance_amount" t-value="0"/>
                         <t t-set="provident_fund" t-value="0"/>
                         <t t-set="net_salary" t-value="0"/>
@@ -15,7 +15,7 @@
                         <t t-set="advance_amt" t-value="0"/>
                         <t t-set="other_deduction" t-value="0"/>
                         <t t-set="reimbursement_amt" t-value="0"/>
-                        <t t-foreach="o.line_ids" t-as="line">
+                        <t t-foreach="o.sudo().line_ids" t-as="line">
                             <t t-if="line.category_id.name == 'Allowance'">
                                 <t t-set="allowance_amount"
                                    t-value="allowance_amount+line.amount"/>
@@ -73,7 +73,7 @@
                                     <strong>Employee</strong>
                                 </td>
                                 <td>
-                                    <span t-field="o.employee_id"/>
+                                    <span t-field="o.sudo().employee_id"/>
                                 </td>
                             </tr>
                             <tr>
@@ -81,7 +81,7 @@
                                     <strong>Designation</strong>
                                 </td>
                                 <td>
-                                    <span t-field="o.employee_id.job_title"/>
+                                    <span t-field="o.sudo().employee_id.job_title"/>
                                 </td>
                             </tr>
                             <tr>
@@ -89,10 +89,10 @@
                                     <strong>Date of Joining</strong>
                                 </td>
                                 <td>
-                                    <span t-field="o.contract_id.date_start"/>
+                                    <span t-field="o.sudo().contract_id.date_start"/>
                                 </td>
                                 <td colspan="2" style="text-align:center;">
-                                    <span t-field="o.contract_id.currency_id"/>
+                                    <span t-field="o.sudo().contract_id.currency_id"/>
                                 </td>
                             </tr>
                             <tr>
@@ -122,9 +122,9 @@
                                 </td>
                                 <td class="w-25">
                                     <t t-set="basic"
-                                       t-value="o.line_ids.filtered(lambda line: line.code == 'BASIC').total"/>
+                                       t-value="o.sudo().line_ids.filtered(lambda line: line.code == 'BASIC').total"/>
                                     <span t-esc="basic"
-                                          t-options='{"widget": "monetary", "display_currency": o.contract_id.currency_id}'/>
+                                          t-options='{"widget": "monetary", "display_currency": o.sudo().contract_id.currency_id}'/>
                                 </td>
                                 <th class="w-25">PF</th>
                                 <td class="w-25">
@@ -150,7 +150,6 @@
                                     Other Benefits
                                 </th>
                                 <td>
-
                                     <t t-esc="other_benefits"/>
                                 </td>
                                 <th>
@@ -322,11 +321,11 @@
                                 <td class="w-25">
                                     <strong>Total Net Payable</strong>
                                     <td>
-                                        <t t-esc="o.contract_id.currency_id.symbol"/>
+                                        <t t-esc="o.sudo().contract_id.currency_id.symbol"/>
                                         <t t-esc="net_pay"/>
                                     </td>
                                     <td colspan="2">
-                                        <t t-esc="o.qty_to_text(net_pay)"/>
+                                        <t t-esc="o.sudo().qty_to_text(net_pay)"/>
                                     </td>
                                 </td>
 
@@ -340,15 +339,6 @@
                                 </td>
 
                             </tr>
-                            <!--                            <tr>-->
-                            <!--                                <td class="w-25 text-center" colspan="4">-->
-                            <!--                                    <strong>TASC Towers Holding Limited | Level-->
-                            <!--                                        7, Gate Village Bldg.05, DIFC, Ddubai,-->
-                            <!--                                        U.A.E.-->
-                            <!--                                    </strong>-->
-                            <!--                                </td>-->
-
-                            <!--                            </tr>-->
                         </table>
                     </div>
                 </t>
@@ -360,23 +350,23 @@
         <t t-foreach="docs" t-as="o">
             <t t-set="inside_foreach_docs" t-value="o"/>
             <t t-call="tasc_payslip_portal.report_payslip_portal_template"
-               t-lang="o.employee_id.sudo().address_home_id.lang"/>
+               t-lang="o.sudo().employee_id.sudo().address_home_id.lang"/>
         </t>
     </template>
 
     <template id="external_layout_standard_payslip_portal">
-        <div t-attf-class="header o_company_#{o.company_id.id}_layout"
+        <div t-attf-class="header o_company_#{o.sudo().company_id.id}_layout"
              t-att-style="report_header_style">
             <div class="row">
                 <div class="col-3 mb4">
-                    <img t-if="o.company_id.logo"
-                         t-att-src="image_data_uri(o.company_id.logo)"
+                    <img t-if="o.sudo().company_id.logo"
+                         t-att-src="image_data_uri(o.sudo().company_id.logo)"
                          style="max-height: 45px;" alt="Logo"/>
                 </div>
                 <div class="col-9 text-right" style="margin-top:10px;"
-                     t-field="o.company_id.report_header" name="moto"/>
+                     t-field="o.sudo().company_id.report_header" name="moto"/>
             </div>
-            <div t-if="o.company_id.logo or o.company_id.report_header"
+            <div t-if="o.sudo().company_id.logo or o.sudo().company_id.report_header"
                  class="row zero_min_height">
                 <div class="col-12">
                     <div style="border-bottom: 1px solid black;"/>
@@ -384,52 +374,52 @@
             </div>
         </div>
 
-        <div t-attf-class="article o_report_layout_standard o_company_#{o.company_id.id}_layout"
-             t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id"
-             t-att-data-oe-lang="o and o.env.context.get('lang')">
+        <div t-attf-class="article o_report_layout_standard o_company_#{o.sudo().company_id.id}_layout"
+             t-att-data-oe-model="o.sudo() and o.sudo()._name" t-att-data-oe-id="o.sudo() and o.sudo().id"
+             t-att-data-oe-lang="o.sudo() and o.sudo().env.context.get('lang')">
             <t t-raw="0"/>
         </div>
 
-        <div t-attf-class="footer o_standard_footer o_company_#{o.company_id.id}_layout">
+        <div t-attf-class="footer o_standard_footer o_company_#{o.sudo().company_id.id}_layout">
             <div class="text-center" style="border-top: 1px solid black;">
                 <ul class="list-inline mb4">
                     <!-- using the list-inline-item class from bootstrap causes weird behaviours in pdf report
                          adding d-inline class fixes the problem-->
-                    <li t-if="o.company_id.name"
+                    <li t-if="o.sudo().company_id.name"
                         class="list-inline-item d-inline">
-                        <span class="o_force_ltr" t-field="o.company_id.name"/>
+                        <span class="o_force_ltr" t-field="o.sudo().company_id.name"/>
                         <t t-esc="','"/>
                     </li>
-                    <li t-if="o.company_id.street"
+                    <li t-if="o.sudo().company_id.street"
                         class="list-inline-item d-inline">
-                        <span t-field="o.company_id.street"/>
+                        <span t-field="o.sudo().company_id.street"/>
                         <t t-esc="','"/>
                     </li>
-                    <li t-if="o.company_id.street2"
+                    <li t-if="o.sudo().company_id.street2"
                         class="list-inline-item d-inline">
-                        <span t-field="o.company_id.street2"/>
+                        <span t-field="o.sudo().company_id.street2"/>
                         <t t-esc="','"/>
                     </li>
-                    <li t-if="o.company_id.city"
+                    <li t-if="o.sudo().company_id.city"
                         class="list-inline-item d-inline">
-                        <span t-field="o.company_id.city"/>
+                        <span t-field="o.sudo().company_id.city"/>
                         <t t-esc="','"/>
                     </li>
-                    <li t-if="o.company_id.state_id.name"
+                    <li t-if="o.sudo().company_id.state_id.name"
                         class="list-inline-item d-inline">
-                        <span t-field="o.company_id.state_id.name"/>
+                        <span t-field="o.sudo().company_id.state_id.name"/>
                         <t t-esc="','"/>
                     </li>
-                    <li t-if="o.company_id.country_id.name"
+                    <li t-if="o.sudo().company_id.country_id.name"
                         class="list-inline-item d-inline">
-                        <span t-field="o.company_id.country_id.name"/>
+                        <span t-field="o.sudo().company_id.country_id.name"/>
                         <t t-esc="','"/>
                     </li>
 
                 </ul>
 
                 <div name="financial_infos">
-                    <span t-field="o.company_id.report_footer"/>
+                    <span t-field="o.sudo().company_id.report_footer"/>
                 </div>
 
                 <div t-if="report_type == 'pdf'" class="text-muted">
@@ -440,7 +430,7 @@
                 </div>
                 <div t-if="report_type == 'pdf' and display_name_in_footer"
                      class="text-muted">
-                    <span t-field="o.name"/>
+                    <span t-field="o.sudo().name"/>
                 </div>
             </div>
         </div>
