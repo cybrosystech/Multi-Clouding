@@ -11,6 +11,7 @@ class AssetSellPartial(models.TransientModel):
 
 
     def do_action(self):
+        print("do_action")
         self.ensure_one()
         invoice_line = self.env[
             'account.move.line'] if self.action == 'dispose' else self.invoice_line_id or self.invoice_id.invoice_line_ids

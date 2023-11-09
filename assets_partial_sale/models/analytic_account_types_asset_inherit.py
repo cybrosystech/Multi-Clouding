@@ -15,6 +15,7 @@ def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial,
         _logger.info("llllllll")
         if company_currency == current_currency:
             amount = round(amount, 2)
+            print("amount",amount)
             return (0, 0, {
                 'name': asset.name,
                 'account_id': account.id,
@@ -36,6 +37,7 @@ def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial,
             amount_test = current_currency._convert(
                     amount, company_currency,
                     asset.company_id, disposal_date)
+            print("amount_test",amount_test)
             return (0, 0, {
                 'name': asset.name,
                 'account_id': account.id,
@@ -50,7 +52,7 @@ def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial,
                 'analytic_tag_ids': [(6, 0,
                                       analytic_tag_ids.ids)] if asset.asset_type == 'sale' else False,
                 'currency_id': company_currency != current_currency and current_currency.id or False,
-                'amount_currency': amount,
+                'amount_currency': -amount,
             })
     print('lllllllllllllkkkkkkkkkkkkkkkkmmmmmmmmmmmmmm')
     move_ids = []
@@ -83,6 +85,7 @@ def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial,
             # Remove all unposted depr. lines
             commands = [(2, line_id.id, False) for line_id in
                         unposted_depreciation_move_ids]
+            print("commands",commands)
 
             # Create a new depr. line with the residual amount and post it
             asset_sequence = len(asset.depreciation_move_ids) - len(
@@ -122,6 +125,7 @@ def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial,
             if not invoice_line_id:
                 del line_datas[2]
             if company_currency == current_currency:
+                print("company_currency1",company_currency)
                 vals = {
                     'amount_total': current_currency._convert(
                         asset.value_residual, company_currency,
@@ -147,14 +151,20 @@ def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial,
                     'currency_id': current_currency.id
                 }
             else:
+                print("not company currency")
                 line_records = [get_line(asset, amount, account) for
                                 amount, account in line_datas if account]
+                print("line_records",line_records)
+                print("pppppppppppp", sum(list(map(lambda x: x[2]['debit'], line_records))))
+                print("iiiiiiiiiiii", sum(
+                        list(map(lambda x: x[2]['credit'], line_records))))
                 difference_current = round(
                     sum(list(map(lambda x: x[2]['debit'], line_records))) - sum(
                         list(map(lambda x: x[2]['credit'], line_records))), 2)
                 print('line_records', line_records)
                 print('difference_current', difference_current)
                 if difference_current < 1:
+                    print("difference less than 1")
                     line_records.append((0, 0, {
                         'name': asset.name,
                         'account_id': asset.account_depreciation_expense_id.id,
@@ -171,6 +181,7 @@ def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial,
                                               analytic_tag_ids.ids)] if asset.asset_type == 'sale' else False,
                         'currency_id': company_currency != current_currency and current_currency.id or False,
                     }))
+                    print("line_records",line_records)
                 vals = {
                     'amount_total': current_currency._convert(
                         asset.value_residual, company_currency,

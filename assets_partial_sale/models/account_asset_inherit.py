@@ -20,12 +20,14 @@ class AccountAssetPartialInherit(models.Model):
     serial_no = fields.Char(string="Serial Number",help="Serial Number")
 
     def set_to_close(self, invoice_line_id, partial, partial_amount, date=None):
+        print("set_to_close1")
         self.ensure_one()
         disposal_date = date or fields.Date.today()
         if invoice_line_id and self.children_ids.filtered(lambda a: a.state in ('draft', 'open') or a.value_residual > 0):
             raise UserError(_("You cannot automate the journal entry for an asset that has a running gross increase. Please use 'Dispose' on the increase(s)."))
         full_asset = self + self.children_ids
         move_ids = full_asset._get_disposal_moves([invoice_line_id] * len(full_asset), disposal_date, partial, partial_amount)
+        print("move_ids",move_ids)
         if not partial:
             full_asset.write({'state': 'close'})
         if move_ids:
@@ -33,7 +35,9 @@ class AccountAssetPartialInherit(models.Model):
 
     def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial,
                             partial_amount):
+        print("_get_disposal_movesssssssssssssssss")
         def get_line(asset, amount, account):
+            print("get_line")
             if asset.currency_id == asset.company_id.currency_id:
                 return (0, 0, {
                     'name': asset.name,
@@ -99,9 +103,11 @@ class AccountAssetPartialInherit(models.Model):
                 current_currency = asset.currency_id
                 prec = company_currency.decimal_places
                 if self.leasee_contract_ids:
+                    print("disposal_date",disposal_date)
                     self.create_last_termination_move(disposal_date)
                 unposted_depreciation_move_ids = asset.depreciation_move_ids.filtered(
                     lambda x: x.state == 'draft')
+                print("unposted_depreciation_move_ids",unposted_depreciation_move_ids)
 
                 old_values = {
                     'method_number': asset.method_number,
@@ -121,6 +127,7 @@ class AccountAssetPartialInherit(models.Model):
                     lambda r: r.state in ['posted', 'cancel'] and not (
                             r.reversal_move_id and r.reversal_move_id[
                         0].state == 'posted'))
+                print("depreciation_moves",depreciation_moves)
                 depreciated_amount = copysign(
                     sum(depreciation_moves.mapped('amount_total')),
                     -initial_amount)
@@ -154,6 +161,7 @@ class AccountAssetPartialInherit(models.Model):
                     move = self.leasee_contract_ids.create_interset_move(
                         self.env['leasee.installment'], disposal_date,
                         termination_residual)
+                    print("interest_move",move)
                     if move:
                         move.auto_post = False
                         move.action_post()
