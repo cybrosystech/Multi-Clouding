@@ -9,9 +9,7 @@ class AssetSellPartial(models.TransientModel):
     partial_amount = fields.Float('amount')
     invoice_id = fields.Many2one('account.move', string="Customer Invoice", help="The disposal invoice is needed in order to generate the closing journal entry.", domain="[('move_type', 'in', ['out_invoice','in_refund']), ('state', '=', 'posted')]")
 
-
     def do_action(self):
-        print("do_action")
         self.ensure_one()
         invoice_line = self.env[
             'account.move.line'] if self.action == 'dispose' else self.invoice_line_id or self.invoice_id.invoice_line_ids
