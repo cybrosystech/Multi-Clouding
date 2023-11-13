@@ -1,3 +1,4 @@
 sqlparse>=0.4.2
 xlsxwriter
 requests
+sqlparse
