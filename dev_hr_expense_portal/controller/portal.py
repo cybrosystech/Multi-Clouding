@@ -96,7 +96,7 @@ class CustomerPortal(CustomerPortal):
                                 ('date', '<=', this_week_end_date)]},
             'last_seven_days': {'label': _('Last 7 Days'),
                                 'domain': [('date', '>=', sd(week_ago)), (
-                                'date', '<=', sd(datetime.today()))]},
+                                    'date', '<=', sd(datetime.today()))]},
             'last_week': {'label': _('Last Week'),
                           'domain': [('date', '>=',
                                       previous_week_range(datetime.today()).get(
@@ -190,6 +190,8 @@ class CustomerPortal(CustomerPortal):
 
         product_id = request.env['product.product'].sudo().search(
             [('can_be_expensed', '=', True)])
+        currency_ids = request.env['res.currency'].sudo().search(
+            [])
 
         values.update({
             'date': date_begin,
@@ -209,6 +211,7 @@ class CustomerPortal(CustomerPortal):
             'sortby': sortby,
             'groupby': groupby,
             'product_ids': product_id,
+            'currency_ids': currency_ids,
 
         })
         return request.render("dev_hr_expense_portal.portal_my_expense", values)
@@ -286,6 +289,7 @@ class CustomerPortal(CustomerPortal):
             'quantity': post['quantity'],
             'reference': post['bill_reference'],
             'employee_id': employee_id,
+            'currency_id': post['currency_id'],
         })
         if expense_id:
             attachment = {
