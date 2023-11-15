@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="portal_my_home_menu_leave" name="Portal layout : sales menu entries" inherit_id="portal.portal_my_home" priority="60">
+        <xpath expr="//div[hasclass('oe_structure')]" position="inside">
+            <li t-if="page_name == 'leaves' or leave" t-attf-class="breadcrumb-item #{'active ' if not leave else ''}">
+                <a t-if="leave" t-attf-href="/my/leaves?{{ keep_query() }}">Leaves</a>
+                <t t-else="">Leaves</t>
+
+            </li>
+            <li t-if="leave" class="breadcrumb-item active">
+                <t t-esc="leave.name"/>
+            </li>
+        </xpath>
+    </template>
+
+    
+    <template id="portal_my_home_leave" name="Portal My Home : sales entries" inherit_id="portal.portal_my_home" priority="60">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="title">Leaves</t>
+                <t t-set="url" t-value="'/my/leaves'"/>
+                <t t-set="count" t-value="leaves_count"/>
+                <t t-set="placeholder_count" t-value="'leaves_count'"/>
+            </t>
+        </xpath>
+    </template>
+
+    <template id="portal_my_leaves" name="My Leaves">
+        <t t-call="portal.portal_layout">
+            <div class="float-right col-lg-2 col-md-2 mt-3">
+                <a role="button" t-attf-href="/leave/apply" class="btn btn-primary float-right">Apply Leave!</a>
+            </div>
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">Leaves</t>
+            </t>
+            <t t-if="not leaves">
+                <p>There are currently no leaves for your account.</p>
+            </t>
+            <t t-if="leaves" t-call="portal.portal_table">
+                <thead>
+                    <tr class="active">
+                        <th>
+                            <span class='d-none d-md-inline'>Employee Name</span>
+                        </th>
+                        <th class="text-right">Leave From</th>
+                        <th class="text-right">Leave To</th>
+                        <th class="text-center">Leave Type</th>
+                        <th class="text-left">Status</th>
+                        <th class="text-center">Description/Reason</th>
+                    </tr>
+                </thead>
+                <t t-foreach="leaves" t-as="leave">
+                    <tr>
+                        <td><a t-att-href="leave.get_portal_url()"><t t-esc="leave.employee_id.name"/></a></td>
+                        <td class="text-right">
+                            <span t-field="leave.request_date_from" t-options="{'widget': 'date'}"/>
+                        </td>
+                        <td class="text-right">
+                            <span t-field="leave.request_date_to" t-options="{'widget': 'date'}"/>
+                        </td>
+                        <td class="text-center"><span t-field="leave.holiday_status_id.name"/></td>
+                        <td class="text-center badge badge-pill badge-info"><center><span class="d-md-inline" t-field="leave.state"/></center></td>
+                        <td class="text-center"><span t-field="leave.name"/></td>
+                    </tr>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <template id="leave_apply" name="Apply Leave">
+        <t t-call="website.layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">Leaves</t>
+            </t>
+            <t t-set="additional_title">Apply Leave</t>
+            <div id="wrap"  class="container">
+                <h2 class="text-center mt-2" style="color: #00A09D;">
+                    Apply leave
+                </h2>
+                <h5 class="text-center mt-2">
+                    Please fill the required details
+                </h5>
+                <div class="center div_center form_width">
+                    <section id="forms" class="col" >
+                        <form id="leave_apply_form" action="/leave/new/data" method="post" enctype="multipart/form-data" class="s_website_form container-fluid mt32" hide-change-model="true">
+                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                            <input type="hidden" id="hidden_employee_id" name="employee_id" t-att-value="employee.id"/>
+                            <div class="form-group row form-field o_website_form_required_custom">
+                                <label class="col-lg-3 col-md-4 col-form-label" for="employee_name">Your Name</label>
+                                <div class="col-lg-7 col-md-8">
+<!--                                    <input type="text" class="form-control o_website_form_input" name="employee_name" t-att-value="employee_name"/>-->
+                                    <b><span class="readonly-left" t-field="employee.name"/></b>
+                                </div>
+                            </div>
+                            <div class="form-group row form-field o_website_form_required_custom">
+                                <label class="col-lg-3 col-md-4 col-form-label" for="holiday_status_id">Leave Type</label>
+                                <div class="col-lg-7 col-md-8">
+                                    <select class="form-control o_website_form_input" name="holiday_status_id"
+                                            id="select_holiday_status_id" required="true">
+                                        <option value="">Select Leave type...</option>
+                                        <t t-foreach="leave_types or []" t-as="leave_type">
+                                            <option t-att-value="leave_type.id" t-att-id="'leave_type_' + str(leave_type.id)">
+                                                <t t-esc="leave_type.name" />
+                                            </option>
+                                        </t>
+                                    </select>
+                                </div>
+<!--                                <div id="show_remaining_leaves_details" class="row hidden">-->
+<!--                                    <span id="show_remaining_leaves_title">Remaining Leaves:</span>-->
+<!--                                    <span id="show_remaining_leaves_value"></span>-->
+<!--                                </div>-->
+                            </div>
+                            <div class="form-group row form-field o_website_form_required_custom">
+                                <label class="col-lg-3 col-md-4 col-form-label" for="request_date_from">Date From</label>
+                                <div class="col-lg-7 col-md-8">
+                                    <input type="date" name="request_date_from" id="request_date_from"
+                                           class="datetimepicker-input form-control o_website_form_input" data-date-format="YYYY-MM-DD"
+                                           placeholder="YYYY-MM-DD" required="1"/>
+                                </div>
+                            </div>
+                            <div class="form-group row form-field o_website_form_required_custom">
+                                <label class="col-lg-3 col-md-4 col-form-label" for="request_date_to">Date To</label>
+                                <div class="col-lg-7 col-md-8">
+                                    <input type="date" name="request_date_to" id="request_date_to"
+                                           class="datetimepicker-input form-control o_website_form_input" data-date-format="YYYY-MM-DD"
+                                           placeholder="YYYY-MM-DD" required="1"/>
+                                </div>
+                            </div>
+                            <div class="form-group row form-field">
+                                <label class="col-lg-3 col-md-4 col-form-label" for="name">Description/Reason*</label>
+                                <div class="col-lg-7 col-md-8">
+                                    <input type="text" class="form-control o_website_form_input" name="name" required="1"/>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-lg-4 text-center mb32">
+                                    <button id="leave_form_submit" class="btn btn-primary request-new-btn-next" type="submit">Submit</button>
+                                </div>
+                                <div class="col-lg-4 text-center mb32">
+                                    <a role="button" href="/my/leaves" class="btn btn-primary request-new-btn-next">Go Back</a>
+                                </div>
+                            </div>
+                            <div class="form-group row" id="main_claim_form" style="display: flex; justify-content: center; margin: 0 auto;">
+                                <section t-if="validation_errors" id="request-error-list" class="row">
+                                    <div class="alert alert-danger alert-dismissible show col-sm-12" role="alert">
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                            <span>X</span>
+                                        </button>
+                                        <h5 class="alert-heading">Following errors happened during leave creation!</h5>
+                                        <hr/>
+                                        <ul>
+                                            <t t-foreach="validation_errors.keys()" t-as="error_field">
+                                                <li t-esc="validation_errors[error_field]['error_text']"/>
+                                            </t>
+                                        </ul>
+                                    </div>
+                                </section>
+                            </div>
+                        </form>
+                    </section>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="view_my_hr_leave" name="Leave Details">
+        <t t-call="website.layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">Leaves</t>
+            </t>
+            <h5 class="text-center mt-2" style="width: 65%;">
+                Below are your leave details:
+            </h5>
+            <div id="wrap"  class="container form_width">
+                <div class="row mt-3 div_center">
+                    <section id="forms" class="col s_website_form">
+                            <div class="form-group row form-field o_website_form_required_custom">
+                                <label class="col-lg-3 col-md-4 col-form-label" for="employee_name">Your Name</label>
+                                <div class="col-lg-7 col-md-8">
+                                    <b><span class="readonly-left" t-field="leave.employee_id.name"/></b>
+                                </div>
+                            </div>
+                            <div class="form-group row form-field o_website_form_required_custom">
+                                <label class="col-lg-3 col-md-4 col-form-label" for="holiday_status_id">Leave Type</label>
+                                <div class="col-lg-7 col-md-8">
+                                    <b><span class="readonly-left" t-field="leave.holiday_status_id.name"/></b>
+                                </div>
+                            </div>
+                            <div class="form-group row form-field o_website_form_required_custom">
+                                <label class="col-lg-3 col-md-4 col-form-label" for="request_date_from">Date From</label>
+                                <div class="col-lg-7 col-md-8">
+                                    <b><span class="readonly-left" t-field="leave.request_date_from"/></b>
+                                </div>
+                            </div>
+                            <div class="form-group row form-field o_website_form_required_custom">
+                                <label class="col-lg-3 col-md-4 col-form-label" for="request_date_to">Date To</label>
+                                <div class="col-lg-7 col-md-8">
+                                    <b><span class="readonly-left" t-field="leave.request_date_to"/></b>
+                                </div>
+                            </div>
+                            <div class="form-group row form-field">
+                                <label class="col-lg-3 col-md-4 col-form-label" for="name">Description/Reason</label>
+                                <div class="col-lg-7 col-md-8">
+                                    <b><span class="readonly-left" t-field="leave.name"/></b>
+                                </div>
+                            </div>
+                            <div class="form-group row form-field">
+                                <label class="col-lg-3 col-md-4 col-form-label" for="name">Status</label>
+                                <div class="col-lg-7 col-md-8">
+                                    <b><span class="readonly-left" t-field="leave.state"/></b>
+                                </div>
+                            </div>
+                            <div class="row" id="o_recruitment_thank_cta">
+                                <div class="col-lg-2 text-center mb32">
+                                    <a role="button" href="/my/leaves" class="btn btn-primary">Go Back</a>
+                                </div>
+                                <div class="col-lg-3 text-center mb32">
+                                    <a role="button" href="/leave/apply" class="btn btn-primary">Apply New Leave!</a>
+                                </div>
+                            </div>
+                    </section>
+                </div>
+            </div>
+        </t>
+    </template>
+
+
+    <record id="leave_thankyou" model="website.page">
+        <field name="url">/leave-thank-you</field>
+        <field name="is_published">True</field>
+        <field name="website_indexed" eval="False"/>
+        <field name="name">Thank you (Leave)</field>
+        <field name="type">qweb</field>
+        <field name="key">gts_hr_portal.leave_thankyou</field>
+        <field name="arch" type="xml">
+            <t name="Thank you (Leave)" t-name="esco_hr_portal.leave_thankyou">
+                <t t-call="website.layout">
+                    <div id="wrap">
+                        <div class="oe_structure">
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <h1 class="text-center">Thanks!</h1>
+                                        <p class="text-center">
+                                            Your leave have been registered successfully.
+                                        </p>
+                                    </div>
+                                    <t>
+                                        <t t-set="responsible" t-value="employee and employee.parent_id.user_id"/>
+                                    </t>
+                                    <t t-if="responsible">
+                                        <div class="col-lg-12">
+                                            <h3 class="mb32 text-center">Your leave application has been sent to:</h3>
+                                        </div>
+                                        <div class="col-lg-1 offset-lg-4">
+                                            <p t-field="responsible.image_128" t-options="{'widget': 'image', 'qweb_img_responsive': False, 'class': 'rounded-circle d-block mx-auto o_image_64_cover'}"/>
+                                        </div>
+                                        <div class="col-lg-5 o_responsible_data">
+                                            <h4 class="mt0" t-field="responsible.name"/>
+                                            <p t-field="responsible.function"/>
+                                            <t t-if='responsible.email'>
+                                                <i class="fa fa-envelope" role="img" aria-label="Email" title="Email"></i> <a t-attf-href="mailto:#{responsible.email}" t-esc="responsible.email"/>
+                                            </t>
+                                            <t t-if='responsible.phone'>
+                                                <br/><i class="fa fa-phone" role="img" aria-label="Phone" title="Phone"></i> <span t-field="responsible.phone"/>
+                                            </t>
+                                        </div>
+                                    </t>
+                                </div>
+                                <div class="row" id="o_recruitment_thank_cta">
+                                    <div class="col-lg-12 text-center mt32 mb32">
+                                        <h5 class="mt8 mb32">You can click below button and go to your leaves:</h5>
+                                        <a role="button" href="/my/leaves" class="btn btn-primary">Continue To Leaves</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </field>
+    </record>
+
+    <record id="leave_employee_not_found" model="website.page">
+        <field name="url">/employee-not-found</field>
+        <field name="is_published">True</field>
+        <field name="website_indexed" eval="False"/>
+        <field name="name">Employee Not Found (Leave)</field>
+        <field name="type">qweb</field>
+        <field name="key">gts_hr_portal.leave_employee_not_found</field>
+        <field name="arch" type="xml">
+            <t name="Employee Not Found (Leave)" t-name="gts_hr_portal.leave_employee_not_found">
+                <t t-call="website.layout">
+                    <div id="wrap">
+                        <div class="oe_structure">
+                            <div class="container center text-center">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <h1 class="text-center">Invalid Configuration!</h1>
+                                        <p class="text-center">
+                                            Employee is not linked with your profile, Please contact Administrator !
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="row" id="o_recruitment_thank_cta">
+                                    <div class="col-lg-12 text-center mb32">
+                                        <a role="button" href="/my" class="btn btn-primary">Go Back</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </field>
+    </record>
+
+<!-- Attendance Templates -->
+
+<template id="portal_my_home_menu_leave" name="Portal layout : sales menu entries" inherit_id="portal.portal_my_home" priority="60">
+<xpath expr="//div[hasclass('oe_structure')]" position="inside">
+<li t-if="page_name == 'attendance' or attendance" t-attf-class="breadcrumb-item #{'active ' if not attendance else ''}">
+<a t-if="attendance" t-attf-href="/my/attandance?{{ keep_query() }}">Leaves</a>
+<t t-else="">Attendance</t>
+</li>
+            <li t-if="attendance" class="breadcrumb-item active">
+                <t t-esc="attendance.name"/>
+            </li>
+        </xpath>
+    </template>
+
+    <template id="portal_my_home_attandance" name="Portal My Attandance : Attandance entries" inherit_id="portal.portal_my_home" priority="60">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="title">Attendance</t>
+                <t t-set="url" t-value="'/my/attandance'"/>
+                 <t t-set="count" t-value="attendances_count"/>
+                <t t-set="placeholder_count" t-value="'attendances_count'"/>
+            </t>
+        </xpath>
+    </template>
+
+  
+
+    <template id="portal_my_attendance" name="My Attendance">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">Attendance</t>
+            </t>
+            <div>
+            <div style="text-align: center;">
+                    <button t-if="not is_check_in" id="check_in_button" type="button" class="btn btn-primary">Check In</button>
+            </div>
+            <div style="text-align: center;">
+                <button t-if="is_check_in and not is_check_out" id="check_out_button" type="button" class="btn btn-primary">Check Out</button>
+            </div>
+            </div>
+            <t t-if="not attendances">
+                <p>There are currently no attendances for your account.</p>
+            </t>
+            <t t-if="attendances" t-call="portal.portal_table">
+                <thead>
+                    <tr class="active">
+                        <th>
+                            <span class='d-none d-md-inline'>Employee Name</span>
+                        </th>
+                        <th class="text-center">Check In</th>
+                        <th class="text-center">Check OUT</th>
+                        <th class="text-center">Work Hours</th>
+                    </tr>
+                </thead>
+                <t t-foreach="attendances" t-as="attendance">
+                    <tr>
+                        <td><a><t t-esc="attendance.employee_id.name"/></a></td>
+                        <td class="text-center">
+                            <span  t-field="attendance.check_in"/>
+                        </td>
+                        <td class="text-center">
+                            <span t-field="attendance.check_out"/>
+                        </td>
+                        <td class="text-center">
+                            <span t-field="attendance.worked_hours"/>
+                        </td>
+                    </tr>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>
