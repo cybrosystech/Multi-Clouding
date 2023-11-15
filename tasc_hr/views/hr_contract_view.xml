@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="hr_contract_view_form" model="ir.ui.view">
+        <field name="name">hr.contract.view.form.inherit.tasc_hr</field>
+        <field name="model">hr.contract</field>
+        <field name="inherit_id" ref="hr_contract.hr_contract_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='information']/group[@name='main_info']/group[@name='salary_and_advantages']"
+                   position="inside">
+                <label for="housing"/>
+                <div class="o_row" name="housing">
+                    <field name="housing" nolabel="1"/>
+                    <span>/ month</span>
+                </div>
+                <label for="mobile_allowance"/>
+                <div class="o_row" name="mobile_allowance">
+                    <field name="mobile_allowance" nolabel="1"/>
+                    <span>/ month</span>
+                </div>
+                <label for="miscellaneous_1"/>
+                <div class="o_row" name="miscellaneous_1">
+                    <field name="miscellaneous_1" nolabel="1"/>
+                    <span>/ month</span>
+                </div>
+                <label for="miscellaneous_2"/>
+                <div class="o_row" name="miscellaneous_2">
+                    <field name="miscellaneous_2" nolabel="1"/>
+                    <span>/ month</span>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>
