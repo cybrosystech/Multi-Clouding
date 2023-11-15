@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="portal_my_home_hr_expense" name="Portal My Home : HR Expense" inherit_id="portal.portal_my_home" priority="20">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="title">Expense</t>
+                <t t-set="url" t-value="'/my/hr_expense'"/>
+                <t t-set="count" t-value="expense_count"/>
+            </t>
+        </xpath>
+    </template>
+    
+     <template id="portal_my_home_menu_expense" name="Portal layout : HR Expense" inherit_id="portal.portal_breadcrumbs" priority="20">
+        <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+            <li  t-attf-class="breadcrumb-item #{'active ' if not loan else ''}">
+                <a t-if="page_name == 'expense_form' or expense_form" t-attf-href="/my/hr_expense?{{ keep_query() }}">HR Expense</a>
+		
+                <t t-if="page_name == 'expense_tree' or expense_tree" t-else="">Expense</t>
+            </li>
+            <li t-if="p_name" class="breadcrumb-item active">
+                <t t-esc="p_name"/> 
+            </li>
+			<a  t-if="page_name == 'expense_tree' or expense_tree" role="button" class="btn btn-primary float-right" data-toggle="modal" style="margin-left:200px;" data-target="#modeledit" href="#">Create Expense Request </a>		
+			<t t-if="p_name">
+				<h5 style="margin-left:450px;">Status : <span t-field="hr_expense.state" class=" badge badge-pill badge-info" title="Current stage of this task"/></h5>
+			</t>
+			
+        </xpath>
+    </template>
+    
+        
+    <template id="portal_my_expense" name="My Expense">
+
+		
+		
+
+        <t t-call="portal.portal_layout">
+			
+				<div role="dialog" class="modal fade" id="modeledit">
+                <div class="modal-dialog">
+					<form action="/dev_expense/expense_create" method="post" class="modal-content" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                        <header class="modal-header">
+                            <h4 class="modal-title">Expense Request</h4>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">&amp;times;</button>
+                        </header>
+                        <main class="modal-body">
+                        
+                            <div class="form-group field-login">
+                                <label for="name">Description</label>
+								<input type="Char" class="form-control form-control-sm" name="name" required="1"  /> 
+                            </div>
+							<div class="form-group field-login">
+						        <label for="employee_id">Product</label>
+						        <select class="custom-select" name="product_id" id="product_id" required="True" >
+						            <t t-foreach="product_ids or []" t-as="product">
+						                <option t-att-value="product.id"><t t-esc="product.name"/></option>
+						            </t>
+						         </select>
+                			</div>
+
+							<div class="form-group field-login">
+						        <label for="description">Quantity</label>
+						        <input type="Integer" class="form-control form-control-sm" name="quantity" required="1"  /> 
+						    </div>    
+							<div class="form-group field-login">
+										<label for="description">Bill Reference</label>
+										<input type="Integer" class="form-control form-control-sm" name="bill_reference" /> 
+						    </div>       
+						    <div class="form-group field-login">
+						        <label for="date">Upload Document</label>
+						        <input type="file" class="form-control" name="expense_file" required="True" multiple="true" data-show-upload="true"  /> 
+							</div>
+                            
+                        </main>
+                        <footer class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                            <button type="button" class="btn btn-primary" data-dismiss="modal">close</button>
+                        </footer>
+                    </form>
+                </div>
+            </div>		
+
+
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">HR Expense</t>
+            </t>
+            <t t-if="not expense">
+                <p>There are no Expense Found.</p>
+            </t>
+            
+            
+            <t t-if="expense" t-call="portal.portal_table">
+				<t t-foreach="grouped_expense" t-as="group_exp">
+                    <thead >
+                        <tr t-attf-class="{{'thead-light' if not groupby == 'none' else ''}}" >
+                            <th t-if="groupby == 'none'">Name</th>
+                            <th t-else="">
+                                <t t-if="groupby == 'product_id'">
+                                    <em class="font-weight-normal text-muted">Product:</em>
+                                    <span t-field="group_exp[0].sudo().product_id"/>
+                                </t>
+								<t t-if="groupby == 'account_id'">
+                                    <em class="font-weight-normal text-muted">Account:</em>
+                                    <span t-field="group_exp[0].sudo().account_id"/>
+                                </t>
+                            </th>
+                            <th class="text-left">Product</th>
+							<th class="text-left">Expense Date</th>
+                            <th class="text-left">Unit Price</th>
+                            <th class="text-left">Quantity</th>
+                            <th class="text-left">Total</th>
+							<th class="text-left">Amount Due</th>
+							<th class="text-left">Stage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+				        <t t-foreach="group_exp" t-as="l">
+				            <tr>
+				                <td><a t-att-href="l.get_portal_url()"><t t-esc="l.name"/></a></td>
+				                 <td class="text-left "><span class="badge badge-pill badge-info" title="Current Product of the Expense" t-field="l.product_id.name" /></td>
+								<td class="text-left"><span t-field="l.date"/></td>
+				                <td class="text-left"><span t-field="l.unit_amount" /></td>
+				                <td class="text-left"><span t-field="l.quantity"/></td>
+				                <td class="text-left"><span t-field="l.total_amount"/></td>
+								<td class="text-left"><span t-field="l.amount_residual"/></td>
+								<td class="text-left">
+									<span class="badge badge-pill badge-info" title="Current stage of the Expense" t-esc="l.state" />								
+								</td>
+			            	</tr>
+				        </t>
+                   </tbody>
+            </t>   
+            </t>
+            <br/>
+        </t>
+        
+    </template>
+    <template id="expense_portal_template" name="HR Expense Portal Template" inherit_id="portal.portal_sidebar" primary="True">
+        <xpath expr="//div[hasclass('o_portal_sidebar')]" position="inside">
+            <div class="row mt16 o_portal_sale_sidebar">
+
+<!--			<t t-call="portal.portal_record_sidebar">-->
+<!--                    <t t-set="classes" t-value="'col-lg-auto d-print-none'"/>-->
+<!--                    <t t-set="title">-->
+<!--                        <h2 class="mb-0">HR Expense</h2>-->
+<!--                    </t>-->
+<!--                    <t t-set="entries">-->
+<!--                        <ul class="list-group list-group-flush flex-wrap flex-row flex-lg-column">-->
+<!--                            <li class="list-group-item flex-grow-1">-->
+<!--                                <div class="o_download_pdf btn-toolbar flex-sm-nowrap">-->
+<!--                                    <div class="btn-group flex-grow-1 mr-1 mb-1">-->
+<!--                                        <a class="btn btn-secondary btn-block o_download_btn" t-att-href="scrap.get_portal_url(report_type='pdf', download=True)" title="Download"><i class="fa fa-download"/> Download</a>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </li>-->
+<!--                            <li class="navspy list-group-item pl-0 flex-grow-1" t-ignore="true" role="complementary">-->
+<!--                                <ul class="nav flex-column bs-sidenav"></ul>-->
+<!--                            </li>-->
+<!--                            <li t-if="scrap.user_id" class="list-group-item flex-grow-1">-->
+<!--                                <div class="small mb-1"><strong class="text-muted">Your Contact</strong></div>-->
+<!--                                <div class="row flex-nowrap">-->
+<!--                                    <div class="col flex-grow-0 pr-2">-->
+<!--                                        <img class="rounded-circle mr4 float-left o_portal_contact_img" t-if="scrap.user_id.image_1920" t-att-src="image_data_uri(scrap.user_id.image_1920)" alt="Contact"/>-->
+<!--                                        <img class="rounded-circle mr4 float-left o_portal_contact_img" t-if="not scrap.user_id.image_1920" src="/web/static/src/img/placeholder.png" alt="Contact"/>-->
+<!--                                    </div>-->
+<!--                                    <div class="col pl-0" style="min-width: 150px">-->
+<!--                                        <span t-field="scrap.user_id.user_id" t-options='{"widget": "contact", "fields": ["name", "phone"], "no_marker": True}'/>-->
+<!--                                        <a href="#discussion" class="small"><i class="fa fa-comment"></i> Send message</a>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </li>-->
+<!--                        </ul>-->
+<!--                    </t>-->
+<!--                </t>			-->
+
+
+                <div id="leave_content" class="col-12 col-lg justify-content-end">
+	                <div t-attf-class="card #{'pb-5' if report_type == 'html' else ''}">
+                        <div t-call="dev_hr_expense_portal.expense_portal_content"/>
+                    </div>
+
+	                <div id="loan_communication" class="mt-4">
+	                    <h2>Communication</h2>
+						<t t-call="portal.message_thread"> 
+ 	                        <t t-set="object" t-value="hr_expense"/> 
+ 	                    </t> 
+							
+	                </div>
+	            </div>
+            </div>
+        </xpath>
+    </template>
+    
+    <template id="expense_portal_content" name="Expense Form">
+		
+		
+    
+        <div t-attf-class="#{'card-body' if report_type == 'html' else ''}">	
+			
+            <div id="informations">
+                <div class="row">
+
+                    <div class="col-lg-6">
+                        <table width="100%">
+                            <tr>
+                                <td width="35%" style="padding:3px"><b>Product</b></td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px"><span t-field="hr_expense.product_id"/></td>
+                            </tr>
+							<tr>
+                                <td width="35%" style="padding:3px"><b>Unit Price</b></td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px"><span t-field="hr_expense.unit_amount"/></td>
+                            </tr>
+							<tr>
+                                <td width="35%" style="padding:3px"><b>Quantity</b></td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px"><span t-field="hr_expense.quantity"/></td>
+                            </tr>
+							<tr>
+                                <td width="35%" style="padding:3px"><b>Taxes</b></td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px"><span t-field="hr_expense.tax_ids"/></td>
+                            </tr>
+							<tr>
+                                <td width="35%" style="padding:3px"><b>Total</b></td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px"><span t-field="hr_expense.total_amount"/></td>
+                            </tr>
+							<tr>
+                                <td width="35%" style="padding:3px"><b>Amount Due</b></td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px"><span t-field="hr_expense.amount_residual"/></td>
+                            </tr>
+                            
+                        </table>
+                    </div>
+                    <div class="col-lg-6">
+                        <table width="100%">
+							<tr>
+                                <td width="35%" style="padding:3px"><b>Bill Reference</b></td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px"><span t-field="hr_expense.reference"/></td>
+                            </tr>
+							<tr>
+                                <td width="35%" style="padding:3px"><b>Expense Date</b></td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px"><span t-field="hr_expense.date"/></td>
+                            </tr>
+							<tr>
+                                <td width="35%" style="padding:3px"><b>Account</b></td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px"><span t-field="hr_expense.account_id"/></td>
+                            </tr>
+<!--							<tr>-->
+<!--                                <td width="35%" style="padding:3px"><b>Customer to Reinvoice</b></td>-->
+<!--                                <td width="5%" style="padding:3px">:</td>-->
+<!--                                <td width="50%" style="padding:3px"><span t-field="hr_expense.sale_order_id"/></td>-->
+<!--                            </tr>-->
+<!--							<tr>-->
+<!--                                <td width="35%" style="padding:3px"><b>Analytic Account</b></td>-->
+<!--                                <td width="5%" style="padding:3px">:</td>-->
+<!--                                <td width="50%" style="padding:3px"><span t-field="hr_expense.analytic_account_id"/></td>-->
+<!--                            </tr>	-->
+<!--							<tr>-->
+<!--                                <td width="35%" style="padding:3px"><b>Analytic Tags</b></td>-->
+<!--                                <td width="5%" style="padding:3px">:</td>-->
+<!--                                <td width="50%" style="padding:3px"><span t-field="hr_expense.analytic_tag_ids"/></td>-->
+<!--                            </tr>     -->
+							<tr>
+                                <td width="35%" style="padding:3px"><b>Company</b></td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px"><span t-field="hr_expense.company_id"/></td>
+                            </tr>     
+							                       
+
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </template>
+    
+</odoo>
