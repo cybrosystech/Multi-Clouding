@@ -16,7 +16,7 @@ from dateutil.relativedelta import relativedelta
 
 class hr_expense(models.Model):
     _name = 'hr.expense'
-    _inherit = ['hr.expense','portal.mixin']
+    _inherit = ['hr.expense', 'portal.mixin']
 
 #    partner_id = fields.Many2one('res.partner',string="Customer")
 #    user_id = fields.Many2one('res.users', string='User',default=lambda self: self.env.user)

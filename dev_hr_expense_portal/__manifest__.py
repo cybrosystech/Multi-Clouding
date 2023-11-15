@@ -36,10 +36,12 @@
          
     """,
     'summary': 'Odoo app allows portal users to view and create expense, expense portal, hr expense, hr expense portal, website hr expense, create and view expense from portal, expense management, employee expenses, employee expenses portal, expense reimbursement, expense approval system, employee expense software, expense tracking portal, business travel expenses, expense approval, employee expense approval, employee expense approval portal',
-    'depends': ['website','hr_expense'],
+    'depends': ['hr_expense', 'portal'],
     'data': [
+        'security/ir.model.access.csv',
+        'views/hr_employee_views.xml',
         'views/hr_expense_portal.xml',
-        ],
+    ],
     'demo': [],
     'test': [],
     'css': [],
@@ -49,15 +51,15 @@
     'installable': True,
     'application': True,
     'auto_install': False,
-    
-    #author and support Details
+
+    # author and support Details
     'author': 'DevIntelle Consulting Service Pvt.Ltd',
-    'website': 'http://www.devintellecs.com',    
-    'maintainer': 'DevIntelle Consulting Service Pvt.Ltd', 
+    'website': 'http://www.devintellecs.com',
+    'maintainer': 'DevIntelle Consulting Service Pvt.Ltd',
     'support': 'devintelle@gmail.com',
-    'price':19.0,
-    'currency':'EUR',
-    'license':'LGPL-3',
+    'price': 19.0,
+    'currency': 'EUR',
+    'license': 'LGPL-3',
 }
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
