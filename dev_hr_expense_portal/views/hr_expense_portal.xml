@@ -44,10 +44,7 @@
 
 
     <template id="portal_my_expense" name="My Expense">
-
-
         <t t-call="portal.portal_layout">
-
             <div role="dialog" class="modal fade" id="modeledit">
                 <div class="modal-dialog">
                     <form action="/dev_expense/expense_create" method="post"
@@ -62,7 +59,6 @@
                             </button>
                         </header>
                         <main class="modal-body">
-
                             <div class="form-group field-login">
                                 <label for="name">Description</label>
                                 <input type="Char"
@@ -85,7 +81,7 @@
                                 <label for="unit_price">Unit Price</label>
                                 <input type="Number"
                                        class="form-control form-control-sm"
-                                       name="unit_price"  required="1"/>
+                                       name="unit_price"/>
                             </div>
                             <div class="form-group field-login">
                                 <label for="currency_id">Currency</label>
@@ -106,14 +102,6 @@
                                        class="form-control form-control-sm"
                                        name="quantity" required="1"/>
                             </div>
-<!--                            <t t-set="tot" t-value=""-->
-                            <div class="form-group field-login">
-                                <label for="total">Total</label>
-                                <input type="Integer"
-                                       class="form-control form-control-sm"
-                                       name="total" required="1"/>
-                            </div>
-
                             <div class="form-group field-login">
                                 <label for="description">Bill Reference</label>
                                 <input type="Integer"
@@ -126,7 +114,6 @@
                                        name="expense_file" required="True"
                                        multiple="true" data-show-upload="true"/>
                             </div>
-
                         </main>
                         <footer class="modal-footer">
                             <button type="submit" class="btn btn-primary">
@@ -139,7 +126,6 @@
                     </form>
                 </div>
             </div>
-
 
             <t t-set="breadcrumbs_searchbar" t-value="True"/>
             <t t-call="portal.portal_searchbar">
@@ -224,42 +210,6 @@
               inherit_id="portal.portal_sidebar" primary="True">
         <xpath expr="//div[hasclass('o_portal_sidebar')]" position="inside">
             <div class="row mt16 o_portal_sale_sidebar">
-
-                <!--			<t t-call="portal.portal_record_sidebar">-->
-                <!--                    <t t-set="classes" t-value="'col-lg-auto d-print-none'"/>-->
-                <!--                    <t t-set="title">-->
-                <!--                        <h2 class="mb-0">HR Expense</h2>-->
-                <!--                    </t>-->
-                <!--                    <t t-set="entries">-->
-                <!--                        <ul class="list-group list-group-flush flex-wrap flex-row flex-lg-column">-->
-                <!--                            <li class="list-group-item flex-grow-1">-->
-                <!--                                <div class="o_download_pdf btn-toolbar flex-sm-nowrap">-->
-                <!--                                    <div class="btn-group flex-grow-1 mr-1 mb-1">-->
-                <!--                                        <a class="btn btn-secondary btn-block o_download_btn" t-att-href="scrap.get_portal_url(report_type='pdf', download=True)" title="Download"><i class="fa fa-download"/> Download</a>-->
-                <!--                                    </div>-->
-                <!--                                </div>-->
-                <!--                            </li>-->
-                <!--                            <li class="navspy list-group-item pl-0 flex-grow-1" t-ignore="true" role="complementary">-->
-                <!--                                <ul class="nav flex-column bs-sidenav"></ul>-->
-                <!--                            </li>-->
-                <!--                            <li t-if="scrap.user_id" class="list-group-item flex-grow-1">-->
-                <!--                                <div class="small mb-1"><strong class="text-muted">Your Contact</strong></div>-->
-                <!--                                <div class="row flex-nowrap">-->
-                <!--                                    <div class="col flex-grow-0 pr-2">-->
-                <!--                                        <img class="rounded-circle mr4 float-left o_portal_contact_img" t-if="scrap.user_id.image_1920" t-att-src="image_data_uri(scrap.user_id.image_1920)" alt="Contact"/>-->
-                <!--                                        <img class="rounded-circle mr4 float-left o_portal_contact_img" t-if="not scrap.user_id.image_1920" src="/web/static/src/img/placeholder.png" alt="Contact"/>-->
-                <!--                                    </div>-->
-                <!--                                    <div class="col pl-0" style="min-width: 150px">-->
-                <!--                                        <span t-field="scrap.user_id.user_id" t-options='{"widget": "contact", "fields": ["name", "phone"], "no_marker": True}'/>-->
-                <!--                                        <a href="#discussion" class="small"><i class="fa fa-comment"></i> Send message</a>-->
-                <!--                                    </div>-->
-                <!--                                </div>-->
-                <!--                            </li>-->
-                <!--                        </ul>-->
-                <!--                    </t>-->
-                <!--                </t>			-->
-
-
                 <div id="leave_content"
                      class="col-12 col-lg justify-content-end">
                     <div t-attf-class="card #{'pb-5' if report_type == 'html' else ''}">
@@ -279,8 +229,6 @@
     </template>
 
     <template id="expense_portal_content" name="Expense Form">
-
-
         <div t-attf-class="#{'card-body' if report_type == 'html' else ''}">
 
             <div id="informations">
@@ -374,21 +322,6 @@
                                     <span t-field="hr_expense.account_id"/>
                                 </td>
                             </tr>
-                            <!--							<tr>-->
-                            <!--                                <td width="35%" style="padding:3px"><b>Customer to Reinvoice</b></td>-->
-                            <!--                                <td width="5%" style="padding:3px">:</td>-->
-                            <!--                                <td width="50%" style="padding:3px"><span t-field="hr_expense.sale_order_id"/></td>-->
-                            <!--                            </tr>-->
-                            <!--							<tr>-->
-                            <!--                                <td width="35%" style="padding:3px"><b>Analytic Account</b></td>-->
-                            <!--                                <td width="5%" style="padding:3px">:</td>-->
-                            <!--                                <td width="50%" style="padding:3px"><span t-field="hr_expense.analytic_account_id"/></td>-->
-                            <!--                            </tr>	-->
-                            <!--							<tr>-->
-                            <!--                                <td width="35%" style="padding:3px"><b>Analytic Tags</b></td>-->
-                            <!--                                <td width="5%" style="padding:3px">:</td>-->
-                            <!--                                <td width="50%" style="padding:3px"><span t-field="hr_expense.analytic_tag_ids"/></td>-->
-                            <!--                            </tr>     -->
                             <tr>
                                 <td width="35%" style="padding:3px">
                                     <b>Company</b>
@@ -398,8 +331,6 @@
                                     <span t-field="hr_expense.company_id"/>
                                 </td>
                             </tr>
-
-
                         </table>
                     </div>
                 </div>

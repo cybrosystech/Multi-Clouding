@@ -285,11 +285,11 @@ class CustomerPortal(CustomerPortal):
             'name': post['name'],
             'product_id': product_id and product_id.id,
             'product_uom_id': product_id.uom_id and product_id.uom_id.id or False,
-            'unit_amount': amount,
             'quantity': post['quantity'],
             'reference': post['bill_reference'],
             'employee_id': employee_id,
-            'currency_id': post['currency_id'],
+            'currency_id': int(post['currency_id']),
+            'unit_amount': post['unit_price'] if post['unit_price'] else amount,
         })
         if expense_id:
             attachment = {
