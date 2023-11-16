@@ -18,5 +18,6 @@ access_resource_calendar_leaves_portal_user,resource.calendar.leaves.user,resour
 access_hr_attendance_portal_user,hr.attendance.user,hr_attendance.model_hr_attendance,base.group_portal,1,1,1,1
 access_hr_payslip_worked_days_portal_user,hr.payslip.worked_days,hr_payroll.model_hr_payslip_worked_days,base.group_portal,1,1,1,1
 access_hr_payslip_line_portal_user,hr.payslip.line,hr_payroll.model_hr_payslip_line,base.group_portal,1,1,1,1
+access_hr_leave_report_portal_user,hr.leave.report,hr_holidays.model_hr_leave_report,base.group_portal,1,1,1,1
 
 access_hr_payslip_portal_user,hr.payslip.user,hr_payroll.model_hr_payslip,base.group_portal,1,1,1,1
