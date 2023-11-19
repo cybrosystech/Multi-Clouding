@@ -1,19 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import binascii
-from datetime import date, datetime
-
+from datetime import datetime
 from odoo import fields, http, _
-from odoo.exceptions import AccessError, MissingError
+from odoo.exceptions import MissingError
 from odoo.http import request
-# from odoo.addons.payment.controllers.portal import PaymentProcessing
-# from odoo.addons.portal.controllers.mail import _message_post_helper
 from odoo.addons.portal.controllers.portal import CustomerPortal, \
     pager as portal_pager, get_records_pager
-from odoo.osv import expression
 from odoo.exceptions import UserError, AccessError, ValidationError
-
-from odoo.tools import ustr, consteq
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -38,6 +31,50 @@ class CustomerPortal(CustomerPortal):
         })
         return values
 
+    @http.route(['/approve/<int:leave_id>'], type='http',
+                auth="user", website=True)
+    def approve_leave(self, leave_id, page=1, **kw):
+        leave = request.env['hr.leave'].browse(leave_id)
+        leave.state = 'validate1'
+        leave.is_manager_approved = True
+        request.render("gts_hr_portal.portal_my_leaves")
+        employee = leave.employee_id.id
+        return request.render("gts_hr_portal.leave_approve",
+                              {'employee': employee,
+                               'leave': leave.sudo()})
+
+    @http.route(['/approve_leave_manager/<int:leave_id>'], type='http',
+                auth="user", website=True)
+    def approve_leave_timeoff_approver(self, leave_id, page=1, **kw):
+        leave = request.env['hr.leave'].browse(leave_id)
+        leave.state = 'validate'
+        employee = leave.employee_id.id
+        return request.render("gts_hr_portal.leave_approve",
+                              {'employee': employee,
+                               'leave': leave.sudo()})
+
+    @http.route(['/refuse/<int:leave_id>'], type='http',
+                auth="user", website=True)
+    def refuse_leave(self, leave_id, page=1, **kw):
+        leave = request.env['hr.leave'].browse(leave_id)
+        leave.state = 'refuse'
+        leave.is_manager_approved = False
+        employee = leave.employee_id.id
+        return request.render("gts_hr_portal.leave_refuse",
+                              {'employee': employee,
+                               'leave': leave.sudo()})
+
+    @http.route(['/refuse_leave_manager/<int:leave_id>'], type='http',
+                auth="user", website=True)
+    def refuse_leave_timeoff_approver(self, leave_id, page=1, **kw):
+        leave = request.env['hr.leave'].browse(leave_id)
+        leave.state = 'refuse'
+        leave.is_manager_approved = False
+        employee = leave.employee_id.id
+        return request.render("gts_hr_portal.leave_refuse",
+                              {'employee': employee,
+                               'leave': leave.sudo()})
+
     @http.route(['/my/leaves', '/my/leaves/page/<int:page>'], type='http',
                 auth="user", website=True)
     def portal_my_leaves(self, page=1, date_begin=None, date_end=None,
@@ -51,7 +88,10 @@ class CustomerPortal(CustomerPortal):
         if not employee:
             return request.render("gts_hr_portal.leave_employee_not_found",
                                   values)
-        domain = [('employee_id', '=', employee.id)]
+        domain = ['|', '|', ('employee_id', '=', employee.id),
+                  ('employee_id.parent_id', '=', employee.id),
+                  ('employee_id.leave_manager_id', '=', employee.user_id.id),
+                  ]
         searchbar_sortings = {
             'date': {'label': _('Leave Date'),
                      'order': 'request_date_from desc'},
@@ -89,13 +129,11 @@ class CustomerPortal(CustomerPortal):
             [('employee_id.user_id', '=', request.env.user.id),
              ('leave_type', '=', 'allocation'),
              ('state', '=', 'validate')]).mapped('number_of_days')
-        print("total_leaves", sum(total_leaves))
         tot_allocated_leaves = sum(total_leaves)
         leave_taken = request.env['hr.leave.report'].search(
             [('employee_id.user_id', '=', request.env.user.id),
              ('leave_type', '!=', 'allocation'),
              ('state', '=', 'validate')]).mapped('number_of_days')
-        print("tot_leave_taken", sum(leave_taken))
         tot_leave_taken = round(sum(leave_taken), 2)
         balance_leave = tot_allocated_leaves - abs(tot_leave_taken)
 
@@ -191,7 +229,6 @@ class CustomerPortal(CustomerPortal):
                                                  request_date_to,
                                                  leave_data_copy.get(
                                                      'employee_id'))['days'] + 1
-                # print("hhhhhhhhh",leave_data_copy)
                 leave = LeaveObj.create(leave_data_copy)
             except (UserError, AccessError, ValidationError) as exc:
                 _logger.error(_("Error 1 while creating leave: %s ") % exc)
@@ -253,8 +290,6 @@ class CustomerPortal(CustomerPortal):
         '/get/employee/leaves/count/<int:employee_id>/<int:holiday_status_id>'],
         type='json', auth="public", methods=['POST'], website=True)
     def get_leaves_count(self, employee_id, holiday_status_id, **kw):
-        print('employee_id, holiday_status_id....', employee_id,
-              holiday_status_id)
         remaining_leaves = 0
         leave_type = request.env['hr.leave.type'].search(
             [('id', '=', int(holiday_status_id))])
@@ -262,8 +297,5 @@ class CustomerPortal(CustomerPortal):
             employee = request.env['hr.leave.type'].search(
                 [('id', '=', int(employee_id))])
             if employee:
-                # remaining_leaves = leave_type.with_context(employee_id=employee_id).remaining_leaves
-                remaining_leaves = leave_type.with_context(
-                    employee_id=employee_id)._compute_leaves()
-        print('remaining_leaves....', remaining_leaves)
+                remaining_leaves = leave_type.with_context(employee_id=employee_id)._compute_leaves()
         return remaining_leaves

@@ -35,7 +35,7 @@ class CustomerPortal(CustomerPortal):
         })
         return values
 
-    @http.route(['/my/payslip', '/my/payslip/page/<int:page>'], type='http',
+    @http.route(['/my/payslip', '/my/payslip/page/<int:page>'], type='http',methods=['GET', 'POST'],
                 auth="user", website=True)
     def portal_my_payslip(self, page=1, date_begin=None, date_end=None,
                           sortby=None, **kw):
