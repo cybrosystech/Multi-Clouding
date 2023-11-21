@@ -5,10 +5,12 @@
         <field name="model">cost.center.modify</field>
         <field name="arch" type="xml">
             <form>
+                <sheet>
                 <group>
                     <group>
                         <field name="company_id"/>
-                        <field name="from_value"/>
+                        <field name="analytic_account_types"/>
+                        <field name="from_value" />
                         <field name="to_value"/>
                     </group>
                     <group>
@@ -24,12 +26,13 @@
                     <button string="Cancel" class="btn btn-secondary"
                             special="cancel"/>
                 </footer>
+                </sheet>
             </form>
         </field>
     </record>
 
     <record id="cost_center_modify_action" model="ir.actions.act_window">
-        <field name="name">Modify Cost Center</field>
+        <field name="name">Modify Cost Center/Project Site</field>
         <field name="type">ir.actions.act_window</field>
         <field name="res_model">cost.center.modify</field>
         <field name="view_mode">form</field>
@@ -37,7 +40,7 @@
     </record>
 
     <menuitem id="menu_modify_cost_center"
-              name="Modify Cost Center (Journal Item)"
+              name="Modify Cost Center/project Site (Journal Item)"
               parent="base.menu_custom"/>
     <menuitem id="menu_modify_cost_center_act"
               action="cost_center_modify_action"
