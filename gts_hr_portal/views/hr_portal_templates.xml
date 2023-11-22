@@ -49,7 +49,7 @@
             </t>
             <t t-call="portal.portal_table">
                 <thead>
-                    <tr style="background-color:#adcfd8;">
+                    <tr style="background-color:#58737F;">
                         <th>
                             <span class='d-none d-md-inline'>Total Leaves :
                             </span>
@@ -79,73 +79,111 @@
                 </thead>
             </t>
             <t t-if="leaves" t-call="portal.portal_table">
+                <!--                <span>My Leaves-->
+                <!--                </span>-->
                 <thead>
-                    <tr class="active">
-                        <th>
-                            <span class='d-none d-md-inline'>Employee Name
-                            </span>
-                        </th>
-                        <th class="text-right">Leave From</th>
-                        <th class="text-right">Leave To</th>
-                        <th class="text-center">Leave Type</th>
-                        <th class="text-left">Status</th>
-                        <th class="text-left"></th>
-                        <th class="text-center">Description/Reason</th>
-                    </tr>
+                    <th colspan="8"
+                        style="text-align:center;background-color:#7BA1B2;">My
+                        Leaves
+                    </th>
                 </thead>
-                <t t-foreach="leaves" t-as="leave">
-                    <tr>
-                        <td>
-                            <a t-att-href="leave.get_portal_url()">
-                                <t t-esc="leave.employee_id.name"/>
-                            </a>
-                        </td>
-                        <td class="text-right">
-                            <span t-field="leave.request_date_from"
-                                  t-options="{'widget': 'date'}"/>
-                        </td>
-                        <td class="text-right">
-                            <span t-field="leave.request_date_to"
-                                  t-options="{'widget': 'date'}"/>
-                        </td>
-                        <td class="text-center">
-                            <span t-field="leave.holiday_status_id.name"/>
-                        </td>
-                        <td class="text-center badge badge-pill badge-info">
-                            <center>
-                                <span class="d-md-inline"
-                                      t-field="leave.state"/>
-                            </center>
-                        </td>
-                        <td>
-                            <t t-if="leave.state=='confirm' and leave.is_manager_approved==False and leave.employee_id.parent_id.user_id.id==request.env.user.id">
-                                <a t-attf-href="/approve/#{leave.sudo().id}">
-                                    <i class="fa fa-check" role="img"
-                                       aria-label="Approve" title="Approve"/>
-                                </a>
-                                <a t-attf-href="/refuse/#{leave.sudo().id}">
-                                    <i class="fa fa-remove" role="img"
-                                       aria-label="Refuse" title="Refuse"/>
-                                </a>
+                <t t-foreach="grouped_leave" t-as="group_leave">
 
-                            </t>
-                            <t t-if="leave.state=='validate1' and leave.is_manager_approved==True and leave.employee_id.leave_manager_id.id==request.env.user.id">
-                                <a t-attf-href="/approve_leave_manager/#{leave.sudo().id}">
-                                    <i class="fa fa-check" role="img"
-                                       aria-label="Approve" title="Approve"/>
-                                </a>
-                                <a t-attf-href="/refuse_leave_manager/#{leave.sudo().id}">
-                                    <i class="fa fa-remove" role="img"
-                                       aria-label="Refuse" title="Refuse"/>
-                                </a>
+                </t>
 
-                            </t>
+                <thead>
+                    <th colspan="8"
+                        style="text-align:center;background-color:#B0E7FF;">
+                        Leaves To Approve
+                    </th>
+                </thead>
+                <t t-foreach="grouped_leave" t-as="group_leave">
+                    <thead>
+                        <tr class="active"
+                            t-attf-class="{{'thead-light' if not groupby == 'none' else ''}}">
+                            <th t-if="groupby == 'none'">Employee Name</th>
+                            <th t-else="">
+                                <t t-if="groupby == 'state'">
+                                    <em class="font-weight-normal text-muted">
+                                        Status:
+                                    </em>
+                                    <span t-field="group_leave[0].sudo().state"/>
+                                </t>
+                            </th>
+                            <th>
+                                <span class='d-none d-md-inline'>Employee Name
+                                </span>
+                            </th>
+                            <th class="text-right">Leave From</th>
+                            <th class="text-right">Leave To</th>
+                            <th class="text-center">Leave Type</th>
+                            <th class="text-left">Status</th>
+                            <th class="text-left"></th>
+                            <th class="text-center">Description/Reason</th>
+                        </tr>
+                    </thead>
 
-                        </td>
-                        <td class="text-center">
-                            <span t-field="leave.name"/>
-                        </td>
-                    </tr>
+                    <t t-foreach="group_leave" t-as="leave">
+                        <t t-if="leave.employee_id.parent_id.user_id.id==request.env.user.id or leave.employee_id.leave_manager_id.id==request.env.user.id">
+                            <tr>
+                                <td></td>
+                                <td>
+                                    <a t-att-href="leave.get_portal_url()">
+                                        <t t-esc="leave.employee_id.name"/>
+                                    </a>
+                                </td>
+                                <td class="text-right">
+                                    <span t-field="leave.request_date_from"
+                                          t-options="{'widget': 'date'}"/>
+                                </td>
+                                <td class="text-right">
+                                    <span t-field="leave.request_date_to"
+                                          t-options="{'widget': 'date'}"/>
+                                </td>
+                                <td class="text-center">
+                                    <span t-field="leave.holiday_status_id.name"/>
+                                </td>
+                                <td class="text-center badge badge-pill badge-info">
+                                    <center>
+                                        <span class="d-md-inline"
+                                              t-field="leave.state"/>
+                                    </center>
+                                </td>
+                                <td>
+                                    <t t-if="leave.state=='confirm' and leave.is_manager_approved==False and leave.employee_id.parent_id.user_id.id==request.env.user.id">
+                                        <a t-attf-href="/approve/#{leave.sudo().id}">
+                                            <i class="fa fa-check" role="img"
+                                               aria-label="Approve"
+                                               title="Approve"/>
+                                        </a>
+                                        <a t-attf-href="/refuse/#{leave.sudo().id}">
+                                            <i class="fa fa-remove" role="img"
+                                               aria-label="Refuse"
+                                               title="Refuse"/>
+                                        </a>
+
+                                    </t>
+                                    <t t-if="leave.state=='validate1' and leave.is_manager_approved==True and leave.employee_id.leave_manager_id.id==request.env.user.id">
+                                        <a t-attf-href="/approve_leave_manager/#{leave.sudo().id}">
+                                            <i class="fa fa-check" role="img"
+                                               aria-label="Approve"
+                                               title="Approve"/>
+                                        </a>
+                                        <a t-attf-href="/refuse_leave_manager/#{leave.sudo().id}">
+                                            <i class="fa fa-remove" role="img"
+                                               aria-label="Refuse"
+                                               title="Refuse"/>
+                                        </a>
+
+                                    </t>
+
+                                </td>
+                                <td class="text-center">
+                                    <span t-field="leave.name"/>
+                                </td>
+                            </tr>
+                        </t>
+                    </t>
                 </t>
             </t>
         </t>

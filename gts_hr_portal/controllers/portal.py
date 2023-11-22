@@ -4,6 +4,8 @@ from datetime import datetime
 from odoo import fields, http, _
 from odoo.exceptions import MissingError
 from odoo.http import request
+from odoo.tools import groupby as groupbyelem
+from operator import itemgetter
 from odoo.addons.portal.controllers.portal import CustomerPortal, \
     pager as portal_pager, get_records_pager
 from odoo.exceptions import UserError, AccessError, ValidationError
@@ -80,7 +82,7 @@ class CustomerPortal(CustomerPortal):
     @http.route(['/my/leaves', '/my/leaves/page/<int:page>'], type='http',
                 auth="user", website=True)
     def portal_my_leaves(self, page=1, date_begin=None, date_end=None,
-                         sortby=None, **kw):
+                         sortby=None, groupby='none', filterby=None, **kw):
         values = self._prepare_portal_layout_values()
         partner = request.env.user.partner_id
         Employee = request.env['hr.employee']
@@ -94,6 +96,9 @@ class CustomerPortal(CustomerPortal):
                   ('employee_id.parent_id', '=', employee.id),
                   ('employee_id.leave_manager_id', '=', employee.user_id.id),
                   ]
+        # if not filterby:
+        #     filterby = 'all'
+
         searchbar_sortings = {
             'date': {'label': _('Leave Date'),
                      'order': 'request_date_from desc'},
@@ -139,15 +144,32 @@ class CustomerPortal(CustomerPortal):
         tot_leave_taken = round(sum(leave_taken), 2)
         balance_leave = tot_allocated_leaves - abs(tot_leave_taken)
 
+        searchbar_groupby = {
+            'none': {'input': 'none', 'label': _('All')},
+            'state': {'input': 'state', 'label': _('State')},
+
+        }
+        if groupby == 'state':
+            print("dddddddd")
+            grouped_leave = [request.env['hr.leave'].concat(*g) for k, g in
+                               groupbyelem(leaves, itemgetter('state'))]
+        else:
+            print("ccccccccccc")
+            grouped_leave = [leaves]
+        print("grouped_leave",grouped_leave)
+
         values.update({
             'date': date_begin,
             'leaves': leaves.sudo(),
+            'grouped_leave':grouped_leave,
             'page_name': 'leave',
             'pager': pager,
             'archive_groups': archive_groups,
             'default_url': '/my/leaves',
             'searchbar_sortings': searchbar_sortings,
+            'searchbar_groupby': searchbar_groupby,
             'sortby': sortby,
+            'groupby': groupby,
             'tot_allocated_leaves': tot_allocated_leaves,
             'tot_leave_taken': tot_leave_taken,
             'balance_leave': balance_leave,
