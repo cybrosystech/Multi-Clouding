@@ -28,14 +28,16 @@ class CustomerPortal(CustomerPortal):
         employee = Employee.search([('user_id', '=', request.env.user.id)],
                                    limit=1)
         if employee:
-            payslip = PayslipObj.search([('employee_id', '=', employee.name)])
+            payslip = PayslipObj.search([('employee_id', '=', employee.id),
+                                         ('state', 'in', ['done', 'verify'])])
             payslip_count = len(payslip)
         values.update({
             'payslip_count': payslip_count,
         })
         return values
 
-    @http.route(['/my/payslip', '/my/payslip/page/<int:page>'], type='http',methods=['GET', 'POST'],
+    @http.route(['/my/payslip', '/my/payslip/page/<int:page>'], type='http',
+                methods=['GET', 'POST'],
                 auth="user", website=True)
     def portal_my_payslip(self, page=1, date_begin=None, date_end=None,
                           sortby=None, **kw):
@@ -45,7 +47,8 @@ class CustomerPortal(CustomerPortal):
         PayslipObj = request.env['hr.payslip']
         employee = Employee.search([('user_id', '=', request.env.user.id)],
                                    limit=1)
-        domain = [('employee_id', '=', employee.id), ('state', '=', 'done')]
+        domain = [('employee_id', '=', employee.id),
+                  ('state', 'in', ['done', 'verify'])]
 
         archive_groups = self._get_archive_groups('hr.payslip',
                                                   domain) if values.get(
@@ -69,6 +72,7 @@ class CustomerPortal(CustomerPortal):
         payslip = PayslipObj.search(domain, limit=self._items_per_page,
                                     offset=pager['offset'])
         request.session['my_payslip_history'] = payslip.ids[:100]
+        print("payslip", payslip)
         values.update({
             'date': date_begin,
             'payslip': payslip.sudo(),
