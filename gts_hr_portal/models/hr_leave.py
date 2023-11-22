@@ -46,6 +46,19 @@ class HolidaysRequest(models.Model):
         )
         return url
 
+    @api.depends_context('uid')
+    def _compute_description(self):
+        self.check_access_rights('read')
+        self.check_access_rule('read')
+
+        is_officer = self.user_has_groups('hr_holidays.group_hr_holidays_user')
+
+        for leave in self:
+            if is_officer or leave.user_id == self.env.user or leave.employee_id.leave_manager_id == self.env.user or  leave.employee_id.parent_id.user_id == self.env.user:
+                leave.name = leave.sudo().private_name
+            else:
+                leave.name = '*****'
+
 
 class HrAttendance(models.Model):
     _inherit = "hr.attendance"

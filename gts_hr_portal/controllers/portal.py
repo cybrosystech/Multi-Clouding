@@ -23,8 +23,10 @@ class CustomerPortal(CustomerPortal):
         employee = Employee.search([('user_id', '=', request.env.user.id)],
                                    limit=1)
         if employee:
-            leaves = LeaveObj.search([('employee_id', '=',
-                                       employee.name)])  # ('state', '=', 'validate')
+            leaves = LeaveObj.search(
+                ['|', '|', ('employee_id', '=', employee.id),
+                 ('employee_id.parent_id', '=', employee.id),
+                 ('employee_id.leave_manager_id', '=', employee.user_id.id), ])
             leaves_count = len(leaves)
         values.update({
             'leaves_count': leaves_count,
@@ -297,5 +299,6 @@ class CustomerPortal(CustomerPortal):
             employee = request.env['hr.leave.type'].search(
                 [('id', '=', int(employee_id))])
             if employee:
-                remaining_leaves = leave_type.with_context(employee_id=employee_id)._compute_leaves()
+                remaining_leaves = leave_type.with_context(
+                    employee_id=employee_id)._compute_leaves()
         return remaining_leaves

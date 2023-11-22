@@ -413,7 +413,7 @@
                                     </div>
                                     <t>
                                         <t t-set="responsible"
-                                           t-value="employee and employee.parent_id.user_id"/>
+                                           t-value="employee.sudo() and employee.sudo().parent_id.user_id"/>
                                     </t>
                                     <t t-if="responsible">
                                         <div class="col-lg-12">
