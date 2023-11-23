@@ -12,5 +12,10 @@
                       t-options='{"widget": "monetary", "display_currency": o.journal_id.currency_id or o.company_id.currency_id}'/>
             </td>
         </xpath>
+        <xpath expr="//table[@name='contract-infos']"
+               position="replace">
+            <span></span>
+        </xpath>
+
     </template>
 </odoo>

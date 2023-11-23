@@ -353,6 +353,18 @@
                                 </td>
                             </tr>
                         </table>
+                        <table name="contract-infos" class="table table-sm table-bordered">
+                        <tr>
+                            <td class="w-25"><strong>Contract Start Date</strong></td>
+                            <td class="w-25"><strong>Working Schedule</strong></td>
+                            <td class="w-25" name="company-car-title"></td>
+                        </tr>
+                        <tr>
+                            <td><span t-field="o.employee_id.first_contract_date"/></td>
+                            <td><span t-field="o.employee_id.contract_id.hours_per_week"/></td>
+                            <td class="w-25" name="company-car-model"></td>
+                        </tr>
+                    </table>
 
                     </div>
                 </t>
