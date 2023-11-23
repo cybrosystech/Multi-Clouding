@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
+    <template id="hr_contract_salary_payroll.report_payslip">
+        <xpath expr="//table[@name='totals']/tr[1]/td[3]"
+               position="after">
+            <td class="w-25">
+            </td>
+        </xpath>
 
+    </template>
     <template id="external_layout_standard_gts_hr_portal">
         <div t-attf-class="header o_company_#{company.id}_layout"
              t-att-style="report_header_style">
@@ -12,7 +19,7 @@
                 </div>
                 <div class="col-9 text-right" style="margin-top:22px;"
                      t-field="company.report_header" name="moto"/>
-                <div class="col-9 text-right" name="company_address" >
+                <div class="col-9 text-right" name="company_address">
                     <div t-field="company.partner_id"
                          t-options='{"widget": "contact", "fields": ["address", "name"], "no_marker": true}'
                     />
@@ -170,7 +177,7 @@
                                                     </td>
                                                     <td>
                                                         <span t-esc="line.total"
-                                                              />
+                                                        />
                                                     </td>
                                                 </tr>
                                             </t>
@@ -359,6 +366,8 @@
             </t>
         </t>
     </template>
+
+
 
     <template id="hr_payroll.report_payslip_lang">
         <t t-foreach="docs" t-as="o">
