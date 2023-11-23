@@ -11,7 +11,7 @@
   "support"              :  "https://www.abdalla.work/r/mW1",
   "description"          :  """ ODOO HR Payroll Accounting Multi Currency Journal""",
   "depends"              :  [
-                             'hr_payroll_account','gts_hr_portal'
+                             'hr_payroll','gts_hr_portal'
                             ],
   "data"                 :  [
                              'views/hr_contract.xml',
