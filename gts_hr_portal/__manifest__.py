@@ -27,6 +27,7 @@
         'views/hr_portal_templates.xml',
         'views/payslip_portal_templates.xml',
         'views/assets.xml',
+        'views/report_payslip_templates.xml',
     ],
     'images': ['static/description/banner.png'],
     'price': '59',

@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <template id="external_layout_standard_gts_hr_portal">
+        <div t-attf-class="header o_company_#{company.id}_layout"
+             t-att-style="report_header_style">
+            <div class="row">
+                <div class="col-3 mb4">
+                    <img t-if="company.logo"
+                         t-att-src="image_data_uri(company.logo)"
+                         style="max-height: 45px;" alt="Logo"/>
+                </div>
+                <div class="col-9 text-right" style="margin-top:22px;"
+                     t-field="company.report_header" name="moto"/>
+                <div class="col-9 text-right" name="company_address" >
+                    <div t-field="company.partner_id"
+                         t-options='{"widget": "contact", "fields": ["address", "name"], "no_marker": true}'
+                    />
+                </div>
+
+            </div>
+            <div t-if="company.logo or company.report_header"
+                 class="row zero_min_height">
+                <div class="col-12">
+                    <div style="border-bottom: 1px solid black;"/>
+                </div>
+            </div>
+        </div>
+
+        <div t-attf-class="article o_report_layout_standard o_company_#{company.id}_layout"
+             t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id"
+             t-att-data-oe-lang="o and o.env.context.get('lang')">
+            <div class="pt-5">
+                <!-- This div ensures that the address is not cropped by the header. -->
+                <t t-call="web.address_layout"/>
+            </div>
+            <t t-raw="0"/>
+        </div>
+
+        <div t-attf-class="footer o_standard_footer o_company_#{company.id}_layout">
+            <div class="text-center" style="border-top: 1px solid black;">
+                <ul class="list-inline mb4">
+                    <!-- using the list-inline-item class from bootstrap causes weird behaviours in pdf report
+                         adding d-inline class fixes the problem-->
+                    <li t-if="company.phone" class="list-inline-item d-inline">
+                        <span class="o_force_ltr" t-field="company.phone"/>
+                    </li>
+                    <li t-if="company.email" class="list-inline-item d-inline">
+                        <span t-field="company.email"/>
+                    </li>
+                    <li t-if="company.website"
+                        class="list-inline-item d-inline">
+                        <span t-field="company.website"/>
+                    </li>
+                    <li t-if="company.vat" class="list-inline-item d-inline"><t
+                            t-esc="company.country_id.vat_label or 'Tax ID'"/>:
+                        <span t-field="company.vat"/>
+                    </li>
+                </ul>
+
+                <div name="financial_infos">
+                    <span t-field="company.report_footer"/>
+                </div>
+
+                <div t-if="report_type == 'pdf'" class="text-muted">
+                    Page:
+                    <span class="page"/>
+                    /
+                    <span class="topage"/>
+                </div>
+                <div t-if="report_type == 'pdf' and display_name_in_footer"
+                     class="text-muted">
+                    <span t-field="o.name"/>
+                </div>
+            </div>
+        </div>
+    </template>
+
+
+    <template id="external_layout_gts_hr_portal">
+        <t t-if="not o" t-set="o" t-value="doc"/>
+
+        <t t-if="not company">
+            <!-- Multicompany -->
+            <t t-if="company_id">
+                <t t-set="company" t-value="company_id"/>
+            </t>
+            <t t-elif="o and 'company_id' in o and o.company_id.sudo()">
+                <t t-set="company" t-value="o.company_id.sudo()"/>
+            </t>
+            <t t-else="else">
+                <t t-set="company" t-value="res_company"/>
+            </t>
+        </t>
+
+        <!--        <t t-if="company.external_report_layout_id" t-call="{{company.external_report_layout_id.sudo().key}}"><t t-raw="0"/></t>-->
+        <t t-call="gts_hr_portal.external_layout_standard_gts_hr_portal">
+            <t t-raw="0"/>
+        </t>
+    </template>
+
+
+    <template id="hr_payroll.report_payslip">
+        <t t-call="web.html_container">
+            <t t-foreach="inside_foreach_docs or docs" t-as="o">
+                <t t-call="gts_hr_portal.external_layout_gts_hr_portal">
+                    <t t-set="o"
+                       t-value="o.with_context(lang=o.employee_id.address_home_id.lang or o.env.lang)"/>
+                    <div class="page">
+                        <h2 style="text-align:center;" t-field="o.name"/>
+                        <table name="employee-infos"
+                               class="table table-sm table-bordered">
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Employee ID</strong>
+                                </td>
+                                <td class="w-25">
+                                    <strong>Employee Name</strong>
+                                </td>
+                                <td class="w-25">
+                                    <strong>Date</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span t-field="o.employee_id.registration_number"/>
+                                </td>
+                                <td>
+                                    <span t-field="o.employee_id.name"/>
+                                </td>
+                                <td>
+                                    <span t-field="o.date_from"/>
+                                    -
+                                    <span t-field="o.date_to"/>
+                                </td>
+                            </tr>
+                        </table>
+                        <t t-set="tot_gross" t-value="0"/>
+                        <t t-set="tot_deduction" t-value="0"/>
+                        <t t-set="tot_net" t-value="0"/>
+                        <t t-set="sos_amount"
+                           t-value="0"/>
+                        <t t-set="pit_amount"
+                           t-value="0"/>
+                        <div class="row">
+                            <div class="col" style="width:50%;border:1px;">
+                                <table class="table table-sm">
+                                    <thead class="o_black_border">
+                                        <tr>
+                                            <th>Payments</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <span t-foreach="o.line_ids.filtered(lambda line: line.appears_on_payslip)"
+                                              t-as="line">
+                                            <t t-set="line_style"/>
+                                            <t t-set="line_class"/>
+                                            <t t-if="line.code == 'NET'">
+                                                <t t-set="line_style"
+                                                   t-value="'color:#875A7B;'"/>
+                                                <t t-set="line_class"
+                                                   t-value="'o_total o_border_bottom'"/>
+                                            </t>
+                                            <t t-if="(line.code == 'BAS') or (line.code == 'ALW') or (line.code == 'OTB') or (line.code == 'ERE') or (line.code == 'OVT') or (line.category_id.name == 'Basic')">
+                                                <t t-set="tot_gross"
+                                                   t-value="tot_gross+line.total"/>
+
+                                                <tr t-att-class="line_class"
+                                                    t-att-style="line_style">
+                                                    <td>
+                                                        <span t-field="line.name"/>
+                                                    </td>
+                                                    <td>
+                                                        <span t-esc="line.total"
+                                                              t-options='{"widget": "monetary", "display_currency": o.company_id.currency_id}'/>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </span>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="col" style="width:50%;border:1px;">
+                                <table class="table table-sm">
+                                    <thead class="o_black_border">
+                                        <tr>
+                                            <th>Deductions</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <span t-foreach="o.line_ids.filtered(lambda line: line.appears_on_payslip)"
+                                              t-as="line">
+                                            <t t-set="line_style"/>
+                                            <t t-set="line_class"/>
+                                            <t t-if="line.code == 'NET'">
+                                                <t t-set="line_style"
+                                                   t-value="'color:#875A7B;'"/>
+                                                <t t-set="line_class"
+                                                   t-value="'o_total o_border_bottom'"/>
+                                            </t>
+                                            <t t-if="(line.code == 'DED') ">
+                                                <t t-set="line_style"
+                                                   t-value="'color:#00A09D;'"/>
+                                                <t t-set="line_class"
+                                                   t-value="'o_subtotal o_border_bottom'"/>
+                                            </t>
+                                            <t t-if="(line.code == 'LOA') or (line.code == 'ADS') or (line.code == 'EXP') or (line.code == 'OTH') or (line.code == 'SOS') or(line.code == 'LOA')">
+                                                <t t-if="(line.code == 'PIT')">
+
+                                                    <t t-set="pit_amount"
+                                                       t-value="pit_amount+abs(line.total)"/>
+                                                </t>
+                                                <t t-if="(line.code == 'SOS')">
+
+                                                    <t t-set="sos_amount"
+                                                       t-value="sos_amount+abs(line.total)"/>
+                                                </t>
+                                                <t t-set="tot_deduction"
+                                                   t-value="tot_deduction+abs(line.total)"/>
+                                                <tr t-att-class="line_class"
+                                                    t-att-style="line_style">
+                                                    <td>
+                                                        <span t-field="line.name"/>
+                                                    </td>
+                                                    <td>
+                                                        <span t-esc="abs(line.total)"
+                                                              t-options='{"widget": "monetary", "display_currency": o.company_id.currency_id}'/>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </span>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col" style="width:50%;border:1px;">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th>Gross Pay</th>
+                                        <td>
+                                            <span t-esc="tot_gross"/>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col" style="width:50%;border:1px;">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th>Total Deductions</th>
+                                        <td>
+                                            <span t-esc="tot_deduction"/>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        <t t-set="tot_net"
+                           t-value="tot_net+tot_gross-tot_deduction"/>
+                        <br/>
+                        <br/>
+                        <table name="total-infos"
+                               class="table table-sm table-bordered">
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Total</strong>
+                                </td>
+                                <td class="w-25">
+                                    <span t-esc="time.strftime('%B %Y',time.strptime(str(o.date_from),'%Y-%m-%d'))"/>
+
+
+                                </td>
+                                <td class="w-25">
+                                    <strong>Total Year To Date</strong>
+                                </td>
+                                <td>
+                                    <span t-esc="time.strftime('%Y',time.strptime(str(o.date_from),'%Y-%m-%d'))"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Gross Pay</strong>
+                                </td>
+                                <td class="w-25">
+                                    <span t-esc="tot_gross"/>
+                                </td>
+                                <td class="w-25">
+                                    <strong>Gross Pay</strong>
+                                </td>
+                                <td>
+                                    <span t-esc="tot_gross"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Social Security</strong>
+                                </td>
+                                <td class="w-25">
+                                    <span t-esc="sos_amount"/>
+
+                                </td>
+                                <td class="w-25">
+                                    <strong>Deductions</strong>
+                                </td>
+                                <td>
+                                    <span t-esc="tot_deduction"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">
+                                    <strong>PIT</strong>
+                                </td>
+                                <td class="w-25">
+                                    <span t-esc="pit_amount"/>
+                                </td>
+                                <td class="w-25">
+                                    <strong>Social Security</strong>
+                                </td>
+                                <td>
+                                    <span t-esc="sos_amount"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">
+                                </td>
+                                <td class="w-25">
+                                </td>
+                                <td class="w-25">
+                                    <strong>PIT</strong>
+                                </td>
+                                <td>
+                                    <span t-esc="pit_amount"/>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <table name="totals"
+                               class="table table-sm table-bordered">
+                            <tr>
+                                <td class="w-25">
+                                    <strong>
+                                        <span t-esc="o.company_id.name"/>
+                                    </strong>
+                                </td>
+                                <td class="w-25">
+                                    <strong>Pay Period :</strong>
+                                    <span t-field="o.date_from"/>
+                                    -
+                                    <span t-field="o.date_to"/>
+                                </td>
+                                <td class="w-25">
+                                    <strong>Net Pay :</strong>
+                                    <span t-esc="tot_net"/>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+
+    <template id="hr_payroll.report_payslip_lang">
+        <t t-foreach="docs" t-as="o">
+            <t t-set="inside_foreach_docs" t-value="o"/>
+            <t t-call="hr_payroll.report_payslip"
+               t-lang="o.employee_id.sudo().address_home_id.lang"/>
+        </t>
+    </template>
+</odoo>

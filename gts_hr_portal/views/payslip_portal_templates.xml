@@ -56,15 +56,12 @@
                         <td class="text-right">
                             <span t-field="pay.number"/>
                         </td>
-                        <td class="text-right"><span t-field="pay.date_from"/>-
-                            <span t-field="pay.date_to"/>
+                        <td class="text-right"><span t-field="pay.date_from"/>-<span t-field="pay.date_to"/>
                         </td>
                         <td class="text-right">
                             <span>
                                 <a t-attf-href="/report/pdf/hr_payroll.report_payslip_lang/#{pay.id}"
                                    target="_blank">
-
-
                                     <button type="button"
                                             class="btn btn-primary btn-md o_website_form_send">
                                         Print
