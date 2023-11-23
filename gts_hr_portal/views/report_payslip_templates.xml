@@ -17,7 +17,6 @@
                          t-options='{"widget": "contact", "fields": ["address", "name"], "no_marker": true}'
                     />
                 </div>
-
             </div>
             <div t-if="company.logo or company.report_header"
                  class="row zero_min_height">
@@ -89,11 +88,9 @@
                 <t t-set="company" t-value="o.company_id.sudo()"/>
             </t>
             <t t-else="else">
-                <t t-set="company" t-value="res_company"/>
+                <t t-set="company" t-value="o.company_id.sudo()"/>
             </t>
         </t>
-
-        <!--        <t t-if="company.external_report_layout_id" t-call="{{company.external_report_layout_id.sudo().key}}"><t t-raw="0"/></t>-->
         <t t-call="gts_hr_portal.external_layout_standard_gts_hr_portal">
             <t t-raw="0"/>
         </t>
@@ -162,7 +159,7 @@
                                                 <t t-set="line_class"
                                                    t-value="'o_total o_border_bottom'"/>
                                             </t>
-                                            <t t-if="(line.code == 'BAS') or (line.code == 'ALW') or (line.code == 'OTB') or (line.code == 'ERE') or (line.code == 'OVT') or (line.category_id.name == 'Basic')">
+                                            <t t-if="(line.code == 'BAS') or (line.code == 'ALW') or (line.code == 'OTB') or (line.code == 'ERE') or (line.code == 'OVT')">
                                                 <t t-set="tot_gross"
                                                    t-value="tot_gross+line.total"/>
 
@@ -173,7 +170,7 @@
                                                     </td>
                                                     <td>
                                                         <span t-esc="line.total"
-                                                              t-options='{"widget": "monetary", "display_currency": o.company_id.currency_id}'/>
+                                                              />
                                                     </td>
                                                 </tr>
                                             </t>
@@ -362,7 +359,6 @@
             </t>
         </t>
     </template>
-
 
     <template id="hr_payroll.report_payslip_lang">
         <t t-foreach="docs" t-as="o">
