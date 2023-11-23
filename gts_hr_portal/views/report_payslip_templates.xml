@@ -222,8 +222,7 @@
                                                         <span t-field="line.name"/>
                                                     </td>
                                                     <td>
-                                                        <span t-esc="abs(line.total)"
-                                                              t-options='{"widget": "monetary", "display_currency": o.company_id.currency_id}'/>
+                                                        <span t-esc="abs(line.total)"/>
                                                     </td>
                                                 </tr>
                                             </t>
@@ -262,18 +261,26 @@
                                class="table table-sm table-bordered">
                             <tr>
                                 <td class="w-25">
-                                    <strong>Total</strong>
+                                    <strong>Total Month</strong>
                                 </td>
                                 <td class="w-25">
                                     <span t-esc="time.strftime('%B %Y',time.strptime(str(o.date_from),'%Y-%m-%d'))"/>
-
-
                                 </td>
                                 <td class="w-25">
                                     <strong>Total Year To Date</strong>
                                 </td>
                                 <td>
-                                    <span t-esc="time.strftime('%Y',time.strptime(str(o.date_from),'%Y-%m-%d'))"/>
+                                    <t t-set="payslips"
+                                       t-value="request.env['hr.payslip'].sudo().search([('employee_id','=',o.employee_id.id)]).filtered(lambda l: l.date_from.month &lt; o.date_from.month and l.date_from.year == o.date_from.year)"/>
+                                    <t t-set="ytd" t-value="str()"/>
+                                    <t t-foreach="payslips" t-as="p">
+                                        <t t-set="line"
+                                           t-value="p.line_ids.filtered(lambda a: a.code == 'GROSS')"/>
+                                        <t t-set="month" t-value="time.strftime('%b',time.strptime(str(line.date_from),'%Y-%m-%d'))"/>
+                                        <t t-set="ytd"
+                                           t-value="ytd+month+'-'+str(line.amount)+' '"/>
+                                    </t>
+                                    <span t-esc="ytd"/>
                                 </td>
                             </tr>
                             <tr>
@@ -353,25 +360,33 @@
                                 </td>
                             </tr>
                         </table>
-                        <table name="contract-infos" class="table table-sm table-bordered">
-                        <tr>
-                            <td class="w-25"><strong>Contract Start Date</strong></td>
-                            <td class="w-25"><strong>Working Schedule</strong></td>
-                            <td class="w-25" name="company-car-title"></td>
-                        </tr>
-                        <tr>
-                            <td><span t-field="o.employee_id.first_contract_date"/></td>
-                            <td><span t-field="o.employee_id.contract_id.hours_per_week"/></td>
-                            <td class="w-25" name="company-car-model"></td>
-                        </tr>
-                    </table>
+                        <table name="contract-infos"
+                               class="table table-sm table-bordered">
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Contract Start Date</strong>
+                                </td>
+                                <td class="w-25">
+                                    <strong>Working Schedule</strong>
+                                </td>
+                                <td class="w-25" name="company-car-title"></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span t-field="o.employee_id.first_contract_date"/>
+                                </td>
+                                <td>
+                                    <span t-field="o.employee_id.contract_id.hours_per_week"/>
+                                </td>
+                                <td class="w-25" name="company-car-model"></td>
+                            </tr>
+                        </table>
 
                     </div>
                 </t>
             </t>
         </t>
     </template>
-
 
 
     <template id="hr_payroll.report_payslip_lang">

@@ -59,18 +59,19 @@ class HrPayslip(models.Model):
                              })
         return res
 
-
-    currency_id = fields.Many2one(
-        comodel_name='res.currency',
-        compute="_get_payslip_currency",
-        # store=True,
-    )
-
     @api.depends('struct_id', 'company_id')
     def _get_payslip_currency(self):
         """ appear currency of payslip """
         for rec in self:
             if rec.struct_id.journal_id.currency_id:
-                rec.currency_id = rec.struct_id.journal_id.currency_id.id
+                rec.currency_id = rec.struct_id.journal_id.currency_id
             else:
-                rec.currency_id = rec.company_id.currency_id.id
+                rec.currency_id = rec.company_id.currency_id
+
+    currency_id = fields.Many2one(
+        comodel_name='res.currency',
+        readonly=True,
+        compute="_get_payslip_currency",
+        related="",
+        store=True,
+    )
