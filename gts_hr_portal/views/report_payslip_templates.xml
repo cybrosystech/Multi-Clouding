@@ -10,10 +10,8 @@
                          t-att-src="image_data_uri(company.logo)"
                          style="max-height: 45px;" alt="Logo"/>
                 </div>
-                <div class="col-9 text-right" style="margin-top:22px;"
-                     t-field="company.report_header" name="moto"/>
                 <div class="col-9 text-right" name="company_address">
-                    <div t-field="company.partner_id"
+                    <div t-field="company.sudo().partner_id"
                          t-options='{"widget": "contact", "fields": ["address", "name"], "no_marker": true}'
                     />
                 </div>
@@ -395,7 +393,7 @@
         <t t-foreach="docs" t-as="o">
             <t t-set="inside_foreach_docs" t-value="o"/>
             <t t-call="hr_payroll.report_payslip"
-               t-lang="o.employee_id.sudo().address_home_id.lang"/>
+               t-lang="o.sudo().employee_id.sudo().address_home_id.lang"/>
         </t>
     </template>
 </odoo>
