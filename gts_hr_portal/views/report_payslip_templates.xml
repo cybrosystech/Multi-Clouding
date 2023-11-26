@@ -120,15 +120,15 @@
                             </tr>
                             <tr>
                                 <td>
-                                    <span t-field="o.employee_id.registration_number"/>
+                                    <span t-field="o.employee_id.sudo().registration_number"/>
                                 </td>
                                 <td>
-                                    <span t-field="o.employee_id.name"/>
+                                    <span t-field="o.employee_id.sudo().name"/>
                                 </td>
                                 <td>
-                                    <span t-field="o.date_from"/>
+                                    <span t-field="o.sudo().date_from"/>
                                     -
-                                    <span t-field="o.date_to"/>
+                                    <span t-field="o.sudo().date_to"/>
                                 </td>
                             </tr>
                         </table>
@@ -145,7 +145,9 @@
                                     <thead class="o_black_border">
                                         <tr>
                                             <th>Payments</th>
-                                            <th style="text-align:right;">Amount</th>
+                                            <th style="text-align:right;">
+                                                Amount
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -155,12 +157,12 @@
                                                 <t t-set="tot_gross"
                                                    t-value="tot_gross+line.total"/>
 
-                                                <tr >
+                                                <tr>
                                                     <td>
                                                         <span t-field="line.name"/>
                                                     </td>
                                                     <td style="text-align:right;">
-                                                        <span t-esc="line.total"
+                                                        <span t-esc="'{0:,.2f}'.format(int(line.total))"
                                                         />
                                                     </td>
                                                 </tr>
@@ -174,7 +176,9 @@
                                     <thead class="o_black_border">
                                         <tr>
                                             <th>Deductions</th>
-                                            <th style="text-align:right;">Amount</th>
+                                            <th style="text-align:right;">
+                                                Amount
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -198,7 +202,7 @@
                                                         <span t-field="line.name"/>
                                                     </td>
                                                     <td style="text-align:right;">
-                                                        <span t-esc="abs(line.total)"/>
+                                                        <span t-esc="'{0:,.2f}'.format(int(abs(line.total)))"/>
                                                     </td>
                                                 </tr>
                                             </t>
@@ -213,7 +217,7 @@
                                     <tr>
                                         <th style="width:60%;">Gross Pay</th>
                                         <td style="width:40%;text-align:right;">
-                                            <span t-esc="tot_gross"/>
+                                            <span t-esc="'{0:,.2f}'.format(int(tot_gross))"/>
                                         </td>
                                     </tr>
                                 </table>
@@ -221,9 +225,11 @@
                             <div class="col" style="width:50%;border:1px;">
                                 <table class="table table-sm">
                                     <tr>
-                                        <th style="width:60%;">Total Deductions</th>
+                                        <th style="width:60%;">Total
+                                            Deductions
+                                        </th>
                                         <td style="width:40%;text-align:right;">
-                                            <span t-esc="tot_deduction"/>
+                                            <span t-esc="'{0:,.2f}'.format(int(tot_deduction))"/>
                                         </td>
                                     </tr>
                                 </table>
@@ -236,21 +242,27 @@
                         <table name="total-infos"
                                class="table table-sm table-bordered">
                             <tr>
-                                <td class="w-25" colspan="2" style="text-align:center;">
-                                    <strong>Total Month -  <span t-esc="time.strftime('%B %Y',time.strptime(str(o.date_from),'%Y-%m-%d'))"/></strong>
+                                <td class="w-25" colspan="2"
+                                    style="text-align:center;">
+                                    <strong>Total Month -
+                                        <span t-esc="time.strftime('%B %Y',time.strptime(str(o.date_from),'%Y-%m-%d'))"/>
+                                    </strong>
                                 </td>
 
-                                <td class="w-25" colspan="2" style="text-align:center;">
-                                    <strong>Total Year - <span t-esc="time.strftime('%Y',time.strptime(str(o.date_from),'%Y-%m-%d'))"/></strong>
+                                <td class="w-25" colspan="2"
+                                    style="text-align:center;">
+                                    <strong>Total Year -
+                                        <span t-esc="time.strftime('%Y',time.strptime(str(o.date_from),'%Y-%m-%d'))"/>
+                                    </strong>
                                 </td>
                             </tr>
 
                             <t t-set="payslips"
                                t-value="request.env['hr.payslip'].sudo().search([('employee_id','=',o.employee_id.id)]).filtered(lambda l: l.date_from.month &lt;= o.date_from.month and l.date_from.year == o.date_from.year)"/>
-                            <t t-set="tot_year_gross" t-value="0.0"/>
-                            <t t-set="tot_year_ded" t-value="0.0"/>
-                            <t t-set="tot_year_sos" t-value="0.0"/>
-                            <t t-set="tot_year_pit" t-value="0.0"/>
+                            <t t-set="tot_year_gross" t-value="0"/>
+                            <t t-set="tot_year_ded" t-value="0"/>
+                            <t t-set="tot_year_sos" t-value="0"/>
+                            <t t-set="tot_year_pit" t-value="0"/>
 
                             <t t-foreach="payslips" t-as="p">
                                 <t t-set="line_gross"
@@ -276,28 +288,42 @@
                                     <strong>Gross Pay</strong>
                                 </td>
                                 <td class="w-25" style="text-align:right;">
-                                    <span t-esc="tot_gross"/>
+                                    <span t-esc="'{0:,.2f}'.format(int(tot_gross))"/>
                                 </td>
                                 <td class="w-25">
                                     <strong>Gross Pay</strong>
                                 </td>
                                 <td style="text-align:right;">
-                                    <span t-esc="tot_year_gross"/>
+                                    <span t-esc="'{0:,.2f}'.format(int(tot_year_gross))"/>
                                 </td>
                             </tr>
                             <tr>
                                 <td class="w-25">
-                                    <strong>Social Security</strong>
+                                    <strong>Deductions</strong>
                                 </td>
                                 <td class="w-25" style="text-align:right;">
-                                    <span t-esc="sos_amount"/>
-
+                                    <span t-esc="'{0:,.2f}'.format(int(tot_deduction))"/>
                                 </td>
                                 <td class="w-25">
                                     <strong>Deductions</strong>
                                 </td>
                                 <td style="text-align:right;">
-                                    <span t-esc="tot_year_ded"/>
+                                    <span t-esc="'{0:,.2f}'.format(int(tot_year_ded))"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="w-25">
+                                    <strong>Social Security</strong>
+                                </td>
+                                <td class="w-25" style="text-align:right;">
+                                    <span t-esc="'{0:,.2f}'.format(int(sos_amount))"/>
+
+                                </td>
+                                <td class="w-25">
+                                    <strong>Social Security</strong>
+                                </td>
+                                <td style="text-align:right;">
+                                    <span t-esc="'{0:,.2f}'.format(int(tot_year_sos))"/>
                                 </td>
                             </tr>
                             <tr>
@@ -305,25 +331,13 @@
                                     <strong>PIT</strong>
                                 </td>
                                 <td class="w-25" style="text-align:right;">
-                                    <span t-esc="pit_amount"/>
+                                    <span t-esc="'{0:,.2f}'.format(int(pit_amount))"/>
                                 </td>
                                 <td class="w-25">
-                                    <strong>Social Security</strong>
-                                </td>
-                                <td style="text-align:right;">
-                                    <span t-esc="tot_year_sos"/>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="w-25">
-                                </td>
-                                <td class="w-25">
-                                </td>
-                                <td class="w-25" >
                                     <strong>PIT</strong>
                                 </td>
                                 <td style="text-align:right;">
-                                    <span t-esc="tot_year_pit"/>
+                                    <span t-esc="'{0:,.2f}'.format(int(tot_year_pit))"/>
                                 </td>
                             </tr>
                         </table>

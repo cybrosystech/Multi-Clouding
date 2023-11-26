@@ -1,5 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_hr_employee_public_portal_user,hr.employee_public,hr.model_hr_employee_public,base.group_portal,1,1,1
+access_hr_employee_public_portal_user,hr.employee_public,hr.model_hr_employee_public,base.group_portal,1,1,1,0
 access_hr_employee_portal_user,hr.employee.user,hr.model_hr_employee,base.group_portal,1,1,1,1
 access_hr_employee_resource_portal_user,resource.resource.user,resource.model_resource_resource,base.group_portal,1,1,1,1
 access_hr_department_portal_user,hr.department.user,hr.model_hr_department,base.group_portal,1,0,0,0
@@ -20,3 +20,4 @@ access_hr_payslip_worked_days_portal_user,hr.payslip.worked_days,hr_payroll.mode
 access_hr_payslip_line_portal_user,hr.payslip.line,hr_payroll.model_hr_payslip_line,base.group_portal,1,1,1,1
 access_hr_leave_report_portal_user,hr.leave.report,hr_holidays.model_hr_leave_report,base.group_portal,1,1,1,1
 access_hr_payslip_portal_user,hr.payslip.user,hr_payroll.model_hr_payslip,base.group_portal,1,1,1,1
+access_account_journal_portal_user,account.journal.user,account.model_account_journal,base.group_portal,1,1,1,1
