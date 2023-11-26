@@ -145,30 +145,21 @@
                                     <thead class="o_black_border">
                                         <tr>
                                             <th>Payments</th>
-                                            <th>Amount</th>
+                                            <th style="text-align:right;">Amount</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <span t-foreach="o.line_ids.filtered(lambda line: line.appears_on_payslip)"
                                               t-as="line">
-                                            <t t-set="line_style"/>
-                                            <t t-set="line_class"/>
-                                            <t t-if="line.code == 'NET'">
-                                                <t t-set="line_style"
-                                                   t-value="'color:#875A7B;'"/>
-                                                <t t-set="line_class"
-                                                   t-value="'o_total o_border_bottom'"/>
-                                            </t>
                                             <t t-if="(line.code == 'BAS') or (line.code == 'ALW') or (line.code == 'OTB') or (line.code == 'ERE') or (line.code == 'OVT')">
                                                 <t t-set="tot_gross"
                                                    t-value="tot_gross+line.total"/>
 
-                                                <tr t-att-class="line_class"
-                                                    t-att-style="line_style">
+                                                <tr >
                                                     <td>
                                                         <span t-field="line.name"/>
                                                     </td>
-                                                    <td>
+                                                    <td style="text-align:right;">
                                                         <span t-esc="line.total"
                                                         />
                                                     </td>
@@ -183,27 +174,13 @@
                                     <thead class="o_black_border">
                                         <tr>
                                             <th>Deductions</th>
-                                            <th>Amount</th>
+                                            <th style="text-align:right;">Amount</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <span t-foreach="o.line_ids.filtered(lambda line: line.appears_on_payslip)"
                                               t-as="line">
-                                            <t t-set="line_style"/>
-                                            <t t-set="line_class"/>
-                                            <t t-if="line.code == 'NET'">
-                                                <t t-set="line_style"
-                                                   t-value="'color:#875A7B;'"/>
-                                                <t t-set="line_class"
-                                                   t-value="'o_total o_border_bottom'"/>
-                                            </t>
-                                            <t t-if="(line.code == 'DED') ">
-                                                <t t-set="line_style"
-                                                   t-value="'color:#00A09D;'"/>
-                                                <t t-set="line_class"
-                                                   t-value="'o_subtotal o_border_bottom'"/>
-                                            </t>
-                                            <t t-if="(line.code == 'LOA') or (line.code == 'ADS') or (line.code == 'EXP') or (line.code == 'OTH') or (line.code == 'SOS') or(line.code == 'LOA')">
+                                            <t t-if="(line.code == 'LOA') or (line.code == 'ADS') or (line.code == 'EXP') or (line.code == 'OTH') or (line.code == 'SOS') or(line.code == 'LOA') or (line.code == 'PIT')">
                                                 <t t-if="(line.code == 'PIT')">
 
                                                     <t t-set="pit_amount"
@@ -216,12 +193,11 @@
                                                 </t>
                                                 <t t-set="tot_deduction"
                                                    t-value="tot_deduction+abs(line.total)"/>
-                                                <tr t-att-class="line_class"
-                                                    t-att-style="line_style">
+                                                <tr>
                                                     <td>
                                                         <span t-field="line.name"/>
                                                     </td>
-                                                    <td>
+                                                    <td style="text-align:right;">
                                                         <span t-esc="abs(line.total)"/>
                                                     </td>
                                                 </tr>
@@ -235,8 +211,8 @@
                             <div class="col" style="width:50%;border:1px;">
                                 <table class="table table-sm">
                                     <tr>
-                                        <th>Gross Pay</th>
-                                        <td>
+                                        <th style="width:60%;">Gross Pay</th>
+                                        <td style="width:40%;text-align:right;">
                                             <span t-esc="tot_gross"/>
                                         </td>
                                     </tr>
@@ -245,8 +221,8 @@
                             <div class="col" style="width:50%;border:1px;">
                                 <table class="table table-sm">
                                     <tr>
-                                        <th>Total Deductions</th>
-                                        <td>
+                                        <th style="width:60%;">Total Deductions</th>
+                                        <td style="width:40%;text-align:right;">
                                             <span t-esc="tot_deduction"/>
                                         </td>
                                     </tr>
@@ -260,70 +236,82 @@
                         <table name="total-infos"
                                class="table table-sm table-bordered">
                             <tr>
-                                <td class="w-25">
-                                    <strong>Total Month</strong>
+                                <td class="w-25" colspan="2" style="text-align:center;">
+                                    <strong>Total Month -  <span t-esc="time.strftime('%B %Y',time.strptime(str(o.date_from),'%Y-%m-%d'))"/></strong>
                                 </td>
-                                <td class="w-25">
-                                    <span t-esc="time.strftime('%B %Y',time.strptime(str(o.date_from),'%Y-%m-%d'))"/>
-                                </td>
-                                <td class="w-25">
-                                    <strong>Total Year To Date</strong>
-                                </td>
-                                <td>
-                                    <t t-set="payslips"
-                                       t-value="request.env['hr.payslip'].sudo().search([('employee_id','=',o.employee_id.id)]).filtered(lambda l: l.date_from.month &lt; o.date_from.month and l.date_from.year == o.date_from.year)"/>
-                                    <t t-set="ytd" t-value="str()"/>
-                                    <t t-foreach="payslips" t-as="p">
-                                        <t t-set="line"
-                                           t-value="p.line_ids.filtered(lambda a: a.code == 'GROSS')"/>
-                                        <t t-set="month" t-value="time.strftime('%b',time.strptime(str(line.date_from),'%Y-%m-%d'))"/>
-                                        <t t-set="ytd"
-                                           t-value="ytd+month+'-'+str(line.amount)+' '"/>
-                                    </t>
-                                    <span t-esc="ytd"/>
+
+                                <td class="w-25" colspan="2" style="text-align:center;">
+                                    <strong>Total Year - <span t-esc="time.strftime('%Y',time.strptime(str(o.date_from),'%Y-%m-%d'))"/></strong>
                                 </td>
                             </tr>
+
+                            <t t-set="payslips"
+                               t-value="request.env['hr.payslip'].sudo().search([('employee_id','=',o.employee_id.id)]).filtered(lambda l: l.date_from.month &lt;= o.date_from.month and l.date_from.year == o.date_from.year)"/>
+                            <t t-set="tot_year_gross" t-value="0.0"/>
+                            <t t-set="tot_year_ded" t-value="0.0"/>
+                            <t t-set="tot_year_sos" t-value="0.0"/>
+                            <t t-set="tot_year_pit" t-value="0.0"/>
+
+                            <t t-foreach="payslips" t-as="p">
+                                <t t-set="line_gross"
+                                   t-value="p.line_ids.filtered(lambda a: a.code == 'GROSS')"/>
+                                <t t-set="tot_year_gross"
+                                   t-value="tot_year_gross+abs(line_gross.amount)"/>
+                                <t t-set="line_ded_amounts"
+                                   t-value="p.line_ids.filtered(lambda a: a.code == 'LOA' or a.code == 'ADS' or a.code == 'EXP' or a.code == 'OTH' or a.code == 'SOS' or a.code == 'LOA' or a.code == 'PIT').mapped('amount')"/>
+                                <t t-set="tot_year_ded"
+                                   t-value="tot_year_ded+abs(sum(line_ded_amounts))"/>
+                                <t t-set="line_sos"
+                                   t-value="p.line_ids.filtered(lambda a: a.code == 'SOS')"/>
+                                <t t-set="tot_year_sos"
+                                   t-value="tot_year_sos+abs(line_sos.amount)"/>
+                                <t t-set="line_pit"
+                                   t-value="p.line_ids.filtered(lambda a: a.code == 'PIT')"/>
+                                <t t-set="tot_year_pit"
+                                   t-value="tot_year_pit+abs(line_pit.amount)"/>
+                            </t>
+                            <span t-esc="ytd"/>
                             <tr>
                                 <td class="w-25">
                                     <strong>Gross Pay</strong>
                                 </td>
-                                <td class="w-25">
+                                <td class="w-25" style="text-align:right;">
                                     <span t-esc="tot_gross"/>
                                 </td>
                                 <td class="w-25">
                                     <strong>Gross Pay</strong>
                                 </td>
-                                <td>
-                                    <span t-esc="tot_gross"/>
+                                <td style="text-align:right;">
+                                    <span t-esc="tot_year_gross"/>
                                 </td>
                             </tr>
                             <tr>
                                 <td class="w-25">
                                     <strong>Social Security</strong>
                                 </td>
-                                <td class="w-25">
+                                <td class="w-25" style="text-align:right;">
                                     <span t-esc="sos_amount"/>
 
                                 </td>
                                 <td class="w-25">
                                     <strong>Deductions</strong>
                                 </td>
-                                <td>
-                                    <span t-esc="tot_deduction"/>
+                                <td style="text-align:right;">
+                                    <span t-esc="tot_year_ded"/>
                                 </td>
                             </tr>
                             <tr>
                                 <td class="w-25">
                                     <strong>PIT</strong>
                                 </td>
-                                <td class="w-25">
+                                <td class="w-25" style="text-align:right;">
                                     <span t-esc="pit_amount"/>
                                 </td>
                                 <td class="w-25">
                                     <strong>Social Security</strong>
                                 </td>
-                                <td>
-                                    <span t-esc="sos_amount"/>
+                                <td style="text-align:right;">
+                                    <span t-esc="tot_year_sos"/>
                                 </td>
                             </tr>
                             <tr>
@@ -331,11 +319,11 @@
                                 </td>
                                 <td class="w-25">
                                 </td>
-                                <td class="w-25">
+                                <td class="w-25" >
                                     <strong>PIT</strong>
                                 </td>
-                                <td>
-                                    <span t-esc="pit_amount"/>
+                                <td style="text-align:right;">
+                                    <span t-esc="tot_year_pit"/>
                                 </td>
                             </tr>
                         </table>
@@ -354,7 +342,7 @@
                                     -
                                     <span t-field="o.date_to"/>
                                 </td>
-                                <td class="w-25">
+                                <td class="w-25" style="text-align:right;">
                                     <strong>Net Pay :</strong>
                                     <span t-esc="tot_net"/>
                                 </td>
