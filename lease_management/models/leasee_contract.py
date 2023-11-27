@@ -477,7 +477,6 @@ class LeaseeContract(models.Model):
                     contract.create_installments(remaining_lease_liability)
                 contract.create_commencement_move()
                 contract.create_initial_bill()
-                # self.create_installments()
                 contract.create_rov_asset()
                 contract.create_contract_installment_entries(
                     contract.commencement_date)
@@ -486,6 +485,7 @@ class LeaseeContract(models.Model):
                 contract.leasee_action_generate_installments_entries()
                 contract.leasee_action_generate_interest_entries(
                     contract.commencement_date)
+
                 contract.original_rou = contract.rou_value
                 contract.original_ll = contract.lease_liability
                 if contract.payment_ids:
@@ -1056,6 +1056,25 @@ class LeaseeContract(models.Model):
                     'location_id': self.location_id.id,
                     'currency_id': self.leasee_currency_id.id
                 }))
+        tot_credit = 0
+        tot_debit = 0
+
+        for line in lines:
+            tot_credit = tot_credit + line[2]['credit']
+            tot_debit = tot_debit + line[2]['debit']
+        balance = abs(tot_debit) - abs(tot_credit)
+        if balance:
+            lines.append((0, 0, {
+                'name': 'create contract number %s' % self.name,
+                'account_id': self.lease_liability_account_id.id,
+                'debit': 0,
+                'credit': balance if balance > 0 else 0,
+                'analytic_account_id': self.analytic_account_id.id,
+                'project_site_id': self.project_site_id.id,
+                'type_id': self.type_id.id,
+                'location_id': self.location_id.id,
+                'currency_id': self.leasee_currency_id.id
+            }))
 
         move = self.env['account.move'].create({
             'partner_id': self.vendor_id.id,
@@ -1063,46 +1082,11 @@ class LeaseeContract(models.Model):
             'currency_id': self.leasee_currency_id.id,
             'ref': self.name,
             'date': self.commencement_date,
-            # 'journal_id': self.asset_model_id.journal_id.id,
             'journal_id': self.initial_journal_id.id,
             'leasee_contract_id': self.id,
             'line_ids': lines,
             'auto_post': True,
         })
-
-    # def create_commencement_move(self):
-    #     rou_account = self.asset_model_id.account_asset_id
-    #     lines = [(0, 0, {
-    #         'name': 'create contract number %s' % self.name,
-    #         'account_id': rou_account.id,
-    #         'credit': 0,
-    #         'debit': self.rou_value,
-    #     }),(0, 0, {
-    #         'name': 'create contract number %s' % self.name,
-    #         'account_id': self.lease_liability_account_id.id,
-    #         'debit': 0,
-    #         'credit': self.lease_liability - self.incentives_received,
-    #     }),(0, 0, {
-    #         'name': 'create contract number %s' % self.name,
-    #         'account_id': self.vendor_id.property_account_payable_id.id,
-    #         'debit': 0,
-    #         'credit': self.initial_direct_cost + self.initial_payment_value,
-    #     }),(0, 0, {
-    #         'name': 'create contract number %s' % self.name,
-    #         'account_id': self.provision_dismantling_account_id.id,
-    #         'debit': 0,
-    #         'credit': self.estimated_cost_dismantling,
-    #     })]
-    #     move = self.env['account.move'].create({
-    #         'partner_id': self.vendor_id.id,
-    #         'move_type': 'entry',
-    #         'currency_id': self.leasee_currency_id.id,
-    #         'ref': self.name,
-    #         'date': self.commencement_date,
-    #         'journal_id': self.asset_model_id.journal_id.id,
-    #         'leasee_contract_id': self.id,
-    #         'line_ids': lines,
-    #     })
 
     def get_annual_period(self, i):
         if self.is_contract_not_annual():
