@@ -10,13 +10,12 @@
     'website': "",
     'category': 'Accounting',
     'version': '14.0.1.0.0',
-    'depends': ['account','analytic'],
+    'depends': ['analytic_account_colocation_type'],
 
     'data':
         ['security/ir.model.access.csv',
          'wizard/cost_center_modify_views.xml',
          ],
-
     'qweb': [
     ],
 }
