@@ -12,7 +12,6 @@
     'depends': ['base', 'portal', 'hr_payroll'],
     'data':
         [
-            'security/tasc_payslip_portal_groups.xml',
             'security/hr_payslip_security.xml',
             'security/ir.model.access.csv',
             'views/payslip_portal_template.xml',

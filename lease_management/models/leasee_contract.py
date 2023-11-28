@@ -225,30 +225,6 @@ class LeaseeContract(models.Model):
                 rec.estimated_ending_date = rec.commencement_date + relativedelta(
                     months=rec.lease_contract_period, days=-1)
 
-    # @api.onchange('analytic_account_id', 'project_site_id', 'type_id',
-    #               'location_id')
-    # def onchange_analytical_account(self):
-    #     if self.state != 'draft':
-    #         account_move_lines = self.env['account.move'].search(
-    #             [('leasee_contract_id', '=', self._origin.id),
-    #              ('state', '=', 'draft')]).mapped(lambda x: x.line_ids)
-    #         # print(len(account_moves), account_moves)
-    #         if account_move_lines:
-    #             for rec in account_move_lines:
-    #                 rec.update({
-    #                     'analytic_account_id': self.analytic_account_id.id,
-    #                     'project_site_id': self.project_site_id.id,
-    #                     'type_id': self.type_id.id,
-    #                     'location_id': self.location_id.id
-    #                 })
-    #         if self.asset_id:
-    #             self.asset_id.update({
-    #                 'account_analytic_id': self.analytic_account_id.id,
-    #                 'project_site_id': self.project_site_id.id,
-    #                 'type_id': self.type_id.id,
-    #                 'location_id': self.location_id.id
-    #             })
-
     @api.onchange('project_site_id')
     def get_location_and_types(self):
         for rec in self:
@@ -477,7 +453,6 @@ class LeaseeContract(models.Model):
                     contract.create_installments(remaining_lease_liability)
                 contract.create_commencement_move()
                 contract.create_initial_bill()
-                # self.create_installments()
                 contract.create_rov_asset()
                 contract.create_contract_installment_entries(
                     contract.commencement_date)
@@ -486,6 +461,7 @@ class LeaseeContract(models.Model):
                 contract.leasee_action_generate_installments_entries()
                 contract.leasee_action_generate_interest_entries(
                     contract.commencement_date)
+
                 contract.original_rou = contract.rou_value
                 contract.original_ll = contract.lease_liability
                 if contract.payment_ids:
@@ -742,11 +718,7 @@ class LeaseeContract(models.Model):
                 'model_id': self.asset_model_id.id,
                 'original_value': self.rou_value,
                 'asset_type': 'purchase',
-                # 'partner_id': self.vendor_id.id,
-                # 'company_id': record.move_id.company_id.id,
-                # 'currency_id': self.env.user.company_id.currency_id.id,
                 'acquisition_date': self.commencement_date,
-                # 'method_number': self.lease_contract_period,
                 'currency_id': self.leasee_currency_id.id,
                 'method_number': method_number,
                 'account_analytic_id': self.analytic_account_id.id,
@@ -756,16 +728,10 @@ class LeaseeContract(models.Model):
                 'prorata': self.prorata,
                 'state': 'draft',
                 'first_depreciation_date': self.commencement_date,
-                # 'method_period': self.lease_contract_period_type,
                 'method_period': '1',
             }
-            # changed_vals = self.env['account.asset'].onchange_category_id_values(self.asset_model_id.category_id.id)
-            # vals.update(changed_vals['value'])
-            # vals.update({
-            #     '':,
-            # })
+
             if self.asset_model_id:
-                # asset = self.asset_model_id.copy(vals)
                 vals.update({
                     'account_asset_id': self.asset_model_id.account_asset_id.id,
                     'account_depreciation_id': self.asset_model_id.account_depreciation_id.id,
@@ -993,7 +959,7 @@ class LeaseeContract(models.Model):
                                                                    self.company_id.currency_id,
                                                                    self.company_id,
                                                                    self.commencement_date),
-                                  2)
+                                  3)
 
             lines.append((0, 0, {
                 'name': 'create contract number %s' % self.name,
@@ -1057,52 +1023,17 @@ class LeaseeContract(models.Model):
                     'currency_id': self.leasee_currency_id.id
                 }))
 
-        move = self.env['account.move'].create({
+        self.env['account.move'].create({
             'partner_id': self.vendor_id.id,
             'move_type': 'entry',
             'currency_id': self.leasee_currency_id.id,
             'ref': self.name,
             'date': self.commencement_date,
-            # 'journal_id': self.asset_model_id.journal_id.id,
             'journal_id': self.initial_journal_id.id,
             'leasee_contract_id': self.id,
             'line_ids': lines,
             'auto_post': True,
         })
-
-    # def create_commencement_move(self):
-    #     rou_account = self.asset_model_id.account_asset_id
-    #     lines = [(0, 0, {
-    #         'name': 'create contract number %s' % self.name,
-    #         'account_id': rou_account.id,
-    #         'credit': 0,
-    #         'debit': self.rou_value,
-    #     }),(0, 0, {
-    #         'name': 'create contract number %s' % self.name,
-    #         'account_id': self.lease_liability_account_id.id,
-    #         'debit': 0,
-    #         'credit': self.lease_liability - self.incentives_received,
-    #     }),(0, 0, {
-    #         'name': 'create contract number %s' % self.name,
-    #         'account_id': self.vendor_id.property_account_payable_id.id,
-    #         'debit': 0,
-    #         'credit': self.initial_direct_cost + self.initial_payment_value,
-    #     }),(0, 0, {
-    #         'name': 'create contract number %s' % self.name,
-    #         'account_id': self.provision_dismantling_account_id.id,
-    #         'debit': 0,
-    #         'credit': self.estimated_cost_dismantling,
-    #     })]
-    #     move = self.env['account.move'].create({
-    #         'partner_id': self.vendor_id.id,
-    #         'move_type': 'entry',
-    #         'currency_id': self.leasee_currency_id.id,
-    #         'ref': self.name,
-    #         'date': self.commencement_date,
-    #         'journal_id': self.asset_model_id.journal_id.id,
-    #         'leasee_contract_id': self.id,
-    #         'line_ids': lines,
-    #     })
 
     def get_annual_period(self, i):
         if self.is_contract_not_annual():
@@ -1417,16 +1348,6 @@ class LeaseeContract(models.Model):
 
         return self.asset_id.action_set_to_close()
 
-        # self.process_termination()
-        # view_form = {
-        #     'name': _('Dispose Asset and terminate contract'),
-        #     'view_type': 'form',
-        #     'view_mode': 'form',
-        #     'res_model': 'account.payment',
-        #     'type': 'ir.actions.act_window',
-        #     'target': 'new',
-        # }
-        # return view_form
 
     def get_interest_amount_termination_amount(self, termination_date):
         if not self.installment_ids.filtered(
@@ -1903,11 +1824,6 @@ class LeaseeContract(models.Model):
         install_period = installment.get_period_order()
         installments_per_year = self.get_installments_per_year()
         if self.payment_method == 'beginning':
-            # if self.is_contract_not_annual():
-            #     next_installment = self.installment_ids.filtered(lambda i: i.get_period_order() == (install_period + installments_per_year) and i.get_period_order() > 1)
-            #     current_installment = self.installment_ids.filtered(lambda i: i.get_period_order() == (install_period + installments_per_year - 1) and i.get_period_order() > 1)
-            #     amount = next_installment.amount - current_installment.subsequent_amount if install_period >= 1 else 0
-            # else:
             if install_period == 1:
                 installments = self.installment_ids.filtered(
                     lambda i: i.amount and i.get_period_order() <= (
