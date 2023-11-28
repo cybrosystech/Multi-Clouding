@@ -62,5 +62,4 @@ class AccountMove(models.Model):
                     valid_leave_types |= leave_type
             else:
                 valid_leave_types |= leave_type
-
         return [('id', 'in', valid_leave_types.ids)]

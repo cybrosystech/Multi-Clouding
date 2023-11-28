@@ -15,6 +15,7 @@
     'data':
         [
             'views/account_move.xml',
+            'views/account_move_line_views.xml',
         ],
 
     'qweb': [
