@@ -10,7 +10,8 @@
     'depends': ['hr_contract'],
     'data':
         [
-          'views/hr_contract_view.xml'
+            'views/hr_contract_view.xml',
+            'views/hr_employee_views.xml',
         ],
     'license': 'AGPL-3',
     'installable': True,
