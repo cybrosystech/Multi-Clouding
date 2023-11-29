@@ -10,6 +10,7 @@
     'depends': ['hr_contract'],
     'data':
         [
+            'security/ir.model.access.csv',
             'views/hr_contract_view.xml',
             'views/hr_employee_views.xml',
         ],
