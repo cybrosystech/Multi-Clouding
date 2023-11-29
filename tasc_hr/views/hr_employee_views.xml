@@ -6,9 +6,24 @@
         <field name="model">hr.employee</field>
         <field name="inherit_id" ref="hr.view_employee_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//page[@name='personal_information']/group[1]/group[4]" position="inside">
-                <field name="child_below_18"/>
-                <field name="child_below_4"/>
+<!--            <xpath expr="//page[@name='personal_information']/group[1]/group[4]"-->
+<!--                   position="inside">-->
+<!--                <field name="date_of_birth_ids">-->
+<!--                    <form>-->
+<!--                        <field name="dob"/>-->
+<!--                        <field name="employee_id"/>-->
+<!--                    </form>-->
+<!--                    <tree>-->
+<!--                        <field name="dob"/>-->
+<!--                        <field name="employee_id"/>-->
+<!--                    </tree>-->
+<!--                </field>-->
+<!--                <field name="child_below_18"/>-->
+<!--                <field name="child_below_4"/>-->
+<!--            </xpath>-->
+            <xpath expr="//page[@name='personal_information']/group[1]/group[3]"
+                   position="inside">
+                <field name="spouse_working"/>
             </xpath>
         </field>
     </record>
