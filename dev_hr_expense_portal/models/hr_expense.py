@@ -18,19 +18,10 @@ class hr_expense(models.Model):
     _name = 'hr.expense'
     _inherit = ['hr.expense', 'portal.mixin']
 
-#    partner_id = fields.Many2one('res.partner',string="Customer")
-#    user_id = fields.Many2one('res.users', string='User',default=lambda self: self.env.user)
+    project_site_id = fields.Many2one('account.analytic.account', domain=[
+        ('analytic_account_type', '=', 'project_site')])
 
-#    def _get_report_base_filename(self):
-#        self.ensure_one()
-#        return '%s %s' % (_('Scrap'), self.name)    
-
-    
     def _compute_access_url(self):
         super(hr_expense, self)._compute_access_url()
         for expense in self:
             expense.access_url = '/my/hr_expense/%s' % (expense.id)
-#    
-#        
-
-# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

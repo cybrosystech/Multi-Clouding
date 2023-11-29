@@ -40,6 +40,7 @@
     'data': [
         'security/ir.model.access.csv',
         'views/hr_employee_views.xml',
+        'views/hr_expense_views.xml',
         'views/hr_expense_portal.xml',
     ],
     'demo': [],
