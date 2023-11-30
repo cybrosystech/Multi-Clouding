@@ -148,9 +148,6 @@
                             <button type="button" class="btn btn-primary"
                                     data-dismiss="modal">close
                             </button>
-                            <a t-attf-href="/my/hr_expense?{{ keep_query() }}">
-                                Add New
-                            </a>
                         </footer>
                     </form>
                 </div>

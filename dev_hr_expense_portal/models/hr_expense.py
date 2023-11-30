@@ -9,7 +9,7 @@
 ##############################################################################
 
 from odoo import models, fields, api, _
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
 
@@ -30,14 +30,3 @@ class hr_expense(models.Model):
         super(hr_expense, self)._compute_access_url()
         for expense in self:
             expense.access_url = '/my/hr_expense/%s' % (expense.id)
-
-#
-# class HrExpenseSheet(models.Model):
-#     _inherit = 'hr.expense.sheet'
-#
-#     analytic_account_id = fields.Many2one('account.analytic.account',
-#                                           domain=[
-#                                               ('analytic_account_type', '=',
-#                                                'cost_center')],
-#                                           string='Analytic Account',
-#                                           check_company=True)

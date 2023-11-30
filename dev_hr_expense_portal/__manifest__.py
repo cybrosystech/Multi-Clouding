@@ -36,12 +36,13 @@
          
     """,
     'summary': 'Odoo app allows portal users to view and create expense, expense portal, hr expense, hr expense portal, website hr expense, create and view expense from portal, expense management, employee expenses, employee expenses portal, expense reimbursement, expense approval system, employee expense software, expense tracking portal, business travel expenses, expense approval, employee expense approval, employee expense approval portal',
-    'depends': ['hr_expense', 'portal', 'analytic_account_types'],
+    'depends': ['product', 'hr_expense', 'portal', 'analytic_account_types'],
     'data': [
         'security/ir.model.access.csv',
         'views/hr_employee_views.xml',
         'views/hr_expense_views.xml',
         'views/hr_expense_portal.xml',
+        'views/product_template_views.xml',
     ],
     'demo': [],
     'test': [],
