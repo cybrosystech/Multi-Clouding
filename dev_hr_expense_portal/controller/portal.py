@@ -192,6 +192,10 @@ class CustomerPortal(CustomerPortal):
             [('can_be_expensed', '=', True)])
         currency_ids = request.env['res.currency'].sudo().search(
             [])
+        cost_centers = request.env['account.analytic.account'].sudo().search(
+            [('analytic_account_type', '=', 'cost_center')])
+        project_sites = request.env['account.analytic.account'].sudo().search(
+            [('analytic_account_type', '=', 'project_site')])
 
         values.update({
             'date': date_begin,
@@ -212,6 +216,8 @@ class CustomerPortal(CustomerPortal):
             'groupby': groupby,
             'product_ids': product_id,
             'currency_ids': currency_ids,
+            'cost_centers': cost_centers,
+            'project_sites': project_sites,
 
         })
         return request.render("dev_hr_expense_portal.portal_my_expense", values)
@@ -290,6 +296,10 @@ class CustomerPortal(CustomerPortal):
             'employee_id': employee_id,
             'currency_id': int(post['currency_id']),
             'unit_amount': post['unit_price'] if post['unit_price'] else amount,
+            'analytic_account_id': post['cost_center'] if post[
+                'cost_center'] else False,
+            'project_site_id': post['project_site'] if post[
+                'project_site'] else False,
         })
         if expense_id:
             attachment = {

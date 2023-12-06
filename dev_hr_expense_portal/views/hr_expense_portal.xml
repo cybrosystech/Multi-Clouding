@@ -103,6 +103,32 @@
                                        name="quantity" required="1"/>
                             </div>
                             <div class="form-group field-login">
+                                <label for="cost_center">Cost Center</label>
+                                <select class="custom-select" name="cost_center"
+                                        id="cost_center" required="True">
+                                    <t t-foreach="cost_centers or []"
+                                       t-as="cost_center">
+                                        <option t-att-value="cost_center.id">
+                                            <t t-esc="cost_center.name"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+
+                            <div class="form-group field-login">
+                                <label for="project_site">Project/Site</label>
+                                <select class="custom-select"
+                                        name="project_site"
+                                        id="project_site" required="True">
+                                    <t t-foreach="project_sites or []"
+                                       t-as="project_site">
+                                        <option t-att-value="project_site.id">
+                                            <t t-esc="project_site.name"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+                            <div class="form-group field-login">
                                 <label for="description">Bill Reference</label>
                                 <input type="Integer"
                                        class="form-control form-control-sm"
@@ -221,7 +247,6 @@
                         <t t-call="portal.message_thread">
                             <t t-set="object" t-value="hr_expense"/>
                         </t>
-
                     </div>
                 </div>
             </div>
@@ -290,7 +315,6 @@
                                     <span t-field="hr_expense.amount_residual"/>
                                 </td>
                             </tr>
-
                         </table>
                     </div>
                     <div class="col-lg-6">
@@ -324,6 +348,24 @@
                             </tr>
                             <tr>
                                 <td width="35%" style="padding:3px">
+                                    <b>Cost Center</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-field="hr_expense.analytic_account_id"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Project Site</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-field="hr_expense.project_site_id"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
                                     <b>Company</b>
                                 </td>
                                 <td width="5%" style="padding:3px">:</td>
@@ -335,8 +377,6 @@
                     </div>
                 </div>
             </div>
-
         </div>
     </template>
-
 </odoo>

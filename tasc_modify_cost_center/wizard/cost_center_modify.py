@@ -5,7 +5,10 @@ class ModelRecordUnlink(models.Model):
     _name = 'cost.center.modify'
 
     company_id = fields.Many2one('res.company', string='Company', required=True)
-    analytic_account_types = fields.Selection(string="Analytic Type", selection=[('cost_center', 'Cost Center'), ('project_site', 'Project/Site')], required=True)
+    analytic_account_types = fields.Selection(string="Analytic Type",
+                                              default='cost_center', selection=[
+            ('cost_center', 'Cost Center'), ('project_site', 'Project/Site')],
+                                              required=True)
     records = fields.Integer(string="Records")
     limit = fields.Integer(string="Limit", required=True)
     journal_state = fields.Selection(
@@ -13,10 +16,10 @@ class ModelRecordUnlink(models.Model):
          ('posted', 'Posted'), ('cancel', 'Cancelled')])
     from_value = fields.Many2one('account.analytic.account',
                                  string="From",
-                                 domain="[('company_id', '=', company_id),('analytic_account_type','=',analytic_account_types)]")
+                                 domain="[('company_id', '=', company_id),'|',('analytic_account_type','=',analytic_account_types),('analytic_account_type','=',False)]")
     to_value = fields.Many2one('account.analytic.account',
                                string="To", required=True,
-                               domain="[('company_id', '=', company_id),('analytic_account_type','=',analytic_account_types)]")
+                               domain="[('company_id', '=', company_id),'|',('analytic_account_type','=',analytic_account_types),('analytic_account_type','=',False)]")
 
     def modify_cost_center(self):
         print("modify_cost_center")
@@ -35,7 +38,8 @@ class ModelRecordUnlink(models.Model):
             print("items", items)
             for item in items:
                 item.analytic_account_id = self.to_value.id
-                analytic_line = self.env['account.analytic.line'].search([('move_id','=',item.id)])
+                analytic_line = self.env['account.analytic.line'].search(
+                    [('move_id', '=', item.id)])
                 analytic_line.account_id = self.to_value.id
         else:
             if self.journal_state:
@@ -52,7 +56,8 @@ class ModelRecordUnlink(models.Model):
             print("items", items)
             for item in items:
                 item.project_site_id = self.to_value.id
-                analytic_line = self.env['account.analytic.line'].search([('move_id','=',item.id)])
+                analytic_line = self.env['account.analytic.line'].search(
+                    [('move_id', '=', item.id)])
                 analytic_line.project_site_id = self.to_value.id
 
     @api.onchange('from_value', 'company_id', 'journal_state')

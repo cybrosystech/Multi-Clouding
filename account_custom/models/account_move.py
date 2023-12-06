@@ -62,5 +62,10 @@ class AccountMove(models.Model):
                     valid_leave_types |= leave_type
             else:
                 valid_leave_types |= leave_type
-
         return [('id', 'in', valid_leave_types.ids)]
+
+
+class AccountMoveLine(models.Model):
+    _inherit = 'account.move.line'
+
+    code = fields.Integer(string="Code", related='account_id.code_num')

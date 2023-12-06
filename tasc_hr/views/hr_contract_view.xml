@@ -27,6 +27,31 @@
                     <field name="miscellaneous_2" nolabel="1"/>
                     <span>/ month</span>
                 </div>
+                <label for="nursery"/>
+                <div class="o_row" name="nursery">
+                    <field name="nursery" nolabel="1"/>
+                    <span>/ month</span>
+                </div>
+                <label for="entertainment"/>
+                <div class="o_row" name="entertainment">
+                    <field name="entertainment" nolabel="1"/>
+                    <span>/ month</span>
+                </div>
+                <label for="overtime"/>
+                <div class="o_row" name="overtime">
+                    <field name="overtime" nolabel="1"/>
+                    <span>/ month</span>
+                </div>
+                <label for="per_diem"/>
+                <div class="o_row" name="per_diem">
+                    <field name="per_diem" nolabel="1"/>
+                    <span>/ month</span>
+                </div>
+                <label for="zain_invoice"/>
+                <div class="o_row" name="zain_invoice">
+                    <field name="zain_invoice" nolabel="1"/>
+                    <span>/ month</span>
+                </div>
             </xpath>
         </field>
     </record>
