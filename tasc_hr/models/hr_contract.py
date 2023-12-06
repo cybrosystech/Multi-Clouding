@@ -7,8 +7,14 @@ class HrContract(models.Model):
     housing = fields.Monetary('Housing', required=True, tracking=True)
     mobile_allowance = fields.Monetary('Mobile Allowance', required=True,
                                        tracking=True)
-    miscellaneous_1 = fields.Monetary('Transport', required=True, tracking=True)
-    miscellaneous_2 = fields.Monetary('Other', required=True, tracking=True)
+    miscellaneous_1 = fields.Monetary('Miscellaneous 1', required=True,
+                                      tracking=True)
+    miscellaneous_2 = fields.Monetary('Miscellaneous 2', required=True,
+                                      tracking=True)
+    transport = fields.Monetary('Transport', required=True,
+                                tracking=True)
+    other = fields.Monetary('Other', required=True,
+                            tracking=True)
     nursery = fields.Monetary('Nursery', required=True, tracking=True)
     entertainment = fields.Monetary('Entertainment', required=True,
                                     tracking=True)

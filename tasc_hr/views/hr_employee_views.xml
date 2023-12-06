@@ -23,7 +23,13 @@
             </xpath>
             <xpath expr="//page[@name='personal_information']/group[1]/group[3]"
                    position="inside">
-                <field name="spouse_working"  attrs="{'invisible': [('marital', 'not in', ['married', 'cohabitant'])]}" groups="hr.group_hr_user"/>
+                <field name="spouse_working"
+                       attrs="{'invisible': [('marital', 'not in', ['married', 'cohabitant'])]}"
+                       groups="hr.group_hr_user"/>
+            </xpath>
+            <xpath expr="//page[@name='personal_information']/group[1]/group[2]"
+                   position="inside">
+                <field name="social_security"/>
             </xpath>
         </field>
     </record>

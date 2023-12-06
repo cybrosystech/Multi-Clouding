@@ -19,6 +19,7 @@ class HrEmployee(models.Model):
 
     date_of_birth_ids = fields.One2many('date.of.birth.line', 'employee_id',
                                         copy=False)
+    social_security = fields.Char(string="Social Security Number")
 
     @api.constrains('date_of_birth_ids')
     def on_save_date_of_birth_ids(self):
