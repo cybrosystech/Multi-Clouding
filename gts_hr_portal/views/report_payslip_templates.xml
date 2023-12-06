@@ -7,7 +7,7 @@
                 <div class="col-12" style="float:right;">
                     <img t-if="company.logo"
                          t-att-src="image_data_uri(company.logo)"
-                         style="max-height: 45px;float:right;" alt="Logo"/>
+                         style="max-height: 55px;float:right;" alt="Logo"/>
                 </div>
             </div>
             <div t-if="company.logo or company.report_header"
@@ -19,7 +19,7 @@
             <br/>
             <br/>
 
-            <div class="row">
+            <div class="row" style="font-size: 10px !important;">
                 <div class="col-6" name="company_address">
                     <div t-field="company.partner_id"
                          t-options='{"widget": "contact", "fields": ["address", "name"], "no_marker": true}'
@@ -27,6 +27,8 @@
                 </div>
             </div>
         </div>
+        <br/>
+        <br/>
 
         <div t-attf-class="article o_report_layout_standard o_company_#{company.id}_layout"
              t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id"
@@ -132,6 +134,8 @@
                                 </td>
                             </tr>
                         </table>
+                        <br/>
+                        <br/>
                         <t t-set="tot_gross" t-value="0"/>
                         <t t-set="tot_deduction" t-value="0"/>
                         <t t-set="tot_net" t-value="0"/>
@@ -139,14 +143,18 @@
                            t-value="0"/>
                         <t t-set="pit_amount"
                            t-value="0"/>
+                        <br/>
+                        <br/>
+                        <br/>
                         <div class="row">
                             <div class="col" style="width:50%;border:1px;">
                                 <table class="table table-sm table-borderless">
                                     <thead class="o_black_border"
                                            style="font-size:13px !important;">
-                                        <tr style="text-color:5A2476;">
-                                            <th>Payments</th>
-                                            <th style="text-align:right;">
+                                        <tr>
+                                            <th class="w-25">Payments</th>
+                                            <th class="w-25"
+                                                style="text-align:right;">
                                                 Amount
                                             </th>
                                         </tr>
@@ -177,8 +185,9 @@
                                     <thead class="o_black_border"
                                            style="font-size:13px !important;">
                                         <tr>
-                                            <th>Deductions</th>
-                                            <th style="text-align:right;">
+                                            <th class="w-25">Deductions</th>
+                                            <th class="w-25"
+                                                style="text-align:right;">
                                                 Amount
                                             </th>
                                         </tr>
@@ -211,6 +220,16 @@
 
                                         </span>
                                         <tr>
+                                            <th></th>
+                                        </tr>
+                                        <tr>
+                                            <th></th>
+                                        </tr>
+                                        <tr>
+                                            <th></th>
+                                        </tr>
+
+                                        <tr>
                                             <th colspan="2">TAX</th>
                                         </tr>
                                         <t t-set="tot_tax" t-value="0"/>
@@ -242,32 +261,36 @@
                                 </table>
                             </div>
                         </div>
+                        <br/>
+                        <br/>
+
                         <div class="row">
                             <div class="col" style="width:50%;border:1px;">
                                 <table class="table table-sm">
                                     <tr>
-                                        <th style="width:60%;">Gross Pay</th>
-                                        <td style="width:40%;text-align:right;">
+                                        <th style="width:60%;"  class="w-25">Gross Pay</th>
+                                        <th style="width:40%;text-align:right;"  class="w-25">
                                             <span t-esc="'{0:,.2f}'.format(int(tot_gross))"/>
-                                        </td>
+                                        </th>
                                     </tr>
                                 </table>
                             </div>
                             <div class="col" style="width:50%;border:1px;">
                                 <table class="table table-sm">
                                     <tr>
-                                        <th style="width:60%;">Total
+                                        <th style="width:60%;"  class="w-25">Total
                                             Deductions
                                         </th>
-                                        <td style="width:40%;text-align:right;">
+                                        <th style="width:40%;text-align:right;"  class="w-25">
                                             <span t-esc="'{0:,.2f}'.format(int(tot_deduction))"/>
-                                        </td>
+                                        </th>
                                     </tr>
                                 </table>
                             </div>
                         </div>
                         <t t-set="tot_net"
                            t-value="tot_net+tot_gross-tot_deduction"/>
+                        <br/>
                         <br/>
                         <br/>
                         <div class="row">
@@ -426,6 +449,8 @@
 
                             </div>
                         </div>
+                        <br/>
+                        <br/>
 
                         <table name="totals"
                                class="table table-sm table-bordered">
@@ -433,10 +458,11 @@
                                 <td class="w-25">
                                     <strong>
                                         Tax Period -
+                                        (
                                         <span t-esc="time.strftime('%m',time.strptime(str(o.date_from),'%Y-%m-%d'))"/>
+                                        )
 
                                         <span t-esc="time.strftime('%B',time.strptime(str(o.date_from),'%Y-%m-%d'))"/>
-                                        <!--                                        <span t-esc="o.company_id.name"/>-->
                                     </strong>
                                 </td>
                                 <td class="w-25">
