@@ -42,31 +42,31 @@
                 <div class="col-9 text-left"
                      style="font-size:10px;">
                     <ul class="list-inline mb4">
-                        <t t-set="company" t-value="request.env.company"/>
+                        <t t-set="company" t-value="o.sudo().struct_id.journal_id.company_id"/>
                         <li t-if="company.name"
                             class="list-inline-item d-inline">
                             <span class="o_force_ltr" t-field="company.name"/>
-                            <t t-esc="','"/>
+                            <t t-esc="'-'"/>
                         </li>
                         <li t-if="company.street"
                             class="list-inline-item d-inline">
                             <span t-field="company.street"/>
-                            <t t-esc="','"/>
+                            <t t-esc="'-'"/>
                         </li>
                         <li t-if="company.street2"
                             class="list-inline-item d-inline">
                             <span t-field="company.street2"/>
-                            <t t-esc="','"/>
+                            <t t-esc="'-'"/>
                         </li>
                         <li t-if="company.city"
                             class="list-inline-item d-inline">
                             <span t-field="o.sudo().company_id.city"/>
-                            <t t-esc="','"/>
+                            <t t-esc="'-'"/>
                         </li>
                         <li t-if="company.state_id.name"
                             class="list-inline-item d-inline">
                             <span t-field="company.state_id.name"/>
-                            <t t-esc="','"/>
+                            <t t-esc="'-'"/>
                         </li>
                         <li t-if="company.country_id.name"
                             class="list-inline-item d-inline">
