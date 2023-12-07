@@ -14,7 +14,7 @@
                 <strong>Net Pay :</strong>
                 <span t-esc="tot_net"
                 />
-                <span t-esc="o.journal_id.currency_id.name"/>
+                <span t-esc="o.sudo().struct_id.journal_id.currency_id.name"/>
             </td>
         </xpath>
         <xpath expr="//table[@name='contract-infos']" position="replace">
