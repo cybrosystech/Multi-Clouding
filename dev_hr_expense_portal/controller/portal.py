@@ -25,7 +25,9 @@ class CustomerPortal(CustomerPortal):
         values = super(CustomerPortal, self)._prepare_portal_layout_values()
         expense_id = request.env['hr.expense']
         expense_count = expense_id.search_count([
-            ('employee_id.user_id', '=', request.env.user.id)
+            '|', '|', ('employee_id.user_id', '=', request.env.user.id),
+            ('employee_id.parent_id.user_id', '=', request.env.user.id),
+            ('employee_id.expense_manager_id', '=', request.env.user.id)
         ])
         values.update({
             'expense_count': expense_count,
@@ -40,7 +42,9 @@ class CustomerPortal(CustomerPortal):
         values = self._prepare_portal_layout_values()
         expense_id = request.env['hr.expense']
         domain = [
-            ('employee_id.user_id', '=', request.env.user.id)
+            '|', '|', ('employee_id.user_id', '=', request.env.user.id),
+            ('employee_id.parent_id.user_id', '=', request.env.user.id),
+            ('employee_id.expense_manager_id', '=', request.env.user.id)
         ]
 
         searchbar_sortings = {
@@ -171,6 +175,7 @@ class CustomerPortal(CustomerPortal):
             page=page,
             step=self._items_per_page
         )
+        print("domain", domain)
         expense = expense_id.search(domain, order=sort_order,
                                     limit=self._items_per_page,
                                     offset=pager['offset'])
@@ -315,3 +320,46 @@ class CustomerPortal(CustomerPortal):
             return werkzeug.utils.redirect(url)
 
             # RMA
+
+    @http.route(['/approve/<int:expense_id>'], type='http',
+                auth="user", website=True)
+    def approve_expense(self, expense_id, page=1, **kw):
+        expense = request.env['hr.expense'].browse(expense_id)
+        # expense_id.state = 'validate1'
+        expense.is_manager_approved = True
+        # request.render("dev_hr_expense_portal.portal_my_expense")
+        employee = expense.employee_id.id
+        return request.render("dev_hr_expense_portal.expense_approve",
+                              {'employee': employee,
+                               'expense': expense.sudo()})
+
+    @http.route(['/approve_expense_manager/<int:expense_id>'], type='http',
+                auth="user", website=True)
+    def approve_expense_manager(self, expense_id, page=1, **kw):
+        expense = request.env['hr.expense'].browse(expense_id)
+        expense.state = 'approved'
+        employee = expense.employee_id.id
+        return request.render("dev_hr_expense_portal.expense_approve",
+                              {'employee': employee,
+                               'expense': expense.sudo()})
+
+    @http.route(['/refuse/<int:expense_id>'], type='http',
+                auth="user", website=True)
+    def refuse_expense(self, expense_id, page=1, **kw):
+        expense = request.env['hr.expense'].browse(expense_id)
+        expense.state = 'refused'
+        employee = expense.employee_id.id
+        return request.render("dev_hr_expense_portal.expense_refuse",
+                              {'employee': employee,
+                               'expense': expense.sudo()})
+
+    @http.route(['/refuse_expense_manager/<int:expense_id>'], type='http',
+                auth="user", website=True)
+    def refuse_expense_manager(self, expense_id, page=1, **kw):
+        expense = request.env['hr.expense'].browse(expense_id)
+        expense.state = 'refused'
+        expense.is_manager_approved = False
+        employee = expense.employee_id.id
+        return request.render("dev_hr_expense_portal.expense_refuse",
+                              {'employee': employee,
+                               'expense': expense.sudo()})

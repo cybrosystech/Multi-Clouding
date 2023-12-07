@@ -25,6 +25,7 @@ class hr_expense(models.Model):
                                                    'cost_center')],
                                           string='Analytic Account',
                                           check_company=True)
+    is_manager_approved = fields.Boolean(string="Is Manager Approved",copy=False)
 
     def _compute_access_url(self):
         super(hr_expense, self)._compute_access_url()

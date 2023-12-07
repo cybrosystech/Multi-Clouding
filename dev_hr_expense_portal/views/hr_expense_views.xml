@@ -9,6 +9,7 @@
             <xpath expr="//form/sheet/group[1]/group[2]/field[@name='analytic_account_id']"
                    position="after">
                 <field name="project_site_id"/>
+                <field name="is_manager_approved" invisible="1"/>
             </xpath>
         </field>
     </record>
