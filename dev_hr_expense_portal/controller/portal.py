@@ -194,13 +194,16 @@ class CustomerPortal(CustomerPortal):
             grouped_expense = [expense]
 
         product_id = request.env['product.product'].sudo().search(
-            [('can_be_expensed', '=', True)])
+            [('can_be_expensed', '=', True),
+             ('company_id', '=', request.env.company.id)])
         currency_ids = request.env['res.currency'].sudo().search(
             [])
         cost_centers = request.env['account.analytic.account'].sudo().search(
-            [('analytic_account_type', '=', 'cost_center')])
+            [('analytic_account_type', '=', 'cost_center'),
+             ('company_id', '=', request.env.company.id)])
         project_sites = request.env['account.analytic.account'].sudo().search(
-            [('analytic_account_type', '=', 'project_site')])
+            [('analytic_account_type', '=', 'project_site'),
+             ('company_id', '=', request.env.company.id)])
 
         values.update({
             'date': date_begin,
