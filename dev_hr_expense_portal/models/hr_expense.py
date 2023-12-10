@@ -42,4 +42,5 @@ class hr_expense(models.Model):
                 [('employee_id', '=', emp.id), ('id', 'in', self.ids),
                  ('state', '=', 'draft'), ('sheet_id', '=', False)])
             print("expense_id", expense_ids)
-            expense_ids._create_sheet_from_expenses()
+            if expense_ids:
+                expense_ids._create_sheet_from_expenses()
