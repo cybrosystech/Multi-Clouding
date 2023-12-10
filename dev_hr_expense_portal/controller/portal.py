@@ -195,15 +195,18 @@ class CustomerPortal(CustomerPortal):
 
         product_id = request.env['product.product'].sudo().search(
             [('can_be_expensed', '=', True),
-             ('company_id', '=', request.env.company.id)])
+             '|', ('company_id', '=', request.env.company.id), '|',
+             ('company_id', '=', False)])
         currency_ids = request.env['res.currency'].sudo().search(
             [])
         cost_centers = request.env['account.analytic.account'].sudo().search(
             [('analytic_account_type', '=', 'cost_center'),
-             ('company_id', '=', request.env.company.id)])
+             '|', ('company_id', '=', request.env.company.id), '|',
+             ('company_id', '=', False)])
         project_sites = request.env['account.analytic.account'].sudo().search(
             [('analytic_account_type', '=', 'project_site'),
-             ('company_id', '=', request.env.company.id)])
+             '|', ('company_id', '=', request.env.company.id), '|',
+             ('company_id', '=', False)])
 
         values.update({
             'date': date_begin,

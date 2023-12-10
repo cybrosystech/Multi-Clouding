@@ -25,9 +25,21 @@ class hr_expense(models.Model):
                                                    'cost_center')],
                                           string='Analytic Account',
                                           check_company=True)
-    is_manager_approved = fields.Boolean(string="Is Manager Approved",copy=False)
+    is_manager_approved = fields.Boolean(string="Is Manager Approved",
+                                         copy=False)
 
     def _compute_access_url(self):
         super(hr_expense, self)._compute_access_url()
         for expense in self:
             expense.access_url = '/my/hr_expense/%s' % (expense.id)
+
+    def action_submit_expenses_all_employees(self):
+        print("self", self)
+        employees_ids = self.mapped('employee_id')
+        print("employees", employees_ids)
+        for emp in employees_ids:
+            expense_ids = self.env['hr.expense'].search(
+                [('employee_id', '=', emp.id), ('id', 'in', self.ids),
+                 ('state', '=', 'draft'), ('sheet_id', '=', False)])
+            print("expense_id", expense_ids)
+            expense_ids._create_sheet_from_expenses()
