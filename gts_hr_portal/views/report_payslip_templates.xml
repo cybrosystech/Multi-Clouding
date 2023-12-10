@@ -42,7 +42,8 @@
                 <div class="col-9 text-left"
                      style="font-size:10px;">
                     <ul class="list-inline mb4">
-                        <t t-set="company" t-value="o.sudo().struct_id.journal_id.company_id"/>
+
+                        <t t-set="company" t-value="o.sudo().company_id"/>
                         <li t-if="company.name"
                             class="list-inline-item d-inline">
                             <span class="o_force_ltr" t-field="company.name"/>
@@ -85,12 +86,8 @@
                                  alt="Logo"/>
                         </li>
                     </ul>
-
                 </div>
-
-
             </div>
-
         </div>
     </template>
 
@@ -190,7 +187,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <span t-foreach="o.line_ids.filtered(lambda line: line.appears_on_payslip)"
+                                        <span t-foreach="o.sudo().line_ids.filtered(lambda line: line.appears_on_payslip)"
                                               t-as="line">
                                             <t t-if="(line.category_id.code == 'BASIC') or (line.category_id.code == 'ALW') or (line.category_id.code == 'ORS')">
                                                 <t t-set="gross"
@@ -225,7 +222,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <span t-foreach="o.line_ids.filtered(lambda line: line.appears_on_payslip)"
+                                        <span t-foreach="o.sudo().line_ids.filtered(lambda line: line.appears_on_payslip)"
                                               t-as="line">
                                             <t t-if="(line.category_id.code == 'DED') ">
                                                 <t t-set="ded"
@@ -266,7 +263,7 @@
                                         </tr>
                                         <t t-set="tot_tax" t-value="0"/>
 
-                                        <span t-foreach="o.line_ids.filtered(lambda line: line.appears_on_payslip)"
+                                        <span t-foreach="o.sudo().line_ids.filtered(lambda line: line.appears_on_payslip)"
                                               t-as="tax_line">
                                             <t t-if="(tax_line.category_id.code == 'TAX') ">
                                                 <t t-if="(tax_line.code == 'PIT')">

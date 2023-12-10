@@ -21,3 +21,4 @@ access_hr_payslip_line_portal_user,hr.payslip.line,hr_payroll.model_hr_payslip_l
 access_hr_leave_report_portal_user,hr.leave.report,hr_holidays.model_hr_leave_report,base.group_portal,1,1,1,1
 access_hr_payslip_portal_user,hr.payslip.user,hr_payroll.model_hr_payslip,base.group_portal,1,1,1,1
 access_account_journal_portal_user,account.journal.user,account.model_account_journal,base.group_portal,1,1,1,1
+access_hr_salary_rule_category_portal_user,hr.salary.rule.category,hr_payroll.model_hr_salary_rule_category,base.group_portal,1,0,0,0
