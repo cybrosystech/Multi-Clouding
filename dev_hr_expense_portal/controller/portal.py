@@ -195,7 +195,7 @@ class CustomerPortal(CustomerPortal):
 
         product_id = request.env['product.product'].sudo().search(
             [('can_be_expensed', '=', True),
-             '|', ('company_id', '=', request.env.company.id), '|',
+             '|', ('company_id', '=', request.env.company.id),
              ('company_id', '=', False)])
         currency_ids = request.env['res.currency'].sudo().search(
             [])
