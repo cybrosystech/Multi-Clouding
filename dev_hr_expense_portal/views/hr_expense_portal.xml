@@ -221,9 +221,11 @@
                                     <span t-field="l.amount_residual"/>
                                 </td>
                                 <td class="text-left">
-                                    <span class="badge badge-pill badge-info"
-                                          title="Current stage of the Expense"
-                                          t-esc="l.state"/>
+                                                                        <span class="badge badge-pill badge-info" t-field="l.state"/>
+
+<!--                                    <span class="badge badge-pill badge-info"-->
+<!--                                          title="Current stage of the Expense"-->
+<!--                                          t-esc="l.state"/>-->
                                 </td>
                                 <td class="text-left">
                                     <t t-if="l.is_manager_approved==False and l.employee_id.parent_id.user_id.id==request.env.user.id and l.state in ['draft','reported']">

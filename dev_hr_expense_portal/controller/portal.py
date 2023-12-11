@@ -192,7 +192,7 @@ class CustomerPortal(CustomerPortal):
                                groupbyelem(expense, itemgetter('state'))]
         else:
             grouped_expense = [expense]
-
+        print("grouped_expense", grouped_expense)
         product_id = request.env['product.product'].sudo().search(
             [('can_be_expensed', '=', True),
              '|', ('company_id', '=', request.env.company.id),
@@ -207,6 +207,7 @@ class CustomerPortal(CustomerPortal):
             [('analytic_account_type', '=', 'project_site'),
              '|', ('company_id', '=', request.env.company.id),
              ('company_id', '=', False)])
+        print("grouped_expense",grouped_expense)
 
         values.update({
             'date': date_begin,
@@ -249,13 +250,13 @@ class CustomerPortal(CustomerPortal):
         if hr_expense_sudo and request.session.get(
                 'view_scrap_%s' % hr_expense_sudo.id) != now and request.env.user.share and access_token:
             request.session['view_rma_%s' % hr_expense_sudo.id] = now
-            body = _('Leave viewed by customer')
-            _message_post_helper(res_model='hr.expense',
-                                 res_id=hr_expense_sudo.id, message=body,
-                                 token=hr_expense_sudo.access_token,
-                                 message_type='notification',
-                                 subtype_xmlid="mail.mt_note",
-                                 partner_ids=hr_expense_sudo.employee_id.user_id.sudo().partner_id.ids)
+            # body = _('Expense viewed by customer')
+            # _message_post_helper(res_model='hr.expense',
+            #                      res_id=hr_expense_sudo.id, message=body,
+            #                      token=hr_expense_sudo.access_token,
+            #                      message_type='notification',
+            #                      subtype_xmlid="mail.mt_note",
+            #                      partner_ids=hr_expense_sudo.employee_id.user_id.sudo().partner_id.ids)
         values = {
             'hr_expense': hr_expense_sudo,
             'message': message,
@@ -311,7 +312,9 @@ class CustomerPortal(CustomerPortal):
                 'cost_center'] else False,
             'project_site_id': post['project_site'] if post[
                 'project_site'] else False,
+            'state': 'waiting_approval',
         })
+        print("state", expense_id.state)
         if expense_id:
             attachment = {
                 'name': post['name'],
@@ -335,6 +338,14 @@ class CustomerPortal(CustomerPortal):
         expense.is_manager_approved = True
         # request.render("dev_hr_expense_portal.portal_my_expense")
         employee = expense.employee_id.id
+        body = _('Expense approved by manager %s .' % (
+            expense.employee_id.parent_id.name))
+        _message_post_helper(res_model='hr.expense',
+                             res_id=expense.id, message=body,
+                             token=expense.access_token,
+                             message_type='notification',
+                             subtype_xmlid="mail.mt_note",
+                             partner_ids=expense.employee_id.user_id.sudo().partner_id.ids)
         return request.render("dev_hr_expense_portal.expense_approve",
                               {'employee': employee,
                                'expense': expense.sudo()})
@@ -345,6 +356,14 @@ class CustomerPortal(CustomerPortal):
         expense = request.env['hr.expense'].browse(expense_id)
         expense.state = 'approved'
         employee = expense.employee_id.id
+        body = _('Expense approved by Expense Approver %s .' % (
+            expense.employee_id.expense_manager_id.name))
+        _message_post_helper(res_model='hr.expense',
+                             res_id=expense.id, message=body,
+                             token=expense.access_token,
+                             message_type='notification',
+                             subtype_xmlid="mail.mt_note",
+                             partner_ids=expense.employee_id.user_id.sudo().partner_id.ids)
         return request.render("dev_hr_expense_portal.expense_approve",
                               {'employee': employee,
                                'expense': expense.sudo()})
@@ -355,6 +374,14 @@ class CustomerPortal(CustomerPortal):
         expense = request.env['hr.expense'].browse(expense_id)
         expense.state = 'refused'
         employee = expense.employee_id.id
+        body = _('Expense refused by Manager %s .' % (
+            expense.employee_id.parent_id.name))
+        _message_post_helper(res_model='hr.expense',
+                             res_id=expense.id, message=body,
+                             token=expense.access_token,
+                             message_type='notification',
+                             subtype_xmlid="mail.mt_note",
+                             partner_ids=expense.employee_id.user_id.sudo().partner_id.ids)
         return request.render("dev_hr_expense_portal.expense_refuse",
                               {'employee': employee,
                                'expense': expense.sudo()})
@@ -366,6 +393,14 @@ class CustomerPortal(CustomerPortal):
         expense.state = 'refused'
         expense.is_manager_approved = False
         employee = expense.employee_id.id
+        body = _('Expense refused by Expense Approver %s .' % (
+            expense.employee_id.expense_manager_id.name))
+        _message_post_helper(res_model='hr.expense',
+                             res_id=expense.id, message=body,
+                             token=expense.access_token,
+                             message_type='notification',
+                             subtype_xmlid="mail.mt_note",
+                             partner_ids=expense.employee_id.user_id.sudo().partner_id.ids)
         return request.render("dev_hr_expense_portal.expense_refuse",
                               {'employee': employee,
                                'expense': expense.sudo()})
