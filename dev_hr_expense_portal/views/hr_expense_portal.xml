@@ -221,21 +221,18 @@
                                     <span t-field="l.amount_residual"/>
                                 </td>
                                 <td class="text-left">
-                                                                        <span class="badge badge-pill badge-info" t-field="l.state"/>
-
-<!--                                    <span class="badge badge-pill badge-info"-->
-<!--                                          title="Current stage of the Expense"-->
-<!--                                          t-esc="l.state"/>-->
+                                    <span class="badge badge-pill badge-info"
+                                          t-field="l.state"/>
                                 </td>
                                 <td class="text-left">
-                                    <t t-if="l.is_manager_approved==False and l.employee_id.parent_id.user_id.id==request.env.user.id and l.state in ['draft','reported']">
+                                    <t t-if="l.is_manager_approved==False and l.employee_id.parent_id.user_id.id==request.env.user.id and l.state in ['waiting_approval']">
                                         <a t-attf-href="/approve/#{l.sudo().id}">
                                             <i class="fa fa-check" role="img"
                                                aria-label="Approve"
                                                title="Approve"/>
                                         </a>
                                     </t>
-                                    <t t-if="l.is_manager_approved==True and l.employee_id.expense_manager_id.id==request.env.user.id and l.state in ['draft','reported']">
+                                    <t t-if="l.is_manager_approved==True and l.employee_id.expense_manager_id.id==request.env.user.id and l.state in ['draft']">
                                         <a t-attf-href="/approve_expense_manager/#{l.sudo().id}">
                                             <i class="fa fa-check" role="img"
                                                aria-label="Approve"
@@ -244,14 +241,14 @@
                                     </t>
                                 </td>
                                 <td class="text-left">
-                                    <t t-if="l.is_manager_approved==False and l.employee_id.parent_id.user_id.id==request.env.user.id and l.state in ['draft','reported']">
+                                    <t t-if="l.is_manager_approved==False and l.employee_id.parent_id.user_id.id==request.env.user.id and l.state in ['waiting_approval']">
                                         <a t-attf-href="/refuse/#{l.sudo().id}">
                                             <i class="fa fa-remove" role="img"
                                                aria-label="Refuse"
                                                title="Refuse"/>
                                         </a>
                                     </t>
-                                       <t t-if="l.is_manager_approved==True and l.employee_id.expense_manager_id.id==request.env.user.id and l.state in ['draft','reported']">
+                                    <t t-if="l.is_manager_approved==True and l.employee_id.expense_manager_id.id==request.env.user.id and l.state in ['draft']">
                                         <a t-attf-href="/refuse_expense_manager/#{l.sudo().id}">
                                             <i class="fa fa-remove" role="img"
                                                aria-label="Refuse"
@@ -379,7 +376,7 @@
                                 </td>
                                 <td width="5%" style="padding:3px">:</td>
                                 <td width="50%" style="padding:3px">
-                                    <span t-field="hr_expense.account_id"/>
+                                    <span t-field="hr_expense.sudo().account_id"/>
                                 </td>
                             </tr>
                             <tr>
@@ -388,7 +385,7 @@
                                 </td>
                                 <td width="5%" style="padding:3px">:</td>
                                 <td width="50%" style="padding:3px">
-                                    <span t-field="hr_expense.analytic_account_id"/>
+                                    <span t-field="hr_expense.sudo().analytic_account_id"/>
                                 </td>
                             </tr>
                             <tr>
@@ -416,7 +413,7 @@
         </div>
     </template>
 
-        <record id="expense_approve" model="website.page">
+    <record id="expense_approve" model="website.page">
         <field name="url">/expense-approve</field>
         <field name="is_published">True</field>
         <field name="website_indexed" eval="False"/>
@@ -458,7 +455,7 @@
     </record>
 
 
-        <record id="expense_refuse" model="website.page">
+    <record id="expense_refuse" model="website.page">
         <field name="url">/expense-refuse</field>
         <field name="is_published">True</field>
         <field name="website_indexed" eval="False"/>
