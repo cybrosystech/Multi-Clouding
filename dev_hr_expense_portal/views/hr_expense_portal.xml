@@ -215,10 +215,12 @@
                                     <span t-field="l.quantity"/>
                                 </td>
                                 <td class="text-left">
-                                    <span t-field="l.total_amount"/>
+                                    <span t-esc="l.total_amount"/>
+                                    <span t-esc="l.currency_id.name"/>
                                 </td>
                                 <td class="text-left">
-                                    <span t-field="l.amount_residual"/>
+                                    <span t-esc="l.amount_residual"/>
+                                    <span t-esc="l.currency_id.name"/>
                                 </td>
                                 <td class="text-left">
                                     <span class="badge badge-pill badge-info"
@@ -336,7 +338,9 @@
                                 </td>
                                 <td width="5%" style="padding:3px">:</td>
                                 <td width="50%" style="padding:3px">
-                                    <span t-field="hr_expense.total_amount"/>
+                                    <span t-esc="hr_expense.total_amount"/>
+                                    <span t-esc="hr_expense.currency_id.name"/>
+
                                 </td>
                             </tr>
                             <tr>
@@ -345,7 +349,8 @@
                                 </td>
                                 <td width="5%" style="padding:3px">:</td>
                                 <td width="50%" style="padding:3px">
-                                    <span t-field="hr_expense.amount_residual"/>
+                                    <span t-esc="hr_expense.amount_residual"/>
+                                    <span t-esc="hr_expense.currency_id.name"/>
                                 </td>
                             </tr>
                         </table>

@@ -195,6 +195,7 @@ class CustomerPortal(CustomerPortal):
         print("grouped_expense", grouped_expense)
         product_id = request.env['product.product'].sudo().search(
             [('can_be_expensed', '=', True),
+             ('product_expense_type', 'not in', ['overtime', 'per_diem']),
              '|', ('company_id', '=', request.env.company.id),
              ('company_id', '=', False)])
         currency_ids = request.env['res.currency'].sudo().search(
@@ -292,7 +293,7 @@ class CustomerPortal(CustomerPortal):
         employee_id = request.env['hr.employee'].sudo().search(
             [('user_id', '=', request.env.user.id)]).id
         amount = product_id.standard_price
-        print("product_id",product_id)
+        print("product_id", product_id)
         expense_id = pool['hr.expense'].sudo().create({
             'name': post['name'],
             'product_id': product_id and product_id.id,

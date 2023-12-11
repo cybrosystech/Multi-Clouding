@@ -32,16 +32,6 @@
                 <field name="state" widget="statusbar"
                        statusbar_visible="waiting_approval,draft,reported,approved,done,refused"/>
             </xpath>
-<!--             <xpath expr="//form/sheet/div[1]/h1/field[@name='name']"-->
-<!--                   position="replace">-->
-<!--                <field name="name"-->
-<!--                        attrs="{'readonly': [('state','in',['waiting_approval','reported','refused']]}"/>-->
-<!--            </xpath>-->
-<!--             <xpath expr="//field[@name='product_id']"-->
-<!--                   position="replace">-->
-<!--                <field name="product_id"-->
-<!--                        attrs="{'readonly': [('state','in',['waiting_approval','reported','refused']]}"/>-->
-<!--            </xpath>-->
         </field>
     </record>
 
@@ -61,6 +51,23 @@
             <xpath expr="//field[@name='expense_line_ids']/tree/field[@name='analytic_account_id']"
                    position="after">
                 <field name="project_site_id"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_hr_expense_sheet_tree" model="ir.ui.view">
+        <field name="name">hr.expense.sheet.dev_hr_expense_portal</field>
+        <field name="model">hr.expense.sheet</field>
+        <field name="inherit_id" ref="hr_expense.view_hr_expense_sheet_tree"/>
+        <field name="mode">primary</field>
+        <field name="arch" type="xml">
+            <xpath expr="//tree" position="inside">
+                <header>
+                    <button name="action_create_journal_entry"
+                            string="Create Entry"
+                            type="object"
+                    />
+                </header>
             </xpath>
         </field>
     </record>
