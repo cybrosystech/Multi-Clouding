@@ -35,9 +35,10 @@ class CustomerPortal(CustomerPortal):
         })
         return values
 
-    @http.route(['/approve/<int:leave_id>'], type='http',
+    @http.route(['/approve/leave/<int:leave_id>'], type='http',
                 auth="user", website=True)
     def approve_leave(self, leave_id, page=1, **kw):
+        print("fffffffffff")
         leave = request.env['hr.leave'].browse(leave_id)
         leave.state = 'validate1'
         leave.is_manager_approved = True
@@ -50,6 +51,7 @@ class CustomerPortal(CustomerPortal):
     @http.route(['/approve_leave_manager/<int:leave_id>'], type='http',
                 auth="user", website=True)
     def approve_leave_timeoff_approver(self, leave_id, page=1, **kw):
+        print("dfghbjcgvhbjngvbnm")
         leave = request.env['hr.leave'].browse(leave_id)
         leave.state = 'validate'
         employee = leave.employee_id.id
@@ -57,7 +59,7 @@ class CustomerPortal(CustomerPortal):
                               {'employee': employee,
                                'leave': leave.sudo()})
 
-    @http.route(['/refuse/<int:leave_id>'], type='http',
+    @http.route(['/refuse/leave/<int:leave_id>'], type='http',
                 auth="user", website=True)
     def refuse_leave(self, leave_id, page=1, **kw):
         leave = request.env['hr.leave'].browse(leave_id)

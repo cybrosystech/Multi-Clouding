@@ -143,12 +143,12 @@
                                 </td>
                                 <td>
                                     <t t-if="leave.state=='confirm' and leave.is_manager_approved==False and leave.employee_id.parent_id.user_id.id==request.env.user.id">
-                                        <a t-attf-href="/approve/#{leave.sudo().id}">
+                                        <a t-attf-href="/approve/leave/#{leave.sudo().id}">
                                             <i class="fa fa-check" role="img"
                                                aria-label="Approve"
                                                title="Approve"/>
                                         </a>
-                                        <a t-attf-href="/refuse/#{leave.sudo().id}">
+                                        <a t-attf-href="/refuse/leave/#{leave.sudo().id}">
                                             <i class="fa fa-remove" role="img"
                                                aria-label="Refuse"
                                                title="Refuse"/>
@@ -237,12 +237,12 @@
                                 </td>
                                 <td>
                                     <t t-if="leave.state=='confirm' and leave.is_manager_approved==False and leave.employee_id.parent_id.user_id.id==request.env.user.id">
-                                        <a t-attf-href="/approve/#{leave.sudo().id}">
+                                        <a t-attf-href="/approve/leave/#{leave.sudo().id}">
                                             <i class="fa fa-check" role="img"
                                                aria-label="Approve"
                                                title="Approve"/>
                                         </a>
-                                        <a t-attf-href="/refuse/#{leave.sudo().id}">
+                                        <a t-attf-href="/refuse/leave/#{leave.sudo().id}">
                                             <i class="fa fa-remove" role="img"
                                                aria-label="Refuse"
                                                title="Refuse"/>
@@ -260,9 +260,7 @@
                                                aria-label="Refuse"
                                                title="Refuse"/>
                                         </a>
-
                                     </t>
-
                                 </td>
                                 <td class="text-center">
                                     <span t-field="leave.name"/>
