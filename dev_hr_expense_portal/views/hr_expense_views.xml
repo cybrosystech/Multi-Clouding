@@ -32,6 +32,16 @@
                 <field name="state" widget="statusbar"
                        statusbar_visible="waiting_approval,draft,reported,approved,done,refused"/>
             </xpath>
+<!--             <xpath expr="//form/sheet/div[1]/h1/field[@name='name']"-->
+<!--                   position="replace">-->
+<!--                <field name="name"-->
+<!--                        attrs="{'readonly': [('state','in',['waiting_approval','reported','refused']]}"/>-->
+<!--            </xpath>-->
+<!--             <xpath expr="//field[@name='product_id']"-->
+<!--                   position="replace">-->
+<!--                <field name="product_id"-->
+<!--                        attrs="{'readonly': [('state','in',['waiting_approval','reported','refused']]}"/>-->
+<!--            </xpath>-->
         </field>
     </record>
 

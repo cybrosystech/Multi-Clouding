@@ -207,7 +207,7 @@ class CustomerPortal(CustomerPortal):
             [('analytic_account_type', '=', 'project_site'),
              '|', ('company_id', '=', request.env.company.id),
              ('company_id', '=', False)])
-        print("grouped_expense",grouped_expense)
+        print("grouped_expense", grouped_expense)
 
         values.update({
             'date': date_begin,
@@ -250,13 +250,6 @@ class CustomerPortal(CustomerPortal):
         if hr_expense_sudo and request.session.get(
                 'view_scrap_%s' % hr_expense_sudo.id) != now and request.env.user.share and access_token:
             request.session['view_rma_%s' % hr_expense_sudo.id] = now
-            # body = _('Expense viewed by customer')
-            # _message_post_helper(res_model='hr.expense',
-            #                      res_id=hr_expense_sudo.id, message=body,
-            #                      token=hr_expense_sudo.access_token,
-            #                      message_type='notification',
-            #                      subtype_xmlid="mail.mt_note",
-            #                      partner_ids=hr_expense_sudo.employee_id.user_id.sudo().partner_id.ids)
         values = {
             'hr_expense': hr_expense_sudo,
             'message': message,
@@ -299,6 +292,7 @@ class CustomerPortal(CustomerPortal):
         employee_id = request.env['hr.employee'].sudo().search(
             [('user_id', '=', request.env.user.id)]).id
         amount = product_id.standard_price
+        print("product_id",product_id)
         expense_id = pool['hr.expense'].sudo().create({
             'name': post['name'],
             'product_id': product_id and product_id.id,
@@ -313,6 +307,7 @@ class CustomerPortal(CustomerPortal):
             'project_site_id': post['project_site'] if post[
                 'project_site'] else False,
             'state': 'waiting_approval',
+            'account_id': product_id.property_account_expense_id.id,
         })
         print("state", expense_id.state)
         if expense_id:
@@ -334,9 +329,8 @@ class CustomerPortal(CustomerPortal):
                 auth="user", website=True)
     def approve_expense(self, expense_id, page=1, **kw):
         expense = request.env['hr.expense'].browse(expense_id)
-        # expense_id.state = 'validate1'
+        expense.state = 'draft'
         expense.is_manager_approved = True
-        # request.render("dev_hr_expense_portal.portal_my_expense")
         employee = expense.employee_id.id
         body = _('Expense approved by manager %s .' % (
             expense.employee_id.parent_id.name))
