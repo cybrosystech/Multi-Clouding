@@ -156,7 +156,7 @@
 
                                     </t>
                                     <t t-if="leave.state=='validate1' and leave.is_manager_approved==True and leave.employee_id.leave_manager_id.id==request.env.user.id">
-                                        <a t-attf-href="/approve_leave_manager/#{leave.sudo().id}">
+                                        <a t-attf-href="/approve/leave/manager/#{leave.sudo().id}">
                                             <i class="fa fa-check" role="img"
                                                aria-label="Approve"
                                                title="Approve"/>
@@ -250,7 +250,7 @@
 
                                     </t>
                                     <t t-if="leave.state=='validate1' and leave.is_manager_approved==True and leave.employee_id.leave_manager_id.id==request.env.user.id">
-                                        <a t-attf-href="/approve_leave_manager/#{leave.sudo().id}">
+                                        <a t-attf-href="/approve/leave/manager/#{leave.sudo().id}">
                                             <i class="fa fa-check" role="img"
                                                aria-label="Approve"
                                                title="Approve"/>

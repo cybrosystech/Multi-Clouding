@@ -24,6 +24,7 @@
     'data': [
         'security/security.xml',
         'security/ir.model.access.csv',
+        'views/hr_payslip_views.xml',
         'views/hr_portal_templates.xml',
         'views/payslip_portal_templates.xml',
         'views/assets.xml',
