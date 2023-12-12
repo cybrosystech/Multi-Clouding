@@ -25,7 +25,7 @@ class HrPayslip(models.Model):
                 'date': fields.datetime.now().date(),
                 'journal_id': struct.journal_id.id,
             }
-            payslips = self.env['hr.payslip'].search([('id','in',self.ids),('struct_id','=',struct.id)])
+            payslips = self.env['hr.payslip'].search([('id','in',self.ids),('struct_id','=',struct.id), ('state', '=', 'waiting')])
             for rec in payslips:
                 if any(slip.state == 'cancel' for slip in rec):
                     raise ValidationError(
