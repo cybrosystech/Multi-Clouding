@@ -119,7 +119,7 @@ class HrExpenseSheet(models.Model):
                                                   precision_rounding=(
                                                           r.currency_id or self.env.company.currency_id).rounding))
         journal = self.env['account.journal'].search(
-            [('short_code', '=', 'MISC'), ('type', '=', 'general')])
+            [('code', '=', 'MISC'), ('type', '=', 'general')])
         move_values = {
             'journal_id': journal.id,
             'date': fields.Datetime.now().date(),
