@@ -100,9 +100,10 @@ class ModelRecordUnlink(models.Model):
                     items = self.env['account.move.line'].search(
                         [('analytic_account_id', '=', self.from_value.id),
                          ('company_id', '=', self.company_id.id),
-                         ('move_id.state', '=', self.journal_state)],
+                         ('move_id.state', '=', self.journal_state),
+                         ('move_id.date', '!=', False)],
                     ).filtered(
-                        lambda l: l.move_id.date.year() == int(self.year))
+                        lambda l: l.move_id.date.year == int(self.year))
                     items_count = len(items)
                 else:
                     items_count = self.env['account.move.line'].search_count(
@@ -132,7 +133,7 @@ class ModelRecordUnlink(models.Model):
                          ('company_id', '=', self.company_id.id),
                          ('move_id.state', '=', self.journal_state)],
                     ).filtered(
-                        lambda l: l.move_id.date.year() == int(self.year))
+                        lambda l: l.move_id.date.year == int(self.year))
                     items_count = len(items)
                 else:
                     items_count = self.env['account.move.line'].search_count(
@@ -145,7 +146,7 @@ class ModelRecordUnlink(models.Model):
                     items = self.env['account.move.line'].search(
                         [('project_site_id', '=', self.from_value.id),
                          ('company_id', '=', self.company_id.id),
-                         ]).filtered(lambda l: l.date.year() == int(self.year))
+                         ]).filtered(lambda l: l.date.year == int(self.year))
                     items_count = len(items)
                 else:
                     items_count = self.env['account.move.line'].search_count(
