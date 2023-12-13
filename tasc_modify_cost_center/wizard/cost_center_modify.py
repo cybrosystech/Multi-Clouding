@@ -27,13 +27,15 @@ class ModelRecordUnlink(models.Model):
             if self.journal_state:
                 items = self.env['account.move.line'].search(
                     [('analytic_account_id', '=', self.from_value.id),
-                     ('company_id', '=', self.company_id.id)],
+                     ('company_id', '=', self.company_id.id),
+                     ('move_id.state', '=', self.journal_state)],
                     limit=self.limit)
+                print("limit1", self.limit)
+                print("items1", items)
             else:
                 items = self.env['account.move.line'].search(
                     [('analytic_account_id', '=', self.from_value.id),
-                     ('company_id', '=', self.company_id.id),
-                     ('move_id.state', '=', self.journal_state)],
+                     ('company_id', '=', self.company_id.id)],
                     limit=self.limit)
             print("items", items)
             for item in items:
@@ -45,13 +47,14 @@ class ModelRecordUnlink(models.Model):
             if self.journal_state:
                 items = self.env['account.move.line'].search(
                     [('project_site_id', '=', self.from_value.id),
-                     ('company_id', '=', self.company_id.id)],
+                     ('company_id', '=', self.company_id.id),
+                     ('move_id.state', '=', self.journal_state)
+                     ],
                     limit=self.limit)
             else:
                 items = self.env['account.move.line'].search(
                     [('project_site_id', '=', self.from_value.id),
-                     ('company_id', '=', self.company_id.id),
-                     ('move_id.state', '=', self.journal_state)],
+                     ('company_id', '=', self.company_id.id)],
                     limit=self.limit)
             print("items", items)
             for item in items:
@@ -62,15 +65,30 @@ class ModelRecordUnlink(models.Model):
 
     @api.onchange('from_value', 'company_id', 'journal_state')
     def onchange_from_value(self):
-        print("uuuuuuuuuuu")
-        if self.journal_state and self.limit:
-            items_count = self.env['account.move.line'].search_count(
-                [('analytic_account_id', '=', self.from_value.id),
-                 ('company_id', '=', self.company_id.id)],
-                limit=self.limit)
+        if self.analytic_account_types == 'cost_center':
+            if self.journal_state and self.limit:
+                items_count = self.env['account.move.line'].search_count(
+                    [('analytic_account_id', '=', self.from_value.id),
+                     ('company_id', '=', self.company_id.id),
+                     ('move_id.state', '=', self.journal_state)],
+                    limit=self.limit)
+            else:
+                items_count = self.env['account.move.line'].search_count(
+                    [('analytic_account_id', '=', self.from_value.id),
+                     ('company_id', '=', self.company_id.id),
+                     ])
+            self.records = items_count
         else:
-            items_count = self.env['account.move.line'].search_count(
-                [('analytic_account_id', '=', self.from_value.id),
-                 ('company_id', '=', self.company_id.id),
-                 ('move_id.state', '=', self.journal_state)])
-        self.records = items_count
+            if self.journal_state and self.limit:
+                items_count = self.env['account.move.line'].search_count(
+                    [('project_site_id', '=', self.from_value.id),
+                     ('company_id', '=', self.company_id.id),
+                     ('move_id.state', '=', self.journal_state)],
+                    limit=self.limit)
+            else:
+                items_count = self.env['account.move.line'].search_count(
+                    [('project_site_id', '=', self.from_value.id),
+                     ('company_id', '=', self.company_id.id),
+                     ])
+            self.records = items_count
+        print("uuuuuuuuuuu")
