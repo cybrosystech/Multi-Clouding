@@ -6,26 +6,27 @@
         <field name="arch" type="xml">
             <form>
                 <sheet>
-                <group>
                     <group>
-                        <field name="company_id"/>
-                        <field name="analytic_account_types"/>
-                        <field name="from_value" />
-                        <field name="to_value"/>
+                        <group>
+                            <field name="company_id"/>
+                            <field name="analytic_account_types"/>
+                            <field name="from_value"/>
+                            <field name="to_value"/>
+                        </group>
+                        <group>
+                            <field name="year"/>
+                            <field name="journal_state"/>
+                            <field name="records"/>
+                            <field name="limit"/>
+                        </group>
                     </group>
-                    <group>
-                        <field name="journal_state"/>
-                        <field name="records"/>
-                        <field name="limit"/>
-                    </group>
-                </group>
-                <footer>
-                    <button name="modify_cost_center" string="Update"
-                            type="object" default_focus="1"
-                            class="oe_highlight"/>
-                    <button string="Cancel" class="btn btn-secondary"
-                            special="cancel"/>
-                </footer>
+                    <footer>
+                        <button name="modify_cost_center" string="Update"
+                                type="object" default_focus="1"
+                                class="oe_highlight"/>
+                        <button string="Cancel" class="btn btn-secondary"
+                                special="cancel"/>
+                    </footer>
                 </sheet>
             </form>
         </field>
