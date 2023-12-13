@@ -123,7 +123,7 @@ class HrExpenseSheet(models.Model):
         move_values = {
             'journal_id': journal.id,
             'date': fields.Datetime.now().date(),
-            'ref': 'Expense Report for Month - ' + fields.Datetime.now().month + '-' + fields.Datetime.now().year,
+            'ref': 'Expense Report for Month - ' + str(fields.Datetime.now().month) + ' - ' + str(fields.Datetime.now().year),
             'name': '/',
         }
         move = self.env['account.move'].with_context(
