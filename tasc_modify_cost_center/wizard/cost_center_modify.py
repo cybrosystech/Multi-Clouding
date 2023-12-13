@@ -66,12 +66,12 @@ class ModelRecordUnlink(models.Model):
     @api.onchange('from_value', 'company_id', 'journal_state')
     def onchange_from_value(self):
         if self.analytic_account_types == 'cost_center':
-            if self.journal_state and self.limit:
+            if self.journal_state:
                 items_count = self.env['account.move.line'].search_count(
                     [('analytic_account_id', '=', self.from_value.id),
                      ('company_id', '=', self.company_id.id),
                      ('move_id.state', '=', self.journal_state)],
-                    limit=self.limit)
+                )
             else:
                 items_count = self.env['account.move.line'].search_count(
                     [('analytic_account_id', '=', self.from_value.id),
@@ -79,16 +79,15 @@ class ModelRecordUnlink(models.Model):
                      ])
             self.records = items_count
         else:
-            if self.journal_state and self.limit:
+            if self.journal_state :
                 items_count = self.env['account.move.line'].search_count(
                     [('project_site_id', '=', self.from_value.id),
                      ('company_id', '=', self.company_id.id),
                      ('move_id.state', '=', self.journal_state)],
-                    limit=self.limit)
+                    )
             else:
                 items_count = self.env['account.move.line'].search_count(
                     [('project_site_id', '=', self.from_value.id),
                      ('company_id', '=', self.company_id.id),
                      ])
             self.records = items_count
-        print("uuuuuuuuuuu")
