@@ -122,43 +122,48 @@ class HrExpenseSheet(models.Model):
 
         sheets_approved = self.env['hr.expense.sheet'].search(
             [('id', 'in', self.ids), ('state', '=', 'approve')])
+        employees = sheets_approved.mapped('employee_id')
 
-        expense_line_ids = sheets_approved.mapped('expense_line_ids') \
-            .filtered(lambda r: not float_is_zero(r.total_amount,
-                                                  precision_rounding=(
-                                                          r.currency_id or self.env.company.currency_id).rounding))
-        journal = self.env['account.journal'].search(
-            [('code', '=', 'MISC'), ('type', '=', 'general')])
-        move_values = {
-            'journal_id': journal.id,
-            'date': fields.Datetime.now().date(),
-            'ref': 'Expense Report for Month - ' + str(
-                fields.Datetime.now().month) + ' - ' + str(
-                fields.Datetime.now().year),
-            'name': '/',
-        }
-        move = self.env['account.move'].with_context(
-            default_journal_id=move_values['journal_id']).create(move_values)
-        print("move", move)
+        for emp in employees:
+            expense_line_ids = sheets_approved.mapped('expense_line_ids') \
+                .filtered(lambda r: not float_is_zero(r.total_amount,
+                                                      precision_rounding=(
+                                                              r.currency_id or self.env.company.currency_id).rounding) and r.employee_id.id == emp.id)
+            journal = self.env['account.journal'].search(
+                [('code', '=', 'MISC'), ('type', '=', 'general')])
+            move_values = {
+                'journal_id': journal.id,
+                'date': fields.Datetime.now().date(),
+                'ref': 'Expense Report for Month - ' + str(
+                    fields.Datetime.now().month) + ' - ' + str(
+                    fields.Datetime.now().year),
+                'name': '/',
+            }
+            move = self.env['account.move'].with_context(
+                default_journal_id=move_values['journal_id']).create(move_values)
+            print("move", move)
+            for exp in expense_line_ids:
+                print("employee", exp.employee_id.name)
+                # move_group_by_sheet = self._get_account_move_by_sheet()
+                move_line_values_by_expense = exp._get_account_move_line_values()
+                print("move_line_values_by_expense", move_line_values_by_expense)
+                move_line_values = move_line_values_by_expense.get(exp.id)
+                print("move_line_values", move_line_values)
+                # link move lines to move, and move to expense sheet
+                move.write(
+                    {'line_ids': [(0, 0, line) for line in move_line_values]})
+                exp.sheet_id.write({'account_move_id': move.id})
+                exp.sheet_id.write({'state': 'done'})
+            emp = emp.name + '-' + str(fields.Datetime.now().date())
+            move.name = emp
+            print("move",move)
+            res = move._post()
 
-        for exp in expense_line_ids:
-            # move_group_by_sheet = self._get_account_move_by_sheet()
-            move_line_values_by_expense = exp._get_account_move_line_values()
-            print("move_line_values_by_expense", move_line_values_by_expense)
-            move_line_values = move_line_values_by_expense.get(exp.id)
-
-            # link move lines to move, and move to expense sheet
-            move.write(
-                {'line_ids': [(0, 0, line) for line in move_line_values]})
-            exp.sheet_id.write({'account_move_id': move.id})
-            exp.sheet_id.write({'state': 'done'})
-        res = move._post()
-
-        for sheet in self.filtered(lambda s: not s.accounting_date):
-            sheet.accounting_date = sheet.account_move_id.date
-        to_post = self.filtered(lambda
-                                    sheet: sheet.payment_mode == 'own_account' and sheet.expense_line_ids)
-        to_post.write({'state': 'post'})
-        (self - to_post).write({'state': 'done'})
-        self.activity_update()
-        return res
+            for sheet in self.filtered(lambda s: not s.accounting_date):
+                sheet.accounting_date = sheet.account_move_id.date
+            to_post = self.filtered(lambda
+                                        sheet: sheet.payment_mode == 'own_account' and sheet.expense_line_ids)
+            to_post.write({'state': 'post'})
+            (self - to_post).write({'state': 'done'})
+            self.activity_update()
+        # return res
