@@ -17,16 +17,19 @@
                     <field name="mobile_allowance" nolabel="1"/>
                     <span>/ month</span>
                 </div>
-                <label for="miscellaneous_1"/>
-                <div class="o_row" name="miscellaneous_1">
-                    <field name="miscellaneous_1" nolabel="1"/>
+                <field name="miscellaneous_1" invisible="1"/>
+                <field name="miscellaneous_2" invisible="1"/>
+                <label for="transport"/>
+                <div class="o_row" name="transport">
+                    <field name="transport" nolabel="1"/>
                     <span>/ month</span>
                 </div>
-                <label for="miscellaneous_2"/>
-                <div class="o_row" name="miscellaneous_2">
-                    <field name="miscellaneous_2" nolabel="1"/>
+                <label for="other"/>
+                <div class="o_row" name="other">
+                    <field name="other" nolabel="1"/>
                     <span>/ month</span>
                 </div>
+
                 <label for="nursery"/>
                 <div class="o_row" name="nursery">
                     <field name="nursery" nolabel="1"/>

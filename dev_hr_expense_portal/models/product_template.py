@@ -12,4 +12,5 @@ class ProductTemplate(models.Model):
 class Product(models.Model):
     _inherit = 'product.product'
 
-    product_expense_type = fields.Selection(string="Expense Type", related='product_tmpl_id.product_expense_type')
+    product_expense_type = fields.Selection(string="Expense Type",
+                                            related='product_tmpl_id.product_expense_type')

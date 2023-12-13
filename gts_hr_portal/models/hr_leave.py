@@ -2,9 +2,50 @@
 import logging
 
 from datetime import datetime, date, timedelta, time
-from odoo import api, fields, models, SUPERUSER_ID, tools
+from odoo import api, fields, models, _, SUPERUSER_ID, tools
+# from odoo.addons.hr_holidays.models.hr_leave import HolidaysRequest
+from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
+
+
+# class HolidayRequestMpatch(HolidaysRequest):
+#
+#     def write(self, values):
+#         is_officer = self.env.user.has_group(
+#             'hr_holidays.group_hr_holidays_user') or self.env.is_superuser() or self.employee_id.parent_id or self.employee_id.leave_manager_id
+#
+#         if not is_officer and values.keys() - {'message_main_attachment_id'}:
+#             if any(
+#                     hol.date_from.date() < fields.Date.today() and hol.employee_id.leave_manager_id != self.env.user
+#                     for hol in self):
+#                 raise UserError(
+#                     _('You must have manager rights to modify/validate a time off that already begun'))
+#
+#         employee_id = values.get('employee_id', False)
+#         if not self.env.context.get('leave_fast_create'):
+#             if values.get('state'):
+#                 self._check_approval_update(values['state'])
+#                 if any(holiday.validation_type == 'both' for holiday in self):
+#                     if values.get('employee_id'):
+#                         employees = self.env['hr.employee'].browse(
+#                             values.get('employee_id'))
+#                     else:
+#                         employees = self.mapped('employee_id')
+#                     self._check_double_validation_rules(employees,
+#                                                         values['state'])
+#             if 'date_from' in values:
+#                 values['request_date_from'] = values['date_from']
+#             if 'date_to' in values:
+#                 values['request_date_to'] = values['date_to']
+#         result = super(HolidaysRequest, self).write(values)
+#         if not self.env.context.get('leave_fast_create'):
+#             for holiday in self:
+#                 if employee_id:
+#                     holiday.add_follower(employee_id)
+#         return result
+#
+#     HolidaysRequest.write = write
 
 
 class CalendarEvent(models.Model):
@@ -54,7 +95,7 @@ class HolidaysRequest(models.Model):
         is_officer = self.user_has_groups('hr_holidays.group_hr_holidays_user')
 
         for leave in self:
-            if is_officer or leave.user_id == self.env.user or leave.employee_id.leave_manager_id == self.env.user or  leave.employee_id.parent_id.user_id == self.env.user:
+            if is_officer or leave.user_id == self.env.user or leave.employee_id.leave_manager_id == self.env.user or leave.employee_id.parent_id.user_id == self.env.user:
                 leave.name = leave.sudo().private_name
             else:
                 leave.name = '*****'

@@ -188,6 +188,8 @@
                             <th class="text-left">Total</th>
                             <th class="text-left">Amount Due</th>
                             <th class="text-left">Stage</th>
+                            <th class="text-left"></th>
+                            <th class="text-left"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -201,7 +203,7 @@
                                 <td class="text-left ">
                                     <span class="badge badge-pill badge-info"
                                           title="Current Product of the Expense"
-                                          t-field="l.product_id.name"/>
+                                          t-field="l.sudo().product_id.name"/>
                                 </td>
                                 <td class="text-left">
                                     <span t-field="l.date"/>
@@ -213,15 +215,48 @@
                                     <span t-field="l.quantity"/>
                                 </td>
                                 <td class="text-left">
-                                    <span t-field="l.total_amount"/>
+                                    <span t-esc="l.total_amount"/>
+                                    <span t-esc="l.currency_id.name"/>
                                 </td>
                                 <td class="text-left">
-                                    <span t-field="l.amount_residual"/>
+                                    <span t-esc="l.amount_residual"/>
+                                    <span t-esc="l.currency_id.name"/>
                                 </td>
                                 <td class="text-left">
                                     <span class="badge badge-pill badge-info"
-                                          title="Current stage of the Expense"
-                                          t-esc="l.state"/>
+                                          t-field="l.state"/>
+                                </td>
+                                <td class="text-left">
+                                    <t t-if="l.is_manager_approved==False and l.employee_id.parent_id.user_id.id==request.env.user.id and l.state in ['waiting_approval']">
+                                        <a t-attf-href="/approve/#{l.sudo().id}">
+                                            <i class="fa fa-check" role="img"
+                                               aria-label="Approve"
+                                               title="Approve"/>
+                                        </a>
+                                    </t>
+                                    <t t-if="l.is_manager_approved==True and l.employee_id.expense_manager_id.id==request.env.user.id and l.state in ['draft']">
+                                        <a t-attf-href="/approve_expense_manager/#{l.sudo().id}">
+                                            <i class="fa fa-check" role="img"
+                                               aria-label="Approve"
+                                               title="Approve"/>
+                                        </a>
+                                    </t>
+                                </td>
+                                <td class="text-left">
+                                    <t t-if="l.is_manager_approved==False and l.employee_id.parent_id.user_id.id==request.env.user.id and l.state in ['waiting_approval']">
+                                        <a t-attf-href="/refuse/#{l.sudo().id}">
+                                            <i class="fa fa-remove" role="img"
+                                               aria-label="Refuse"
+                                               title="Refuse"/>
+                                        </a>
+                                    </t>
+                                    <t t-if="l.is_manager_approved==True and l.employee_id.expense_manager_id.id==request.env.user.id and l.state in ['draft']">
+                                        <a t-attf-href="/refuse_expense_manager/#{l.sudo().id}">
+                                            <i class="fa fa-remove" role="img"
+                                               aria-label="Refuse"
+                                               title="Refuse"/>
+                                        </a>
+                                    </t>
                                 </td>
                             </tr>
                         </t>
@@ -303,7 +338,9 @@
                                 </td>
                                 <td width="5%" style="padding:3px">:</td>
                                 <td width="50%" style="padding:3px">
-                                    <span t-field="hr_expense.total_amount"/>
+                                    <span t-esc="hr_expense.total_amount"/>
+                                    <span t-esc="hr_expense.currency_id.name"/>
+
                                 </td>
                             </tr>
                             <tr>
@@ -312,7 +349,8 @@
                                 </td>
                                 <td width="5%" style="padding:3px">:</td>
                                 <td width="50%" style="padding:3px">
-                                    <span t-field="hr_expense.amount_residual"/>
+                                    <span t-esc="hr_expense.amount_residual"/>
+                                    <span t-esc="hr_expense.currency_id.name"/>
                                 </td>
                             </tr>
                         </table>
@@ -343,7 +381,7 @@
                                 </td>
                                 <td width="5%" style="padding:3px">:</td>
                                 <td width="50%" style="padding:3px">
-                                    <span t-field="hr_expense.account_id"/>
+                                    <span t-field="hr_expense.sudo().account_id"/>
                                 </td>
                             </tr>
                             <tr>
@@ -352,7 +390,7 @@
                                 </td>
                                 <td width="5%" style="padding:3px">:</td>
                                 <td width="50%" style="padding:3px">
-                                    <span t-field="hr_expense.analytic_account_id"/>
+                                    <span t-field="hr_expense.sudo().analytic_account_id"/>
                                 </td>
                             </tr>
                             <tr>
@@ -379,4 +417,88 @@
             </div>
         </div>
     </template>
+
+    <record id="expense_approve" model="website.page">
+        <field name="url">/expense-approve</field>
+        <field name="is_published">True</field>
+        <field name="website_indexed" eval="False"/>
+        <field name="name">Approve(Expense)</field>
+        <field name="type">qweb</field>
+        <field name="key">dev_hr_expense_portal.expense_approve</field>
+        <field name="arch" type="xml">
+            <t name="Approve (Expense)" t-name="expense_approve">
+                <t t-call="website.layout">
+                    <div id="wrap">
+                        <div class="oe_structure">
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <h1 class="text-center">Approved!</h1>
+                                        <p class="text-center">
+                                            The expense request is successfully
+                                            approved.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="row" id="o_recruitment_thank_cta">
+                                    <div class="col-lg-12 text-center mt32 mb32">
+                                        <h5 class="mt8 mb32">You can click below
+                                            button and go to your expenses:
+                                        </h5>
+                                        <a role="button" href="/my/hr_expense"
+                                           class="btn btn-primary">Continue To
+                                            Expenses
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </field>
+    </record>
+
+
+    <record id="expense_refuse" model="website.page">
+        <field name="url">/expense-refuse</field>
+        <field name="is_published">True</field>
+        <field name="website_indexed" eval="False"/>
+        <field name="name">Refuse(Expense)</field>
+        <field name="type">qweb</field>
+        <field name="key">dev_hr_expense_portal.expense_refuse</field>
+        <field name="arch" type="xml">
+            <t name="Refuse (Expense)" t-name="expense_refuse">
+                <t t-call="website.layout">
+                    <div id="wrap">
+                        <div class="oe_structure">
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <h1 class="text-center">Refused!</h1>
+                                        <p class="text-center">
+                                            The Expense request is refused.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="row" id="o_recruitment_thank_cta">
+                                    <div class="col-lg-12 text-center mt32 mb32">
+                                        <h5 class="mt8 mb32">You can click below
+                                            button and go to your expenses:
+                                        </h5>
+                                        <a role="button" href="/my/hr_expense"
+                                           class="btn btn-primary">Continue To
+                                            Expenses
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </field>
+    </record>
+
+
 </odoo>

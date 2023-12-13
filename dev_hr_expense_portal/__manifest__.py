@@ -39,6 +39,7 @@
     'depends': ['product', 'hr_expense', 'portal', 'analytic_account_types'],
     'data': [
         'security/ir.model.access.csv',
+        'security/security.xml',
         'views/hr_employee_views.xml',
         'views/hr_expense_views.xml',
         'views/hr_expense_portal.xml',

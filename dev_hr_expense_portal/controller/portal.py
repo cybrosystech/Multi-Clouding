@@ -25,7 +25,9 @@ class CustomerPortal(CustomerPortal):
         values = super(CustomerPortal, self)._prepare_portal_layout_values()
         expense_id = request.env['hr.expense']
         expense_count = expense_id.search_count([
-            ('employee_id.user_id', '=', request.env.user.id)
+            '|', '|', ('employee_id.user_id', '=', request.env.user.id),
+            ('employee_id.parent_id.user_id', '=', request.env.user.id),
+            ('employee_id.expense_manager_id', '=', request.env.user.id)
         ])
         values.update({
             'expense_count': expense_count,
@@ -40,7 +42,9 @@ class CustomerPortal(CustomerPortal):
         values = self._prepare_portal_layout_values()
         expense_id = request.env['hr.expense']
         domain = [
-            ('employee_id.user_id', '=', request.env.user.id)
+            '|', '|', ('employee_id.user_id', '=', request.env.user.id),
+            ('employee_id.parent_id.user_id', '=', request.env.user.id),
+            ('employee_id.expense_manager_id', '=', request.env.user.id)
         ]
 
         searchbar_sortings = {
@@ -171,6 +175,7 @@ class CustomerPortal(CustomerPortal):
             page=page,
             step=self._items_per_page
         )
+        print("domain", domain)
         expense = expense_id.search(domain, order=sort_order,
                                     limit=self._items_per_page,
                                     offset=pager['offset'])
@@ -187,15 +192,23 @@ class CustomerPortal(CustomerPortal):
                                groupbyelem(expense, itemgetter('state'))]
         else:
             grouped_expense = [expense]
-
+        print("grouped_expense", grouped_expense)
         product_id = request.env['product.product'].sudo().search(
-            [('can_be_expensed', '=', True)])
+            [('can_be_expensed', '=', True),
+             ('product_expense_type', 'not in', ['overtime', 'per_diem']),
+             '|', ('company_id', '=', request.env.company.id),
+             ('company_id', '=', False)])
         currency_ids = request.env['res.currency'].sudo().search(
             [])
         cost_centers = request.env['account.analytic.account'].sudo().search(
-            [('analytic_account_type', '=', 'cost_center')])
+            [('analytic_account_type', '=', 'cost_center'),
+             '|', ('company_id', '=', request.env.company.id),
+             ('company_id', '=', False)])
         project_sites = request.env['account.analytic.account'].sudo().search(
-            [('analytic_account_type', '=', 'project_site')])
+            [('analytic_account_type', '=', 'project_site'),
+             '|', ('company_id', '=', request.env.company.id),
+             ('company_id', '=', False)])
+        print("grouped_expense", grouped_expense)
 
         values.update({
             'date': date_begin,
@@ -238,13 +251,6 @@ class CustomerPortal(CustomerPortal):
         if hr_expense_sudo and request.session.get(
                 'view_scrap_%s' % hr_expense_sudo.id) != now and request.env.user.share and access_token:
             request.session['view_rma_%s' % hr_expense_sudo.id] = now
-            body = _('Leave viewed by customer')
-            _message_post_helper(res_model='hr.expense',
-                                 res_id=hr_expense_sudo.id, message=body,
-                                 token=hr_expense_sudo.access_token,
-                                 message_type='notification',
-                                 subtype_xmlid="mail.mt_note",
-                                 partner_ids=hr_expense_sudo.employee_id.user_id.sudo().partner_id.ids)
         values = {
             'hr_expense': hr_expense_sudo,
             'message': message,
@@ -287,6 +293,7 @@ class CustomerPortal(CustomerPortal):
         employee_id = request.env['hr.employee'].sudo().search(
             [('user_id', '=', request.env.user.id)]).id
         amount = product_id.standard_price
+        print("product_id", product_id)
         expense_id = pool['hr.expense'].sudo().create({
             'name': post['name'],
             'product_id': product_id and product_id.id,
@@ -300,7 +307,10 @@ class CustomerPortal(CustomerPortal):
                 'cost_center'] else False,
             'project_site_id': post['project_site'] if post[
                 'project_site'] else False,
+            'state': 'waiting_approval',
+            'account_id': product_id.property_account_expense_id.id,
         })
+        print("state", expense_id.state)
         if expense_id:
             attachment = {
                 'name': post['name'],
@@ -315,3 +325,77 @@ class CustomerPortal(CustomerPortal):
             return werkzeug.utils.redirect(url)
 
             # RMA
+
+    @http.route(['/approve/<int:expense_id>'], type='http',
+                auth="user", website=True)
+    def approve_expense(self, expense_id, page=1, **kw):
+        expense = request.env['hr.expense'].browse(expense_id)
+        expense.state = 'draft'
+        expense.is_manager_approved = True
+        employee = expense.employee_id.id
+        body = _('Expense approved by manager %s .' % (
+            expense.employee_id.parent_id.name))
+        _message_post_helper(res_model='hr.expense',
+                             res_id=expense.id, message=body,
+                             token=expense.access_token,
+                             message_type='notification',
+                             subtype_xmlid="mail.mt_note",
+                             partner_ids=expense.employee_id.user_id.sudo().partner_id.ids)
+        return request.render("dev_hr_expense_portal.expense_approve",
+                              {'employee': employee,
+                               'expense': expense.sudo()})
+
+    @http.route(['/approve_expense_manager/<int:expense_id>'], type='http',
+                auth="user", website=True)
+    def approve_expense_manager(self, expense_id, page=1, **kw):
+        expense = request.env['hr.expense'].browse(expense_id)
+        expense.state = 'approved'
+        employee = expense.employee_id.id
+        body = _('Expense approved by Expense Approver %s .' % (
+            expense.employee_id.expense_manager_id.name))
+        _message_post_helper(res_model='hr.expense',
+                             res_id=expense.id, message=body,
+                             token=expense.access_token,
+                             message_type='notification',
+                             subtype_xmlid="mail.mt_note",
+                             partner_ids=expense.employee_id.user_id.sudo().partner_id.ids)
+        return request.render("dev_hr_expense_portal.expense_approve",
+                              {'employee': employee,
+                               'expense': expense.sudo()})
+
+    @http.route(['/refuse/<int:expense_id>'], type='http',
+                auth="user", website=True)
+    def refuse_expense(self, expense_id, page=1, **kw):
+        expense = request.env['hr.expense'].browse(expense_id)
+        expense.state = 'refused'
+        employee = expense.employee_id.id
+        body = _('Expense refused by Manager %s .' % (
+            expense.employee_id.parent_id.name))
+        _message_post_helper(res_model='hr.expense',
+                             res_id=expense.id, message=body,
+                             token=expense.access_token,
+                             message_type='notification',
+                             subtype_xmlid="mail.mt_note",
+                             partner_ids=expense.employee_id.user_id.sudo().partner_id.ids)
+        return request.render("dev_hr_expense_portal.expense_refuse",
+                              {'employee': employee,
+                               'expense': expense.sudo()})
+
+    @http.route(['/refuse_expense_manager/<int:expense_id>'], type='http',
+                auth="user", website=True)
+    def refuse_expense_manager(self, expense_id, page=1, **kw):
+        expense = request.env['hr.expense'].browse(expense_id)
+        expense.state = 'refused'
+        expense.is_manager_approved = False
+        employee = expense.employee_id.id
+        body = _('Expense refused by Expense Approver %s .' % (
+            expense.employee_id.expense_manager_id.name))
+        _message_post_helper(res_model='hr.expense',
+                             res_id=expense.id, message=body,
+                             token=expense.access_token,
+                             message_type='notification',
+                             subtype_xmlid="mail.mt_note",
+                             partner_ids=expense.employee_id.user_id.sudo().partner_id.ids)
+        return request.render("dev_hr_expense_portal.expense_refuse",
+                              {'employee': employee,
+                               'expense': expense.sudo()})

@@ -2,12 +2,19 @@
 <odoo>
     <template id="report_payslip_inherit"
               inherit_id="hr_payroll.report_payslip">
+
         <xpath expr="//table[@name='totals']/tr[1]/td[3]" position="replace">
 
-            <td class="w-25">
+            <td class="w-25"
+                style="height:70px;text-align:center;vertical-align: middle;">
+                <img
+                        src="/gts_hr_portal/static/src/img/wallet.png"
+                        alt="Logo"
+                        style="max-height:20px;max-width:20px;"/>
                 <strong>Net Pay :</strong>
                 <span t-esc="tot_net"
-                      t-options='{"widget": "monetary", "display_currency": o.journal_id.currency_id or o.company_id.currency_id}'/>
+                />
+                <span t-esc="o.sudo().currency_id.name"/>
             </td>
         </xpath>
         <xpath expr="//table[@name='contract-infos']" position="replace">
