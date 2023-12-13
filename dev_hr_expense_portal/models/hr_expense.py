@@ -36,6 +36,15 @@ class hr_expense(models.Model):
                                      'refused': [('readonly', False)]},
                                  domain="[('can_be_expensed', '=', True), '|', ('company_id', '=', False), ('company_id', '=', company_id)]",
                                  ondelete='restrict')
+    unit_amount = fields.Float("Unit Price",
+                               compute='_compute_from_product_id_company_id',
+                               store=True, required=True, copy=True,
+                               states={
+                                   'waiting_approval': [('readonly', False)],
+                                   'draft': [('readonly', False)],
+                                   'reported': [('readonly', False)],
+                                   'refused': [('readonly', False)]},
+                               digits='Product Price')
 
     project_site_id = fields.Many2one('account.analytic.account', domain=[
         ('analytic_account_type', '=', 'project_site')])
@@ -123,7 +132,9 @@ class HrExpenseSheet(models.Model):
         move_values = {
             'journal_id': journal.id,
             'date': fields.Datetime.now().date(),
-            'ref': 'Expense Report for Month - ' + str(fields.Datetime.now().month) + ' - ' + str(fields.Datetime.now().year),
+            'ref': 'Expense Report for Month - ' + str(
+                fields.Datetime.now().month) + ' - ' + str(
+                fields.Datetime.now().year),
             'name': '/',
         }
         move = self.env['account.move'].with_context(
