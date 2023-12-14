@@ -23,6 +23,7 @@
     'depends': ['base', 'mail', 'website', 'hr_holidays', 'hr','calendar','resource', 'hr_attendance','hr_contract','hr_payroll', 'tasc_hr'],
     'data': [
         'security/security.xml',
+        'data/mail_template.xml',
         'security/ir.model.access.csv',
         'views/hr_payslip_views.xml',
         'views/hr_portal_templates.xml',

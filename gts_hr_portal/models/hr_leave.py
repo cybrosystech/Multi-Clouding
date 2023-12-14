@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import logging
-
 from datetime import datetime
-from odoo import api, fields, models
+
+from pytz import timezone, UTC
+from odoo import api, fields, models, _
 
 _logger = logging.getLogger(__name__)
 
@@ -124,3 +125,50 @@ class HrAttendance(models.Model):
                         message = ("Already Check Out at %r" % str(
                             attendance.check_out))
                         return message
+
+    def activity_update(self):
+        to_clean, to_do = self.env['hr.leave'], self.env['hr.leave']
+        for holiday in self:
+            start = UTC.localize(holiday.date_from).astimezone(
+                timezone(holiday.employee_id.tz or 'UTC'))
+            end = UTC.localize(holiday.date_to).astimezone(
+                timezone(holiday.employee_id.tz or 'UTC'))
+            note = _(
+                'New %(leave_type)s Request created by %(user)s from %(start)s to %(end)s',
+                leave_type=holiday.holiday_status_id.name,
+                user=holiday.create_uid.name,
+                start=start,
+                end=end
+            )
+            if holiday.state == 'draft':
+                to_clean |= holiday
+            elif holiday.state == 'confirm':
+                holiday.activity_schedule(
+                    'hr_holidays.mail_act_leave_approval',
+                    note=note,
+                    user_id=holiday.sudo()._get_responsible_for_approval().id or self.env.user.id)
+                holiday.activity_schedule(
+                    'hr_holidays.mail_act_leave_approval',
+                    note=note,
+                    user_id=holiday.sudo().employee_id.parent_id.user_id.id or self.env.user.id)
+            elif holiday.state == 'validate1':
+                holiday.activity_feedback(
+                    ['hr_holidays.mail_act_leave_approval'])
+                holiday.activity_schedule(
+                    'hr_holidays.mail_act_leave_second_approval',
+                    note=note,
+                    user_id=holiday.sudo()._get_responsible_for_approval().id or self.env.user.id)
+                holiday.activity_schedule(
+                    'hr_holidays.mail_act_leave_second_approval',
+                    note=note,
+                    user_id=holiday.sudo().employee_id.parent_id.user_id.id or self.env.user.id)
+            elif holiday.state == 'validate':
+                to_do |= holiday
+            elif holiday.state == 'refuse':
+                to_clean |= holiday
+        if to_clean:
+            to_clean.activity_unlink(['hr_holidays.mail_act_leave_approval',
+                                      'hr_holidays.mail_act_leave_second_approval'])
+        if to_do:
+            to_do.activity_feedback(['hr_holidays.mail_act_leave_approval',
+                                     'hr_holidays.mail_act_leave_second_approval'])

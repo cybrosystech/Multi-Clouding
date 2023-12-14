@@ -38,7 +38,6 @@ class CustomerPortal(CustomerPortal):
     @http.route(['/approve/leave/<int:leave_id>'], type='http',
                 auth="user", website=True)
     def approve_leave(self, leave_id, page=1, **kw):
-        print("fffffffffff")
         leave = request.env['hr.leave'].browse(leave_id)
         leave.state = 'validate1'
         leave.is_manager_approved = True
@@ -51,7 +50,6 @@ class CustomerPortal(CustomerPortal):
     @http.route(['/approve/leave/manager/<int:leave_id>'], type='http',
                 auth="user", website=True)
     def approve_leave_timeoff_approver(self, leave_id, page=1, **kw):
-        print("dfghbjcgvhbjngvbnm")
         leave = request.env['hr.leave'].browse(leave_id)
         leave.sudo().state = 'validate'
         employee = leave.employee_id.id
@@ -152,14 +150,10 @@ class CustomerPortal(CustomerPortal):
 
         }
         if groupby == 'state':
-            print("dddddddd")
             grouped_leave = [request.env['hr.leave'].concat(*g) for k, g in
                                groupbyelem(leaves, itemgetter('state'))]
         else:
-            print("ccccccccccc")
             grouped_leave = [leaves]
-        print("grouped_leave",grouped_leave)
-
         values.update({
             'date': date_begin,
             'leaves': leaves.sudo(),
@@ -256,6 +250,10 @@ class CustomerPortal(CustomerPortal):
                                                  leave_data_copy.get(
                                                      'employee_id'))['days'] + 1
                 leave = LeaveObj.create(leave_data_copy)
+                template = request.env.ref(
+                    'gts_hr_portal.email_template_leave_request')
+                template.with_context(date_from=leave.date_from.date(),date_to=leave.date_to.date(), state=leave.state).send_mail(leave.id,
+                                   force_send=True)
             except (UserError, AccessError, ValidationError) as exc:
                 _logger.error(_("Error 1 while creating leave: %s ") % exc)
                 validation_errors.update({'error': {'error_text': exc}})
@@ -276,6 +274,9 @@ class CustomerPortal(CustomerPortal):
             values['validation_errors'] = validation_errors
             values.update(leave_data)
             values = self._leave_get_default_data(employee, values)
+
+
+
         return request.render("gts_hr_portal.leave_apply", values)
 
     def _leave_get_default_data(self, employee, values):
