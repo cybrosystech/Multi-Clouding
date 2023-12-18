@@ -24,13 +24,27 @@ class CustomerPortal(CustomerPortal):
     def _prepare_portal_layout_values(self):
         values = super(CustomerPortal, self)._prepare_portal_layout_values()
         expense_id = request.env['hr.expense']
-        expense_count = expense_id.search_count([
+        expense_count = expense_id.sudo().search_count([
             '|', '|', ('employee_id.user_id', '=', request.env.user.id),
             ('employee_id.parent_id.user_id', '=', request.env.user.id),
             ('employee_id.expense_manager_id', '=', request.env.user.id)
         ])
+        overtime_count = expense_id.sudo().search_count([
+            ('product_id.product_expense_type', '=', 'overtime'),
+            '|', '|', ('employee_id.user_id', '=', request.env.user.id),
+            ('employee_id.parent_id.user_id', '=', request.env.user.id),
+            ('employee_id.expense_manager_id', '=', request.env.user.id),
+        ])
+        per_diem_count = expense_id.sudo().search_count([
+            '|', '|', ('employee_id.user_id', '=', request.env.user.id),
+            ('employee_id.parent_id.user_id', '=', request.env.user.id),
+            ('employee_id.expense_manager_id', '=', request.env.user.id),
+            ('product_id.product_expense_type', '=', 'per_diem')
+        ])
         values.update({
             'expense_count': expense_count,
+            'overtime_count': overtime_count,
+            'per_diem_count': per_diem_count,
         })
         return values
 
@@ -175,8 +189,7 @@ class CustomerPortal(CustomerPortal):
             page=page,
             step=self._items_per_page
         )
-        print("domain", domain)
-        expense = expense_id.search(domain, order=sort_order,
+        expense = expense_id.sudo().search(domain, order=sort_order,
                                     limit=self._items_per_page,
                                     offset=pager['offset'])
         request.session['my_contact_history'] = expense.ids[:100]
@@ -192,7 +205,6 @@ class CustomerPortal(CustomerPortal):
                                groupbyelem(expense, itemgetter('state'))]
         else:
             grouped_expense = [expense]
-        print("grouped_expense", grouped_expense)
         product_id = request.env['product.product'].sudo().search(
             [('can_be_expensed', '=', True),
              ('product_expense_type', 'not in', ['overtime', 'per_diem']),
@@ -208,8 +220,6 @@ class CustomerPortal(CustomerPortal):
             [('analytic_account_type', '=', 'project_site'),
              '|', ('company_id', '=', request.env.company.id),
              ('company_id', '=', False)])
-        print("grouped_expense", grouped_expense)
-
         values.update({
             'date': date_begin,
             'expense': expense.sudo(),
@@ -293,7 +303,6 @@ class CustomerPortal(CustomerPortal):
         employee_id = request.env['hr.employee'].sudo().search(
             [('user_id', '=', request.env.user.id)]).id
         amount = product_id.standard_price
-        print("product_id", product_id)
         expense_id = pool['hr.expense'].sudo().create({
             'name': post['name'],
             'product_id': product_id and product_id.id,
@@ -310,7 +319,6 @@ class CustomerPortal(CustomerPortal):
             'state': 'waiting_approval',
             'account_id': product_id.property_account_expense_id.id,
         })
-        print("state", expense_id.state)
         if expense_id:
             attachment = {
                 'name': post['name'],
@@ -397,5 +405,703 @@ class CustomerPortal(CustomerPortal):
                              subtype_xmlid="mail.mt_note",
                              partner_ids=expense.employee_id.user_id.sudo().partner_id.ids)
         return request.render("dev_hr_expense_portal.expense_refuse",
+                              {'employee': employee,
+                               'expense': expense.sudo()})
+
+    # ....................overtime...............................................
+
+    @http.route(['/my/overtime', '/my/overtime/page/<int:page>'],
+                type='http', auth="user", website=True)
+    def portal_my_overtime(self, page=1, date_begin=None, date_end=None,
+                           sortby=None, filterby=None, groupby='none',
+                           search=None, search_in='content', **kw):
+        values = self._prepare_portal_layout_values()
+        expense_id = request.env['hr.expense']
+        domain = [
+            '|', '|', ('employee_id.user_id', '=', request.env.user.id),
+            ('employee_id.parent_id.user_id', '=', request.env.user.id),
+            ('employee_id.expense_manager_id', '=', request.env.user.id),
+            ('product_id.product_expense_type', '=', 'overtime')
+        ]
+
+        searchbar_sortings = {
+            'name': {'label': _('Name'), 'order': 'name desc'},
+            'product_id': {'label': _('Product'), 'order': 'product_id desc'},
+        }
+
+        # default sortby order
+        if not sortby:
+            sortby = 'name'
+
+        today = fields.Date.today()
+        this_week_end_date = fields.Date.to_string(
+            fields.Date.from_string(today) + timedelta(days=7))
+        week_ago = datetime.today() - timedelta(days=7)
+        month_ago = (datetime.today() - relativedelta(months=1)).strftime(
+            '%Y-%m-%d %H:%M:%S')
+        starting_of_year = datetime.now().date().replace(month=1, day=1)
+        ending_of_year = datetime.now().date().replace(month=12, day=31)
+
+        def sd(date):
+            return fields.Datetime.to_string(date)
+
+        def previous_week_range(date):
+            start_date = date + timedelta(-date.weekday(), weeks=-1)
+            end_date = date + timedelta(-date.weekday() - 1)
+            return {'start_date': start_date.strftime('%Y-%m-%d %H:%M:%S'),
+                    'end_date': end_date.strftime('%Y-%m-%d %H:%M:%S')}
+
+        searchbar_filters = {
+            'all': {'label': _('All'), 'domain': []},
+            'today': {'label': _('Today'), 'domain': [('date', '>=',
+                                                       datetime.strftime(
+                                                           date.today(),
+                                                           '%Y-%m-%d 00:00:00')),
+                                                      ('date', '<=',
+                                                       datetime.strftime(
+                                                           date.today(),
+                                                           '%Y-%m-%d 23:59:59'))]},
+            'yesterday': {'label': _('Yesterday'), 'domain': [('date', '>=',
+                                                               datetime.strftime(
+                                                                   date.today() - timedelta(
+                                                                       days=1),
+                                                                   '%Y-%m-%d 00:00:00')),
+                                                              ('date', '<=',
+                                                               datetime.strftime(
+                                                                   date.today(),
+                                                                   '%Y-%m-%d 23:59:59'))]},
+            'week': {'label': _('This Week'),
+                     'domain': [('date', '>=',
+                                 sd(datetime.today() + relativedelta(
+                                     days=-today.weekday()))),
+                                ('date', '<=', this_week_end_date)]},
+            'last_seven_days': {'label': _('Last 7 Days'),
+                                'domain': [('date', '>=', sd(week_ago)), (
+                                    'date', '<=', sd(datetime.today()))]},
+            'last_week': {'label': _('Last Week'),
+                          'domain': [('date', '>=',
+                                      previous_week_range(datetime.today()).get(
+                                          'start_date')), ('date', '<=',
+                                                           previous_week_range(
+                                                               datetime.today()).get(
+                                                               'end_date'))]},
+
+            'last_month': {'label': _('Last 30 Days'),
+                           'domain': [('date', '>=', month_ago),
+                                      ('date', '<=', sd(datetime.today()))]},
+            'month': {'label': _('This Month'),
+                      'domain': [
+                          ("date", ">=", sd(today.replace(day=1))),
+                          ("date", "<", (today.replace(day=1) + relativedelta(
+                              months=1)).strftime('%Y-%m-%d 00:00:00'))
+                      ]
+                      },
+            'year': {'label': _('This Year'),
+                     'domain': [
+                         ("date", ">=", sd(starting_of_year)),
+                         ("date", "<=", sd(ending_of_year)),
+                     ]
+                     }
+        }
+
+        if not filterby:
+            filterby = 'all'
+        domain += searchbar_filters[filterby]['domain']
+
+        sort_order = searchbar_sortings[sortby]['order']
+
+        searchbar_groupby = {
+            'none': {'input': 'none', 'label': _('All')},
+            'product_id': {'input': 'product_id', 'label': _('Product')},
+            'account_id': {'input': 'account_id', 'label': _('Account')},
+            'state': {'input': 'state', 'label': _('State')},
+
+        }
+
+        # count for pager
+        exp_count = expense_id.search_count(domain)
+
+        searchbar_inputs = {
+            'name': {'input': 'name', 'label': _('Search in Name')},
+            'product': {'input': 'product', 'label': _('Search in Product')},
+            'state': {'input': 'state', 'label': _('Search in State')},
+            'all': {'input': 'all', 'label': _('Search in All')},
+        }
+
+        # search
+        if search and search_in:
+            search_domain = []
+            if search_in in ('name', 'all'):
+                search_domain = OR(
+                    [search_domain, [('name', 'ilike', search)]])
+            if search_in in ('product', 'all'):
+                search_domain = OR(
+                    [search_domain, [('product_id', 'ilike', search)]])
+            if search_in in ('state', 'all'):
+                search_domain = OR(
+                    [search_domain, [('state', 'ilike', search)]])
+            domain += search_domain
+
+        # make pager
+        pager = portal_pager(
+            url="/my/overtime",
+            url_args={'date_begin': date_begin, 'date_end': date_end,
+                      'sortby': sortby, 'search_in': search_in,
+                      'search': search},
+            total=exp_count,
+            page=page,
+            step=self._items_per_page
+        )
+        expense = expense_id.sudo().search(domain, order=sort_order,
+                                    limit=self._items_per_page,
+                                    offset=pager['offset'])
+        request.session['my_contact_history'] = expense.ids[:100]
+
+        if groupby == 'product_id':
+            grouped_expense = [request.env['hr.expense'].concat(*g) for k, g in
+                               groupbyelem(expense, itemgetter('product_id'))]
+        elif groupby == 'account_id':
+            grouped_expense = [request.env['hr.expense'].concat(*g) for k, g in
+                               groupbyelem(expense, itemgetter('account_id'))]
+        elif groupby == 'state':
+            grouped_expense = [request.env['hr.expense'].concat(*g) for k, g in
+                               groupbyelem(expense, itemgetter('state'))]
+        else:
+            grouped_expense = [expense]
+        product_id = request.env['product.product'].sudo().search(
+            [('can_be_expensed', '=', True),
+             ('product_expense_type', '=', 'overtime'),
+             '|', ('company_id', '=', request.env.company.id),
+             ('company_id', '=', False)])
+        currency_ids = request.env['res.currency'].sudo().search(
+            [])
+        cost_centers = request.env['account.analytic.account'].sudo().search(
+            [('analytic_account_type', '=', 'cost_center'),
+             '|', ('company_id', '=', request.env.company.id),
+             ('company_id', '=', False)])
+        project_sites = request.env['account.analytic.account'].sudo().search(
+            [('analytic_account_type', '=', 'project_site'),
+             '|', ('company_id', '=', request.env.company.id),
+             ('company_id', '=', False)])
+        values.update({
+            'date': date_begin,
+            'expense': expense.sudo(),
+            'page_name': 'overtime_tree',
+            'grouped_expense': grouped_expense,
+            'pager': pager,
+            'default_url': '/my/overtime',
+            'searchbar_filters': OrderedDict(sorted(searchbar_filters.items())),
+            'searchbar_inputs': searchbar_inputs,
+            'search_in': search_in,
+            'search': search,
+            'searchbar_sortings': searchbar_sortings,
+            'searchbar_groupby': searchbar_groupby,
+            'page_name': 'overtime_tree',
+            'filterby': filterby,
+            'sortby': sortby,
+            'groupby': groupby,
+            'product_ids': product_id,
+            'currency_ids': currency_ids,
+            'cost_centers': cost_centers,
+            'project_sites': project_sites,
+
+        })
+        return request.render("dev_hr_expense_portal.portal_my_overtime",
+                              values)
+
+    @http.route(['/dev_expense/overtime_create'], type='http', auth="public",
+                methods=['POST'], website=True)
+    def overtime_submit(self, **post):
+        cr, uid, context, pool = http.request.cr, http.request.uid, http.request.context, request.env
+        product_id = request.env['product.product'].sudo().browse(
+            int(post['product_id']))
+        employee_id = request.env['hr.employee'].sudo().search(
+            [('user_id', '=', request.env.user.id)]).id
+        amount = product_id.standard_price
+        expense_id = pool['hr.expense'].sudo().create({
+            'name': post['name'],
+            'product_id': product_id and product_id.id,
+            'product_uom_id': product_id.uom_id and product_id.uom_id.id or False,
+            'quantity': post['quantity'],
+            'reference': post['bill_reference'],
+            'employee_id': employee_id,
+            'currency_id': int(post['currency_id']),
+            'unit_amount': post['unit_price'] if post['unit_price'] else amount,
+            'analytic_account_id': post['cost_center'] if post[
+                'cost_center'] else False,
+            'project_site_id': post['project_site'] if post[
+                'project_site'] else False,
+            'state': 'waiting_approval',
+            'account_id': product_id.property_account_expense_id.id,
+        })
+        if expense_id:
+            attachment = {
+                'name': post['name'],
+                'datas': base64.b64encode(post['expense_file'].read()),
+                'res_model': 'hr.expense',
+                'type': 'binary',
+                'res_id': expense_id.id,
+            }
+            attachment_id = request.env['ir.attachment'].sudo().create(
+                attachment)
+            url = expense_id.get_portal_url()
+            return werkzeug.utils.redirect(url)
+
+    @http.route(['/approve/overtime/<int:expense_id>'], type='http',
+                auth="user", website=True)
+    def approve_overtime(self, expense_id, page=1, **kw):
+        expense = request.env['hr.expense'].browse(expense_id)
+        expense.state = 'draft'
+        expense.is_manager_approved = True
+        employee = expense.employee_id.id
+        body = _('Overtime request approved by manager %s .' % (
+            expense.employee_id.parent_id.name))
+        _message_post_helper(res_model='hr.expense',
+                             res_id=expense.id, message=body,
+                             token=expense.access_token,
+                             message_type='notification',
+                             subtype_xmlid="mail.mt_note",
+                             partner_ids=expense.employee_id.user_id.sudo().partner_id.ids)
+        return request.render("dev_hr_expense_portal.overtime_approve",
+                              {'employee': employee,
+                               'expense': expense.sudo()})
+
+    @http.route(['/approve_expense_manager/overtime/<int:expense_id>'],
+                type='http',
+                auth="user", website=True)
+    def approve_overtime_expense_manager(self, expense_id, page=1, **kw):
+        expense = request.env['hr.expense'].browse(expense_id)
+        expense.state = 'approved'
+        employee = expense.employee_id.id
+        body = _('Overtime approved by Expense Approver %s .' % (
+            expense.employee_id.expense_manager_id.name))
+        _message_post_helper(res_model='hr.expense',
+                             res_id=expense.id, message=body,
+                             token=expense.access_token,
+                             message_type='notification',
+                             subtype_xmlid="mail.mt_note",
+                             partner_ids=expense.employee_id.user_id.sudo().partner_id.ids)
+        return request.render("dev_hr_expense_portal.overtime_approve",
+                              {'employee': employee,
+                               'expense': expense.sudo()})
+
+    @http.route(['/refuse/overtime/<int:expense_id>'], type='http',
+                auth="user", website=True)
+    def refuse_overtime(self, expense_id, page=1, **kw):
+        expense = request.env['hr.expense'].browse(expense_id)
+        expense.state = 'refused'
+        employee = expense.employee_id.id
+        body = _('Overtime refused by Manager %s .' % (
+            expense.employee_id.parent_id.name))
+        _message_post_helper(res_model='hr.expense',
+                             res_id=expense.id, message=body,
+                             token=expense.access_token,
+                             message_type='notification',
+                             subtype_xmlid="mail.mt_note",
+                             partner_ids=expense.employee_id.user_id.sudo().partner_id.ids)
+        return request.render("dev_hr_expense_portal.overtime_refuse",
+                              {'employee': employee,
+                               'expense': expense.sudo()})
+
+    @http.route(['/refuse_expense_manager/overtime/<int:expense_id>'],
+                type='http',
+                auth="user", website=True)
+    def refuse_overtime_expense_manager(self, expense_id, page=1, **kw):
+        expense = request.env['hr.expense'].browse(expense_id)
+        expense.state = 'refused'
+        expense.is_manager_approved = False
+        employee = expense.employee_id.id
+        body = _('Overtime request refused by Expense Approver %s .' % (
+            expense.employee_id.expense_manager_id.name))
+        _message_post_helper(res_model='hr.expense',
+                             res_id=expense.id, message=body,
+                             token=expense.access_token,
+                             message_type='notification',
+                             subtype_xmlid="mail.mt_note",
+                             partner_ids=expense.employee_id.user_id.sudo().partner_id.ids)
+        return request.render("dev_hr_expense_portal.overtime_refuse",
+                              {'employee': employee,
+                               'expense': expense.sudo()})
+
+    @http.route(['/my/overtime/<int:order_id>'], type='http', auth="public",
+                website=True)
+    def portal_hr_overtime_page(self, order_id, report_type=None,
+                                access_token=None, message=False,
+                                download=False,
+                                **kw):
+        try:
+            hr_expense_sudo = self._document_check_access('hr.expense',
+                                                          order_id,
+                                                          access_token=access_token)
+        except (AccessError, MissingError):
+            return request.redirect('/my')
+        now = fields.Date.today()
+        if hr_expense_sudo and request.session.get(
+                'view_scrap_%s' % hr_expense_sudo.id) != now and request.env.user.share and access_token:
+            request.session['view_rma_%s' % hr_expense_sudo.id] = now
+        values = {
+            'hr_expense': hr_expense_sudo,
+            'message': message,
+            'token': access_token,
+            'bootstrap_formatting': True,
+            'report_type': 'html',
+            'page_name': 'overtime_form',
+            'p_name': hr_expense_sudo.name,
+
+        }
+        if hr_expense_sudo.company_id:
+            values['res_company'] = hr_expense_sudo.company_id
+        if hr_expense_sudo.name:
+            history = request.session.get('my_contact_history', [])
+        values.update(get_records_pager(history, hr_expense_sudo))
+        return request.render('dev_hr_expense_portal.overtime_portal_template',
+                              values)
+
+    # ....................Per Diem...............................................
+
+    @http.route(['/my/per_diem/<int:order_id>'], type='http', auth="public",
+                website=True)
+    def portal_hr_per_diem_page(self, order_id, report_type=None,
+                                access_token=None, message=False,
+                                download=False,
+                                **kw):
+        try:
+            hr_expense_sudo = self._document_check_access('hr.expense',
+                                                          order_id,
+                                                          access_token=access_token)
+        except (AccessError, MissingError):
+            return request.redirect('/my')
+        now = fields.Date.today()
+        if hr_expense_sudo and request.session.get(
+                'view_scrap_%s' % hr_expense_sudo.id) != now and request.env.user.share and access_token:
+            request.session['view_rma_%s' % hr_expense_sudo.id] = now
+        values = {
+            'hr_expense': hr_expense_sudo,
+            'message': message,
+            'token': access_token,
+            'bootstrap_formatting': True,
+            'report_type': 'html',
+            'page_name': 'overtime_form',
+            'p_name': hr_expense_sudo.name,
+
+        }
+        if hr_expense_sudo.company_id:
+            values['res_company'] = hr_expense_sudo.company_id
+        if hr_expense_sudo.name:
+            history = request.session.get('my_contact_history', [])
+        values.update(get_records_pager(history, hr_expense_sudo))
+        return request.render('dev_hr_expense_portal.per_diem_portal_template',
+                              values)
+
+    @http.route(['/my/per_diem', '/my/per_diem/page/<int:page>'],
+                type='http', auth="user", website=True)
+    def portal_my_per_diem(self, page=1, date_begin=None, date_end=None,
+                           sortby=None, filterby=None, groupby='none',
+                           search=None, search_in='content', **kw):
+        values = self._prepare_portal_layout_values()
+        expense_id = request.env['hr.expense']
+        domain = [
+            '|', '|', ('employee_id.user_id', '=', request.env.user.id),
+            ('employee_id.parent_id.user_id', '=', request.env.user.id),
+            ('employee_id.expense_manager_id', '=', request.env.user.id),
+            ('product_id.product_expense_type', '=', 'per_diem')
+        ]
+
+        searchbar_sortings = {
+            'name': {'label': _('Name'), 'order': 'name desc'},
+            'product_id': {'label': _('Product'), 'order': 'product_id desc'},
+        }
+
+        # default sortby order
+        if not sortby:
+            sortby = 'name'
+
+        today = fields.Date.today()
+        this_week_end_date = fields.Date.to_string(
+            fields.Date.from_string(today) + timedelta(days=7))
+        week_ago = datetime.today() - timedelta(days=7)
+        month_ago = (datetime.today() - relativedelta(months=1)).strftime(
+            '%Y-%m-%d %H:%M:%S')
+        starting_of_year = datetime.now().date().replace(month=1, day=1)
+        ending_of_year = datetime.now().date().replace(month=12, day=31)
+
+        def sd(date):
+            return fields.Datetime.to_string(date)
+
+        def previous_week_range(date):
+            start_date = date + timedelta(-date.weekday(), weeks=-1)
+            end_date = date + timedelta(-date.weekday() - 1)
+            return {'start_date': start_date.strftime('%Y-%m-%d %H:%M:%S'),
+                    'end_date': end_date.strftime('%Y-%m-%d %H:%M:%S')}
+
+        searchbar_filters = {
+            'all': {'label': _('All'), 'domain': []},
+            'today': {'label': _('Today'), 'domain': [('date', '>=',
+                                                       datetime.strftime(
+                                                           date.today(),
+                                                           '%Y-%m-%d 00:00:00')),
+                                                      ('date', '<=',
+                                                       datetime.strftime(
+                                                           date.today(),
+                                                           '%Y-%m-%d 23:59:59'))]},
+            'yesterday': {'label': _('Yesterday'), 'domain': [('date', '>=',
+                                                               datetime.strftime(
+                                                                   date.today() - timedelta(
+                                                                       days=1),
+                                                                   '%Y-%m-%d 00:00:00')),
+                                                              ('date', '<=',
+                                                               datetime.strftime(
+                                                                   date.today(),
+                                                                   '%Y-%m-%d 23:59:59'))]},
+            'week': {'label': _('This Week'),
+                     'domain': [('date', '>=',
+                                 sd(datetime.today() + relativedelta(
+                                     days=-today.weekday()))),
+                                ('date', '<=', this_week_end_date)]},
+            'last_seven_days': {'label': _('Last 7 Days'),
+                                'domain': [('date', '>=', sd(week_ago)), (
+                                    'date', '<=', sd(datetime.today()))]},
+            'last_week': {'label': _('Last Week'),
+                          'domain': [('date', '>=',
+                                      previous_week_range(datetime.today()).get(
+                                          'start_date')), ('date', '<=',
+                                                           previous_week_range(
+                                                               datetime.today()).get(
+                                                               'end_date'))]},
+
+            'last_month': {'label': _('Last 30 Days'),
+                           'domain': [('date', '>=', month_ago),
+                                      ('date', '<=', sd(datetime.today()))]},
+            'month': {'label': _('This Month'),
+                      'domain': [
+                          ("date", ">=", sd(today.replace(day=1))),
+                          ("date", "<", (today.replace(day=1) + relativedelta(
+                              months=1)).strftime('%Y-%m-%d 00:00:00'))
+                      ]
+                      },
+            'year': {'label': _('This Year'),
+                     'domain': [
+                         ("date", ">=", sd(starting_of_year)),
+                         ("date", "<=", sd(ending_of_year)),
+                     ]
+                     }
+        }
+
+        if not filterby:
+            filterby = 'all'
+        domain += searchbar_filters[filterby]['domain']
+
+        sort_order = searchbar_sortings[sortby]['order']
+
+        searchbar_groupby = {
+            'none': {'input': 'none', 'label': _('All')},
+            'product_id': {'input': 'product_id', 'label': _('Product')},
+            'account_id': {'input': 'account_id', 'label': _('Account')},
+            'state': {'input': 'state', 'label': _('State')},
+
+        }
+
+        # count for pager
+        exp_count = expense_id.search_count(domain)
+
+        searchbar_inputs = {
+            'name': {'input': 'name', 'label': _('Search in Name')},
+            'product': {'input': 'product', 'label': _('Search in Product')},
+            'state': {'input': 'state', 'label': _('Search in State')},
+            'all': {'input': 'all', 'label': _('Search in All')},
+        }
+
+        # search
+        if search and search_in:
+            search_domain = []
+            if search_in in ('name', 'all'):
+                search_domain = OR(
+                    [search_domain, [('name', 'ilike', search)]])
+            if search_in in ('product', 'all'):
+                search_domain = OR(
+                    [search_domain, [('product_id', 'ilike', search)]])
+            if search_in in ('state', 'all'):
+                search_domain = OR(
+                    [search_domain, [('state', 'ilike', search)]])
+            domain += search_domain
+
+        # make pager
+        pager = portal_pager(
+            url="/my/per_diem",
+            url_args={'date_begin': date_begin, 'date_end': date_end,
+                      'sortby': sortby, 'search_in': search_in,
+                      'search': search},
+            total=exp_count,
+            page=page,
+            step=self._items_per_page
+        )
+        expense = expense_id.sudo().search(domain, order=sort_order,
+                                    limit=self._items_per_page,
+                                    offset=pager['offset'])
+        request.session['my_contact_history'] = expense.ids[:100]
+
+        if groupby == 'product_id':
+            grouped_expense = [request.env['hr.expense'].concat(*g) for k, g in
+                               groupbyelem(expense, itemgetter('product_id'))]
+        elif groupby == 'account_id':
+            grouped_expense = [request.env['hr.expense'].concat(*g) for k, g in
+                               groupbyelem(expense, itemgetter('account_id'))]
+        elif groupby == 'state':
+            grouped_expense = [request.env['hr.expense'].concat(*g) for k, g in
+                               groupbyelem(expense, itemgetter('state'))]
+        else:
+            grouped_expense = [expense]
+        product_id = request.env['product.product'].sudo().search(
+            [('can_be_expensed', '=', True),
+             ('product_expense_type', '=', 'per_diem'),
+             '|', ('company_id', '=', request.env.company.id),
+             ('company_id', '=', False)])
+        currency_ids = request.env['res.currency'].sudo().search(
+            [])
+        cost_centers = request.env['account.analytic.account'].sudo().search(
+            [('analytic_account_type', '=', 'cost_center'),
+             '|', ('company_id', '=', request.env.company.id),
+             ('company_id', '=', False)])
+        project_sites = request.env['account.analytic.account'].sudo().search(
+            [('analytic_account_type', '=', 'project_site'),
+             '|', ('company_id', '=', request.env.company.id),
+             ('company_id', '=', False)])
+        values.update({
+            'date': date_begin,
+            'expense': expense.sudo(),
+            'page_name': 'per_diem_tree',
+            'grouped_expense': grouped_expense,
+            'pager': pager,
+            'default_url': '/my/per_diem',
+            'searchbar_filters': OrderedDict(sorted(searchbar_filters.items())),
+            'searchbar_inputs': searchbar_inputs,
+            'search_in': search_in,
+            'search': search,
+            'searchbar_sortings': searchbar_sortings,
+            'searchbar_groupby': searchbar_groupby,
+            'page_name': 'per_diem_tree',
+            'filterby': filterby,
+            'sortby': sortby,
+            'groupby': groupby,
+            'product_ids': product_id,
+            'currency_ids': currency_ids,
+            'cost_centers': cost_centers,
+            'project_sites': project_sites,
+
+        })
+        return request.render("dev_hr_expense_portal.portal_my_per_diem",
+                              values)
+
+    @http.route(['/dev_expense/per_diem_create'], type='http', auth="public",
+                methods=['POST'], website=True)
+    def perdiem_submit(self, **post):
+        cr, uid, context, pool = http.request.cr, http.request.uid, http.request.context, request.env
+        product_id = request.env['product.product'].sudo().browse(
+            int(post['product_id']))
+        employee_id = request.env['hr.employee'].sudo().search(
+            [('user_id', '=', request.env.user.id)]).id
+        amount = product_id.standard_price
+        expense_id = pool['hr.expense'].sudo().create({
+            'name': post['name'],
+            'product_id': product_id and product_id.id,
+            'product_uom_id': product_id.uom_id and product_id.uom_id.id or False,
+            'quantity': post['quantity'],
+            'reference': post['bill_reference'],
+            'employee_id': employee_id,
+            'currency_id': int(post['currency_id']),
+            'unit_amount': post['unit_price'] if post['unit_price'] else amount,
+            'analytic_account_id': post['cost_center'] if post[
+                'cost_center'] else False,
+            'project_site_id': post['project_site'] if post[
+                'project_site'] else False,
+            'state': 'waiting_approval',
+            'account_id': product_id.property_account_expense_id.id,
+        })
+        if expense_id:
+            attachment = {
+                'name': post['name'],
+                'datas': base64.b64encode(post['expense_file'].read()),
+                'res_model': 'hr.expense',
+                'type': 'binary',
+                'res_id': expense_id.id,
+            }
+            attachment_id = request.env['ir.attachment'].sudo().create(
+                attachment)
+            url = expense_id.get_portal_url()
+            return werkzeug.utils.redirect(url)
+
+    @http.route(['/approve/per_diem/<int:expense_id>'], type='http',
+                auth="user", website=True)
+    def approve_perdiem(self, expense_id, page=1, **kw):
+        expense = request.env['hr.expense'].browse(expense_id)
+        expense.state = 'draft'
+        expense.is_manager_approved = True
+        employee = expense.employee_id.id
+        body = _('Per Diem approved by manager %s .' % (
+            expense.employee_id.parent_id.name))
+        _message_post_helper(res_model='hr.expense',
+                             res_id=expense.id, message=body,
+                             token=expense.access_token,
+                             message_type='notification',
+                             subtype_xmlid="mail.mt_note",
+                             partner_ids=expense.employee_id.user_id.sudo().partner_id.ids)
+        return request.render("dev_hr_expense_portal.per_diem_approve",
+                              {'employee': employee,
+                               'expense': expense.sudo()})
+
+    @http.route(['/approve_expense_manager/per_diem/<int:expense_id>'],
+                type='http',
+                auth="user", website=True)
+    def approve_perdiem_expense_manager(self, expense_id, page=1, **kw):
+        expense = request.env['hr.expense'].browse(expense_id)
+        expense.state = 'approved'
+        employee = expense.employee_id.id
+        body = _('Per diem approved by Expense Approver %s .' % (
+            expense.employee_id.expense_manager_id.name))
+        _message_post_helper(res_model='hr.expense',
+                             res_id=expense.id, message=body,
+                             token=expense.access_token,
+                             message_type='notification',
+                             subtype_xmlid="mail.mt_note",
+                             partner_ids=expense.employee_id.user_id.sudo().partner_id.ids)
+        return request.render("dev_hr_expense_portal.per_diem_approve",
+                              {'employee': employee,
+                               'expense': expense.sudo()})
+
+    @http.route(['/refuse/per_diem/<int:expense_id>'], type='http',
+                auth="user", website=True)
+    def refuse_per_diem(self, expense_id, page=1, **kw):
+        expense = request.env['hr.expense'].browse(expense_id)
+        expense.state = 'refused'
+        employee = expense.employee_id.id
+        body = _('per Diem refused by Manager %s .' % (
+            expense.employee_id.parent_id.name))
+        _message_post_helper(res_model='hr.expense',
+                             res_id=expense.id, message=body,
+                             token=expense.access_token,
+                             message_type='notification',
+                             subtype_xmlid="mail.mt_note",
+                             partner_ids=expense.employee_id.user_id.sudo().partner_id.ids)
+        return request.render("dev_hr_expense_portal.per_diem_refuse",
+                              {'employee': employee,
+                               'expense': expense.sudo()})
+
+    @http.route(['/refuse_expense_manager/per_diem/<int:expense_id>'],
+                type='http',
+                auth="user", website=True)
+    def refuse_per_diem_expense_manager(self, expense_id, page=1, **kw):
+        expense = request.env['hr.expense'].browse(expense_id)
+        expense.state = 'refused'
+        expense.is_manager_approved = False
+        employee = expense.employee_id.id
+        body = _('Per Diem request refused by Expense Approver %s .' % (
+            expense.employee_id.expense_manager_id.name))
+        _message_post_helper(res_model='hr.expense',
+                             res_id=expense.id, message=body,
+                             token=expense.access_token,
+                             message_type='notification',
+                             subtype_xmlid="mail.mt_note",
+                             partner_ids=expense.employee_id.user_id.sudo().partner_id.ids)
+        return request.render("dev_hr_expense_portal.per_diem_refuse",
                               {'employee': employee,
                                'expense': expense.sudo()})

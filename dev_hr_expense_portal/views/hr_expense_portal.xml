@@ -8,6 +8,16 @@
                 <t t-set="url" t-value="'/my/hr_expense'"/>
                 <t t-set="count" t-value="expense_count"/>
             </t>
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="title">OverTime</t>
+                <t t-set="url" t-value="'/my/overtime'"/>
+                <t t-set="count" t-value="overtime_count"/>
+            </t>
+             <t t-call="portal.portal_docs_entry">
+                <t t-set="title">Per Diem</t>
+                <t t-set="url" t-value="'/my/per_diem'"/>
+                <t t-set="count" t-value="per_diem_count"/>
+            </t>
         </xpath>
     </template>
 
@@ -16,11 +26,16 @@
         <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
             <li t-attf-class="breadcrumb-item #{'active ' if not loan else ''}">
                 <a t-if="page_name == 'expense_form' or expense_form"
-                   t-attf-href="/my/hr_expense?{{ keep_query() }}">HR Expense
+                   t-attf-href="/my/hr_expense?{{ keep_query() }}">Expenses
                 </a>
-
                 <t t-if="page_name == 'expense_tree' or expense_tree" t-else="">
-                    Expense
+                    Expenses
+                </t>
+                <a t-if="page_name == 'overtime_form' or overtime_form"
+                   t-attf-href="/my/hr_expense?{{ keep_query() }}">Expenses
+                </a>
+                <t t-if="page_name == 'overtime_tree' or overtime_tree" t-else="">
+                    Overtime
                 </t>
             </li>
             <li t-if="p_name" class="breadcrumb-item active">
@@ -30,6 +45,16 @@
                class="btn btn-primary float-right" data-toggle="modal"
                style="margin-left:200px;" data-target="#modeledit" href="#">
                 Create Expense Request
+            </a>
+            <a t-if="page_name == 'overtime_tree' or overtime_tree" role="button"
+               class="btn btn-primary float-right" data-toggle="modal"
+               style="margin-left:200px;" data-target="#modeledit" href="#">
+                Create Overtime Request
+            </a>
+            <a t-if="page_name == 'per_diem_tree' or per_diem_tree" role="button"
+               class="btn btn-primary float-right" data-toggle="modal"
+               style="margin-left:200px;" data-target="#modeledit" href="#">
+                Create Per Diem Request
             </a>
             <t t-if="p_name">
                 <h5 style="margin-left:450px;">Status :
@@ -500,5 +525,929 @@
         </field>
     </record>
 
+
+<!--.............................OverTime....................................-->
+
+        <template id="overtime_portal_template" name="Overtime Portal Template"
+              inherit_id="portal.portal_sidebar" primary="True">
+        <xpath expr="//div[hasclass('o_portal_sidebar')]" position="inside">
+            <div class="row mt16 o_portal_sale_sidebar">
+                <div id="leave_content"
+                     class="col-12 col-lg justify-content-end">
+                    <div t-attf-class="card #{'pb-5' if report_type == 'html' else ''}">
+                        <div t-call="dev_hr_expense_portal.overtime_portal_content"/>
+                    </div>
+
+                    <div id="loan_communication" class="mt-4">
+                        <h2>Communication</h2>
+                        <t t-call="portal.message_thread">
+                            <t t-set="object" t-value="hr_expense"/>
+                        </t>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+    </template>
+
+    <template id="overtime_portal_content" name="Expense Form">
+        <div t-attf-class="#{'card-body' if report_type == 'html' else ''}">
+
+            <div id="informations">
+                <div class="row">
+
+                    <div class="col-lg-6">
+                        <table width="100%">
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Product</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-field="hr_expense.product_id"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Unit Price</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-field="hr_expense.unit_amount"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Quantity</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-field="hr_expense.quantity"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Taxes</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-field="hr_expense.tax_ids"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Total</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-esc="hr_expense.total_amount"/>
+                                    <span t-esc="hr_expense.currency_id.name"/>
+
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Amount Due</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-esc="hr_expense.amount_residual"/>
+                                    <span t-esc="hr_expense.currency_id.name"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-lg-6">
+                        <table width="100%">
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Bill Reference</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-field="hr_expense.reference"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Expense Date</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-field="hr_expense.date"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Account</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-field="hr_expense.sudo().account_id"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Cost Center</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-field="hr_expense.sudo().analytic_account_id"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Project Site</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-field="hr_expense.project_site_id"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Company</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-field="hr_expense.company_id"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+
+
+
+
+
+        <template id="portal_my_overtime" name="My OverTime">
+        <t t-call="portal.portal_layout">
+            <div role="dialog" class="modal fade" id="modeledit">
+                <div class="modal-dialog">
+                    <form action="/dev_expense/overtime_create" method="post"
+                          class="modal-content" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token"
+                               t-att-value="request.csrf_token()"/>
+                        <header class="modal-header">
+                            <h4 class="modal-title">Overtime Request</h4>
+                            <button type="button" class="close"
+                                    data-dismiss="modal" aria-label="Close">
+                                &amp;times;
+                            </button>
+                        </header>
+                        <main class="modal-body">
+                            <div class="form-group field-login">
+                                <label for="name">Description</label>
+                                <input type="Char"
+                                       class="form-control form-control-sm"
+                                       name="name" required="1"/>
+                            </div>
+                            <div class="form-group field-login">
+                                <label for="employee_id">Product</label>
+                                <select class="custom-select" name="product_id"
+                                        id="product_id" required="True">
+                                    <t t-foreach="product_ids or []"
+                                       t-as="product">
+                                        <option t-att-value="product.id">
+                                            <t t-esc="product.name"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+                            <div class="form-group field-login">
+                                <label for="unit_price">Unit Price</label>
+                                <input type="Number"
+                                       class="form-control form-control-sm"
+                                       name="unit_price"/>
+                            </div>
+                            <div class="form-group field-login">
+                                <label for="currency_id">Currency</label>
+                                <select class="custom-select" name="currency_id"
+                                        id="currency_id" required="True">
+                                    <t t-foreach="currency_ids or []"
+                                       t-as="currency">
+                                        <option t-att-value="currency.id">
+                                            <t t-esc="currency.name"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+
+                            <div class="form-group field-login">
+                                <label for="description">Quantity</label>
+                                <input type="Integer"
+                                       class="form-control form-control-sm"
+                                       name="quantity" required="1"/>
+                            </div>
+                            <div class="form-group field-login">
+                                <label for="cost_center">Cost Center</label>
+                                <select class="custom-select" name="cost_center"
+                                        id="cost_center" required="True">
+                                    <t t-foreach="cost_centers or []"
+                                       t-as="cost_center">
+                                        <option t-att-value="cost_center.id">
+                                            <t t-esc="cost_center.name"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+
+                            <div class="form-group field-login">
+                                <label for="project_site">Project/Site</label>
+                                <select class="custom-select"
+                                        name="project_site"
+                                        id="project_site" required="True">
+                                    <t t-foreach="project_sites or []"
+                                       t-as="project_site">
+                                        <option t-att-value="project_site.id">
+                                            <t t-esc="project_site.name"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+                            <div class="form-group field-login">
+                                <label for="description">Bill Reference</label>
+                                <input type="Integer"
+                                       class="form-control form-control-sm"
+                                       name="bill_reference"/>
+                            </div>
+                            <div class="form-group field-login">
+                                <label for="date">Upload Document</label>
+                                <input type="file" class="form-control"
+                                       name="expense_file" required="True"
+                                       multiple="true" data-show-upload="true"/>
+                            </div>
+                        </main>
+                        <footer class="modal-footer">
+                            <button type="submit" class="btn btn-primary">
+                                Submit
+                            </button>
+                            <button type="button" class="btn btn-primary"
+                                    data-dismiss="modal">close
+                            </button>
+                        </footer>
+                    </form>
+                </div>
+            </div>
+
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">Over Time</t>
+            </t>
+            <t t-if="not expense">
+                <p>There are no overtime Found.</p>
+            </t>
+            <t t-if="expense" t-call="portal.portal_table">
+                <t t-foreach="grouped_expense" t-as="group_exp">
+                    <thead>
+                        <tr t-attf-class="{{'thead-light' if not groupby == 'none' else ''}}">
+                            <th t-if="groupby == 'none'">Name</th>
+                            <th t-else="">
+                                <t t-if="groupby == 'product_id'">
+                                    <em class="font-weight-normal text-muted">
+                                        Product:
+                                    </em>
+                                    <span t-field="group_exp[0].sudo().product_id"/>
+                                </t>
+                                <t t-if="groupby == 'account_id'">
+                                    <em class="font-weight-normal text-muted">
+                                        Account:
+                                    </em>
+                                    <span t-field="group_exp[0].sudo().account_id"/>
+                                </t>
+                            </th>
+                            <th class="text-left">Product</th>
+                            <th class="text-left">Expense Date</th>
+                            <th class="text-left">Unit Price</th>
+                            <th class="text-left">Quantity</th>
+                            <th class="text-left">Total</th>
+                            <th class="text-left">Amount Due</th>
+                            <th class="text-left">Stage</th>
+                            <th class="text-left"></th>
+                            <th class="text-left"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="group_exp" t-as="l">
+                            <tr>
+                                <td>
+                                    <a t-att-href="l.get_portal_url()">
+                                        <t t-esc="l.name"/>
+                                    </a>
+                                </td>
+                                <td class="text-left ">
+                                    <span class="badge badge-pill badge-info"
+                                          title="Current Product of the Expense"
+                                          t-field="l.sudo().product_id.name"/>
+                                </td>
+                                <td class="text-left">
+                                    <span t-field="l.date"/>
+                                </td>
+                                <td class="text-left">
+                                    <span t-field="l.unit_amount"/>
+                                </td>
+                                <td class="text-left">
+                                    <span t-field="l.quantity"/>
+                                </td>
+                                <td class="text-left">
+                                    <span t-esc="l.total_amount"/>
+                                    <span t-esc="l.currency_id.name"/>
+                                </td>
+                                <td class="text-left">
+                                    <span t-esc="l.amount_residual"/>
+                                    <span t-esc="l.currency_id.name"/>
+                                </td>
+                                <td class="text-left">
+                                    <span class="badge badge-pill badge-info"
+                                          t-field="l.state"/>
+                                </td>
+                                <td class="text-left">
+                                    <t t-if="l.is_manager_approved==False and l.employee_id.parent_id.user_id.id==request.env.user.id and l.state in ['waiting_approval']">
+                                        <a t-attf-href="/approve/overtime/#{l.sudo().id}">
+                                            <i class="fa fa-check" role="img"
+                                               aria-label="Approve"
+                                               title="Approve"/>
+                                        </a>
+                                    </t>
+                                    <t t-if="l.is_manager_approved==True and l.employee_id.expense_manager_id.id==request.env.user.id and l.state in ['draft']">
+                                        <a t-attf-href="/approve_expense_manager/overtime/#{l.sudo().id}">
+                                            <i class="fa fa-check" role="img"
+                                               aria-label="Approve"
+                                               title="Approve"/>
+                                        </a>
+                                    </t>
+                                </td>
+                                <td class="text-left">
+                                    <t t-if="l.is_manager_approved==False and l.employee_id.parent_id.user_id.id==request.env.user.id and l.state in ['waiting_approval']">
+                                        <a t-attf-href="/refuse/overtime/#{l.sudo().id}">
+                                            <i class="fa fa-remove" role="img"
+                                               aria-label="Refuse"
+                                               title="Refuse"/>
+                                        </a>
+                                    </t>
+                                    <t t-if="l.is_manager_approved==True and l.employee_id.expense_manager_id.id==request.env.user.id and l.state in ['draft']">
+                                        <a t-attf-href="/refuse_expense_manager/overtime/#{l.sudo().id}">
+                                            <i class="fa fa-remove" role="img"
+                                               aria-label="Refuse"
+                                               title="Refuse"/>
+                                        </a>
+                                    </t>
+                                </td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </t>
+            </t>
+            <br/>
+        </t>
+    </template>
+
+
+        <record id="overtime_approve" model="website.page">
+        <field name="url">/overtime-approve</field>
+        <field name="is_published">True</field>
+        <field name="website_indexed" eval="False"/>
+        <field name="name">Approve(OverTime)</field>
+        <field name="type">qweb</field>
+        <field name="key">dev_hr_expense_portal.overtime_approve</field>
+        <field name="arch" type="xml">
+            <t name="Approve (OverTime)" t-name="overtime_approve">
+                <t t-call="website.layout">
+                    <div id="wrap">
+                        <div class="oe_structure">
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <h1 class="text-center">Approved!</h1>
+                                        <p class="text-center">
+                                            The overtime request is successfully
+                                            approved.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="row" id="o_recruitment_thank_cta">
+                                    <div class="col-lg-12 text-center mt32 mb32">
+                                        <h5 class="mt8 mb32">You can click below
+                                            button and go to your overtime:
+                                        </h5>
+                                        <a role="button" href="/my/overtime"
+                                           class="btn btn-primary">Continue To
+                                            Overtime
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </field>
+    </record>
+
+    <record id="overtime_refuse" model="website.page">
+        <field name="url">/overtime-refuse</field>
+        <field name="is_published">True</field>
+        <field name="website_indexed" eval="False"/>
+        <field name="name">Refuse(Overtime)</field>
+        <field name="type">qweb</field>
+        <field name="key">dev_hr_expense_portal.overtime_refuse</field>
+        <field name="arch" type="xml">
+            <t name="Refuse (Overtime)" t-name="overtime_refuse">
+                <t t-call="website.layout">
+                    <div id="wrap">
+                        <div class="oe_structure">
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <h1 class="text-center">Refused!</h1>
+                                        <p class="text-center">
+                                            The overtime request is refused.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="row" id="o_recruitment_thank_cta">
+                                    <div class="col-lg-12 text-center mt32 mb32">
+                                        <h5 class="mt8 mb32">You can click below
+                                            button and go to your overtime:
+                                        </h5>
+                                        <a role="button" href="/my/overtime"
+                                           class="btn btn-primary">Continue To
+                                            Overtime
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </field>
+    </record>
+
+<!--........................Per Diem.........................................-->
+
+
+    <template id="per_diem_portal_template" name="Overtime Portal Template"
+              inherit_id="portal.portal_sidebar" primary="True">
+        <xpath expr="//div[hasclass('o_portal_sidebar')]" position="inside">
+            <div class="row mt16 o_portal_sale_sidebar">
+                <div id="leave_content"
+                     class="col-12 col-lg justify-content-end">
+                    <div t-attf-class="card #{'pb-5' if report_type == 'html' else ''}">
+                        <div t-call="dev_hr_expense_portal.per_diem_portal_content"/>
+                    </div>
+
+                    <div id="loan_communication" class="mt-4">
+                        <h2>Communication</h2>
+                        <t t-call="portal.message_thread">
+                            <t t-set="object" t-value="hr_expense"/>
+                        </t>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+    </template>
+
+    <template id="per_diem_portal_content" name="Expense Form">
+        <div t-attf-class="#{'card-body' if report_type == 'html' else ''}">
+
+            <div id="informations">
+                <div class="row">
+
+                    <div class="col-lg-6">
+                        <table width="100%">
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Product</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-field="hr_expense.product_id"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Unit Price</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-field="hr_expense.unit_amount"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Quantity</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-field="hr_expense.quantity"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Taxes</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-field="hr_expense.tax_ids"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Total</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-esc="hr_expense.total_amount"/>
+                                    <span t-esc="hr_expense.currency_id.name"/>
+
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Amount Due</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-esc="hr_expense.amount_residual"/>
+                                    <span t-esc="hr_expense.currency_id.name"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-lg-6">
+                        <table width="100%">
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Bill Reference</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-field="hr_expense.reference"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Expense Date</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-field="hr_expense.date"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Account</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-field="hr_expense.sudo().account_id"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Cost Center</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-field="hr_expense.sudo().analytic_account_id"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Project Site</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-field="hr_expense.project_site_id"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Company</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-field="hr_expense.company_id"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+
+
+
+        <template id="portal_my_per_diem" name="My OverTime">
+        <t t-call="portal.portal_layout">
+            <div role="dialog" class="modal fade" id="modeledit">
+                <div class="modal-dialog">
+                    <form action="/dev_expense/per_diem_create" method="post"
+                          class="modal-content" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token"
+                               t-att-value="request.csrf_token()"/>
+                        <header class="modal-header">
+                            <h4 class="modal-title">PerDiem Request</h4>
+                            <button type="button" class="close"
+                                    data-dismiss="modal" aria-label="Close">
+                                &amp;times;
+                            </button>
+                        </header>
+                        <main class="modal-body">
+                            <div class="form-group field-login">
+                                <label for="name">Description</label>
+                                <input type="Char"
+                                       class="form-control form-control-sm"
+                                       name="name" required="1"/>
+                            </div>
+                            <div class="form-group field-login">
+                                <label for="employee_id">Product</label>
+                                <select class="custom-select" name="product_id"
+                                        id="product_id" required="True">
+                                    <t t-foreach="product_ids or []"
+                                       t-as="product">
+                                        <option t-att-value="product.id">
+                                            <t t-esc="product.name"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+                            <div class="form-group field-login">
+                                <label for="unit_price">Unit Price</label>
+                                <input type="Number"
+                                       class="form-control form-control-sm"
+                                       name="unit_price"/>
+                            </div>
+                            <div class="form-group field-login">
+                                <label for="currency_id">Currency</label>
+                                <select class="custom-select" name="currency_id"
+                                        id="currency_id" required="True">
+                                    <t t-foreach="currency_ids or []"
+                                       t-as="currency">
+                                        <option t-att-value="currency.id">
+                                            <t t-esc="currency.name"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+
+                            <div class="form-group field-login">
+                                <label for="description">Quantity</label>
+                                <input type="Integer"
+                                       class="form-control form-control-sm"
+                                       name="quantity" required="1"/>
+                            </div>
+                            <div class="form-group field-login">
+                                <label for="cost_center">Cost Center</label>
+                                <select class="custom-select" name="cost_center"
+                                        id="cost_center" required="True">
+                                    <t t-foreach="cost_centers or []"
+                                       t-as="cost_center">
+                                        <option t-att-value="cost_center.id">
+                                            <t t-esc="cost_center.name"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+
+                            <div class="form-group field-login">
+                                <label for="project_site">Project/Site</label>
+                                <select class="custom-select"
+                                        name="project_site"
+                                        id="project_site" required="True">
+                                    <t t-foreach="project_sites or []"
+                                       t-as="project_site">
+                                        <option t-att-value="project_site.id">
+                                            <t t-esc="project_site.name"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+                            <div class="form-group field-login">
+                                <label for="description">Bill Reference</label>
+                                <input type="Integer"
+                                       class="form-control form-control-sm"
+                                       name="bill_reference"/>
+                            </div>
+                            <div class="form-group field-login">
+                                <label for="date">Upload Document</label>
+                                <input type="file" class="form-control"
+                                       name="expense_file" required="True"
+                                       multiple="true" data-show-upload="true"/>
+                            </div>
+                        </main>
+                        <footer class="modal-footer">
+                            <button type="submit" class="btn btn-primary">
+                                Submit
+                            </button>
+                            <button type="button" class="btn btn-primary"
+                                    data-dismiss="modal">close
+                            </button>
+                        </footer>
+                    </form>
+                </div>
+            </div>
+
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">Per Diem</t>
+            </t>
+            <t t-if="not expense">
+                <p>There are no per diem requests Found.</p>
+            </t>
+            <t t-if="expense" t-call="portal.portal_table">
+                <t t-foreach="grouped_expense" t-as="group_exp">
+                    <thead>
+                        <tr t-attf-class="{{'thead-light' if not groupby == 'none' else ''}}">
+                            <th t-if="groupby == 'none'">Name</th>
+                            <th t-else="">
+                                <t t-if="groupby == 'product_id'">
+                                    <em class="font-weight-normal text-muted">
+                                        Product:
+                                    </em>
+                                    <span t-field="group_exp[0].sudo().product_id"/>
+                                </t>
+                                <t t-if="groupby == 'account_id'">
+                                    <em class="font-weight-normal text-muted">
+                                        Account:
+                                    </em>
+                                    <span t-field="group_exp[0].sudo().account_id"/>
+                                </t>
+                            </th>
+                            <th class="text-left">Product</th>
+                            <th class="text-left">Expense Date</th>
+                            <th class="text-left">Unit Price</th>
+                            <th class="text-left">Quantity</th>
+                            <th class="text-left">Total</th>
+                            <th class="text-left">Amount Due</th>
+                            <th class="text-left">Stage</th>
+                            <th class="text-left"></th>
+                            <th class="text-left"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="group_exp" t-as="l">
+                            <tr>
+                                <td>
+                                    <a t-att-href="l.get_portal_url()">
+                                        <t t-esc="l.name"/>
+                                    </a>
+                                </td>
+                                <td class="text-left ">
+                                    <span class="badge badge-pill badge-info"
+                                          title="Current Product of the Expense"
+                                          t-field="l.sudo().product_id.name"/>
+                                </td>
+                                <td class="text-left">
+                                    <span t-field="l.date"/>
+                                </td>
+                                <td class="text-left">
+                                    <span t-field="l.unit_amount"/>
+                                </td>
+                                <td class="text-left">
+                                    <span t-field="l.quantity"/>
+                                </td>
+                                <td class="text-left">
+                                    <span t-esc="l.total_amount"/>
+                                    <span t-esc="l.currency_id.name"/>
+                                </td>
+                                <td class="text-left">
+                                    <span t-esc="l.amount_residual"/>
+                                    <span t-esc="l.currency_id.name"/>
+                                </td>
+                                <td class="text-left">
+                                    <span class="badge badge-pill badge-info"
+                                          t-field="l.state"/>
+                                </td>
+                                <td class="text-left">
+                                    <t t-if="l.is_manager_approved==False and l.employee_id.parent_id.user_id.id==request.env.user.id and l.state in ['waiting_approval']">
+                                        <a t-attf-href="/approve/per_diem/#{l.sudo().id}">
+                                            <i class="fa fa-check" role="img"
+                                               aria-label="Approve"
+                                               title="Approve"/>
+                                        </a>
+                                    </t>
+                                    <t t-if="l.is_manager_approved==True and l.employee_id.expense_manager_id.id==request.env.user.id and l.state in ['draft']">
+                                        <a t-attf-href="/approve_expense_manager/per_diem/#{l.sudo().id}">
+                                            <i class="fa fa-check" role="img"
+                                               aria-label="Approve"
+                                               title="Approve"/>
+                                        </a>
+                                    </t>
+                                </td>
+                                <td class="text-left">
+                                    <t t-if="l.is_manager_approved==False and l.employee_id.parent_id.user_id.id==request.env.user.id and l.state in ['waiting_approval']">
+                                        <a t-attf-href="/refuse/per_diem/#{l.sudo().id}">
+                                            <i class="fa fa-remove" role="img"
+                                               aria-label="Refuse"
+                                               title="Refuse"/>
+                                        </a>
+                                    </t>
+                                    <t t-if="l.is_manager_approved==True and l.employee_id.expense_manager_id.id==request.env.user.id and l.state in ['draft']">
+                                        <a t-attf-href="/refuse_expense_manager/per_diem/#{l.sudo().id}">
+                                            <i class="fa fa-remove" role="img"
+                                               aria-label="Refuse"
+                                               title="Refuse"/>
+                                        </a>
+                                    </t>
+                                </td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </t>
+            </t>
+            <br/>
+        </t>
+
+    </template>
+
+
+        <record id="per_diem_approve" model="website.page">
+        <field name="url">/per_diem-approve</field>
+        <field name="is_published">True</field>
+        <field name="website_indexed" eval="False"/>
+        <field name="name">Approve(Per Diem)</field>
+        <field name="type">qweb</field>
+        <field name="key">dev_hr_expense_portal.per_diem_approve</field>
+        <field name="arch" type="xml">
+            <t name="Approve (Per Diem)" t-name="per_diem_approve">
+                <t t-call="website.layout">
+                    <div id="wrap">
+                        <div class="oe_structure">
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <h1 class="text-center">Approved!</h1>
+                                        <p class="text-center">
+                                            The per diem request is successfully
+                                            approved.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="row" id="o_recruitment_thank_cta">
+                                    <div class="col-lg-12 text-center mt32 mb32">
+                                        <h5 class="mt8 mb32">You can click below
+                                            button and go to your per diem:
+                                        </h5>
+                                        <a role="button" href="/my/per_diem"
+                                           class="btn btn-primary">Continue To
+                                            Per Diem
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </field>
+    </record>
+
+    <record id="per_diem_refuse" model="website.page">
+        <field name="url">/per_diem-refuse</field>
+        <field name="is_published">True</field>
+        <field name="website_indexed" eval="False"/>
+        <field name="name">Refuse(Per Diem)</field>
+        <field name="type">qweb</field>
+        <field name="key">dev_hr_expense_portal.per_diem_refuse</field>
+        <field name="arch" type="xml">
+            <t name="Refuse (Per Diem)" t-name="per_diem_refuse">
+                <t t-call="website.layout">
+                    <div id="wrap">
+                        <div class="oe_structure">
+                            <div class="container">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <h1 class="text-center">Refused!</h1>
+                                        <p class="text-center">
+                                            The Per Diem request is refused.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="row" id="o_recruitment_thank_cta">
+                                    <div class="col-lg-12 text-center mt32 mb32">
+                                        <h5 class="mt8 mb32">You can click below
+                                            button and go to your per diem:
+                                        </h5>
+                                        <a role="button" href="/my/per_diem"
+                                           class="btn btn-primary">Continue To
+                                            Per Diem
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </field>
+    </record>
 
 </odoo>
