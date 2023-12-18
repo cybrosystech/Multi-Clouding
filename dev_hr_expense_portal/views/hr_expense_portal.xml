@@ -13,7 +13,7 @@
                 <t t-set="url" t-value="'/my/overtime'"/>
                 <t t-set="count" t-value="overtime_count"/>
             </t>
-             <t t-call="portal.portal_docs_entry">
+            <t t-call="portal.portal_docs_entry">
                 <t t-set="title">Per Diem</t>
                 <t t-set="url" t-value="'/my/per_diem'"/>
                 <t t-set="count" t-value="per_diem_count"/>
@@ -34,7 +34,8 @@
                 <a t-if="page_name == 'overtime_form' or overtime_form"
                    t-attf-href="/my/hr_expense?{{ keep_query() }}">Expenses
                 </a>
-                <t t-if="page_name == 'overtime_tree' or overtime_tree" t-else="">
+                <t t-if="page_name == 'overtime_tree' or overtime_tree"
+                   t-else="">
                     Overtime
                 </t>
             </li>
@@ -46,12 +47,14 @@
                style="margin-left:200px;" data-target="#modeledit" href="#">
                 Create Expense Request
             </a>
-            <a t-if="page_name == 'overtime_tree' or overtime_tree" role="button"
+            <a t-if="page_name == 'overtime_tree' or overtime_tree"
+               role="button"
                class="btn btn-primary float-right" data-toggle="modal"
                style="margin-left:200px;" data-target="#modeledit" href="#">
                 Create Overtime Request
             </a>
-            <a t-if="page_name == 'per_diem_tree' or per_diem_tree" role="button"
+            <a t-if="page_name == 'per_diem_tree' or per_diem_tree"
+               role="button"
                class="btn btn-primary float-right" data-toggle="modal"
                style="margin-left:200px;" data-target="#modeledit" href="#">
                 Create Per Diem Request
@@ -206,6 +209,7 @@
                                     <span t-field="group_exp[0].sudo().account_id"/>
                                 </t>
                             </th>
+                            <th class="text-left">Employee</th>
                             <th class="text-left">Product</th>
                             <th class="text-left">Expense Date</th>
                             <th class="text-left">Unit Price</th>
@@ -226,10 +230,14 @@
                                     </a>
                                 </td>
                                 <td class="text-left ">
+                                    <span t-field="l.employee_id.name"/>
+                                </td>
+                                <td class="text-left ">
                                     <span class="badge badge-pill badge-info"
                                           title="Current Product of the Expense"
                                           t-field="l.sudo().product_id.name"/>
                                 </td>
+
                                 <td class="text-left">
                                     <span t-field="l.date"/>
                                 </td>
@@ -526,9 +534,9 @@
     </record>
 
 
-<!--.............................OverTime....................................-->
+    <!--.............................OverTime....................................-->
 
-        <template id="overtime_portal_template" name="Overtime Portal Template"
+    <template id="overtime_portal_template" name="Overtime Portal Template"
               inherit_id="portal.portal_sidebar" primary="True">
         <xpath expr="//div[hasclass('o_portal_sidebar')]" position="inside">
             <div class="row mt16 o_portal_sale_sidebar">
@@ -564,6 +572,15 @@
                                 <td width="5%" style="padding:3px">:</td>
                                 <td width="50%" style="padding:3px">
                                     <span t-field="hr_expense.product_id"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Employee</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-field="hr_expense.employee_id.name"/>
                                 </td>
                             </tr>
                             <tr>
@@ -680,11 +697,7 @@
     </template>
 
 
-
-
-
-
-        <template id="portal_my_overtime" name="My OverTime">
+    <template id="portal_my_overtime" name="My OverTime">
         <t t-call="portal.portal_layout">
             <div role="dialog" class="modal fade" id="modeledit">
                 <div class="modal-dialog">
@@ -820,6 +833,7 @@
                                     <span t-field="group_exp[0].sudo().account_id"/>
                                 </t>
                             </th>
+                            <th class="text-left">Employee</th>
                             <th class="text-left">Product</th>
                             <th class="text-left">Expense Date</th>
                             <th class="text-left">Unit Price</th>
@@ -838,6 +852,9 @@
                                     <a t-att-href="l.get_portal_url()">
                                         <t t-esc="l.name"/>
                                     </a>
+                                </td>
+                                <td class="text-left">
+                                    <span t-field="l.employee_id.name"/>
                                 </td>
                                 <td class="text-left ">
                                     <span class="badge badge-pill badge-info"
@@ -907,7 +924,7 @@
     </template>
 
 
-        <record id="overtime_approve" model="website.page">
+    <record id="overtime_approve" model="website.page">
         <field name="url">/overtime-approve</field>
         <field name="is_published">True</field>
         <field name="website_indexed" eval="False"/>
@@ -988,7 +1005,7 @@
         </field>
     </record>
 
-<!--........................Per Diem.........................................-->
+    <!--........................Per Diem.........................................-->
 
 
     <template id="per_diem_portal_template" name="Overtime Portal Template"
@@ -1027,6 +1044,15 @@
                                 <td width="5%" style="padding:3px">:</td>
                                 <td width="50%" style="padding:3px">
                                     <span t-field="hr_expense.product_id"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Employee</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td width="50%" style="padding:3px">
+                                    <span t-field="hr_expense.employee_id.name"/>
                                 </td>
                             </tr>
                             <tr>
@@ -1143,9 +1169,7 @@
     </template>
 
 
-
-
-        <template id="portal_my_per_diem" name="My OverTime">
+    <template id="portal_my_per_diem" name="My OverTime">
         <t t-call="portal.portal_layout">
             <div role="dialog" class="modal fade" id="modeledit">
                 <div class="modal-dialog">
@@ -1281,6 +1305,8 @@
                                     <span t-field="group_exp[0].sudo().account_id"/>
                                 </t>
                             </th>
+                            <th class="text-left">Employee</th>
+
                             <th class="text-left">Product</th>
                             <th class="text-left">Expense Date</th>
                             <th class="text-left">Unit Price</th>
@@ -1299,6 +1325,9 @@
                                     <a t-att-href="l.get_portal_url()">
                                         <t t-esc="l.name"/>
                                     </a>
+                                </td>
+                                <td class="text-left">
+                                    <span t-field="l.employee_id.name"/>
                                 </td>
                                 <td class="text-left ">
                                     <span class="badge badge-pill badge-info"
@@ -1369,7 +1398,7 @@
     </template>
 
 
-        <record id="per_diem_approve" model="website.page">
+    <record id="per_diem_approve" model="website.page">
         <field name="url">/per_diem-approve</field>
         <field name="is_published">True</field>
         <field name="website_indexed" eval="False"/>
