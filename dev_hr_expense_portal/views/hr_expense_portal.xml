@@ -137,7 +137,7 @@
                                     <t t-foreach="cost_centers or []"
                                        t-as="cost_center">
                                         <option t-att-value="cost_center.id">
-                                            <t t-esc="cost_center.name"/>
+                                            <t t-esc="cost_center.code"/> - <t t-esc="cost_center.name"/>
                                         </option>
                                     </t>
                                 </select>
@@ -151,7 +151,7 @@
                                     <t t-foreach="project_sites or []"
                                        t-as="project_site">
                                         <option t-att-value="project_site.id">
-                                            <t t-esc="project_site.name"/>
+                                          <t t-esc="project_site.code"/> -  <t t-esc="project_site.name"/>
                                         </option>
                                     </t>
                                 </select>
@@ -763,7 +763,7 @@
                                     <t t-foreach="cost_centers or []"
                                        t-as="cost_center">
                                         <option t-att-value="cost_center.id">
-                                            <t t-esc="cost_center.name"/>
+                                           <t t-esc="cost_center.code"/>- <t t-esc="cost_center.name"/>
                                         </option>
                                     </t>
                                 </select>
@@ -777,7 +777,7 @@
                                     <t t-foreach="project_sites or []"
                                        t-as="project_site">
                                         <option t-att-value="project_site.id">
-                                            <t t-esc="project_site.name"/>
+                                           <t t-esc="project_site.code"/>- <t t-esc="project_site.name"/>
                                         </option>
                                     </t>
                                 </select>
@@ -1235,7 +1235,7 @@
                                     <t t-foreach="cost_centers or []"
                                        t-as="cost_center">
                                         <option t-att-value="cost_center.id">
-                                            <t t-esc="cost_center.name"/>
+                                           <t t-esc="cost_center.code"/>- <t t-esc="cost_center.name"/>
                                         </option>
                                     </t>
                                 </select>
@@ -1249,7 +1249,7 @@
                                     <t t-foreach="project_sites or []"
                                        t-as="project_site">
                                         <option t-att-value="project_site.id">
-                                            <t t-esc="project_site.name"/>
+                                           <t t-esc="project_site.code"/>- <t t-esc="project_site.name"/>
                                         </option>
                                     </t>
                                 </select>

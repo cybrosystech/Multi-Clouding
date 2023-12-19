@@ -20,6 +20,10 @@ class hr_expense(models.Model):
     _name = 'hr.expense'
     _inherit = ['hr.expense', 'portal.mixin']
 
+    @api.model
+    def _default_product_uom_id(self):
+        return self.env['uom.uom'].search([], limit=1, order='id')
+
     name = fields.Char('Description',
                        compute='_compute_from_product_id_company_id',
                        store=True, required=True, copy=True,
@@ -34,7 +38,7 @@ class hr_expense(models.Model):
                                      'draft': [('readonly', False)],
                                      'reported': [('readonly', False)],
                                      'refused': [('readonly', False)]},
-                                 domain="[('can_be_expensed', '=', True), '|', ('company_id', '=', False), ('company_id', '=', company_id)]",
+                                 domain="[('can_be_expensed', '=', True),('product_expense_type', 'not in', ['overtime','per_diem']), '|', ('company_id', '=', False), ('company_id', '=', company_id)]",
                                  ondelete='restrict')
     unit_amount = fields.Float("Unit Price",
                                compute='_compute_from_product_id_company_id',
@@ -45,6 +49,12 @@ class hr_expense(models.Model):
                                    'reported': [('readonly', False)],
                                    'refused': [('readonly', False)]},
                                digits='Product Price')
+    quantity = fields.Float(required=True, readonly=True,
+                            states={'waiting_approval': [('readonly', False)],
+                                    'draft': [('readonly', False)],
+                                    'reported': [('readonly', False)],
+                                    'refused': [('readonly', False)]},
+                            digits='Product Unit of Measure', default=1)
 
     project_site_id = fields.Many2one('account.analytic.account', domain=[
         ('analytic_account_type', '=', 'project_site')])
@@ -64,6 +74,36 @@ class hr_expense(models.Model):
         ('refused', 'Refused')], compute='_compute_state', string='Status',
         copy=False, index=True, readonly=True, store=True,
         default='waiting_approval', help="Status of the expense.")
+
+    description = fields.Text('Notes...', readonly=True,
+                              states={'waiting_approval': [('readonly', False)],
+                                      'draft': [('readonly', False)],
+                                      'reported': [('readonly', False)],
+                                      'refused': [('readonly', False)]})
+    date = fields.Date(readonly=True,
+                       states={'waiting_approval': [('readonly', False)],
+                               'draft': [('readonly', False)],
+                               'reported': [('readonly', False)],
+                               'refused': [('readonly', False)]},
+                       default=fields.Date.context_today, string="Expense Date")
+    product_uom_id = fields.Many2one('uom.uom', string='Unit of Measure',
+                                     compute='_compute_from_product_id_company_id',
+                                     store=True, copy=True,
+                                     states={'waiting_approval': [
+                                         ('readonly', False)],
+                                         'draft': [('readonly', False)],
+                                         'refused': [('readonly', False)]},
+                                     default=_default_product_uom_id,
+                                     domain="[('category_id', '=', product_uom_category_id)]")
+
+    company_id = fields.Many2one('res.company', string='Company', required=True,
+                                 readonly=True,
+                                 states={
+                                     'waiting_approval': [
+                                         ('readonly', False)],
+                                     'draft': [('readonly', False)],
+                                     'refused': [('readonly', False)]},
+                                 default=lambda self: self.env.company)
 
     @api.depends('sheet_id', 'sheet_id.account_move_id', 'sheet_id.state')
     def _compute_state(self):
@@ -140,13 +180,15 @@ class HrExpenseSheet(models.Model):
                 'name': '/',
             }
             move = self.env['account.move'].with_context(
-                default_journal_id=move_values['journal_id']).create(move_values)
+                default_journal_id=move_values['journal_id']).create(
+                move_values)
             print("move", move)
             for exp in expense_line_ids:
                 print("employee", exp.employee_id.name)
                 # move_group_by_sheet = self._get_account_move_by_sheet()
                 move_line_values_by_expense = exp._get_account_move_line_values()
-                print("move_line_values_by_expense", move_line_values_by_expense)
+                print("move_line_values_by_expense",
+                      move_line_values_by_expense)
                 move_line_values = move_line_values_by_expense.get(exp.id)
                 print("move_line_values", move_line_values)
                 # link move lines to move, and move to expense sheet
@@ -156,7 +198,7 @@ class HrExpenseSheet(models.Model):
                 exp.sheet_id.write({'state': 'done'})
             emp = emp.name + '-' + str(fields.Datetime.now().date())
             move.name = emp
-            print("move",move)
+            print("move", move)
             res = move._post()
 
             for sheet in self.filtered(lambda s: not s.accounting_date):

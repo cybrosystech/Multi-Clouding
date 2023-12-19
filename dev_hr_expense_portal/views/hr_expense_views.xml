@@ -165,7 +165,7 @@
                             <field name="analytic_account_id"
                                    domain="['|', ('company_id', '=', company_id), ('company_id', '=', False)]"
                                    groups="analytic.group_analytic_accounting"
-                                   attrs="{'readonly': [('is_editable', '=', False)]}"/>
+                                   />
                             <field name="sale_order_id"
                                    attrs="{'invisible': [('can_be_reinvoiced', '=', False)]}"
                                    options="{'no_create_edit': True, 'no_create': True, 'no_open': True}"
@@ -263,7 +263,7 @@
                                    invisible="1"/>
                             <label for="quantity"/>
                             <div class="o_row">
-                                <field name="quantity" class="oe_inline"/>
+                                <field name="quantity" class="oe_inline" readonly="False"/>
                                 <field name="product_uom_id" required="1"
                                        widget="selection" class="oe_inline"
                                        groups="uom.group_uom"/>
@@ -298,7 +298,7 @@
                             <field name="analytic_account_id"
                                    domain="['|', ('company_id', '=', company_id), ('company_id', '=', False)]"
                                    groups="analytic.group_analytic_accounting"
-                                   attrs="{'readonly': [('is_editable', '=', False)]}"/>
+                                   />
                             <field name="sale_order_id"
                                    attrs="{'invisible': [('can_be_reinvoiced', '=', False)]}"
                                    options="{'no_create_edit': True, 'no_create': True, 'no_open': True}"
