@@ -131,7 +131,7 @@ class PayrollSummary(models.Model):
     def get_report_data(self):
         if self.month and self.year:
             struct_ids = self.env['hr.payslip'].search(
-                [('date_from', '!=', False),
+                [('state', '!=', 'cancel'), ('date_from', '!=', False),
                  ('struct_id', '=', self.struct_id.id),
                  ('company_id', '=', self.env.company.id)]).filtered(
                 lambda l: l.date_from.month == int(
@@ -186,7 +186,7 @@ class PayrollSummary(models.Model):
                 worksheet.write(row, col, _(line.name), header_format)
                 col += 1
             payslip_lines = self.env['hr.payslip'].search(
-                [('struct_id', '=', struct.id),
+                [('state', '!=', 'cancel'), ('struct_id', '=', struct.id),
                  ('date_from', '!=', False)]).filtered(
                 lambda l: l.date_from.month == int(
                     self.month) and l.date_from.year == int(self.year))
