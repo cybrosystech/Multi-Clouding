@@ -1,13 +1,28 @@
 import base64
+import datetime
 import io
 import xlsxwriter
 from odoo import fields, models, _
+from odoo.exceptions import UserError
 
 
 class PayrollSummary(models.Model):
     _name = 'payroll.summary'
 
-    date = fields.Date(string="Date")
+    month = fields.Selection(string="Month", selection=[('1', 'January'),
+                                                        ('2', 'February'),
+                                                        ('3', 'March'),
+                                                        ('4', 'April'),
+                                                        ('5', 'May'),
+                                                        ('6', 'June'),
+                                                        ('7', 'July'),
+                                                        ('8', 'August'),
+                                                        ('9', 'September'),
+                                                        ('10', 'October'),
+                                                        ('11', 'November'),
+                                                        ('12', 'December'),
+                                                        ], required=True)
+    year = fields.Char(string="Year", required=True)
     struct_id = fields.Many2one('hr.payroll.structure',
                                 'Payslip Structure',
                                 required=True)
@@ -100,12 +115,13 @@ class PayrollSummary(models.Model):
         }
 
     def get_report_data(self):
-        if self.date:
+        if self.month and self.year:
             struct_ids = self.env['hr.payslip'].search(
                 [('date_from', '!=', False),
                  ('struct_id', '=', self.struct_id.id),
                  ('company_id', '=', self.env.company.id)]).filtered(
-                lambda l: l.date_from.month == self.date.month).mapped(
+                lambda l: l.date_from.month == int(
+                    self.month) and l.date_from.year == int(self.year)).mapped(
                 'struct_id')
             payslip_structure = {}
             for struct in struct_ids:
@@ -125,8 +141,12 @@ class PayrollSummary(models.Model):
         length = len(stru.rule_ids.ids)
         row = 0
         col = 0
-        worksheet.merge_range(row, row, col, col + 9+length,
-                              _('Payment Summary Report'),
+        datetime_object = datetime.datetime.strptime(self.month, "%m")
+
+        full_month_name = datetime_object.strftime("%B")
+        heading = 'Payment Summary Report' + ' - ' + full_month_name + ' - ' + self.year
+        worksheet.merge_range(row, row, col, col + 7 + length,
+                              _(heading),
                               STYLE_LINE_HEADER)
         for s in struct_ids:
             struct = self.env['hr.payroll.structure'].browse(s)
@@ -150,61 +170,81 @@ class PayrollSummary(models.Model):
             for line in struct.rule_ids:
                 worksheet.write(row, col, _(line.name), header_format)
                 col += 1
-            worksheet.write(row, col, _('Total Without Overtime'),
-                            header_format)
-            col += 1
-            worksheet.write(row, col, _('Total Deductions'), header_format)
-            col += 1
-
             payslip_lines = self.env['hr.payslip'].search(
                 [('struct_id', '=', struct.id),
                  ('date_from', '!=', False)]).filtered(
-                lambda l: l.date_from.month == self.date.month)
+                lambda l: l.date_from.month == int(
+                    self.month) and l.date_from.year == int(self.year))
             row += 1
-            for p in payslip_lines:
-                working_days = p.worked_days_line_ids.mapped(
-                    'number_of_days')
-                col = 0
-                worksheet.write(row, col, p.employee_id.registration_number,
-                                STYLE_LINE_Data)
-                col += 1
-                worksheet.write(row, col, p.employee_id.name,
-                                STYLE_LINE_Data)
-                col += 1
-                worksheet.write(row, col, p.employee_id.job_id.name,
-                                STYLE_LINE_Data)
-                col += 1
-                worksheet.write(row, col, p.employee_id.department_id.name,
-                                STYLE_LINE_Data)
-                col += 1
-                worksheet.write(row, col, p.employee_id.date_of_joining,
-                                STYLE_LINE_Data)
-                col += 1
-                worksheet.write(row, col,
-                                p.currency_id.name,
-                                STYLE_LINE_Data)
-                col += 1
-                worksheet.write(row, col,
-                                sum(working_days),
-                                STYLE_LINE_Data)
-                col += 1
-                for l in p.line_ids:
-                    worksheet.write(row, col, l.total,
-                                    STYLE_LINE_Data)
+            if payslip_lines:
+                for p in payslip_lines:
+                    working_days = p.worked_days_line_ids.mapped(
+                        'number_of_days')
+                    col = 0
+                    if p.employee_id.registration_number:
+                        worksheet.write(row, col, p.employee_id.registration_number,
+                                        STYLE_LINE_Data)
+                    else:
+                        worksheet.write(row, col, '',
+                                        STYLE_LINE_Data)
                     col += 1
-                tot_without_overtime = p.line_ids.filtered(lambda l: (
-                                                                                 l.category_id.code == 'ALW' and l.code != 'OVT') or (
-                                                                                 l.category_id.code == 'BAS')).mapped(
-                    'total')
-                tot_amt_without_overtime = sum(tot_without_overtime)
-                tot_deductions = p.line_ids.filtered(
-                    lambda l: l.category_id.code == 'DED').mapped('total')
-                worksheet.write(row, col,
-                                tot_amt_without_overtime,
-                                STYLE_LINE_Data)
-                col += 1
-                worksheet.write(row, col,
-                                sum(tot_deductions),
-                                STYLE_LINE_Data)
-                row += 1
+                    if p.employee_id.name:
+                        worksheet.write(row, col, p.employee_id.name,
+                                        STYLE_LINE_Data)
+                    else:
+                        worksheet.write(row, col, '',
+                                        STYLE_LINE_Data)
+                    col += 1
+                    if p.employee_id.job_id.name:
+                        worksheet.write(row, col, p.employee_id.job_id.name,
+                                        STYLE_LINE_Data)
+                    else:
+                        worksheet.write(row, col, '',
+                                        STYLE_LINE_Data)
+                    col += 1
+                    if p.employee_id.department_id.name:
+                        worksheet.write(row, col, p.employee_id.department_id.name,
+                                        STYLE_LINE_Data)
+                    else:
+                        worksheet.write(row, col, '',
+                                        STYLE_LINE_Data)
+                    col += 1
+                    if p.employee_id.date_of_joining:
+                        worksheet.write(row, col, p.employee_id.date_of_joining,
+                                        STYLE_LINE_Data)
+                    else:
+                        worksheet.write(row, col, '',
+                                        STYLE_LINE_Data)
 
+                    col += 1
+                    if p.currency_id.name:
+
+                        worksheet.write(row, col,
+                                        p.currency_id.name,
+                                        STYLE_LINE_Data)
+                    else:
+                        worksheet.write(row, col,
+                                        '',
+                                        STYLE_LINE_Data)
+                    col += 1
+                    if working_days:
+                        worksheet.write(row, col,
+                                        sum(working_days),
+                                        STYLE_LINE_Data)
+                    else:
+                        worksheet.write(row, col,
+                                        0,
+                                        STYLE_LINE_Data)
+                    col += 1
+                    for l in p.line_ids:
+                        if l.total:
+                            worksheet.write(row, col, l.total,
+                                            STYLE_LINE_Data)
+                        else:
+                            worksheet.write(row, col, 0,
+                                            STYLE_LINE_Data)
+                        col += 1
+                    row += 1
+            else:
+                raise UserError(
+                    _("No Payslips are found!!!"))

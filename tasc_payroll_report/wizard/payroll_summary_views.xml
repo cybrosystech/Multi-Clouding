@@ -6,13 +6,16 @@
         <field name="arch" type="xml">
             <form string="Report Options">
                 <group>
-                    <field name="date"/>
+                    <field name="year"/>
+                    <field name="month"/>
                     <field name="struct_id"/>
                 </group>
                 <footer>
-                    <button name="print_report_xlsx" string="PRINT" type="object"
+                    <button name="print_report_xlsx" string="PRINT"
+                            type="object"
                             default_focus="1" class="oe_highlight"/>
-                    <button string="Cancel" class="btn btn-default" special="cancel"/>
+                    <button string="Cancel" class="btn btn-default"
+                            special="cancel"/>
                 </footer>
             </form>
         </field>
