@@ -16,6 +16,7 @@
         [
             'security/ir.model.access.csv',
             'views/hr_employee_views.xml',
+            'views/res_partner_views.xml',
             'wizard/payroll_summary_views.xml',
         ],
     'qweb': [

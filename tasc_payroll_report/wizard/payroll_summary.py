@@ -2,7 +2,7 @@ import base64
 import datetime
 import io
 import xlsxwriter
-from odoo import fields, models, _
+from odoo import fields, models, _, api
 from odoo.exceptions import UserError
 
 
@@ -28,6 +28,11 @@ class PayrollSummary(models.Model):
                                 required=True)
     excel_sheet = fields.Binary('Download Report')
     excel_sheet_name = fields.Char(string='Name', size=64)
+
+    @api.constrains('year')
+    def on_save_year(self):
+        if len(self.year) > 4:
+            raise UserError('Invalid year!!!')
 
     def print_report_xlsx(self):
         report_data = self.get_report_data()
@@ -60,6 +65,12 @@ class PayrollSummary(models.Model):
         STYLE_LINE = workbook.add_format({
             'border': 0,
             'align': 'center',
+            'valign': 'vcenter',
+        })
+
+        STYLE_LINE_EMP_NAME = workbook.add_format({
+            'border': 0,
+            'align': 'left',
             'valign': 'vcenter',
         })
         STYLE_LINE_HEADER = workbook.add_format({
@@ -95,10 +106,12 @@ class PayrollSummary(models.Model):
 
         TABLE_data_tolal_line.num_format_str = '#,##0.00'
         STYLE_LINE_Data = STYLE_LINE
+        STYLE_LINE_Data_emp_name = STYLE_LINE_EMP_NAME
+
         STYLE_LINE_Data.num_format_str = '#,##0.00_);(#,##0.00)'
 
         if report_data:
-            self.add_xlsx_sheet(report_data, workbook, STYLE_LINE_Data,
+            self.add_xlsx_sheet(report_data, workbook, STYLE_LINE_Data,STYLE_LINE_Data_emp_name,
                                 header_format, STYLE_LINE_HEADER)
 
         self.excel_sheet_name = 'Payment Summary Report'
@@ -129,7 +142,7 @@ class PayrollSummary(models.Model):
                 payslip_structure.update({struct.id: data})
         return payslip_structure
 
-    def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data,
+    def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data,STYLE_LINE_Data_emp_name,
                        header_format, STYLE_LINE_HEADER):
         self.ensure_one()
         worksheet = workbook.add_worksheet(_('Payment Summary Report'))
@@ -178,11 +191,20 @@ class PayrollSummary(models.Model):
             row += 1
             if payslip_lines:
                 for p in payslip_lines:
+                    precision = p.currency_id.decimal_places
+                    print("prec",precision)
+                    string_val = "0" * precision
+                    float_str = '#,##0.'+string_val
+                    print("float_str",float_str)
+                    floating_point_bordered = workbook.add_format(
+                        {'num_format': float_str})
+
                     working_days = p.worked_days_line_ids.mapped(
                         'number_of_days')
                     col = 0
                     if p.employee_id.registration_number:
-                        worksheet.write(row, col, p.employee_id.registration_number,
+                        worksheet.write(row, col,
+                                        p.employee_id.registration_number,
                                         STYLE_LINE_Data)
                     else:
                         worksheet.write(row, col, '',
@@ -190,7 +212,7 @@ class PayrollSummary(models.Model):
                     col += 1
                     if p.employee_id.name:
                         worksheet.write(row, col, p.employee_id.name,
-                                        STYLE_LINE_Data)
+                                        STYLE_LINE_Data_emp_name)
                     else:
                         worksheet.write(row, col, '',
                                         STYLE_LINE_Data)
@@ -203,7 +225,8 @@ class PayrollSummary(models.Model):
                                         STYLE_LINE_Data)
                     col += 1
                     if p.employee_id.department_id.name:
-                        worksheet.write(row, col, p.employee_id.department_id.name,
+                        worksheet.write(row, col,
+                                        p.employee_id.department_id.name,
                                         STYLE_LINE_Data)
                     else:
                         worksheet.write(row, col, '',
@@ -242,7 +265,7 @@ class PayrollSummary(models.Model):
                                             STYLE_LINE_Data)
                         else:
                             worksheet.write(row, col, 0,
-                                            STYLE_LINE_Data)
+                                            floating_point_bordered)
                         col += 1
                     row += 1
             else:

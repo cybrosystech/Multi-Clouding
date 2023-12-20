@@ -9,7 +9,9 @@
             <xpath expr="//form/sheet/group[1]/group[2]/field[@name='coach_id']"
                    position="after">
                 <field name="date_of_joining" string="Date of Joining"/>
+                <field name="employment_type"/>
             </xpath>
         </field>
     </record>
+
 </odoo>

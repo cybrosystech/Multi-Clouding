@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <record id="res_partner_view_form_private" model="ir.ui.view">
+            <field name="name">
+                res.partner.view.form.private.tasc_payroll_report
+            </field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.res_partner_view_form_private"/>
+            <field name="priority">20</field>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='bank_ids']/tree" position="replace">
+                    <tree>
+                        <field name="bank_id"/>
+                        <field name="branch"/>
+                        <field name="bank_bic"/>
+                        <field name="bank_iban"/>
+                        <field name="acc_number"/>
+                        <field name="acc_holder_name" invisible="1"/>
+                    </tree>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_company_partner_bank_form" model="ir.ui.view">
+            <field name="name">res.partner.bank.form.tasc_payroll_report</field>
+            <field name="model">res.partner.bank</field>
+            <field name="inherit_id" ref="base.view_partner_bank_form"/>
+            <field name="mode">primary</field>
+            <field name="priority">20</field>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='bank_id']" position="attributes">
+                    <attribute name="visible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='bank_id']" position="after">
+                    <field name="branch"/>
+                    <field name="bank_bic"/>
+                    <field name="bank_iban"/>
+                </xpath>
+            </field>
+        </record>
+
+
+        <record id="view_partner_bank_form" model="ir.ui.view">
+            <field name="name">
+                res.partner.bank.form.inherit.tasc_payroll_report
+            </field>
+            <field name="model">res.partner.bank</field>
+            <field name="inherit_id" ref="base.view_partner_bank_form"/>
+            <field name="arch" type="xml">
+                <field name="bank_id" position="after">
+                    <field name="branch"/>
+                    <field name="bank_bic"/>
+                    <field name="bank_iban"/>
+                </field>
+            </field>
+        </record>
+
+        <record id="res_partner_view_form_tasc_payroll_report" model="ir.ui.view">
+        <field name="name">res.partner.view.form.tasc_payroll_report</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="account.view_partner_property_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='accounting']/group[1]/group[1]/field[@name='bank_ids']/tree"
+                   position="replace">
+                <tree editable="bottom">
+                    <field name="sequence" widget="handle"/>
+                    <field name="bank_id"/>
+                    <field name="branch"/>
+                    <field name="bank_bic"/>
+                    <field name="bank_iban"/>
+                    <field name="acc_number"/>
+                    <field name="acc_holder_name" invisible="1"/>
+                </tree>
+            </xpath>
+        </field>
+        </record>
+    </data>
+</odoo>
