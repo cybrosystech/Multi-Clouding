@@ -11,6 +11,13 @@
                 <field name="date_of_joining" string="Date of Joining"/>
                 <field name="employment_type"/>
             </xpath>
+            <xpath expr="//page[@name='personal_information']/group[1]/group[1]/field[@name='bank_account_id']"
+                   position="after">
+                <field name="bank_id"/>
+                <field name="branch"/>
+                <field name="bank_bic"/>
+                <field name="bank_iban"/>
+            </xpath>
         </field>
     </record>
 

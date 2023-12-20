@@ -13,7 +13,7 @@
                     <tree>
                         <field name="bank_id"/>
                         <field name="branch"/>
-                        <field name="bank_bic"/>
+                        <field name="bank_bic" string="SWIFT/BIC"/>
                         <field name="bank_iban"/>
                         <field name="acc_number"/>
                         <field name="acc_holder_name" invisible="1"/>
@@ -34,7 +34,7 @@
                 </xpath>
                 <xpath expr="//field[@name='bank_id']" position="after">
                     <field name="branch"/>
-                    <field name="bank_bic"/>
+                    <field name="bank_bic" string="SWIFT/BIC"/>
                     <field name="bank_iban"/>
                 </xpath>
             </field>
@@ -50,7 +50,7 @@
             <field name="arch" type="xml">
                 <field name="bank_id" position="after">
                     <field name="branch"/>
-                    <field name="bank_bic"/>
+                    <field name="bank_bic" string="SWIFT/BIC"/>
                     <field name="bank_iban"/>
                 </field>
             </field>
@@ -67,7 +67,7 @@
                     <field name="sequence" widget="handle"/>
                     <field name="bank_id"/>
                     <field name="branch"/>
-                    <field name="bank_bic"/>
+                    <field name="bank_bic" string="SWIFT/BIC"/>
                     <field name="bank_iban"/>
                     <field name="acc_number"/>
                     <field name="acc_holder_name" invisible="1"/>

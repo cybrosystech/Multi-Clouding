@@ -111,7 +111,8 @@ class PayrollSummary(models.Model):
         STYLE_LINE_Data.num_format_str = '#,##0.00_);(#,##0.00)'
 
         if report_data:
-            self.add_xlsx_sheet(report_data, workbook, STYLE_LINE_Data,STYLE_LINE_Data_emp_name,
+            self.add_xlsx_sheet(report_data, workbook, STYLE_LINE_Data,
+                                STYLE_LINE_Data_emp_name,
                                 header_format, STYLE_LINE_HEADER)
 
         self.excel_sheet_name = 'Payment Summary Report'
@@ -142,7 +143,8 @@ class PayrollSummary(models.Model):
                 payslip_structure.update({struct.id: data})
         return payslip_structure
 
-    def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data,STYLE_LINE_Data_emp_name,
+    def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data,
+                       STYLE_LINE_Data_emp_name,
                        header_format, STYLE_LINE_HEADER):
         self.ensure_one()
         worksheet = workbook.add_worksheet(_('Payment Summary Report'))
@@ -192,10 +194,10 @@ class PayrollSummary(models.Model):
             if payslip_lines:
                 for p in payslip_lines:
                     precision = p.currency_id.decimal_places
-                    print("prec",precision)
+                    print("prec", precision)
                     string_val = "0" * precision
-                    float_str = '#,##0.'+string_val
-                    print("float_str",float_str)
+                    float_str = '#,##0.' + string_val
+                    print("float_str", float_str)
                     floating_point_bordered = workbook.add_format(
                         {'num_format': float_str})
 
@@ -262,7 +264,7 @@ class PayrollSummary(models.Model):
                     for l in p.line_ids:
                         if l.total:
                             worksheet.write(row, col, l.total,
-                                            STYLE_LINE_Data)
+                                            floating_point_bordered)
                         else:
                             worksheet.write(row, col, 0,
                                             floating_point_bordered)
