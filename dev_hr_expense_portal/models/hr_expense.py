@@ -127,23 +127,38 @@ class hr_expense(models.Model):
             expense.access_url = '/my/hr_expense/%s' % (expense.id)
 
     def action_submit_expenses_all_employees(self):
-        print("self", self)
         employees_ids = self.mapped('employee_id')
-        print("employees", employees_ids)
         for emp in employees_ids:
             expense_ids = self.env['hr.expense'].search(
                 [('employee_id', '=', emp.id), ('id', 'in', self.ids),
                  ('state', '=', 'draft'), ('sheet_id', '=', False)])
-            print("expense_id", expense_ids)
+            total_amount = sum(expense_ids.mapped('total_amount'))
+            expense_report_summary = emp.name + " (" + str(total_amount)+") "
             if expense_ids:
-                expense_ids._create_sheet_from_expenses()
+                expense_ids._create_sheet_all_employees_from_expenses(expense_report_summary)
+
+    def _create_sheet_all_employees_from_expenses(self,expense_report_summary):
+        if any(expense.state != 'draft' or expense.sheet_id for expense in self):
+            raise UserError(_("You cannot report twice the same line!"))
+        if len(self.mapped('employee_id')) != 1:
+            raise UserError(_("You cannot report expenses for different employees in the same report."))
+        if any(not expense.product_id for expense in self):
+            raise UserError(_("You can not create report without product."))
+
+        todo = self.filtered(lambda x: x.payment_mode=='own_account') or self.filtered(lambda x: x.payment_mode=='company_account')
+        sheet = self.env['hr.expense.sheet'].create({
+            'company_id': self.company_id.id,
+            'employee_id': self[0].employee_id.id,
+            'name': expense_report_summary,
+            'expense_line_ids': [(6, 0, todo.ids)]
+        })
+        return sheet
 
 
 class HrExpenseSheet(models.Model):
     _inherit = 'hr.expense.sheet'
 
     def action_create_journal_entry(self):
-        print("action_create_journal_entry", self)
         samples = self.mapped('expense_line_ids.sample')
         if samples.count(True):
             if samples.count(False):
@@ -182,15 +197,9 @@ class HrExpenseSheet(models.Model):
             move = self.env['account.move'].with_context(
                 default_journal_id=move_values['journal_id']).create(
                 move_values)
-            print("move", move)
             for exp in expense_line_ids:
-                print("employee", exp.employee_id.name)
-                # move_group_by_sheet = self._get_account_move_by_sheet()
                 move_line_values_by_expense = exp._get_account_move_line_values()
-                print("move_line_values_by_expense",
-                      move_line_values_by_expense)
                 move_line_values = move_line_values_by_expense.get(exp.id)
-                print("move_line_values", move_line_values)
                 # link move lines to move, and move to expense sheet
                 move.write(
                     {'line_ids': [(0, 0, line) for line in move_line_values]})
@@ -198,8 +207,7 @@ class HrExpenseSheet(models.Model):
                 exp.sheet_id.write({'state': 'done'})
             emp = emp.name + '-' + str(fields.Datetime.now().date())
             move.name = emp
-            print("move", move)
-            res = move._post()
+            move._post()
 
             for sheet in self.filtered(lambda s: not s.accounting_date):
                 sheet.accounting_date = sheet.account_move_id.date
@@ -208,4 +216,3 @@ class HrExpenseSheet(models.Model):
             to_post.write({'state': 'post'})
             (self - to_post).write({'state': 'done'})
             self.activity_update()
-        # return res
