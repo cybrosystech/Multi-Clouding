@@ -32,6 +32,12 @@
                 <field name="state" widget="statusbar"
                        statusbar_visible="waiting_approval,draft,reported,approved,done,refused"/>
             </xpath>
+            <xpath expr="//form/sheet/group[1]/group[2]/field[@name='analytic_account_id']"
+                   position="replace">
+                <field name="analytic_account_id"
+                       domain="['|', ('company_id', '=', company_id), ('company_id', '=', False)]"
+                       groups="analytic.group_analytic_accounting"/>
+            </xpath>
         </field>
     </record>
 
@@ -72,11 +78,11 @@
         </field>
     </record>
 
-        <record id="hr_expense_view_form_per_diem" model="ir.ui.view">
+    <record id="hr_expense_view_form_per_diem" model="ir.ui.view">
         <field name="name">hr.expense.view.form</field>
         <field name="model">hr.expense</field>
         <field name="arch" type="xml">
-            <form string="Expenses" >
+            <form string="Expenses">
                 <header>
                     <button name="action_submit_expenses" string="Create Report"
                             type="object" class="oe_highlight "
@@ -165,7 +171,7 @@
                             <field name="analytic_account_id"
                                    domain="['|', ('company_id', '=', company_id), ('company_id', '=', False)]"
                                    groups="analytic.group_analytic_accounting"
-                                   />
+                            />
                             <field name="sale_order_id"
                                    attrs="{'invisible': [('can_be_reinvoiced', '=', False)]}"
                                    options="{'no_create_edit': True, 'no_create': True, 'no_open': True}"
@@ -204,12 +210,11 @@
     </record>
 
 
-
     <record id="hr_expense_view_form_overtime" model="ir.ui.view">
         <field name="name">hr.expense.view.form</field>
         <field name="model">hr.expense</field>
         <field name="arch" type="xml">
-            <form string="Expenses" >
+            <form string="Expenses">
                 <header>
                     <button name="action_submit_expenses" string="Create Report"
                             type="object" class="oe_highlight "
@@ -263,7 +268,8 @@
                                    invisible="1"/>
                             <label for="quantity"/>
                             <div class="o_row">
-                                <field name="quantity" class="oe_inline" readonly="False"/>
+                                <field name="quantity" class="oe_inline"
+                                       readonly="False"/>
                                 <field name="product_uom_id" required="1"
                                        widget="selection" class="oe_inline"
                                        groups="uom.group_uom"/>
@@ -298,7 +304,7 @@
                             <field name="analytic_account_id"
                                    domain="['|', ('company_id', '=', company_id), ('company_id', '=', False)]"
                                    groups="analytic.group_analytic_accounting"
-                                   />
+                            />
                             <field name="sale_order_id"
                                    attrs="{'invisible': [('can_be_reinvoiced', '=', False)]}"
                                    options="{'no_create_edit': True, 'no_create': True, 'no_open': True}"
@@ -337,17 +343,19 @@
     </record>
 
 
-    <record id="hr_expense_actions_my_all_overtime" model="ir.actions.act_window">
+    <record id="hr_expense_actions_my_all_overtime"
+            model="ir.actions.act_window">
         <field name="name">All My Overtime</field>
         <field name="res_model">hr.expense</field>
         <field name="view_mode">tree,kanban,form,graph,pivot,activity</field>
         <field name="view_ids"
-                   eval="[(5, 0, 0),
+               eval="[(5, 0, 0),
                           (0, 0, {'view_mode': 'tree', 'view_id': ref('hr_expense.hr_expense_view_expenses_analysis_tree')}),
                           (0, 0, {'view_mode': 'form', 'view_id': ref('dev_hr_expense_portal.hr_expense_view_form_overtime')})]"/>
         <field name="search_view_id" ref="hr_expense.hr_expense_view_search"/>
         <field name="context">{'search_default_my_expenses': 1}</field>
-        <field name="domain">[('product_id.product_expense_type', '=','overtime')]
+        <field name="domain">[('product_id.product_expense_type',
+            '=','overtime')]
         </field>
         <field name="help" type="html">
             <p class="o_view_nocontent_expense_receipt">
@@ -381,9 +389,11 @@
         <field name="view_mode">tree,kanban,form,graph,pivot,activity</field>
         <field name="search_view_id" ref="hr_expense.hr_expense_view_search"/>
         <field name="context">{'search_default_my_expenses': 1}</field>
-        <field name="domain">[('product_id.product_expense_type', '=','per_diem')]</field>
-         <field name="view_ids"
-                   eval="[(5, 0, 0),
+        <field name="domain">[('product_id.product_expense_type',
+            '=','per_diem')]
+        </field>
+        <field name="view_ids"
+               eval="[(5, 0, 0),
                           (0, 0, {'view_mode': 'tree', 'view_id': ref('hr_expense.hr_expense_view_expenses_analysis_tree')}),
                           (0, 0, {'view_mode': 'form', 'view_id': ref('dev_hr_expense_portal.hr_expense_view_form_per_diem')})]"/>
         <field name="help" type="html">
