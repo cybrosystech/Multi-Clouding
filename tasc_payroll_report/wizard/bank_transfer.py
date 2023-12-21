@@ -221,6 +221,10 @@ class PayrollSummary(models.Model):
                             worksheet.write(row, col,
                                             p.employee_id.bank_account_id.acc_holder_name,
                                             STYLE_LINE_Data)
+                        elif p.employee_id.name:
+                            worksheet.write(row, col,
+                                            p.employee_id.name,
+                                            STYLE_LINE_Data)
                         else:
                             worksheet.write(row, col, '',
                                             STYLE_LINE_Data)
@@ -386,6 +390,10 @@ class PayrollSummary(models.Model):
                         if p.employee_id.bank_account_id.acc_holder_name:
                             worksheet.write(row, col,
                                             p.employee_id.bank_account_id.acc_holder_name,
+                                            STYLE_LINE_Data)
+                        elif p.employee_id.name:
+                            worksheet.write(row, col,
+                                            p.employee_id.name,
                                             STYLE_LINE_Data)
                         else:
                             worksheet.write(row, col, '',
