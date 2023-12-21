@@ -133,24 +133,39 @@ class hr_expense(models.Model):
                 [('employee_id', '=', emp.id), ('id', 'in', self.ids),
                  ('state', '=', 'draft'), ('sheet_id', '=', False)])
             total_amount = sum(expense_ids.mapped('total_amount'))
-            expense_report_summary = emp.name + " (" + str(total_amount)+") "
+            full_month_name = fields.Datetime.now().strftime("%B")
+            print("full_month_name", full_month_name)
+            expense_report_summary = emp.name + " - " + full_month_name + "(" + str(
+                total_amount) + ") "
             if expense_ids:
-                expense_ids._create_sheet_all_employees_from_expenses(expense_report_summary)
+                print("ddddddd")
+                journal = self.env['ir.config_parameter'].sudo().get_param(
+                    'dev_hr_expense_portal.expense_journal_id')
+                print("journal", journal)
+                expense_ids._create_sheet_all_employees_from_expenses(
+                    expense_report_summary, journal)
 
-    def _create_sheet_all_employees_from_expenses(self,expense_report_summary):
-        if any(expense.state != 'draft' or expense.sheet_id for expense in self):
+    def _create_sheet_all_employees_from_expenses(self, expense_report_summary,
+                                                  journal):
+        print("journalllllllllll", journal,type(journal))
+        if any(expense.state != 'draft' or expense.sheet_id for expense in
+               self):
             raise UserError(_("You cannot report twice the same line!"))
         if len(self.mapped('employee_id')) != 1:
-            raise UserError(_("You cannot report expenses for different employees in the same report."))
+            raise UserError(
+                _("You cannot report expenses for different employees in the same report."))
         if any(not expense.product_id for expense in self):
             raise UserError(_("You can not create report without product."))
 
-        todo = self.filtered(lambda x: x.payment_mode=='own_account') or self.filtered(lambda x: x.payment_mode=='company_account')
+        todo = self.filtered(
+            lambda x: x.payment_mode == 'own_account') or self.filtered(
+            lambda x: x.payment_mode == 'company_account')
         sheet = self.env['hr.expense.sheet'].create({
             'company_id': self.company_id.id,
             'employee_id': self[0].employee_id.id,
             'name': expense_report_summary,
-            'expense_line_ids': [(6, 0, todo.ids)]
+            'expense_line_ids': [(6, 0, todo.ids)],
+            'journal_id': journal,
         })
         return sheet
 
@@ -206,7 +221,7 @@ class HrExpenseSheet(models.Model):
                 exp.sheet_id.write({'account_move_id': move.id})
                 exp.sheet_id.write({'state': 'done'})
             emp = emp.name + '-' + str(fields.Datetime.now().date())
-            move.name = emp
+            move.ref = emp
             move._post()
 
             for sheet in self.filtered(lambda s: not s.accounting_date):
