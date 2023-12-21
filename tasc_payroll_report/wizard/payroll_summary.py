@@ -8,6 +8,7 @@ from odoo.exceptions import UserError
 
 class PayrollSummary(models.Model):
     _name = 'payroll.summary'
+    _description = 'Payroll Summary'
 
     month = fields.Selection(string="Month", selection=[('1', 'January'),
                                                         ('2', 'February'),

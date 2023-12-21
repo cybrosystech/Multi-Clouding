@@ -18,6 +18,7 @@
             'views/hr_employee_views.xml',
             'views/res_partner_views.xml',
             'wizard/payroll_summary_views.xml',
+            'wizard/bank_transfer_views.xml',
         ],
     'qweb': [
     ],
