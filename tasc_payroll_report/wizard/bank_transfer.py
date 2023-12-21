@@ -212,22 +212,22 @@ class PayrollSummary(models.Model):
                         if p.employee_id.bank_account_id.bank_iban:
                             worksheet.write(row, col,
                                             p.employee_id.bank_account_id.bank_iban,
-                                            STYLE_LINE_Data)
+                                            STYLE_LINE_Data_emp_name)
                         else:
                             worksheet.write(row, col, '',
-                                            STYLE_LINE_Data)
+                                            STYLE_LINE_Data_emp_name)
                         col += 1
                         if p.employee_id.bank_account_id.acc_holder_name:
                             worksheet.write(row, col,
                                             p.employee_id.bank_account_id.acc_holder_name,
-                                            STYLE_LINE_Data)
+                                            STYLE_LINE_Data_emp_name)
                         elif p.employee_id.name:
                             worksheet.write(row, col,
                                             p.employee_id.name,
-                                            STYLE_LINE_Data)
+                                            STYLE_LINE_Data_emp_name)
                         else:
                             worksheet.write(row, col, '',
-                                            STYLE_LINE_Data)
+                                            STYLE_LINE_Data_emp_name)
 
                         col += 1
                         if p.employee_id.bank_account_id.bank_bic:
@@ -321,9 +321,6 @@ class PayrollSummary(models.Model):
                 col += 1
                 worksheet.write(row, col, _('Month'), header_format)
                 col += 1
-                # for line in struct.rule_ids:
-                #     worksheet.write(row, col, _(line.name), header_format)
-                #     col += 1
                 payslip_lines = self.env['hr.payslip'].search(
                     [('state', '!=', 'cancel'), ('struct_id', '=', struct.id),
                      ('date_from', '!=', False)]).filtered(
@@ -382,26 +379,24 @@ class PayrollSummary(models.Model):
                         if p.employee_id.bank_account_id.bank_iban:
                             worksheet.write(row, col,
                                             p.employee_id.bank_account_id.bank_iban,
-                                            STYLE_LINE_Data)
+                                            STYLE_LINE_Data_emp_name)
                         else:
                             worksheet.write(row, col, '',
-                                            STYLE_LINE_Data)
+                                            STYLE_LINE_Data_emp_name)
                         col += 1
                         if p.employee_id.bank_account_id.acc_holder_name:
                             worksheet.write(row, col,
                                             p.employee_id.bank_account_id.acc_holder_name,
-                                            STYLE_LINE_Data)
+                                            STYLE_LINE_Data_emp_name)
                         elif p.employee_id.name:
                             worksheet.write(row, col,
                                             p.employee_id.name,
-                                            STYLE_LINE_Data)
+                                            STYLE_LINE_Data_emp_name)
                         else:
                             worksheet.write(row, col, '',
-                                            STYLE_LINE_Data)
-
+                                            STYLE_LINE_Data_emp_name)
                         col += 1
                         if p.employee_id.bank_account_id.bank_bic:
-
                             worksheet.write(row, col,
                                             p.employee_id.bank_account_id.bank_bic,
                                             STYLE_LINE_Data)
@@ -417,7 +412,6 @@ class PayrollSummary(models.Model):
                         if self.date:
                             date_format = workbook.add_format(
                                 {'num_format': 'yyyy-mm-dd'})
-
                             worksheet.write(row, col,
                                             self.date,
                                             date_format)
