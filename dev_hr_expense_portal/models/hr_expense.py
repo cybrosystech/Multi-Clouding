@@ -65,15 +65,12 @@ class hr_expense(models.Model):
                                           check_company=True)
     is_manager_approved = fields.Boolean(string="Is Manager Approved",
                                          copy=False)
-    state = fields.Selection([
-        ('waiting_approval', 'Awaiting Manager Approval'),
-        ('draft', 'To Submit'),
-        ('reported', 'Submitted'),
-        ('approved', 'Approved'),
-        ('done', 'Paid'),
-        ('refused', 'Refused')], compute='_compute_state', string='Status',
-        copy=False, index=True, readonly=True, store=True,
-        default='waiting_approval', help="Status of the expense.")
+    state = fields.Selection(compute='_compute_state', string='Status',
+                             selection_add=[('waiting_approval',
+                                             'Awaiting Manager Approval')],
+                             copy=False, index=True, readonly=True, store=True,
+                             default='waiting_approval',
+                             help="Status of the expense.")
 
     description = fields.Text('Notes...', readonly=True,
                               states={'waiting_approval': [('readonly', False)],
@@ -147,7 +144,7 @@ class hr_expense(models.Model):
 
     def _create_sheet_all_employees_from_expenses(self, expense_report_summary,
                                                   journal):
-        print("journalllllllllll", journal,type(journal))
+        print("journalllllllllll", journal, type(journal))
         if any(expense.state != 'draft' or expense.sheet_id for expense in
                self):
             raise UserError(_("You cannot report twice the same line!"))
@@ -231,3 +228,21 @@ class HrExpenseSheet(models.Model):
             to_post.write({'state': 'post'})
             (self - to_post).write({'state': 'done'})
             self.activity_update()
+
+    def action_report_in_next_payslip(self):
+        records = self.filtered(lambda l: l.refund_in_payslip == False)
+        print("records", records)
+        self.write({'refund_in_payslip': True})
+        if records:
+            for record in records:
+                record.message_post(
+                    body=_(
+                        "Your expense (%s) will be added to your next payslip.") % (
+                             record.name),
+                    partner_ids=record.employee_id.user_id.partner_id.ids,
+                    subtype_id=self.env.ref('mail.mt_note').id,
+                    email_layout_xmlid='mail.mail_notification_light')
+                print("payslip", record.payslip_id)
+        else:
+            raise UserError(_("The expense reports are already reported in "
+                              "payslip."))
