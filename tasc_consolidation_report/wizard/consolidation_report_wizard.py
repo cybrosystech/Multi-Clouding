@@ -54,21 +54,21 @@ class ConsolidationReportWizard(models.Model):
             for data in filtered_data:
                 total += data['case']
             test.append({
-                'name': 'Total_' + parent_name,
+                'name': 'Total ' + parent_name,
                 'journal_id': journals,
                 'case': total,
                 'format': {'valign': 'vcenter',
                            'font_color': 'black', 'border': 2}
             })
             total_list.append({
-                'name': 'Total_' + parent_name,
+                'name': 'Total ' + parent_name,
                 'journal_id': journals,
                 'case': total,
                 'format': {'valign': 'vcenter',
                            'font_color': 'black', 'border': 2}
             })
             main_list.append({
-                'name': 'Total_' + parent_name,
+                'name': 'Total ' + parent_name,
                 'journal_id': journals,
                 'case': total,
                 'format': {'valign': 'vcenter',
@@ -83,7 +83,7 @@ class ConsolidationReportWizard(models.Model):
             for group in consolidation_conf.consolidation_parent:
                 filtered_data = list(
                     filter(lambda x: x['journal_id'] == journals and x[
-                        'name'] == 'Total_' + group.name, total_list))
+                        'name'] == 'Total ' + group.name, total_list))
                 if filtered_data:
                     total += filtered_data[0]['case']
             test_ab.append({'name': consolidation_conf.config_name,
@@ -151,7 +151,7 @@ class ConsolidationReportWizard(models.Model):
                                           total_list, main_list)
                 demo_list.append(test)
                 group_name.append({
-                    'name': 'Total_' + parent_group.consolidation_parent_group_id.name,
+                    'name': 'Total ' + parent_group.consolidation_parent_group_id.name,
                     'format': {'valign': 'vcenter',
                                'font_color': 'black',
                                'bold': True},
@@ -250,20 +250,37 @@ class ConsolidationReportWizard(models.Model):
                                             dynamic_format)
                         else:
                             pass
+            print("data", data)
+            print("head", head)
+
             final_comp_list = list(
                 filter(lambda x: x['name'] == head['name'], data['main_list']))
+            print("final_comp_list", final_comp_list)
             if final_comp_list:
                 for cmp_list in final_comp_list:
                     total_comp += cmp_list['case']
                 if not head['not_show_on_report']:
+                    company_heading = workbook.add_format(
+                        {'valign': 'vcenter',
+                         'font_color': 'black',
+                         'border': 2})
                     if head['multiply_factor'] != 0:
-                        sheet.write(row, len(journal_ids) + 1,
-                                    head['multiply_factor'] * total_comp,
-                                    sub_heading)
+                        if head["name"] and 'Total' in head["name"]:
+                            sheet.write(row, len(journal_ids) + 1,
+                                        head['multiply_factor'] * total_comp,
+                                        company_heading)
+                        else:
+                            sheet.write(row, len(journal_ids) + 1,
+                                        head['multiply_factor'] * total_comp,
+                                        sub_heading)
 
                     else:
-                        sheet.write(row, len(journal_ids) + 1, total_comp,
-                                    sub_heading)
+                        if head["name"] and 'Total' in head["name"]:
+                            sheet.write(row, len(journal_ids) + 1, total_comp,
+                                        company_heading)
+                        else:
+                            sheet.write(row, len(journal_ids) + 1, total_comp,
+                                        sub_heading)
                 else:
                     pass
 
