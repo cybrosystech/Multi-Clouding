@@ -32,6 +32,18 @@
                 <field name="state" widget="statusbar"
                        statusbar_visible="waiting_approval,draft,reported,approved,done,refused"/>
             </xpath>
+            <xpath expr="//form/sheet/group[1]/group[2]/field[@name='analytic_account_id']"
+                   position="replace">
+                <field name="analytic_account_id"
+                       domain="['|', ('company_id', '=', company_id), ('company_id', '=', False)]"
+                       groups="analytic.group_analytic_accounting"/>
+            </xpath>
+            <xpath expr="//group[1]/group[1]/field[@name='tax_ids']"
+                   position="replace">
+                <field name="tax_ids" widget="many2many_tags"
+                       groups="account.group_account_readonly"
+                       context="{'default_company_id': company_id}"/>
+            </xpath>
         </field>
     </record>
 
@@ -67,9 +79,366 @@
                             string="Create Entry"
                             type="object"
                     />
+                    <button name="action_report_in_next_payslip"
+                            string="Report in Next Payslip" type="object"
+                            groups="account.group_account_manager"
+                            class="oe_highlight"/>
                 </header>
+                <field name="refund_in_payslip" invisible="1"/>
+                <field name="state" invisible="1"/>
             </xpath>
         </field>
     </record>
+
+    <record id="hr_expense_view_form_per_diem" model="ir.ui.view">
+        <field name="name">hr.expense.view.form</field>
+        <field name="model">hr.expense</field>
+        <field name="arch" type="xml">
+            <form string="Expenses">
+                <header>
+                    <button name="action_submit_expenses" string="Create Report"
+                            type="object" class="oe_highlight "
+                            attrs="{'invisible': ['|', ('attachment_number', '&lt;=', 0), ('sheet_id', '!=', False)]}"/>
+                    <widget name="attach_document" string="Attach Receipt"
+                            action="message_post"
+                            attrs="{'invisible': ['|', ('attachment_number', '&lt;', 1), ('id','=',False)]}"/>
+                    <widget name="attach_document" string="Attach Receipt"
+                            action="message_post" highlight="1"
+                            attrs="{'invisible': ['|',('attachment_number', '&gt;=', 1), ('id','=',False)]}"/>
+                    <button name="action_submit_expenses" string="Create Report"
+                            type="object" class="o_expense_submit"
+                            attrs="{'invisible': ['|', ('attachment_number', '&gt;=', 1), ('sheet_id', '!=', False)]}"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,reported,approved,done,refused"/>
+                    <button name="action_view_sheet" type="object"
+                            string="View Report" class="oe_highlight"
+                            attrs="{'invisible': [('sheet_id', '=', False)]}"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_get_attachment_view"
+                                class="oe_stat_button"
+                                icon="fa-file-text-o"
+                                type="object">
+                            <field name="attachment_number" widget="statinfo"
+                                   string="Receipts"
+                                   options="{'reload_on_button': true}"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name"
+                                   placeholder="e.g. Lunch with Customer"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="is_editable" invisible="1"/>
+                            <field name="is_ref_editable" invisible="1"/>
+                            <field name="product_id" required="1"
+                                   context="{'default_can_be_expensed': 1, 'tree_view_ref': 'hr_expense.product_product_expense_tree_view'}"
+                                   widget="many2one_barcode"
+                                   domain="[('product_expense_type','=','per_diem')]"
+                            />
+                            <field name="unit_amount" required="1"
+                                   widget="monetary"
+                                   options="{'currency_field': 'currency_id', 'field_digits': True}"/>
+                            <field name="product_uom_category_id"
+                                   invisible="1"/>
+                            <label for="quantity"/>
+                            <div class="o_row">
+                                <field name="quantity" class="oe_inline"/>
+                                <field name="product_uom_id" required="1"
+                                       widget="selection" class="oe_inline"
+                                       groups="uom.group_uom"/>
+                            </div>
+                            <field name="tax_ids" widget="many2many_tags"
+                                   groups="account.group_account_readonly"
+                                   attrs="{'readonly': [('is_editable', '=', False)]}"
+                                   context="{'default_company_id': company_id}"/>
+                            <field name="total_amount" widget='monetary'
+                                   options="{'currency_field': 'currency_id'}"/>
+                            <field name="amount_residual" widget='monetary'
+                                   options="{'currency_field': 'currency_id'}"/>
+                        </group>
+                        <group>
+                            <field name="reference"
+                                   attrs="{'readonly': [('is_ref_editable', '=', False)]}"/>
+                            <field name="date"/>
+                            <field name="accounting_date"
+                                   attrs="{'invisible': ['|', ('accounting_date', '=', False), ('state', 'not in', ['approved', 'done'])]}"/>
+                            <field name="account_id"
+                                   options="{'no_create': True}"
+                                   domain="[('internal_type', '=', 'other'), ('company_id', '=', company_id)]"
+                                   groups="account.group_account_readonly"
+                                   attrs="{'readonly': [('is_editable', '=', False)]}"
+                                   context="{'default_company_id': company_id}"/>
+                            <field name="employee_id"
+                                   groups="hr_expense.group_hr_expense_team_approver"
+                                   context="{'default_company_id': company_id}"/>
+                            <field name="sheet_id" invisible="1"/>
+                            <field name="currency_id"
+                                   groups="base.group_multi_currency"/>
+                            <field name="analytic_account_id"
+                                   domain="['|', ('company_id', '=', company_id), ('company_id', '=', False)]"
+                                   groups="analytic.group_analytic_accounting"
+                            />
+                            <field name="sale_order_id"
+                                   attrs="{'invisible': [('can_be_reinvoiced', '=', False)]}"
+                                   options="{'no_create_edit': True, 'no_create': True, 'no_open': True}"
+                                   context="{'sale_show_partner_name': True, 'sale_expense_all_order': True}"
+                                   widget="sale_order_many2one"/>
+                            <field name="can_be_reinvoiced" invisible="1"/>
+                            <field name="project_site_id"/>
+                            <field name="is_manager_approved" invisible="1"/>
+                            <field name="analytic_tag_ids"
+                                   widget="many2many_tags"
+                                   groups="analytic.group_analytic_tags"
+                                   attrs="{'readonly': [('is_editable', '=', False)]}"/>
+                            <field name="company_id"
+                                   groups="base.group_multi_company"/>
+                        </group>
+                        <group>
+                            <label for="payment_mode"/>
+                            <div>
+                                <field name="payment_mode" widget="radio"/>
+                            </div>
+                        </group>
+                    </group>
+                    <div>
+                        <field name="description" class="oe_inline"
+                               placeholder="Notes..."/>
+                    </div>
+                </sheet>
+                <div class="o_attachment_preview"/>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="hr_expense_view_form_overtime" model="ir.ui.view">
+        <field name="name">hr.expense.view.form</field>
+        <field name="model">hr.expense</field>
+        <field name="arch" type="xml">
+            <form string="Expenses">
+                <header>
+                    <button name="action_submit_expenses" string="Create Report"
+                            type="object" class="oe_highlight "
+                            attrs="{'invisible': ['|', ('attachment_number', '&lt;=', 0), ('sheet_id', '!=', False)]}"/>
+                    <widget name="attach_document" string="Attach Receipt"
+                            action="message_post"
+                            attrs="{'invisible': ['|', ('attachment_number', '&lt;', 1), ('id','=',False)]}"/>
+                    <widget name="attach_document" string="Attach Receipt"
+                            action="message_post" highlight="1"
+                            attrs="{'invisible': ['|',('attachment_number', '&gt;=', 1), ('id','=',False)]}"/>
+                    <button name="action_submit_expenses" string="Create Report"
+                            type="object" class="o_expense_submit"
+                            attrs="{'invisible': ['|', ('attachment_number', '&gt;=', 1), ('sheet_id', '!=', False)]}"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,reported,approved,done,refused"/>
+                    <button name="action_view_sheet" type="object"
+                            string="View Report" class="oe_highlight"
+                            attrs="{'invisible': [('sheet_id', '=', False)]}"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_get_attachment_view"
+                                class="oe_stat_button"
+                                icon="fa-file-text-o"
+                                type="object">
+                            <field name="attachment_number" widget="statinfo"
+                                   string="Receipts"
+                                   options="{'reload_on_button': true}"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name"
+                                   placeholder="e.g. Lunch with Customer"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="is_editable" invisible="1"/>
+                            <field name="is_ref_editable" invisible="1"/>
+                            <field name="product_id" required="1"
+                                   context="{'default_can_be_expensed': 1, 'tree_view_ref': 'hr_expense.product_product_expense_tree_view'}"
+                                   widget="many2one_barcode"
+                                   domain="[('product_expense_type','=','overtime')]"
+                            />
+                            <field name="unit_amount" required="1"
+                                   widget="monetary"
+                                   options="{'currency_field': 'currency_id', 'field_digits': True}"/>
+                            <field name="product_uom_category_id"
+                                   invisible="1"/>
+                            <label for="quantity"/>
+                            <div class="o_row">
+                                <field name="quantity" class="oe_inline"
+                                       readonly="False"/>
+                                <field name="product_uom_id" required="1"
+                                       widget="selection" class="oe_inline"
+                                       groups="uom.group_uom"/>
+                            </div>
+                            <field name="tax_ids" widget="many2many_tags"
+                                   groups="account.group_account_readonly"
+                                   attrs="{'readonly': [('is_editable', '=', False)]}"
+                                   context="{'default_company_id': company_id}"/>
+                            <field name="total_amount" widget='monetary'
+                                   options="{'currency_field': 'currency_id'}"/>
+                            <field name="amount_residual" widget='monetary'
+                                   options="{'currency_field': 'currency_id'}"/>
+                        </group>
+                        <group>
+                            <field name="reference"
+                                   attrs="{'readonly': [('is_ref_editable', '=', False)]}"/>
+                            <field name="date"/>
+                            <field name="accounting_date"
+                                   attrs="{'invisible': ['|', ('accounting_date', '=', False), ('state', 'not in', ['approved', 'done'])]}"/>
+                            <field name="account_id"
+                                   options="{'no_create': True}"
+                                   domain="[('internal_type', '=', 'other'), ('company_id', '=', company_id)]"
+                                   groups="account.group_account_readonly"
+                                   attrs="{'readonly': [('is_editable', '=', False)]}"
+                                   context="{'default_company_id': company_id}"/>
+                            <field name="employee_id"
+                                   groups="hr_expense.group_hr_expense_team_approver"
+                                   context="{'default_company_id': company_id}"/>
+                            <field name="sheet_id" invisible="1"/>
+                            <field name="currency_id"
+                                   groups="base.group_multi_currency"/>
+                            <field name="analytic_account_id"
+                                   domain="['|', ('company_id', '=', company_id), ('company_id', '=', False)]"
+                                   groups="analytic.group_analytic_accounting"
+                            />
+                            <field name="sale_order_id"
+                                   attrs="{'invisible': [('can_be_reinvoiced', '=', False)]}"
+                                   options="{'no_create_edit': True, 'no_create': True, 'no_open': True}"
+                                   context="{'sale_show_partner_name': True, 'sale_expense_all_order': True}"
+                                   widget="sale_order_many2one"/>
+                            <field name="can_be_reinvoiced" invisible="1"/>
+                            <field name="project_site_id"/>
+                            <field name="is_manager_approved" invisible="1"/>
+                            <field name="analytic_tag_ids"
+                                   widget="many2many_tags"
+                                   groups="analytic.group_analytic_tags"
+                                   attrs="{'readonly': [('is_editable', '=', False)]}"/>
+                            <field name="company_id"
+                                   groups="base.group_multi_company"/>
+                        </group>
+                        <group>
+                            <label for="payment_mode"/>
+                            <div>
+                                <field name="payment_mode" widget="radio"/>
+                            </div>
+                        </group>
+                    </group>
+                    <div>
+                        <field name="description" class="oe_inline"
+                               placeholder="Notes..."/>
+                    </div>
+                </sheet>
+                <div class="o_attachment_preview"/>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="hr_expense_actions_my_all_overtime"
+            model="ir.actions.act_window">
+        <field name="name">All My Overtime</field>
+        <field name="res_model">hr.expense</field>
+        <field name="view_mode">tree,kanban,form,graph,pivot,activity</field>
+        <field name="view_ids"
+               eval="[(5, 0, 0),
+                          (0, 0, {'view_mode': 'tree', 'view_id': ref('hr_expense.view_my_expenses_tree')}),
+                          (0, 0, {'view_mode': 'form', 'view_id': ref('dev_hr_expense_portal.hr_expense_view_form_overtime')})]"/>
+        <field name="search_view_id" ref="hr_expense.hr_expense_view_search"/>
+        <field name="context">{'search_default_my_expenses': 1}</field>
+        <field name="domain">[('product_id.product_expense_type',
+            '=','overtime')]
+        </field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_expense_receipt">
+                Did you try the mobile app?
+            </p>
+            <p>Snap pictures of your receipts and let Odoo
+                <br/>
+                automatically create expenses for you.
+            </p>
+            <p>
+                <a href="https://apps.apple.com/be/app/odoo/id1272543640"
+                   target="_blank">
+                    <img alt="Apple App Store"
+                         class="img img-fluid h-100 o_expense_apple_store"
+                         src="/hr_expense/static/img/app_store.png"/>
+                </a>
+                <a href="https://play.google.com/store/apps/details?id=com.odoo.mobile"
+                   target="_blank" class="o_expense_google_store">
+                    <img alt="Google Play Store"
+                         class="img img-fluid h-100 o_expense_google_store"
+                         src="/hr_expense/static/img/play_store.png"/>
+                </a>
+            </p>
+        </field>
+    </record>
+
+    <record id="hr_expense_actions_my_all_per_diem"
+            model="ir.actions.act_window">
+        <field name="name">All My Per Diem</field>
+        <field name="res_model">hr.expense</field>
+        <field name="view_mode">tree,kanban,form,graph,pivot,activity</field>
+        <field name="search_view_id" ref="hr_expense.hr_expense_view_search"/>
+        <field name="context">{'search_default_my_expenses': 1}</field>
+        <field name="domain">[('product_id.product_expense_type',
+            '=','per_diem')]
+        </field>
+        <field name="view_ids"
+               eval="[(5, 0, 0),
+                          (0, 0, {'view_mode': 'tree', 'view_id': ref('hr_expense.view_my_expenses_tree')}),
+                          (0, 0, {'view_mode': 'form', 'view_id': ref('dev_hr_expense_portal.hr_expense_view_form_per_diem')})]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_expense_receipt">
+                Did you try the mobile app?
+            </p>
+            <p>Snap pictures of your receipts and let Odoo
+                <br/>
+                automatically create expenses for you.
+            </p>
+            <p>
+                <a href="https://apps.apple.com/be/app/odoo/id1272543640"
+                   target="_blank">
+                    <img alt="Apple App Store"
+                         class="img img-fluid h-100 o_expense_apple_store"
+                         src="/hr_expense/static/img/app_store.png"/>
+                </a>
+                <a href="https://play.google.com/store/apps/details?id=com.odoo.mobile"
+                   target="_blank" class="o_expense_google_store">
+                    <img alt="Google Play Store"
+                         class="img img-fluid h-100 o_expense_google_store"
+                         src="/hr_expense/static/img/play_store.png"/>
+                </a>
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_hr_expense_my_expenses_all_overtime"
+              parent="hr_expense.menu_hr_expense_root"
+              action="hr_expense_actions_my_all_overtime" name="Overtime"/>
+
+    <menuitem id="menu_hr_expense_my_expenses_all_per_diem"
+              parent="hr_expense.menu_hr_expense_root"
+              action="hr_expense_actions_my_all_per_diem" name="Per Diem"/>
 
 </odoo>

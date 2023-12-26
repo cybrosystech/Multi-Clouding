@@ -25,7 +25,9 @@ class HrPayslip(models.Model):
                 'date': fields.datetime.now().date(),
                 'journal_id': struct.journal_id.id,
             }
-            payslips = self.env['hr.payslip'].search([('id','in',self.ids),('struct_id','=',struct.id), ('state', '=', 'waiting')])
+            payslips = self.env['hr.payslip'].search(
+                [('id', 'in', self.ids), ('struct_id', '=', struct.id),
+                 ('state', '=', 'verify')])
             for rec in payslips:
                 if any(slip.state == 'cancel' for slip in rec):
                     raise ValidationError(
@@ -79,10 +81,12 @@ class HrPayslip(models.Model):
                                 payslip.id,
                                 email_values=email_values,
                                 notif_layout='mail.mail_notification_light')
-                precision = self.env['decimal.precision'].precision_get('Payroll')
+                precision = self.env['decimal.precision'].precision_get(
+                    'Payroll')
                 payslips_to_post = self.filtered(
                     lambda slip: not slip.payslip_run_id)
-                payslip_runs = (self - payslips_to_post).mapped('payslip_run_id')
+                payslip_runs = (self - payslips_to_post).mapped(
+                    'payslip_run_id')
                 for run in payslip_runs:
                     if run._are_payslips_ready():
                         payslips_to_post |= run.slip_ids
@@ -121,7 +125,8 @@ class HrPayslip(models.Model):
                             move_dict[
                                 'narration'] += slip.number or '' + ' - ' + slip.employee_id.name or ''
                             move_dict['narration'] += '\n'
-                            slip_lines = slip._prepare_slip_lines(date, line_ids)
+                            slip_lines = slip._prepare_slip_lines(date,
+                                                                  line_ids)
                             line_ids.extend(slip_lines)
 
                         for line_id in line_ids:  # Get the debit and credit sum.
@@ -131,13 +136,16 @@ class HrPayslip(models.Model):
                         # The code below is called if there is an error in the balance between credit and debit sum.
                         if float_compare(credit_sum, debit_sum,
                                          precision_digits=precision) == -1:
-                            slip._prepare_adjust_line(line_ids, 'credit', debit_sum,
+                            slip._prepare_adjust_line(line_ids, 'credit',
+                                                      debit_sum,
                                                       credit_sum, date)
                         elif float_compare(debit_sum, credit_sum,
                                            precision_digits=precision) == -1:
-                            slip._prepare_adjust_line(line_ids, 'debit', debit_sum,
+                            slip._prepare_adjust_line(line_ids, 'debit',
+                                                      debit_sum,
                                                       credit_sum, date)
-                        move_dict['line_ids'] = [(0,0, line_vals) for line_vals in
+                        move_dict['line_ids'] = [(0, 0, line_vals) for line_vals
+                                                 in
                                                  line_ids]
             move = self._create_account_move(move_dict)
             for payslip in payslips:

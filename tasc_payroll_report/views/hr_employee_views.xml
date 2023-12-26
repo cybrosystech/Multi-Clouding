@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_employee_form" model="ir.ui.view">
+        <field name="name">hr.employee.view.form.inherit.tasc_payroll_report
+        </field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form/sheet/group[1]/group[2]/field[@name='coach_id']"
+                   position="after">
+                <field name="date_of_joining" string="Date of Joining"/>
+                <field name="employment_type"/>
+            </xpath>
+            <xpath expr="//page[@name='personal_information']/group[1]/group[1]/field[@name='bank_account_id']"
+                   position="after">
+                <field name="bank_id"/>
+                <field name="branch"/>
+                <field name="bank_bic"/>
+                <field name="bank_iban"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
