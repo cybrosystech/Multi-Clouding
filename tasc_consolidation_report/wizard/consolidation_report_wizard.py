@@ -120,6 +120,7 @@ class ConsolidationReportWizard(models.Model):
                      'format': {'valign': 'vcenter',
                                 'font_color': 'black',
                                 'bold': True,
+
                                 },
                      'formatting': 2,
                      'multiply_factor': parent_group.multiply_factor,
@@ -146,25 +147,29 @@ class ConsolidationReportWizard(models.Model):
                                                 'font_color': 'black'}})
                         test.append(dict)
                         main_list.append(dict)
-                self.generate_total_lines(test, self.consolidation_period_id,
-                                          parent_group.consolidation_parent_group_id.name,
-                                          total_list, main_list)
-                demo_list.append(test)
-                group_name.append({
-                    'name': 'Total ' + parent_group.consolidation_parent_group_id.name,
-                    'format': {'valign': 'vcenter',
-                               'font_color': 'black',
-                               'bold': True},
-                    'formatting': 1,
-                    'multiply_factor': parent_group.multiply_factor,
-                    'not_show_on_report': parent_group.not_show_on_report,
-                })
+                if parent_group.consolidation_parent_group_id.name == 'Equity':
+                    pass
+                else:
+                    self.generate_total_lines(test, self.consolidation_period_id,
+                                              parent_group.consolidation_parent_group_id.name,
+                                              total_list, main_list)
+                    demo_list.append(test)
+                    group_name.append({
+                        'name': 'Total ' + parent_group.consolidation_parent_group_id.name,
+                        'format': {'valign': 'vcenter',
+                                   'font_color': 'black',
+                                   'bold': True},
+                        'formatting': 1,
+                        'multiply_factor': parent_group.multiply_factor,
+                        'not_show_on_report': parent_group.not_show_on_report,
+                    })
             else:
                 group_name.append({
                     'name': parent_group.config_name,
                     'format': {'valign': 'vcenter',
                                'font_color': 'black',
-                               'bold': True},
+                               'bold': True,
+                               },
                     'formatting': 2,
                     'multiply_factor': parent_group.multiply_factor,
                     'not_show_on_report': parent_group.not_show_on_report,
