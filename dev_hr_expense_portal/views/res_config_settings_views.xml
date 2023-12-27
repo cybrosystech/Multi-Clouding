@@ -13,7 +13,6 @@
                        position="inside">
                     <div class="row mt16 o_settings_container"
                          name="expenses_journal_container">
-
                         <div class="col-lg-6 col-12 o_setting_box"
                              id="expense_journal_divv">
                             <div class="o_setting_left_pane"/>
