@@ -120,7 +120,6 @@ class ConsolidationReportWizard(models.Model):
                      'format': {'valign': 'vcenter',
                                 'font_color': 'black',
                                 'bold': True,
-
                                 },
                      'formatting': 2,
                      'multiply_factor': parent_group.multiply_factor,
@@ -149,9 +148,12 @@ class ConsolidationReportWizard(models.Model):
                         test.append(dict)
                         main_list.append(dict)
                 if parent_group.consolidation_parent_group_id.name == 'Equity':
+                    print("sql_accounts",sql_accounts)
+
                     pass
                 else:
-                    self.generate_total_lines(test, self.consolidation_period_id,
+                    self.generate_total_lines(test,
+                                              self.consolidation_period_id,
                                               parent_group.consolidation_parent_group_id.name,
                                               total_list, main_list)
                     demo_list.append(test)
@@ -269,25 +271,48 @@ class ConsolidationReportWizard(models.Model):
                          'font_color': 'black',
                          'border': 2})
                     if head['multiply_factor'] != 0:
-                        if (head["name"] and 'Total' in head["name"]) or head["name"] == False:
+                        if (head["name"] and 'Total' in head["name"]) or head[
+                            "name"] == False:
                             sheet.write(row, len(journal_ids) + 1,
                                         head['multiply_factor'] * total_comp,
                                         company_heading)
                         else:
-                            sheet.write(row, len(journal_ids) + 1,
-                                        head['multiply_factor'] * total_comp,
-                                        sub_heading)
+                            line_format = workbook.add_format(
+                                {'valign': 'vcenter',
+                                 'font_color': 'black',
+                                 })
+                            if 'Current Profit' in head['name']:
+                                sheet.write(row, len(journal_ids) + 1,
+                                            head[
+                                                'multiply_factor'] * total_comp,
+                                            line_format)
+                            else:
+                                sheet.write(row, len(journal_ids) + 1,
+                                            head[
+                                                'multiply_factor'] * total_comp,
+                                            sub_heading)
 
                     else:
-                        if (head["name"] and 'Total' in head["name"]) or head["name"] == False:
+                        if (head["name"] and 'Total' in head["name"]) or head[
+                            "name"] == False:
                             sheet.write(row, len(journal_ids) + 1, total_comp,
                                         company_heading)
                         else:
-                            sheet.write(row, len(journal_ids) + 1, total_comp,
-                                        sub_heading)
+                            if 'Current Profit' in head['name']:
+                                line_format = workbook.add_format(
+                                    {'valign': 'vcenter',
+                                     'font_color': 'black',
+                                     })
+                                sheet.write(row, len(journal_ids) + 1,
+                                            head[
+                                                'multiply_factor'] * total_comp,
+                                            line_format)
+                            else:
+                                sheet.write(row, len(journal_ids) + 1,
+                                            total_comp,
+                                            sub_heading)
                 else:
                     pass
-
         workbook.close()
         output.seek(0)
         response.stream.write(output.read())
