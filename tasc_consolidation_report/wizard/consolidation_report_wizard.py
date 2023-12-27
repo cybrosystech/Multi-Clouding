@@ -133,7 +133,6 @@ class ConsolidationReportWizard(models.Model):
                      'format': {'valign': 'vcenter',
                                 'font_color': 'black',
                                 'bold': True,
-
                                 },
                      'formatting': 2,
                      'multiply_factor': parent_group.multiply_factor,
@@ -312,7 +311,8 @@ class ConsolidationReportWizard(models.Model):
                          'font_color': 'black',
                          'border': 2})
                     if head['multiply_factor'] != 0:
-                        if head["name"] and 'Total' in head["name"]:
+                        print("yyyyyyyyyy")
+                        if (head["name"] and 'Total' in head["name"]) or head['name'] == False:
                             sheet.write(row, len(journal_ids) + 1,
                                         head['multiply_factor'] * total_comp,
                                         company_heading)
@@ -321,13 +321,16 @@ class ConsolidationReportWizard(models.Model):
                                         head['multiply_factor'] * total_comp,
                                         sub_heading)
                     else:
-                        if head["name"] and 'Total' in head["name"]:
+                        print("jjjjjjjjjj")
+                        if (head["name"] and 'Total' in head["name"]) or head['name'] == False:
+                            print("fghjghjhghmgv")
                             sheet.write(row, len(journal_ids) + 1, total_comp,
                                         company_heading)
                         else:
                             sheet.write(row, len(journal_ids) + 1, total_comp,
                                         sub_heading)
                 else:
+                    print("ffffffffffffffff")
                     pass
 
         workbook.close()
