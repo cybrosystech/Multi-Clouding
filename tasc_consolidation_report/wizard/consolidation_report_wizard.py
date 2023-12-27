@@ -182,6 +182,7 @@ class ConsolidationReportWizard(models.Model):
                     'format': {'valign': 'vcenter',
                                'font_color': 'black',
                                'bold': True,
+
                                },
                     'formatting': 2,
                     'multiply_factor': parent_group.multiply_factor,
@@ -193,6 +194,7 @@ class ConsolidationReportWizard(models.Model):
                                                                  main_list)
                 demo_list.append(total_config)
 
+        print("group_name",group_name)
         data = {
             'ids': self.ids,
             'state': self.report_type,
@@ -241,10 +243,17 @@ class ConsolidationReportWizard(models.Model):
             total_comp = 0
             col = 0
             if not head['not_show_on_report']:
-                row += head['formatting']
-                head_format = workbook.add_format(head['format'])
-                sheet.set_column(row, col, 20)
-                sheet.write(row, col, head['name'], head_format)
+                if head['name'] == 'Current Profit':
+                    sheet.set_column(row, col, 20)
+                    line_formt2 = workbook.add_format(
+                        {'valign': 'vcenter',
+                         'font_color': 'black'})
+                    sheet.write(row, col, head['name'], line_formt2)
+                else:
+                    row += head['formatting']
+                    head_format = workbook.add_format(head['format'])
+                    sheet.set_column(row, col, 20)
+                    sheet.write(row, col, head['name'], head_format)
             else:
                 pass
             for demo in data['demo_list']:
@@ -274,7 +283,6 @@ class ConsolidationReportWizard(models.Model):
                                                 head['multiply_factor'] * rec[
                                                     'case'],
                                                 dynamic_format)
-
                             else:
                                 if list_data[0]["name"] == 'Current Profit':
                                     line_formt = workbook.add_format(
@@ -292,7 +300,6 @@ class ConsolidationReportWizard(models.Model):
                             pass
             print("data", data)
             print("head", head)
-
             final_comp_list = list(
                 filter(lambda x: x['name'] == head['name'], data['main_list']))
             print("final_comp_list", final_comp_list)
@@ -313,7 +320,6 @@ class ConsolidationReportWizard(models.Model):
                             sheet.write(row, len(journal_ids) + 1,
                                         head['multiply_factor'] * total_comp,
                                         sub_heading)
-
                     else:
                         if head["name"] and 'Total' in head["name"]:
                             sheet.write(row, len(journal_ids) + 1, total_comp,
