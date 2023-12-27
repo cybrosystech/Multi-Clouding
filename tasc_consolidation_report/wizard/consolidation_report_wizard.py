@@ -144,7 +144,8 @@ class ConsolidationReportWizard(models.Model):
                                                           self.consolidation_period_id)
                     for dict in dictionary:
                         dict.update({'format': {'align': 'center',
-                                                'font_color': 'black'}})
+                                                'font_color': 'black',
+                                                }})
                         test.append(dict)
                         main_list.append(dict)
                 if parent_group.consolidation_parent_group_id.name == 'Equity':
@@ -213,7 +214,8 @@ class ConsolidationReportWizard(models.Model):
              'font_color': '#f2f7f4', 'border': 2})
         sub_heading = workbook.add_format(
             {'valign': 'vcenter',
-             'font_color': 'black'})
+             'font_color': 'black',
+             })
         sheet.set_column('B3:B3', 15)
         row = 2
         col = 1
@@ -255,12 +257,9 @@ class ConsolidationReportWizard(models.Model):
                                             dynamic_format)
                         else:
                             pass
-            print("data", data)
-            print("head", head)
 
             final_comp_list = list(
                 filter(lambda x: x['name'] == head['name'], data['main_list']))
-            print("final_comp_list", final_comp_list)
             if final_comp_list:
                 for cmp_list in final_comp_list:
                     total_comp += cmp_list['case']
@@ -270,7 +269,7 @@ class ConsolidationReportWizard(models.Model):
                          'font_color': 'black',
                          'border': 2})
                     if head['multiply_factor'] != 0:
-                        if head["name"] and 'Total' in head["name"]:
+                        if (head["name"] and 'Total' in head["name"]) or head["name"] == False:
                             sheet.write(row, len(journal_ids) + 1,
                                         head['multiply_factor'] * total_comp,
                                         company_heading)
@@ -280,7 +279,7 @@ class ConsolidationReportWizard(models.Model):
                                         sub_heading)
 
                     else:
-                        if head["name"] and 'Total' in head["name"]:
+                        if (head["name"] and 'Total' in head["name"]) or head["name"] == False:
                             sheet.write(row, len(journal_ids) + 1, total_comp,
                                         company_heading)
                         else:
