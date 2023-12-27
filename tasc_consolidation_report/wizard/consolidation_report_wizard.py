@@ -161,8 +161,13 @@ class ConsolidationReportWizard(models.Model):
                         main_list.append(dict)
                 if parent_group.consolidation_parent_group_id.name == 'Equity':
                     demo_list.append(test)
+                    self.generate_total_lines(test,
+                                              self.consolidation_period_id,
+                                              parent_group.consolidation_parent_group_id.name,
+                                              total_list, main_list)
                 else:
-                    self.generate_total_lines(test, self.consolidation_period_id,
+                    self.generate_total_lines(test,
+                                              self.consolidation_period_id,
                                               parent_group.consolidation_parent_group_id.name,
                                               total_list, main_list)
                     demo_list.append(test)
@@ -193,7 +198,7 @@ class ConsolidationReportWizard(models.Model):
                                                                  main_list)
                 demo_list.append(total_config)
 
-        print("group_name",group_name)
+        print("group_name", group_name)
         data = {
             'ids': self.ids,
             'state': self.report_type,
@@ -258,7 +263,7 @@ class ConsolidationReportWizard(models.Model):
             for demo in data['demo_list']:
                 list_data = list(
                     filter(lambda x: x['name'] == head['name'], demo))
-                print("list_data",list_data)
+                print("list_data", list_data)
                 if list_data:
                     for rec in list_data:
                         filter_demo = list(
@@ -268,7 +273,7 @@ class ConsolidationReportWizard(models.Model):
                         if not head['not_show_on_report']:
                             if head['multiply_factor'] != 0:
                                 if list_data[0]["name"] == 'Current Profit':
-                                    print("dynamic_format",dynamic_format)
+                                    print("dynamic_format", dynamic_format)
                                     line_formt = workbook.add_format(
                                         {'valign': 'vcenter',
                                          'font_color': 'black'})
@@ -311,8 +316,9 @@ class ConsolidationReportWizard(models.Model):
                          'font_color': 'black',
                          'border': 2})
                     if head['multiply_factor'] != 0:
-                        print("yyyyyyyyyy")
-                        if (head["name"] and 'Total' in head["name"]) or head['name'] == False:
+                        print("yyyyyyyyyy", head)
+                        if (head["name"] and 'Total' in head["name"]) or head[
+                            'name'] == False:
                             sheet.write(row, len(journal_ids) + 1,
                                         head['multiply_factor'] * total_comp,
                                         company_heading)
@@ -321,8 +327,9 @@ class ConsolidationReportWizard(models.Model):
                                         head['multiply_factor'] * total_comp,
                                         sub_heading)
                     else:
-                        print("jjjjjjjjjj")
-                        if (head["name"] and 'Total' in head["name"]) or head['name'] == False:
+                        print("jjjjjjjjjj", head)
+                        if (head["name"] and 'Total' in head["name"]) or head[
+                            'name'] == False:
                             print("fghjghjhghmgv")
                             sheet.write(row, len(journal_ids) + 1, total_comp,
                                         company_heading)
