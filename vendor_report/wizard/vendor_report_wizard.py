@@ -155,6 +155,14 @@ class VendorReportWizard(models.TransientModel):
                         lambda x: max(x.tax_ids.filtered(lambda y: y.amount)))
                     sub_total = sum(lines.mapped(lambda x: x.price_subtotal))
                     tax_amount = (sub_total * tax.amount) / 100
+                    tot = (sub_total * rate) + (tax_amount * rate)
+                    if rec.move_type == 'in_refund':
+                        sub_total = -abs(sub_total)
+                        tax_amount = -abs(tax_amount)
+                        tot = -abs(tot)
+                        paid_amount = -abs(paid_amount)
+
+
                     sheet.write(row_num + 1, col_num, rec.invoice_date,
                                 date_format)
                     sheet.write(row_num + 1, col_num + 1, rec.date,
@@ -181,6 +189,7 @@ class VendorReportWizard(models.TransientModel):
                     sheet.write(row_num + 1, col_num + 10,
                                 rec.currency_id.name,
                                 date_format)
+
                     sheet.write(row_num + 1, col_num + 11, sub_total, num)
                     sheet.write(row_num + 1, col_num + 12, tax_amount, num)
                     sheet.write(row_num + 1, col_num + 13, sub_total +
@@ -199,7 +208,7 @@ class VendorReportWizard(models.TransientModel):
                     sheet.write(row_num + 1, col_num + 19, tax_amount * rate,
                                 num)
                     sheet.write(row_num + 1, col_num + 20,
-                                (sub_total * rate) + (tax_amount * rate), num)
+                               tot, num)
                     sheet.write(row_num + 1, col_num + 21, paid_amount * rate,
                                 num)
                     row_num = row_num + 1
@@ -207,6 +216,21 @@ class VendorReportWizard(models.TransientModel):
                     tax = lines.tax_ids
                     sub_total = sum(lines.mapped(lambda x: x.price_subtotal))
                     tax_amount = (sub_total * tax.amount) / 100
+                    tot = sub_total +tax_amount
+                    tot1 = sub_total * rate
+                    tot2 = tax_amount * rate
+                    tot3 =  (sub_total * rate) + (tax_amount * rate)
+                    tot4 = paid_amount * rate
+                    if rec.move_type == 'in_refund':
+                        sub_total = -abs(sub_total)
+                        tax_amount = -abs(tax_amount)
+                        tot = -abs(tot)
+                        paid_amount = -abs(paid_amount)
+                        tot1= -abs(tot1)
+                        tot2 = -abs(tot2)
+                        tot3 = -abs(tot3)
+                        tot4 = -abs(tot4)
+
                     sheet.write(row_num + 1, col_num, rec.invoice_date,
                                 date_format)
                     sheet.write(row_num + 1, col_num + 1, rec.date,
@@ -236,8 +260,7 @@ class VendorReportWizard(models.TransientModel):
                                 date_format)
                     sheet.write(row_num + 1, col_num + 11, sub_total, num)
                     sheet.write(row_num + 1, col_num + 12, tax_amount, num)
-                    sheet.write(row_num + 1, col_num + 13, sub_total +
-                                tax_amount, num)
+                    sheet.write(row_num + 1, col_num + 13, tot, num)
                     sheet.write(row_num + 1, col_num + 14, tax.name,
                                 date_format)
                     sheet.write(row_num + 1, col_num + 15,
@@ -247,13 +270,13 @@ class VendorReportWizard(models.TransientModel):
                                 payment_widget, date_format)
                     sheet.write(row_num + 1, col_num + 17,
                                 paid_amount, num)
-                    sheet.write(row_num + 1, col_num + 18, sub_total * rate,
+                    sheet.write(row_num + 1, col_num + 18, tot1,
                                 num)
-                    sheet.write(row_num + 1, col_num + 19, tax_amount * rate,
+                    sheet.write(row_num + 1, col_num + 19, tot2,
                                 num)
                     sheet.write(row_num + 1, col_num + 20,
-                                (sub_total * rate) + (tax_amount * rate), num)
-                    sheet.write(row_num + 1, col_num + 21, paid_amount * rate,
+                                tot3, num)
+                    sheet.write(row_num + 1, col_num + 21, tot4,
                                 num)
                     row_num = row_num + 1
 
