@@ -73,25 +73,25 @@ class VendorReportWizard(models.TransientModel):
             date_to = datetime.strptime(data['date_to'], '%Y-%m-%d')
 
         journals = self.env['account.move'].search(
-            [('move_type', '=', 'in_invoice'),
+            ['|',('move_type', '=', 'in_invoice'),('move_type', '=', 'in_refund'),
              ('company_id', '=', int(data['company_id'])),
              ('state', '=', data['state'])])
         if date_from and date_to:
             journals = self.env['account.move'].search(
-                [('move_type', '=', 'in_invoice'),
+                ['|',('move_type', '=', 'in_invoice'),('move_type', '=', 'in_refund'),
                  ('date', '>=', date_from),
                  ('date', '<=', date_to),
                  ('company_id', '=', int(data['company_id'])),
                  ('state', '=', data['state'])])
         elif date_from:
             journals = self.env['account.move'].search(
-                [('move_type', '=', 'in_invoice'),
+                ['|',('move_type', '=', 'in_invoice'),('move_type', '=', 'in_refund'),
                  ('date', '>=', date_from),
                  ('company_id', '=', int(data['company_id'])),
                  ('state', '=', data['state'])])
         elif date_to:
             journals = self.env['account.move'].search(
-                [('move_type', '=', 'in_invoice'),
+                ['|',('move_type', '=', 'in_invoice'),('move_type', '=', 'in_refund'),
                  ('date', '<=', date_to),
                  ('company_id', '=', int(data['company_id'])),
                  ('state', '=', data['state'])])
