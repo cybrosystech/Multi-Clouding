@@ -136,7 +136,6 @@ class VendorReportWizard(models.TransientModel):
         row_num = 2
         col_num = 0
         for rec in journals:
-            print("rec",rec)
             payment_widget = ''
             paid_amount = 0
             if json.loads(rec.invoice_payments_widget):
