@@ -37,9 +37,9 @@ class HrEmployee(models.Model):
         if self.department_id:
             sub_department = self.env['hr.sub.department'].search([])
             deps = sub_department.filtered(lambda x: self.department_id.id in x.department_ids.ids)
-            domain = [('id', 'in', deps.ids)]
+            domain = [('id', 'in', deps.ids),('company_id','=',self.env.company.id)]
         else:
-            domain = []
+            domain = [('company_id','=',self.env.company.id)]
         return {'domain': {'sub_department_id': domain}}
 
     @api.constrains('date_of_birth_ids')
