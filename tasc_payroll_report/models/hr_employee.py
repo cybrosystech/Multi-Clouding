@@ -11,7 +11,8 @@ class HrEmployee(models.Model):
                                                   'consulatncy_agreement',
                                                   'Consultancy Agreement'),
                                                   ('os_ipt', 'OS-IPT'),
-                                                  ('os_sim', 'OS-SIM')])
+                                                  ('os_sim', 'OS-SIM'),
+                                                  ('fte_capped','FTE-Capped')])
     bank_id = fields.Many2one('res.bank', string='Bank',
                               related='bank_account_id.bank_id')
     bank_bic = fields.Char(related='bank_id.bic', string="SWIFT/BIC")
