@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <record id="hr_sub_department_view_form" model="ir.ui.view">
+            <field name="name">hr.sub.department.form</field>
+            <field name="model">hr.sub.department</field>
+            <field name="arch" type="xml">
+                <form string="Sub Department">
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="department_ids"
+                                   widget="many2many_tags"/>
+                            <field name="company_id" readonly="1"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="hr_sub_department_view_tree" model="ir.ui.view">
+            <field name="name">hr.sub.department.tree</field>
+            <field name="model">hr.sub.department</field>
+            <field name="arch" type="xml">
+                <tree string="Sub Department">
+                    <field name="name"/>
+                    <field name="department_ids"
+                           widget="many2many_tags"/>
+                </tree>
+            </field>
+        </record>
+
+
+    <record id="action_hr_sub_department" model="ir.actions.act_window">
+        <field name="name">Sub Departments</field>
+        <field name="res_model">hr.sub.department</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_hr_sub_department" name="Sub Departments"
+            parent="hr.menu_human_resources_configuration" action="action_hr_sub_department"/>
+    </data>
+</odoo>

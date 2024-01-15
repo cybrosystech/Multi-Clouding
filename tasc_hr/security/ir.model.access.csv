@@ -1,2 +1,3 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_date_of_birth_line_user,access.date.of.birth.line,model_date_of_birth_line,base.group_user,1,1,1,1
+access_hr_sub_department_user,access.hr.sub.department,model_hr_sub_department,base.group_user,1,1,1,1

@@ -4,6 +4,13 @@ from datetime import date
 from odoo.exceptions import ValidationError
 
 
+# class HrEmployeeBase(models.AbstractModel):
+#     _inherit = 'hr.employee.base'
+#
+#     department_id = fields.Many2one('hr.department', 'Department',
+#                                     domain="['|', ('company_id', '=', False), ('company_id', '=', company_id),('sub_department_id','=',sub_department_id)]")
+#
+
 class HrEmployee(models.Model):
     _inherit = 'hr.employee'
 
@@ -20,6 +27,20 @@ class HrEmployee(models.Model):
     date_of_birth_ids = fields.One2many('date.of.birth.line', 'employee_id',
                                         copy=False)
     social_security = fields.Char(string="Social Security Number")
+    sub_department_id = fields.Many2one('hr.sub.department',
+                                        string="Sub Department",
+
+                                        )
+
+    @api.onchange('department_id')
+    def get_sub_department(self):
+        if self.department_id:
+            sub_department = self.env['hr.sub.department'].search([])
+            deps = sub_department.filtered(lambda x: self.department_id.id in x.department_ids.ids)
+            domain = [('id', 'in', deps.ids),('company_id','=',self.env.company.id)]
+        else:
+            domain = [('company_id','=',self.env.company.id)]
+        return {'domain': {'sub_department_id': domain}}
 
     @api.constrains('date_of_birth_ids')
     def on_save_date_of_birth_ids(self):
