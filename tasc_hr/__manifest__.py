@@ -7,12 +7,13 @@
     'website': 'https://www.cybrosys.com',
     'category': 'Human Resources/Contracts',
     'version': '14.0.1.0.0',
-    'depends': ['hr_contract'],
+    'depends': ['hr','hr_contract'],
     'data':
         [
             'security/ir.model.access.csv',
             'views/hr_contract_view.xml',
             'views/hr_employee_views.xml',
+            'views/hr_department_views.xml'
         ],
     'license': 'AGPL-3',
     'installable': True,
