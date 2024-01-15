@@ -31,10 +31,6 @@
                    position="inside">
                 <field name="social_security"/>
             </xpath>
-            <xpath expr="//form/sheet/group[1]/group[2]/field[@name='department_id']"
-                   position="after">
-                <field name="sub_department_id"/>
-            </xpath>
         </field>
     </record>
 </odoo>
