@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-
+from dateutil.relativedelta import relativedelta
 from odoo import api, fields, models, _
 from odoo.tools import format_date
 from itertools import groupby
 from collections import defaultdict
+
 
 MAX_NAME_LENGTH = 50
 
@@ -33,7 +34,7 @@ class assets_report(models.AbstractModel):
         return [
             [
                 {'name': ''},
-                {'name': _('Characteristics'), 'colspan': 4},
+                {'name': _('Characteristics'), 'colspan': 6},
                 {'name': _('Assets'), 'colspan': 4},
                 {'name': _('Depreciation'), 'colspan': 4},
                 {'name': _('Book Value')},
@@ -41,7 +42,9 @@ class assets_report(models.AbstractModel):
             [
                 {'name': ''},  # Description
                 {'name': _('Acquisition Date'), 'class': 'text-center'},  # Characteristics
+                {'name': _('Total Number of Depreciation'), 'class': 'text-center'},
                 {'name': _('First Depreciation'), 'class': 'text-center'},
+                {'name': _('Last Depreciation Date'), 'class': 'text-center'},
                 {'name': _('Method'), 'class': 'text-center'},
                 {'name': _('Rate'), 'class': 'number', 'title': _('In percent.<br>For a linear method, the depreciation rate is computed per year.<br>For a declining method, it is the declining factor'), 'data-toggle': 'tooltip'},
                 {'name': start_date, 'class': 'number'},  # Assets
@@ -240,6 +243,21 @@ class assets_report(models.AbstractModel):
 
                 id = "_".join([self._get_account_group_with_company(al['account_code'], al['company_id'])[0], str(al['asset_id'])])
                 name = str(al['asset_name'])
+                tot_months = 0
+                if al['method_period'] == '12':
+                    tot_months = al['method_number']*12
+                    year = al['asset_acquisition_date'].year
+                    day = al['asset_acquisition_date'].day
+                    day=day-1
+                    last_depreciation_date = al['asset_acquisition_date'].replace(year=year+al['method_number'],day=day)
+                elif al['method_period'] == '1':
+                    tot_months = al['method_number']
+                    last_depreciation_date = al['asset_acquisition_date']+relativedelta(months=al['method_number'])
+                else:
+                    delta = relativedelta(al['end_date'], al['start_date'])
+                    tot_months =  delta.months
+                    last_depreciation_date = al['asset_acquisition_date']+relativedelta(months=tot_months)
+
                 line = {
                     'id': id,
                     'level': 1,
@@ -247,7 +265,10 @@ class assets_report(models.AbstractModel):
                     'account_code': al['account_code'],
                     'columns': [
                         {'name': al['asset_acquisition_date'] and format_date(self.env, al['asset_acquisition_date']) or '', 'no_format_name': ''},  # Caracteristics
+                        {'name': tot_months,'no_format_name': ''},
                         {'name': al['asset_date'] and format_date(self.env, al['asset_date']) or '', 'no_format_name': ''},
+                        {'name':last_depreciation_date and format_date(self.env, last_depreciation_date) or '',
+                         'no_format_name': ''},
                         {'name': (al['asset_method'] == 'linear' and _('Linear')) or (al['asset_method'] == 'degressive' and _('Declining')) or _('Dec. then Straight'), 'no_format_name': ''},
                         {'name': asset_depreciation_rate, 'no_format_name': ''},
                         {'name': self.format_value(asset_opening), 'no_format_name': asset_opening},  # Assets
@@ -274,6 +295,8 @@ class assets_report(models.AbstractModel):
             'name': _('Total'),
             'columns': [
                 {'name': ''},  # Characteristics
+                {'name': ''},
+                {'name': ''},
                 {'name': ''},
                 {'name': ''},
                 {'name': ''},
@@ -319,7 +342,13 @@ class assets_report(models.AbstractModel):
                        asset.already_depreciated_amount_import as import_depreciated,
                        asset.disposal_date as asset_disposal_date,
                        asset.acquisition_date as asset_acquisition_date,
+                       asset.method_number as method_number,
+                       asset.method_period as method_period,
+                       asset.first_depreciation_date as first_depreciation_date,
+                       asset.start_date as start_date,
+                       asset.end_date as end_date,
                        asset.method as asset_method,
+                       
                        (
                            COALESCE(account_move_count.count, 0)
                            + COALESCE(asset.depreciation_number_import, 0)
