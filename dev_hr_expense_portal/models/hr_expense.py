@@ -123,6 +123,11 @@ class hr_expense(models.Model):
         for expense in self:
             expense.access_url = '/my/hr_expense/%s' % (expense.id)
 
+    def action_approve(self):
+        for rec in self:
+            if rec.state == 'waiting_approval':
+                rec.state = 'draft'
+
     def action_submit_expenses_all_employees(self):
         employees_ids = self.mapped('employee_id')
         for emp in employees_ids:
@@ -131,20 +136,16 @@ class hr_expense(models.Model):
                  ('state', '=', 'draft'), ('sheet_id', '=', False)])
             total_amount = sum(expense_ids.mapped('total_amount'))
             full_month_name = fields.Datetime.now().strftime("%B")
-            print("full_month_name", full_month_name)
             expense_report_summary = emp.name + " - " + full_month_name + "(" + str(
                 total_amount) + ") "
             if expense_ids:
-                print("ddddddd")
                 journal = self.env['ir.config_parameter'].sudo().get_param(
                     'dev_hr_expense_portal.expense_journal_id')
-                print("journal", journal)
                 expense_ids._create_sheet_all_employees_from_expenses(
                     expense_report_summary, journal)
 
     def _create_sheet_all_employees_from_expenses(self, expense_report_summary,
                                                   journal):
-        print("journalllllllllll", journal, type(journal))
         if any(expense.state != 'draft' or expense.sheet_id for expense in
                self):
             raise UserError(_("You cannot report twice the same line!"))
@@ -231,7 +232,6 @@ class HrExpenseSheet(models.Model):
 
     def action_report_in_next_payslip(self):
         records = self.filtered(lambda l: l.refund_in_payslip == False)
-        print("records", records)
         self.write({'refund_in_payslip': True})
         if records:
             for record in records:
@@ -242,7 +242,6 @@ class HrExpenseSheet(models.Model):
                     partner_ids=record.employee_id.user_id.partner_id.ids,
                     subtype_id=self.env.ref('mail.mt_note').id,
                     email_layout_xmlid='mail.mail_notification_light')
-                print("payslip", record.payslip_id)
         else:
             raise UserError(_("The expense reports are already reported in "
                               "payslip."))
