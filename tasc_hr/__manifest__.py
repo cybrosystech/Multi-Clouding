@@ -7,11 +7,12 @@
     'website': 'https://www.cybrosys.com',
     'category': 'Human Resources/Contracts',
     'version': '14.0.1.0.0',
-    'depends': ['hr','hr_contract'],
+    'depends': ['hr','hr_contract','hr_payroll'],
     'data':
         [
             'security/ir.model.access.csv',
             'security/hr_sub_department_security.xml',
+            'views/hr_payslip_views.xml',
             'views/hr_contract_view.xml',
             'views/hr_employee_views.xml',
             'views/hr_sub_department_views.xml',
