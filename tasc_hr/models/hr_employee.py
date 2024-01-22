@@ -4,13 +4,6 @@ from datetime import date
 from odoo.exceptions import ValidationError
 
 
-# class HrEmployeeBase(models.AbstractModel):
-#     _inherit = 'hr.employee.base'
-#
-#     department_id = fields.Many2one('hr.department', 'Department',
-#                                     domain="['|', ('company_id', '=', False), ('company_id', '=', company_id),('sub_department_id','=',sub_department_id)]")
-#
-
 class HrEmployee(models.Model):
     _inherit = 'hr.employee'
 
