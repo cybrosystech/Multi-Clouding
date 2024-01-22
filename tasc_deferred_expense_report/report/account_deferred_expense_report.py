@@ -246,17 +246,16 @@ class assets_report(models.AbstractModel):
                 tot_months = 0
                 if al['method_period'] == '12':
                     tot_months = al['method_number']*12
-                    year = al['asset_acquisition_date'].year
-                    day = al['asset_acquisition_date'].day
-                    day=day-1
-                    last_depreciation_date = al['asset_acquisition_date'].replace(year=year+al['method_number'],day=day)
+                    year = al['first_depreciation_date'].year
+                    day = al['first_depreciation_date'].day
+                    last_depreciation_date = al['first_depreciation_date'].replace(year=year+al['method_number'],day=day)
                 elif al['method_period'] == '1':
                     tot_months = al['method_number']
-                    last_depreciation_date = al['asset_acquisition_date']+relativedelta(months=al['method_number'])
+                    last_depreciation_date = al['first_depreciation_date']+relativedelta(months=al['method_number'])
                 else:
                     delta = relativedelta(al['end_date'], al['start_date'])
                     tot_months =  delta.months
-                    last_depreciation_date = al['asset_acquisition_date']+relativedelta(months=tot_months)
+                    last_depreciation_date = al['first_depreciation_date']+relativedelta(months=tot_months)
 
                 line = {
                     'id': id,
@@ -267,7 +266,7 @@ class assets_report(models.AbstractModel):
                         {'name': al['asset_acquisition_date'] and format_date(self.env, al['asset_acquisition_date']) or '', 'no_format_name': ''},  # Caracteristics
                         {'name': tot_months,'no_format_name': ''},
                         {'name': al['asset_date'] and format_date(self.env, al['asset_date']) or '', 'no_format_name': ''},
-                        {'name':last_depreciation_date and format_date(self.env, last_depreciation_date) or '',
+                        {'name': last_depreciation_date and format_date(self.env, last_depreciation_date) or '',
                          'no_format_name': ''},
                         {'name': (al['asset_method'] == 'linear' and _('Linear')) or (al['asset_method'] == 'degressive' and _('Declining')) or _('Dec. then Straight'), 'no_format_name': ''},
                         {'name': asset_depreciation_rate, 'no_format_name': ''},
