@@ -12,6 +12,10 @@
                         string="Create Report(All Employees)"
                         type="object" class="oe_highlight o_expense_submit"
                 />
+                <button name="action_approve"
+                        string="Approve"
+                        type="object" class="o_expense_submit"
+                />
             </xpath>
         </field>
     </record>

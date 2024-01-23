@@ -25,7 +25,6 @@ class ResConfigSettings(models.TransientModel):
         res = super(ResConfigSettings, self).get_values()
         value = self.env['ir.config_parameter'].sudo().get_param(
             'expense_journal_id',False)
-        print("value",value,type(value))
         res.update(
             expense_journal_id=int(value)
         )
