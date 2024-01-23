@@ -338,37 +338,15 @@ class assets_report(models.AbstractModel):
                                str(al['asset_id'])])
                 name = str(al['asset_name'])
                 tot_months = 0
-                day = al['first_depreciation_date'].day
+                last_depreciation = self.env['account.move'].search([('id','in',asset.depreciation_move_ids.ids)], order='id DESC,date DESC',limit=1)
+                last_depreciation_date = last_depreciation.date
                 if al['method_period'] == '12':
                     tot_months = al['method_number'] * 12
-                    last_depreciation_date = al[
-                            'first_depreciation_date']+ relativedelta(
-                        months=tot_months)
-                    last_depreciation_date = last_depreciation_date.replace(year=last_depreciation_date.year-1)
-
                 elif al['method_period'] == '1':
                     tot_months = al['method_number']
-                    nxt_mnth = al['first_depreciation_date'].replace(
-                        day=28) + datetime.timedelta(
-                        days=4)
-
-                    # subtracting the days from next month date to
-                    # get last date of current Month
-                    res = nxt_mnth - datetime.timedelta(days=nxt_mnth.day)
-                    if res.day == day:
-                        last_depreciation_date = al[
-                                                     'first_depreciation_date'] + relativedelta(
-                            months=al['method_number']-1)
-                    else:
-                        last_depreciation_date = al[
-                                                     'first_depreciation_date'] + relativedelta(
-                            months=al['method_number'])
                 else:
                     delta = relativedelta(al['end_date'], al['start_date'])
                     tot_months = delta.months
-                    last_depreciation_date = al[
-                                                 'first_depreciation_date'] + relativedelta(
-                        months=tot_months)
 
                 line = {
                     'id': id,
@@ -384,9 +362,7 @@ class assets_report(models.AbstractModel):
                         {'name': tot_months, 'no_format_name': ''},
                         {'name': al['asset_date'] and format_date(self.env, al[
                             'asset_date']) or '', 'no_format_name': ''},
-                        {'name': last_depreciation_date and format_date(
-                            self.env, last_depreciation_date) or '',
-                         'no_format_name': ''},
+                        {'name': last_depreciation_date and format_date(self.env, last_depreciation_date) or '', 'no_format_name': ''},
                         {'name': (al['asset_method'] == 'linear' and _(
                             'Linear')) or (al[
                                                'asset_method'] == 'degressive' and _(
