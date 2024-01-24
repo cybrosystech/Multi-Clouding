@@ -108,13 +108,17 @@ class PayrollSummary(models.Model):
         TABLE_data_tolal_line.num_format_str = '#,##0.00'
         STYLE_LINE_Data = STYLE_LINE
         STYLE_LINE_Data_emp_name = STYLE_LINE_EMP_NAME
-
+        date_format = workbook.add_format({
+            'border': 0,
+            'align': 'center',
+            'valign': 'vcenter',
+            'num_format': 'dd/mm/yyyy'})
         STYLE_LINE_Data.num_format_str = '#,##0.00_);(#,##0.00)'
 
         if report_data:
             self.add_xlsx_sheet(report_data, workbook, STYLE_LINE_Data,
                                 STYLE_LINE_Data_emp_name,
-                                header_format, STYLE_LINE_HEADER)
+                                header_format, STYLE_LINE_HEADER, date_format)
 
         self.excel_sheet_name = 'Payment Summary Report'
         workbook.close()
@@ -146,7 +150,7 @@ class PayrollSummary(models.Model):
 
     def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data,
                        STYLE_LINE_Data_emp_name,
-                       header_format, STYLE_LINE_HEADER):
+                       header_format, STYLE_LINE_HEADER, date_format):
         self.ensure_one()
         worksheet = workbook.add_worksheet(_('Payment Summary Report'))
         lang = self.env.user.lang
@@ -194,6 +198,7 @@ class PayrollSummary(models.Model):
             row += 1
             if payslip_lines:
                 for p in payslip_lines:
+                    print("pppppp", p)
                     precision = p.currency_id.decimal_places
                     print("prec", precision)
                     string_val = "0" * precision
@@ -237,10 +242,10 @@ class PayrollSummary(models.Model):
                     col += 1
                     if p.employee_id.date_of_joining:
                         worksheet.write(row, col, p.employee_id.date_of_joining,
-                                        STYLE_LINE_Data)
+                                        date_format)
                     else:
                         worksheet.write(row, col, '',
-                                        STYLE_LINE_Data)
+                                        date_format)
 
                     col += 1
                     if p.currency_id.name:
