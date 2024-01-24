@@ -147,14 +147,14 @@
                             </thead>
                             <tr>
                                 <td>
-                                    <span t-field="o.id"/>
+                                    <span t-field="o.employee_id.registration_number"/>
                                 </td>
                                 <td>
                                     <span style="text-align:center;"
                                           t-field="o.employee_id.sudo().name"/>
                                 </td>
                                 <td>
-                                    <span t-field="o.sudo().date"/>
+                                    <span t-field="o.sudo().create_date" t-options='{"widget": "date","format": "dd-MM-yyyy"}'/>
                                 </td>
                                 <td>
                                     <span t-field="o.sudo().employee_id.social_security"/>
