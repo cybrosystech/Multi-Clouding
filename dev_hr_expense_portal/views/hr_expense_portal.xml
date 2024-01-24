@@ -97,8 +97,11 @@
                                 <label for="employee_id">Product</label>
                                 <select class="custom-select" name="product_id"
                                         id="product_id" required="True">
+                                    <option selected="=selected">
+                                    </option>
                                     <t t-foreach="product_ids or []"
                                        t-as="product">
+
                                         <option t-att-value="product.id">
                                             <t t-esc="product.name"/>
                                         </option>
@@ -134,17 +137,39 @@
                                 <label for="cost_center">Cost Center</label>
                                 <select class="custom-select" name="cost_center"
                                         id="cost_center" required="True">
+                                    <option selected="selected">
+                                    </option>
                                     <t t-foreach="cost_centers or []"
                                        t-as="cost_center">
-                                        <option t-att-value="cost_center.id">
-                                            <t t-if="cost_center.code">
-                                                <t t-esc="cost_center.name"/>
-                                                (<t t-esc="cost_center.code"/>)
-                                            </t>
-                                            <t t-else="">
-                                                <t t-esc="cost_center.name"/>
-                                            </t>
-                                        </option>
+                                        <t t-if="cost_center.name == 'No Cost Center'">
+                                            <option t-att-value="cost_center.id"
+                                                    selected="selected">
+                                                <t t-if="cost_center.code">
+                                                    <t t-esc="cost_center.name"/>
+                                                    (
+                                                    <t t-esc="cost_center.code"/>
+                                                    )
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-esc="cost_center.name"/>
+                                                </t>
+                                            </option>
+
+                                        </t>
+                                        <t t-else="">
+                                            <option t-att-value="cost_center.id">
+                                                <t t-if="cost_center.code">
+                                                    <t t-esc="cost_center.name"/>
+                                                    (
+                                                    <t t-esc="cost_center.code"/>
+                                                    )
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-esc="cost_center.name"/>
+                                                </t>
+                                            </option>
+                                        </t>
+
                                     </t>
                                 </select>
                             </div>
@@ -154,17 +179,39 @@
                                 <select class="custom-select"
                                         name="project_site"
                                         id="project_site" required="True">
+                                    <option selected="selected">
+                                    </option>
                                     <t t-foreach="project_sites or []"
                                        t-as="project_site">
-                                        <option t-att-value="project_site.id">
-                                            <t t-if="project_site.code">
-                                                <t t-esc="project_site.name"/>
-                                                (<t t-esc="project_site.code"/>)
-                                            </t>
-                                            <t t-else="">
-                                                <t t-esc="project_site.name"/>
-                                            </t>
-                                        </option>
+                                        <t t-if="project_site.name == 'No Project'">
+                                            <option t-att-value="project_site.id"
+                                                    selected="selected">
+                                                <t t-if="project_site.code">
+                                                    <t t-esc="project_site.name"/>
+                                                    (
+                                                    <t t-esc="project_site.code"/>
+                                                    )
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-esc="project_site.name"/>
+                                                </t>
+                                            </option>
+                                        </t>
+                                        <t t-else="">
+                                            <option t-att-value="project_site.id">
+                                                <t t-if="project_site.code">
+                                                    <t t-esc="project_site.name"/>
+                                                    (
+                                                    <t t-esc="project_site.code"/>
+                                                    )
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-esc="project_site.name"/>
+                                                </t>
+                                            </option>
+                                        </t>
+
+
                                     </t>
                                 </select>
                             </div>
@@ -186,7 +233,7 @@
                                 Submit
                             </button>
                             <button type="button" class="btn btn-primary"
-                                    data-dismiss="modal">close
+                                    data-dismiss="modal">Close
                             </button>
                         </footer>
                     </form>
@@ -719,7 +766,7 @@
                                t-att-value="request.csrf_token()"/>
                         <header class="modal-header">
                             <h4 class="modal-title">Overtime Request</h4>
-                            <button type="button" class="close"
+                            <button type="button" class="lose"
                                     data-dismiss="modal" aria-label="Close">
                                 &amp;times;
                             </button>
@@ -735,11 +782,21 @@
                                 <label for="employee_id">Product</label>
                                 <select class="custom-select" name="product_id"
                                         id="product_id" required="True">
+                                    <option selected="=selected">
+                                    </option>
                                     <t t-foreach="product_ids or []"
                                        t-as="product">
-                                        <option t-att-value="product.id">
-                                            <t t-esc="product.name"/>
-                                        </option>
+                                        <t t-if="product.name == 'Overtime'">
+                                            <option t-att-value="product.id"
+                                                    selected="selected">
+                                                <t t-esc="product.name"/>
+                                            </option>
+                                        </t>
+                                        <t t-else="">
+                                            <option t-att-value="product.id">
+                                                <t t-esc="product.name"/>
+                                            </option>
+                                        </t>
                                     </t>
                                 </select>
                             </div>
@@ -772,17 +829,39 @@
                                 <label for="cost_center">Cost Center</label>
                                 <select class="custom-select" name="cost_center"
                                         id="cost_center" required="True">
+                                    <option selected="selected">
+                                    </option>
                                     <t t-foreach="cost_centers or []"
                                        t-as="cost_center">
-                                        <option t-att-value="cost_center.id">
-                                            <t t-if="cost_center.code">
-                                                <t t-esc="cost_center.name"/>
-                                                (<t t-esc="cost_center.code"/>)
-                                            </t>
-                                            <t t-else="">
-                                                <t t-esc="cost_center.name"/>
-                                            </t>
-                                        </option>
+                                        <t t-if="cost_center.name == 'No Cost Center'">
+                                            <option t-att-value="cost_center.id"
+                                                    selected="selected">
+                                                <t t-if="cost_center.code">
+                                                    <t t-esc="cost_center.name"/>
+                                                    (
+                                                    <t t-esc="cost_center.code"/>
+                                                    )
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-esc="cost_center.name"/>
+                                                </t>
+                                            </option>
+
+                                        </t>
+                                        <t t-else="">
+                                            <option t-att-value="cost_center.id">
+                                                <t t-if="cost_center.code">
+                                                    <t t-esc="cost_center.name"/>
+                                                    (
+                                                    <t t-esc="cost_center.code"/>
+                                                    )
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-esc="cost_center.name"/>
+                                                </t>
+                                            </option>
+                                        </t>
+
                                     </t>
                                 </select>
                             </div>
@@ -792,17 +871,37 @@
                                 <select class="custom-select"
                                         name="project_site"
                                         id="project_site" required="True">
+                                    <option selected="selected">
+                                    </option>
                                     <t t-foreach="project_sites or []"
                                        t-as="project_site">
-                                        <option t-att-value="project_site.id">
-                                            <t t-if="project_site.code">
-                                                <t t-esc="project_site.name"/>
-                                                (<t t-esc="project_site.code"/>)
-                                            </t>
-                                            <t t-else="">
-                                                <t t-esc="project_site.name"/>
-                                            </t>
-                                        </option>
+                                        <t t-if="project_site.name == 'No Project'">
+                                            <option t-att-value="project_site.id"
+                                                    selected="selected">
+                                                <t t-if="project_site.code">
+                                                    <t t-esc="project_site.name"/>
+                                                    (
+                                                    <t t-esc="project_site.code"/>
+                                                    )
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-esc="project_site.name"/>
+                                                </t>
+                                            </option>
+                                        </t>
+                                        <t t-else="">
+                                            <option t-att-value="project_site.id">
+                                                <t t-if="project_site.code">
+                                                    <t t-esc="project_site.name"/>
+                                                    (
+                                                    <t t-esc="project_site.code"/>
+                                                    )
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-esc="project_site.name"/>
+                                                </t>
+                                            </option>
+                                        </t>
                                     </t>
                                 </select>
                             </div>
@@ -824,7 +923,7 @@
                                 Submit
                             </button>
                             <button type="button" class="btn btn-primary"
-                                    data-dismiss="modal">close
+                                    data-dismiss="modal">Close
                             </button>
                         </footer>
                     </form>
@@ -1219,11 +1318,21 @@
                                 <label for="employee_id">Product</label>
                                 <select class="custom-select" name="product_id"
                                         id="product_id" required="True">
+                                    <option selected="=selected">
+                                    </option>
                                     <t t-foreach="product_ids or []"
                                        t-as="product">
-                                        <option t-att-value="product.id">
-                                            <t t-esc="product.name"/>
-                                        </option>
+                                        <t t-if="product.name == 'Per Diem'">
+                                            <option t-att-value="product.id"
+                                                    selected="selected">
+                                                <t t-esc="product.name"/>
+                                            </option>
+                                        </t>
+                                        <t t-else="">
+                                            <option t-att-value="product.id">
+                                                <t t-esc="product.name"/>
+                                            </option>
+                                        </t>
                                     </t>
                                 </select>
                             </div>
@@ -1256,17 +1365,39 @@
                                 <label for="cost_center">Cost Center</label>
                                 <select class="custom-select" name="cost_center"
                                         id="cost_center" required="True">
+                                    <option selected="selected">
+                                    </option>
                                     <t t-foreach="cost_centers or []"
                                        t-as="cost_center">
-                                        <option t-att-value="cost_center.id">
-                                            <t t-if="cost_center.code">
-                                                <t t-esc="cost_center.name"/>
-                                                (<t t-esc="cost_center.code"/>)
-                                            </t>
-                                            <t t-else="">
-                                                <t t-esc="cost_center.name"/>
-                                            </t>
-                                        </option>
+                                        <t t-if="cost_center.name == 'No Cost Center'">
+                                            <option t-att-value="cost_center.id"
+                                                    selected="selected">
+                                                <t t-if="cost_center.code">
+                                                    <t t-esc="cost_center.name"/>
+                                                    (
+                                                    <t t-esc="cost_center.code"/>
+                                                    )
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-esc="cost_center.name"/>
+                                                </t>
+                                            </option>
+
+                                        </t>
+                                        <t t-else="">
+                                            <option t-att-value="cost_center.id">
+                                                <t t-if="cost_center.code">
+                                                    <t t-esc="cost_center.name"/>
+                                                    (
+                                                    <t t-esc="cost_center.code"/>
+                                                    )
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-esc="cost_center.name"/>
+                                                </t>
+                                            </option>
+                                        </t>
+
                                     </t>
                                 </select>
                             </div>
@@ -1276,18 +1407,37 @@
                                 <select class="custom-select"
                                         name="project_site"
                                         id="project_site" required="True">
+                                    <option selected="selected">
+                                    </option>
                                     <t t-foreach="project_sites or []"
                                        t-as="project_site">
-                                        <option t-att-value="project_site.id">
-                                            <t t-if="project_site.code">
-                                                <t t-esc="project_site.name"/>
-                                                (<t t-esc="project_site.code"/>)
-                                            </t>
-                                            <t t-else="">
-                                                <t t-esc="project_site.name"/>
-                                            </t>
-
-                                        </option>
+                                        <t t-if="project_site.name == 'No Project'">
+                                            <option t-att-value="project_site.id"
+                                                    selected="selected">
+                                                <t t-if="project_site.code">
+                                                    <t t-esc="project_site.name"/>
+                                                    (
+                                                    <t t-esc="project_site.code"/>
+                                                    )
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-esc="project_site.name"/>
+                                                </t>
+                                            </option>
+                                        </t>
+                                        <t t-else="">
+                                            <option t-att-value="project_site.id">
+                                                <t t-if="project_site.code">
+                                                    <t t-esc="project_site.name"/>
+                                                    (
+                                                    <t t-esc="project_site.code"/>
+                                                    )
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-esc="project_site.name"/>
+                                                </t>
+                                            </option>
+                                        </t>
                                     </t>
                                 </select>
                             </div>
@@ -1309,7 +1459,7 @@
                                 Submit
                             </button>
                             <button type="button" class="btn btn-primary"
-                                    data-dismiss="modal">close
+                                    data-dismiss="modal">Close
                             </button>
                         </footer>
                     </form>
