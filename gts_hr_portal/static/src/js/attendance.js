@@ -13,7 +13,7 @@ odoo.define('gts_hr_portal.hr_portal_attendance', function(require) {
 
         $("#check_in_button").click(function() {
             var self = this;
-            console.log('hggggggggggg')
+            console.log('shivaaaaaaaaaaaaaaaaaaaaaaaaa')
             var check_in = $('.gts_checkin');
             var employee_id = $(".employee_id");
             var check_out_date
