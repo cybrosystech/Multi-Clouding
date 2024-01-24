@@ -28,7 +28,7 @@ class CustomerPortal(CustomerPortal):
             leaves = LeaveObj.search(
                 ['|', '|', ('employee_id', '=', employee.id),
                  ('employee_id.parent_id', '=', employee.id),
-                 ('employee_id.leave_manager_id', '=', employee.user_id.id), ])
+                 ('employee_id.leave_manager_id', '=', employee.user_id.id)])
             leaves_count = len(leaves)
         values.update({
             'leaves_count': leaves_count,

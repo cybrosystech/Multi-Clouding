@@ -58,7 +58,8 @@ class CustomerPortal(CustomerPortal):
         domain = [
             '|', '|', ('employee_id.user_id', '=', request.env.user.id),
             ('employee_id.parent_id.user_id', '=', request.env.user.id),
-            ('employee_id.expense_manager_id', '=', request.env.user.id)
+            ('employee_id.expense_manager_id', '=', request.env.user.id),
+            ('product_id.product_expense_type', 'not in', ['overtime','per_diem'])
         ]
 
         searchbar_sortings = {
