@@ -25,6 +25,7 @@ class CustomerPortal(CustomerPortal):
         values = super(CustomerPortal, self)._prepare_portal_layout_values()
         expense_id = request.env['hr.expense']
         expense_count = expense_id.sudo().search_count([
+            ('product_id.product_expense_type', 'not in', ['overtime','per_diem']),
             '|', '|', ('employee_id.user_id', '=', request.env.user.id),
             ('employee_id.parent_id.user_id', '=', request.env.user.id),
             ('employee_id.expense_manager_id', '=', request.env.user.id)
@@ -338,7 +339,7 @@ class CustomerPortal(CustomerPortal):
     @http.route(['/approve/<int:expense_id>'], type='http',
                 auth="user", website=True)
     def approve_expense(self, expense_id, page=1, **kw):
-        expense = request.env['hr.expense'].browse(expense_id)
+        expense = request.env['hr.expense'].browse(expense_id).sudo()
         expense.state = 'draft'
         expense.is_manager_approved = True
         employee = expense.employee_id.id
@@ -357,7 +358,7 @@ class CustomerPortal(CustomerPortal):
     @http.route(['/approve_expense_manager/<int:expense_id>'], type='http',
                 auth="user", website=True)
     def approve_expense_manager(self, expense_id, page=1, **kw):
-        expense = request.env['hr.expense'].browse(expense_id)
+        expense = request.env['hr.expense'].browse(expense_id).sudo()
         expense.state = 'approved'
         employee = expense.employee_id.id
         body = _('Expense approved by Expense Approver %s .' % (
