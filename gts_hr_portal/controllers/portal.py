@@ -251,7 +251,7 @@ class CustomerPortal(CustomerPortal):
                                                      'employee_id'))['days'] + 1
                 leave = LeaveObj.create(leave_data_copy)
                 template = request.env.ref(
-                    'gts_hr_portal.email_template_leave_request')
+                    'gts_hr_portal.email_template_leave_request').sudo()
                 template.with_context(date_from=leave.date_from.date(),date_to=leave.date_to.date(), state=leave.state).send_mail(leave.id,
                                    force_send=True)
             except (UserError, AccessError, ValidationError) as exc:

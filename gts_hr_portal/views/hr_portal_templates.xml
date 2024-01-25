@@ -93,7 +93,7 @@
                     <thead>
                         <tr class="active"
                             t-attf-class="{{'thead-light' if not groupby == 'none' else ''}}">
-                            <th t-if="groupby == 'none'">Employee Name</th>
+                            <th t-if="groupby == 'none'"></th>
                             <th t-else="">
                                 <t t-if="groupby == 'state'">
                                     <em class="font-weight-normal text-muted">
@@ -187,7 +187,7 @@
                     <thead>
                         <tr class="active"
                             t-attf-class="{{'thead-light' if not groupby == 'none' else ''}}">
-                            <th t-if="groupby == 'none'">Employee Name</th>
+                            <th t-if="groupby == 'none'"></th>
                             <th t-else="">
                                 <t t-if="groupby == 'state'">
                                     <em class="font-weight-normal text-muted">
