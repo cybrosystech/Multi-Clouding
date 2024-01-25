@@ -77,7 +77,7 @@ class HrAttendance(models.Model):
         # check_in_date = datetime.strptime(portal_check_in,'%d/%m/%Y %H:%M:%S')
         check_in_date = datetime.strptime(portal_check_in,
                                           '%d/%m/%Y %H:%M:%S')
-        check_in_date.strftime('%d/%m/%Y %H:%M:%S %p')
+        # check_in_date.strftime('%d/%m/%Y %H:%M:%S %p')
 
         if attendances:
             for attendance in attendances:
@@ -112,7 +112,7 @@ class HrAttendance(models.Model):
         portal_check_out = value['check_out'].replace(',', '')
         check_out_date = datetime.strptime(portal_check_out,
                                            '%d/%m/%Y %H:%M:%S')
-        check_out_date.strftime('%d/%m/%Y %H:%M:%S %p')
+        # check_out_date.strftime('%d/%m/%Y %H:%M:%S %p')
 
         if attendances:
             for attendance in attendances:
