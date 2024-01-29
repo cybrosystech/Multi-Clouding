@@ -170,8 +170,22 @@ class hr_expense(models.Model):
         return sheet
 
 
+class HrExpense(models.Model):
+    _inherit = 'hr.expense'
+
+    currency_id = fields.Many2one('res.currency', string='Currency',
+                                  readonly=False,
+                                  default=lambda
+                                      self: self.env.company.currency_id)
+
+
 class HrExpenseSheet(models.Model):
     _inherit = 'hr.expense.sheet'
+
+    currency_id = fields.Many2one('res.currency', string='Currency',
+                                  readonly=False,
+                                  default=lambda
+                                      self: self.env.company.currency_id)
 
     def action_create_journal_entry(self):
         samples = self.mapped('expense_line_ids.sample')
