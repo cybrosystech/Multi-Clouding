@@ -73,8 +73,6 @@ class HrAttendance(models.Model):
         attendances = self.env['hr.attendance'].search(
             [('employee_id', '=', employee_id.id)])
         portal_check_in = value['check_in'].replace(',', '')
-        print("===========portal_check_in=======", portal_check_in)
-        # check_in_date = datetime.strptime(portal_check_in,'%d/%m/%Y %H:%M:%S')
         check_in_date = datetime.strptime(portal_check_in,
                                           '%d/%m/%Y %H:%M:%S %p')
 
@@ -111,6 +109,7 @@ class HrAttendance(models.Model):
         portal_check_out = value['check_out'].replace(',', '')
         check_out_date = datetime.strptime(portal_check_out,
                                            '%d/%m/%Y %H:%M:%S %p')
+
         if attendances:
             for attendance in attendances:
                 if attendance.check_in:

@@ -133,7 +133,7 @@ class hr_expense(models.Model):
         for emp in employees_ids:
             expense_ids = self.env['hr.expense'].search(
                 [('employee_id', '=', emp.id), ('id', 'in', self.ids),
-                 ('state', '=', 'draft'), ('sheet_id', '=', False)])
+                 ('state', '=', 'approved'), ('sheet_id', '=', False)])
             total_amount = sum(expense_ids.mapped('total_amount'))
             full_month_name = fields.Datetime.now().strftime("%B")
             expense_report_summary = emp.name + " - " + full_month_name + "(" + str(
@@ -146,7 +146,7 @@ class hr_expense(models.Model):
 
     def _create_sheet_all_employees_from_expenses(self, expense_report_summary,
                                                   journal):
-        if any(expense.state != 'draft' or expense.sheet_id for expense in
+        if any(expense.state != 'approved' or expense.sheet_id for expense in
                self):
             raise UserError(_("You cannot report twice the same line!"))
         if len(self.mapped('employee_id')) != 1:
@@ -165,11 +165,27 @@ class hr_expense(models.Model):
             'expense_line_ids': [(6, 0, todo.ids)],
             'journal_id': journal,
         })
+        for exp in self:
+            exp.sheet_id = sheet.id
         return sheet
+
+
+class HrExpense(models.Model):
+    _inherit = 'hr.expense'
+
+    currency_id = fields.Many2one('res.currency', string='Currency',
+                                  readonly=False,
+                                  default=lambda
+                                      self: self.env.company.currency_id)
 
 
 class HrExpenseSheet(models.Model):
     _inherit = 'hr.expense.sheet'
+
+    currency_id = fields.Many2one('res.currency', string='Currency',
+                                  readonly=False,
+                                  default=lambda
+                                      self: self.env.company.currency_id)
 
     def action_create_journal_entry(self):
         samples = self.mapped('expense_line_ids.sample')

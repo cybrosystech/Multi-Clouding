@@ -93,7 +93,7 @@
                     <thead>
                         <tr class="active"
                             t-attf-class="{{'thead-light' if not groupby == 'none' else ''}}">
-                            <th t-if="groupby == 'none'">Employee Name</th>
+                            <th t-if="groupby == 'none'"></th>
                             <th t-else="">
                                 <t t-if="groupby == 'state'">
                                     <em class="font-weight-normal text-muted">
@@ -110,7 +110,7 @@
                             <th class="text-right">Leave To</th>
                             <th class="text-center">Leave Type</th>
                             <th class="text-left">Status</th>
-<!--                            <th class="text-left"></th>-->
+                            <th class="text-left"></th>
                             <th class="text-center">Description/Reason</th>
                         </tr>
                     </thead>
@@ -141,35 +141,35 @@
                                               t-field="leave.state"/>
                                     </center>
                                 </td>
-<!--                                <td>-->
-<!--                                    <t t-if="leave.state=='confirm' and leave.is_manager_approved==False and leave.employee_id.parent_id.user_id.id==request.env.user.id">-->
-<!--                                        <a t-attf-href="/approve/leave/#{leave.sudo().id}">-->
-<!--                                            <i class="fa fa-check" role="img"-->
-<!--                                               aria-label="Approve"-->
-<!--                                               title="Approve"/>-->
-<!--                                        </a>-->
-<!--                                        <a t-attf-href="/refuse/leave/#{leave.sudo().id}">-->
-<!--                                            <i class="fa fa-remove" role="img"-->
-<!--                                               aria-label="Refuse"-->
-<!--                                               title="Refuse"/>-->
-<!--                                        </a>-->
+                                <td>
+                                    <t t-if="leave.state=='confirm' and leave.is_manager_approved==False and leave.employee_id.parent_id.user_id.id==request.env.user.id">
+                                        <a t-attf-href="/approve/leave/#{leave.sudo().id}">
+                                            <i class="fa fa-check" role="img"
+                                               aria-label="Approve"
+                                               title="Approve"/>
+                                        </a>
+                                        <a t-attf-href="/refuse/leave/#{leave.sudo().id}">
+                                            <i class="fa fa-remove" role="img"
+                                               aria-label="Refuse"
+                                               title="Refuse"/>
+                                        </a>
 
-<!--                                    </t>-->
-<!--                                    <t t-if="leave.state=='validate1' and leave.is_manager_approved==True and leave.employee_id.leave_manager_id.id==request.env.user.id">-->
-<!--                                        <a t-attf-href="/approve/leave/manager/#{leave.sudo().id}">-->
-<!--                                            <i class="fa fa-check" role="img"-->
-<!--                                               aria-label="Approve"-->
-<!--                                               title="Approve"/>-->
-<!--                                        </a>-->
-<!--                                        <a t-attf-href="/refuse_leave_manager/#{leave.sudo().id}">-->
-<!--                                            <i class="fa fa-remove" role="img"-->
-<!--                                               aria-label="Refuse"-->
-<!--                                               title="Refuse"/>-->
-<!--                                        </a>-->
+                                    </t>
+                                    <t t-if="leave.state=='validate1' and leave.is_manager_approved==True and leave.employee_id.leave_manager_id.id==request.env.user.id">
+                                        <a t-attf-href="/approve/leave/manager/#{leave.sudo().id}">
+                                            <i class="fa fa-check" role="img"
+                                               aria-label="Approve"
+                                               title="Approve"/>
+                                        </a>
+                                        <a t-attf-href="/refuse_leave_manager/#{leave.sudo().id}">
+                                            <i class="fa fa-remove" role="img"
+                                               aria-label="Refuse"
+                                               title="Refuse"/>
+                                        </a>
 
-<!--                                    </t>-->
+                                    </t>
 
-<!--                                </td>-->
+                                </td>
                                 <td class="text-center">
                                     <span t-field="leave.name"/>
                                 </td>
@@ -187,7 +187,7 @@
                     <thead>
                         <tr class="active"
                             t-attf-class="{{'thead-light' if not groupby == 'none' else ''}}">
-                            <th t-if="groupby == 'none'">Employee Name</th>
+                            <th t-if="groupby == 'none'"></th>
                             <th t-else="">
                                 <t t-if="groupby == 'state'">
                                     <em class="font-weight-normal text-muted">
@@ -204,7 +204,7 @@
                             <th class="text-right">Leave To</th>
                             <th class="text-center">Leave Type</th>
                             <th class="text-left">Status</th>
-<!--                            <th class="text-left"></th>-->
+                            <th class="text-left"></th>
                             <th class="text-center">Description/Reason</th>
                         </tr>
                     </thead>
@@ -235,33 +235,33 @@
                                               t-field="leave.state"/>
                                     </center>
                                 </td>
-<!--                                <td>-->
-<!--                                    <t t-if="leave.state=='confirm' and leave.is_manager_approved==False and leave.employee_id.parent_id.user_id.id==request.env.user.id">-->
-<!--                                        <a t-attf-href="/approve/leave/#{leave.sudo().id}">-->
-<!--                                            <i class="fa fa-check" role="img"-->
-<!--                                               aria-label="Approve"-->
-<!--                                               title="Approve"/>-->
-<!--                                        </a>-->
-<!--                                        <a t-attf-href="/refuse/leave/#{leave.sudo().id}">-->
-<!--                                            <i class="fa fa-remove" role="img"-->
-<!--                                               aria-label="Refuse"-->
-<!--                                               title="Refuse"/>-->
-<!--                                        </a>-->
+                                <td>
+                                    <t t-if="leave.state=='confirm' and leave.is_manager_approved==False and leave.employee_id.parent_id.user_id.id==request.env.user.id">
+                                        <a t-attf-href="/approve/leave/#{leave.sudo().id}">
+                                            <i class="fa fa-check" role="img"
+                                               aria-label="Approve"
+                                               title="Approve"/>
+                                        </a>
+                                        <a t-attf-href="/refuse/leave/#{leave.sudo().id}">
+                                            <i class="fa fa-remove" role="img"
+                                               aria-label="Refuse"
+                                               title="Refuse"/>
+                                        </a>
 
-<!--                                    </t>-->
-<!--                                    <t t-if="leave.state=='validate1' and leave.is_manager_approved==True and leave.employee_id.leave_manager_id.id==request.env.user.id">-->
-<!--                                        <a t-attf-href="/approve/leave/manager/#{leave.sudo().id}">-->
-<!--                                            <i class="fa fa-check" role="img"-->
-<!--                                               aria-label="Approve"-->
-<!--                                               title="Approve"/>-->
-<!--                                        </a>-->
-<!--                                        <a t-attf-href="/refuse_leave_manager/#{leave.sudo().id}">-->
-<!--                                            <i class="fa fa-remove" role="img"-->
-<!--                                               aria-label="Refuse"-->
-<!--                                               title="Refuse"/>-->
-<!--                                        </a>-->
-<!--                                    </t>-->
-<!--                                </td>-->
+                                    </t>
+                                    <t t-if="leave.state=='validate1' and leave.is_manager_approved==True and leave.employee_id.leave_manager_id.id==request.env.user.id">
+                                        <a t-attf-href="/approve/leave/manager/#{leave.sudo().id}">
+                                            <i class="fa fa-check" role="img"
+                                               aria-label="Approve"
+                                               title="Approve"/>
+                                        </a>
+                                        <a t-attf-href="/refuse_leave_manager/#{leave.sudo().id}">
+                                            <i class="fa fa-remove" role="img"
+                                               aria-label="Refuse"
+                                               title="Refuse"/>
+                                        </a>
+                                    </t>
+                                </td>
                                 <td class="text-center">
                                     <span t-field="leave.name"/>
                                 </td>

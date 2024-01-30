@@ -147,6 +147,6 @@ class HrPayslip(models.Model):
                         move_dict['line_ids'] = [(0, 0, line_vals) for line_vals
                                                  in
                                                  line_ids]
-            move = self._create_account_move(move_dict)
+            move = self.sudo()._create_account_move(move_dict)
             for payslip in payslips:
                 payslip.move_id = move.id

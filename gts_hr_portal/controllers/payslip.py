@@ -72,7 +72,6 @@ class CustomerPortal(CustomerPortal):
         payslip = PayslipObj.search(domain, limit=self._items_per_page,
                                     offset=pager['offset'])
         request.session['my_payslip_history'] = payslip.ids[:100]
-        print("payslip", payslip)
         values.update({
             'date': date_begin,
             'payslip': payslip.sudo(),

@@ -17,7 +17,7 @@ odoo.define('gts_hr_portal.hr_portal_attendance', function(require) {
             var check_in = $('.gts_checkin');
             var employee_id = $(".employee_id");
             var check_out_date
-            var status = Date(); 
+            var status = Date();
             if (check_in) {
                 self.status = convert(status);
                 var values = {check_in:self.status,'write_uid':session.user_id}
