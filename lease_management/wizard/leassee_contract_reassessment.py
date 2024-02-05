@@ -195,6 +195,8 @@ class Reassessment(models.TransientModel):
             base_amount = amount
             if contract.leasee_currency_id != contract.company_id.currency_id:
                 amount = contract.leasee_currency_id._convert(amount, contract.company_id.currency_id, contract.company_id, self.reassessment_start_Date)
+            print("amount",amount)
+            print("base_amount",base_amount)
             lines = [(0, 0, {
                 'name': 'Reassessment contract number %s' % contract.name,
                 'account_id': rou_account.id,
@@ -219,6 +221,7 @@ class Reassessment(models.TransientModel):
                 'location_id': contract.location_id.id,
                 'currency_id': contract.leasee_currency_id.id
             })]
+            print("linessssss",lines)
             move = self.env['account.move'].create({
                 'partner_id': contract.vendor_id.id,
                 'move_type': 'entry',
@@ -230,6 +233,7 @@ class Reassessment(models.TransientModel):
                 'line_ids': lines,
                 'auto_post': True,
             })
+            print("move",move)
             if contract.leasee_currency_id != contract.company_id.currency_id:
                 test_amount_c = move.line_ids.filtered(lambda x: x.credit > 0)
                 test_amount_c.amount_currency = test_amount_c.amount_currency * -1

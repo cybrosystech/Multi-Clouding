@@ -7,6 +7,8 @@ from itertools import groupby
 from collections import defaultdict
 from odoo.addons.analytic_account_types.models.account_reports import \
     AccountReport
+from odoo.addons.web.controllers.main import clean_action
+
 import re
 
 MAX_NAME_LENGTH = 50
@@ -21,6 +23,7 @@ class assets_report(models.AbstractModel):
     filter_all_entries = False
     filter_hierarchy = True
     filter_unfold_all = True
+
 
     def _get_report_name(self):
         return _('Depreciation Table Report')
@@ -225,7 +228,6 @@ class assets_report(models.AbstractModel):
                     depreciation_add, depreciation_minus = depreciation_minus, depreciation_add
                     asset_closing, depreciation_closing = -asset_closing, -depreciation_closing
                 if asset.partial_disposal:
-                    print('options', options)
                     state = ['posted']
                     if options['all_entries']:
                         state = ['draft', 'posted']
@@ -258,7 +260,6 @@ class assets_report(models.AbstractModel):
                         asset_closing = asset_opening
                         depreciation_opening = depreciation_opening - asset_minus_demo
                         depreciation_closing = depreciation_opening + depreciation_add - depreciation_minus
-                print('///////', asset_closing, depreciation_closing)
                 asset_gross = asset_closing - depreciation_closing
 
                 total = [x + y for x, y in zip(total, [asset_opening, asset_add, asset_minus, asset_closing, depreciation_opening, depreciation_add, depreciation_minus, depreciation_closing, asset_gross])]
@@ -649,7 +650,7 @@ def get_report_informations(self, options):
     if options.get('date') and options.get('all_entries') is not None:
         date_to = options['date'].get('date_to') or options['date'].get(
             'date') or fields.Date.today()
-        period_domain = [('state', '=', 'draft'), ('date', '<=', date_to)]
+        period_domain = ['|',('state', '=', 'draft'),('state', '=', 'to_approve'), ('date', '<=', date_to)]
         options['unposted_in_period'] = bool(
             self.env['account.move'].search_count(period_domain))
 
@@ -680,5 +681,20 @@ def get_report_informations(self, options):
             }
     return info
 
+def open_unposted_moves(self, options, params=None):
+    ''' Open the list of draft journal entries that might impact the reporting'''
+    action = self.env["ir.actions.actions"]._for_xml_id("account.action_move_journal_line")
+    action = clean_action(action, env=self.env)
+    domain = ['|',('state', '=', 'draft'),('state', '=', 'to_approve')]
+    if options.get('date'):
+        #there's no condition on the date from, as a draft entry might change the initial balance of a line
+        date_to = options['date'].get('date_to') or options['date'].get('date') or fields.Date.today()
+        domain += [('date', '<=', date_to)]
+    action['domain'] = domain
+    #overwrite the context to avoid default filtering on 'misc' journals
+    action['context'] = {}
+    return action
+
 
 AccountReport.get_report_informations = get_report_informations
+AccountReport.open_unposted_moves = open_unposted_moves

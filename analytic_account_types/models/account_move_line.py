@@ -70,7 +70,7 @@ class AccountMove(models.Model):
             else:
                 draft_name += ' ' + self.name
         return (draft_name or self.name) + (
-                    show_ref and self.ref and ' (%s%s)' % (
+                show_ref and self.ref and ' (%s%s)' % (
             self.ref[:50], '...' if len(self.ref) > 50 else '') or '')
 
     @api.depends()
@@ -180,7 +180,8 @@ class AccountMove(models.Model):
                 out_budget = journals.env['budget.in.out.check.invoice'].search(
                     [('type', '=', 'out_budget'),
                      ('company_id', '=', journals.env.company.id)], limit=1)
-                max_value = max(journals.budget_collect_ids.mapped('demand_amount'))
+                max_value = max(
+                    journals.budget_collect_ids.mapped('demand_amount'))
                 for rec in out_budget.budget_line_ids:
                     if max_value >= rec.from_amount:
                         out_budget_list.append((0, 0, {
@@ -198,7 +199,8 @@ class AccountMove(models.Model):
                     max_value = max(journals.line_ids.mapped(
                         'local_subtotal'))  # Old Field is debit
                 else:
-                    max_value = sum(journals.invoice_line_ids.mapped('local_subtotal'))
+                    max_value = sum(
+                        journals.invoice_line_ids.mapped('local_subtotal'))
                 for rec in in_budget.budget_line_ids:
                     if max_value >= rec.from_amount:
                         in_budget_list.append((0, 0, {
@@ -266,17 +268,23 @@ class AccountMove(models.Model):
             if not journal.purchase_approval_cycle_ids:
                 journal.button_request_purchase_cycle()
             min_seq_approval = min(
-                journal.purchase_approval_cycle_ids.filtered(lambda x: x.is_approved is not True).mapped('approval_seq'))
+                journal.purchase_approval_cycle_ids.filtered(
+                    lambda x: x.is_approved is not True).mapped('approval_seq'))
             last_approval = journal.purchase_approval_cycle_ids.filtered(
                 lambda x: x.approval_seq == int(min_seq_approval))
             if journal.env.user not in last_approval.user_approve_ids:
-                raise UserError('You cannot approve this record'+ ' '+ str(journal.name))
+                raise UserError(
+                    'You cannot approve this record' + ' ' + str(journal.name))
             last_approval.is_approved = True
             journal.send_user_notification(last_approval.user_approve_ids)
-            if not journal.purchase_approval_cycle_ids.filtered(lambda x: x.is_approved is False):
+            if not journal.purchase_approval_cycle_ids.filtered(
+                    lambda x: x.is_approved is False):
                 journal.action_post()
-            message = 'Level ' + str(last_approval.approval_seq) + ' Approved by :' +str( journal.env.user.name)
+            message = 'Level ' + str(
+                last_approval.approval_seq) + ' Approved by :' + str(
+                journal.env.user.name)
             journal.message_post(body=message)
+
     # /////////// End of Approval Cycle According To In Budget or Out Budget in Po Configuration //////////////
 
     def _auto_create_asset(self):
@@ -369,8 +377,9 @@ class AccountMove(models.Model):
                                         account=move_line.account_id.display_name))
                             amount_total = amount_left = move_line.debit + move_line.credit
                             unit_uom = self.env.ref('uom.product_uom_unit')
-                            if move_line.account_id.multiple_assets_per_line and ((
-                                                                                          move_line.product_uom_id and move_line.product_uom_id.category_id.id == unit_uom.category_id.id) or not move_line.product_uom_id):
+                            if move_line.account_id.multiple_assets_per_line and (
+                                    (
+                                            move_line.product_uom_id and move_line.product_uom_id.category_id.id == unit_uom.category_id.id) or not move_line.product_uom_id):
                                 units_quantity = move_line.product_uom_id._compute_quantity(
                                     move_line.quantity, unit_uom, False)
                             else:
@@ -394,7 +403,8 @@ class AccountMove(models.Model):
                                     'type_id': move_line.type_id.id,
                                     'location_id': move_line.location_id.id,
                                     'analytic_tag_ids': [
-                                        (6, False, move_line.analytic_tag_ids.ids)],
+                                        (6, False,
+                                         move_line.analytic_tag_ids.ids)],
                                     'original_move_line_ids': [
                                         (6, False, move_line.ids)],
                                     'state': 'draft',
@@ -426,7 +436,7 @@ class AccountMove(models.Model):
                 }[asset.asset_type]
                 msg = _('%s created from invoice') % (asset_name)
                 msg += ': <a href=# data-oe-model=account.move data-oe-id=%d>%s</a>' % (
-                invoice.id, invoice.name)
+                    invoice.id, invoice.name)
                 asset.message_post(body=msg)
         return assets
 
@@ -526,7 +536,8 @@ class AccountMoveLine(models.Model):
                                      string="Budget Line", required=False, )
 
     remaining_amount = fields.Float(string="Remaining Amount", required=False,
-                                    compute='get_budget_remaining_amount', store=True)
+                                    compute='get_budget_remaining_amount',
+                                    store=True)
     local_subtotal = fields.Float(compute='compute_local_subtotal', store=True)
     is_set_remaining_amount = fields.Boolean(string="",
                                              help="This field is used for the scheduled action (set remaining amount) to check the remaining is set for old account.move.line records (Note :This field will not required in further)")
@@ -544,7 +555,6 @@ class AccountMoveLine(models.Model):
             total_lines = len(move_lines.ids)
         else:
             total_lines = 0
-        print("total_lines", total_lines)
         for line in move_lines:
             line.remaining_amount = 0.0
             if line.purchase_line_id:
@@ -588,7 +598,8 @@ class AccountMoveLine(models.Model):
             else:
                 rec.local_subtotal = 0
 
-    @api.depends('budget_id', 'purchase_line_id', 'sale_line_ids', 'budget_line_id')
+    @api.depends('budget_id', 'purchase_line_id', 'sale_line_ids',
+                 'budget_line_id')
     def get_budget_remaining_amount(self):
         for rec in self:
             rec.remaining_amount = 0.0
