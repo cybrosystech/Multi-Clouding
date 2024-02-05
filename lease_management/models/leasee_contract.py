@@ -295,6 +295,7 @@ class LeaseeContract(models.Model):
                                              assessment_date,
                                              remaining_lease_liability_before,
                                              reduction_amount):
+        print("update_reassessed_installments_after")
         first_installment = self.installment_ids.filtered(
             lambda i: i.date == assessment_date)
 
@@ -954,7 +955,6 @@ class LeaseeContract(models.Model):
 
         if short_lease_liability_amount or self.initial_payment_value:
             short_amount = short_lease_liability_amount + self.initial_payment_value
-            print('short_amount', short_amount)
             short_amount1 = round(self.leasee_currency_id._convert(short_amount,
                                                                    self.company_id.currency_id,
                                                                    self.company_id,
@@ -1484,8 +1484,7 @@ class LeaseeContract(models.Model):
     @api.model
     def leasee_action_expired(self):
         leasee_contracts = self.search([]).filtered(lambda
-                                                        rec: rec.estimated_ending_date <= fields.Date.today() and rec.state not in [
-            'extended', 'terminated'])
+                                                        rec: rec.estimated_ending_date <= fields.Date.today() and rec.state not in ['terminated'])
         for contract in leasee_contracts:
             contract.state = 'expired'
 
@@ -1613,6 +1612,7 @@ class LeaseeContract(models.Model):
                                 if (
                                         ins_period == 1 and contract.commencement_date.month == n_date.month) or (
                                         prev_install and prev_install.date.month == n_date.month):
+                                    print("4444444444444444444")
                                     start_month = n_date.replace(day=1)
                                     if prev_install:
                                         remaining_of_month = (
@@ -1647,9 +1647,11 @@ class LeaseeContract(models.Model):
                                             prev_install.date + relativedelta(
                                                 days=-1), previous_amount)
                                 else:
+                                    print("5555555555555")
                                     start = n_date.replace(day=1)
                                     amount = interest_amount * ((
                                                                         n_date - start).days + 1) / num_days
+                                    print("amount",amount)
                                 contract.create_interset_move(installment,
                                                               n_date, amount)
                         if installment.get_period_order() == len(
@@ -1745,6 +1747,7 @@ class LeaseeContract(models.Model):
                                                       amount)
 
     def create_interset_move(self, installment, move_date, interest_amount):
+        print("create_interset_move",interest_amount,move_date)
         if round(interest_amount, 3) > 0:
             base_amount = interest_amount
             if self.leasee_currency_id != self.company_id.currency_id:
@@ -1968,6 +1971,7 @@ class LeaseeContract(models.Model):
     # Reassessment
     @api.model
     def create_reassessment_move(self, contract, amount, reassessment_date):
+        print("ffffffffffff234567345345")
         rou_account = contract.asset_model_id.account_asset_id
         if amount:
             base_amount = amount
@@ -1976,7 +1980,6 @@ class LeaseeContract(models.Model):
                                                           self.company_id.currency_id,
                                                           self.company_id,
                                                           reassessment_date)
-            print('base_amount', base_amount)
             lines = [(0, 0, {
                 'name': 'Reassessment contract number %s' % contract.name,
                 'account_id': rou_account.id,

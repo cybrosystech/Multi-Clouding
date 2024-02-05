@@ -32,6 +32,7 @@ class LeaseeInstallment(models.Model):
     is_long_liability = fields.Boolean(compute='compute_is_long_liability')
 
     def get_period_order(self):
+        print("self",self)
         if not max(self.leasee_contract_id.installment_ids.mapped('period')):
             i = 0
             for inst in self.leasee_contract_id.installment_ids:

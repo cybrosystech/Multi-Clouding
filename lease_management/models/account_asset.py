@@ -252,6 +252,7 @@ class AccountAsset(models.Model):
             amount_to_depreciate, depreciation_date,
             already_depreciated_amount, amount_change_ids, depreciation_months,
             total_days)
+        print("depreciation_date", depreciation_date)
         if self._context.get('decrease'):
             if move_vals:
                 first_date = self.prorata_date
