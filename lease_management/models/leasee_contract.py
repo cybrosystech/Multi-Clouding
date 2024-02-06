@@ -1488,10 +1488,12 @@ class LeaseeContract(models.Model):
         for contract in leasee_contracts:
             if contract.child_ids:
                 child = self.search([('id','in',contract.child_ids.ids)],order='id DESC',limit=1)
-                contract.state = child.state
+                if child.id in leasee_contracts.ids:
+                    contract.state = 'expired'
+                else:
+                    contract.state = 'extended'
             else:
                 contract.state = 'expired'
-            contract.parent_id.state= contract.state
 
 
     @api.model
