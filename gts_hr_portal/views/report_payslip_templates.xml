@@ -147,7 +147,7 @@
                             </thead>
                             <tr>
                                 <td>
-                                    <span t-field="o.employee_id.registration_number"/>
+                                    <span t-field="o.employee_id.sudo().registration_number"/>
                                 </td>
                                 <td>
                                     <span style="text-align:center;"
