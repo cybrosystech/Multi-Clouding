@@ -1486,7 +1486,13 @@ class LeaseeContract(models.Model):
         leasee_contracts = self.search([]).filtered(lambda
                                                         rec: rec.estimated_ending_date <= fields.Date.today() and rec.state not in ['terminated'])
         for contract in leasee_contracts:
-            contract.state = 'expired'
+            if contract.child_ids:
+                child = self.search([('id','in',contract.child_ids.ids)],order='id DESC',limit=1)
+                contract.state = child.state
+            else:
+                contract.state = 'expired'
+            contract.parent_id.state= contract.state
+
 
     @api.model
     def leasee_action_generate_installments_entries(self):
