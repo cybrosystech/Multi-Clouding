@@ -295,7 +295,6 @@ class LeaseeContract(models.Model):
                                              assessment_date,
                                              remaining_lease_liability_before,
                                              reduction_amount):
-        print("update_reassessed_installments_after")
         first_installment = self.installment_ids.filtered(
             lambda i: i.date == assessment_date)
 
@@ -1348,7 +1347,6 @@ class LeaseeContract(models.Model):
 
         return self.asset_id.action_set_to_close()
 
-
     def get_interest_amount_termination_amount(self, termination_date):
         if not self.installment_ids.filtered(
                 lambda i: i.date > termination_date):
@@ -1484,17 +1482,38 @@ class LeaseeContract(models.Model):
     @api.model
     def leasee_action_expired(self):
         leasee_contracts = self.search([]).filtered(lambda
-                                                        rec: rec.estimated_ending_date <= fields.Date.today() and rec.state not in ['terminated'])
+                                                        rec: rec.estimated_ending_date <= fields.Date.today() and rec.state not in [
+            'terminated'])
         for contract in leasee_contracts:
             if contract.child_ids:
-                child = self.search([('id','in',contract.child_ids.ids)],order='id DESC',limit=1)
-                if child.id in leasee_contracts.ids:
-                    contract.state = 'expired'
+                child = self.search([('id', 'in', contract.child_ids.ids)],
+                                    order='id DESC', limit=1)
+                if child.child_ids:
+                    self.check_child_expiry(child, leasee_contracts,contract)
                 else:
-                    contract.state = 'extended'
+                    if child.id in leasee_contracts.ids :
+                        contract.state = 'expired'
+                    else:
+                        contract.state = 'extended'
             else:
                 contract.state = 'expired'
 
+    def check_child_expiry(self, child, leasee_contracts,contract):
+        if child.child_ids:
+            child_new = self.search([('id', 'in', child.child_ids.ids)],
+                                order='id DESC', limit=1)
+            if child_new.child_ids:
+                self.check_child_expiry(child_new,leasee_contracts,contract)
+            else:
+                if child_new.id in leasee_contracts.ids:
+                    contract.state = 'expired'
+                else:
+                    contract.state = 'extended'
+        else:
+            if child.id in leasee_contracts.ids:
+                contract.state = 'expired'
+            else:
+                contract.state = 'extended'
 
     @api.model
     def leasee_action_generate_installments_entries(self):
@@ -1620,7 +1639,6 @@ class LeaseeContract(models.Model):
                                 if (
                                         ins_period == 1 and contract.commencement_date.month == n_date.month) or (
                                         prev_install and prev_install.date.month == n_date.month):
-                                    print("4444444444444444444")
                                     start_month = n_date.replace(day=1)
                                     if prev_install:
                                         remaining_of_month = (
@@ -1655,11 +1673,9 @@ class LeaseeContract(models.Model):
                                             prev_install.date + relativedelta(
                                                 days=-1), previous_amount)
                                 else:
-                                    print("5555555555555")
                                     start = n_date.replace(day=1)
                                     amount = interest_amount * ((
                                                                         n_date - start).days + 1) / num_days
-                                    print("amount",amount)
                                 contract.create_interset_move(installment,
                                                               n_date, amount)
                         if installment.get_period_order() == len(
@@ -1755,7 +1771,6 @@ class LeaseeContract(models.Model):
                                                       amount)
 
     def create_interset_move(self, installment, move_date, interest_amount):
-        print("create_interset_move",interest_amount,move_date)
         if round(interest_amount, 3) > 0:
             base_amount = interest_amount
             if self.leasee_currency_id != self.company_id.currency_id:
@@ -1979,7 +1994,6 @@ class LeaseeContract(models.Model):
     # Reassessment
     @api.model
     def create_reassessment_move(self, contract, amount, reassessment_date):
-        print("ffffffffffff234567345345")
         rou_account = contract.asset_model_id.account_asset_id
         if amount:
             base_amount = amount
