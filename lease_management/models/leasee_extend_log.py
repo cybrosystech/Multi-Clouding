@@ -14,3 +14,4 @@ class LeaseeExtendLog(models.Model):
     date = fields.Date(string="", default=lambda self: fields.Datetime.now(), required=False, )
     old_period = fields.Integer()
     new_period = fields.Integer()
+

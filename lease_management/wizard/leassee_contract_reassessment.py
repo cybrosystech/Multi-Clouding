@@ -66,7 +66,6 @@ class Reassessment(models.TransientModel):
                 (1 + contract.interest_rate / 100) ** period_ratio - 1)
         remaining_liability = new_lease_liability - (
                 first_installment.amount - interest_recognition)
-        print('interest_recognition', interest_recognition)
         if self.reassessment_start_Date.month == contract.inception_date.month:
             journal_update_date = datetime.date(
                 self.reassessment_start_Date.year,
@@ -239,7 +238,6 @@ class Reassessment(models.TransientModel):
                     self.reassessment_start_Date - prev_start).days / days + first_installment.subsequent_amount * (
                                       (
                                               end_month - self.reassessment_start_Date).days + 1) / days_after_reassessment
-            print('beginning_interest_move', beginning_interest_move)
             if subsequent_amount_data != 0:
                 subsequent_amount_base = subsequent_amount_data
                 if beginning_interest_move.currency_id != self.env.company.currency_id:
@@ -269,7 +267,6 @@ class Reassessment(models.TransientModel):
                         (
                             1, credit_line.id, {'credit': interest_amount,
                                                 'amount_currency': -beginning_interest_base})]})
-        print('after_reassessment_moves', after_reassessment_moves)
         for move in after_reassessment_moves:
             debit_line = move.line_ids.filtered(lambda l: l.debit > 0)
             credit_line = move.line_ids.filtered(lambda l: l.credit > 0)
@@ -300,7 +297,6 @@ class Reassessment(models.TransientModel):
             debit_line = installment_entry.line_ids.filtered(lambda l: l.debit > 0)
             credit_line = installment_entry.line_ids.filtered(lambda l: l.credit > 0)
             installment_entry_base = amount
-            print('installment_entry', installment_entry)
             if installment_entry.currency_id != self.env.company.currency_id:
                 amount = installment_entry.currency_id._convert(
                     amount,

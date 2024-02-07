@@ -2,7 +2,7 @@
 """ init object """
 import calendar
 from math import copysign
-from odoo import fields, models, api, _
+from odoo import fields, models, _
 from odoo.exceptions import ValidationError, UserError
 from odoo.tools import float_compare
 from dateutil.relativedelta import relativedelta

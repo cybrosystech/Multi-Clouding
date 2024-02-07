@@ -2,9 +2,10 @@
 """ init object """
 import base64
 import io
-from odoo import fields, models
-from datetime import datetime , date ,timedelta
+from odoo import fields, models, _
+from datetime import datetime , date
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DF
+
 import calendar
 
 
@@ -210,13 +211,3 @@ class APRecon(models.TransientModel):
             worksheet.write(row, col, line['operating_exp_paid'], STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['bill_status'], STYLE_LINE_Data)
-
-
-
-
-
-
-
-
-
-
