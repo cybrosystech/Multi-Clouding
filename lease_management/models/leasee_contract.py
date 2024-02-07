@@ -700,23 +700,43 @@ class LeaseeContract(models.Model):
         if not self.asset_id:
             method_number = self.lease_contract_period * (
                 1 if self.lease_contract_period_type == 'months' else 12)
-            vals = {
-                'name': self.name,
-                'model_id': self.asset_model_id.id,
-                'original_value': self.rou_value,
-                'asset_type': 'purchase',
-                'acquisition_date': self.commencement_date,
-                'currency_id': self.leasee_currency_id.id,
-                'method_number': method_number,
-                'account_analytic_id': self.analytic_account_id.id,
-                'project_site_id': self.project_site_id.id,
-                'type_id': self.type_id.id,
-                'location_id': self.location_id.id,
-                'prorata': self.prorata,
-                'state': 'draft',
-                'first_depreciation_date': self.commencement_date,
-                'method_period': '1',
-            }
+            if self.inception_date > self.commencement_date:
+                vals = {
+                    'name': self.name,
+                    'model_id': self.asset_model_id.id,
+                    'original_value': self.rou_value,
+                    'asset_type': 'purchase',
+                    'acquisition_date': self.commencement_date,
+                    'currency_id': self.leasee_currency_id.id,
+                    'method_number': method_number,
+                    'accounting_date':self.inception_date,
+                    'account_analytic_id': self.analytic_account_id.id,
+                    'project_site_id': self.project_site_id.id,
+                    'type_id': self.type_id.id,
+                    'location_id': self.location_id.id,
+                    'prorata': self.prorata,
+                    'state': 'draft',
+                    'first_depreciation_date': self.commencement_date,
+                    'method_period': '1',
+                }
+            else:
+                vals = {
+                    'name': self.name,
+                    'model_id': self.asset_model_id.id,
+                    'original_value': self.rou_value,
+                    'asset_type': 'purchase',
+                    'acquisition_date': self.commencement_date,
+                    'currency_id': self.leasee_currency_id.id,
+                    'method_number': method_number,
+                    'account_analytic_id': self.analytic_account_id.id,
+                    'project_site_id': self.project_site_id.id,
+                    'type_id': self.type_id.id,
+                    'location_id': self.location_id.id,
+                    'prorata': self.prorata,
+                    'state': 'draft',
+                    'first_depreciation_date': self.commencement_date,
+                    'method_period': '1',
+                }
 
             if self.asset_model_id:
                 vals.update({
@@ -836,7 +856,6 @@ class LeaseeContract(models.Model):
                 # 'auto_post': True,
             })
             if invoice.date > self.commencement_date and invoice.date <= self.inception_date:
-                invoice.invoice_date = self.inception_date
                 invoice.date = self.inception_date
                 invoice.auto_post = True
 
@@ -878,7 +897,6 @@ class LeaseeContract(models.Model):
                 # 'auto_post': True,
             })
             if invoice.date >= self.commencement_date and invoice.date <= self.inception_date:
-                invoice.invoice_date = self.inception_date
                 invoice.date = self.inception_date
                 invoice.auto_post = True
             line = invoice.line_ids.filtered(
@@ -1028,7 +1046,6 @@ class LeaseeContract(models.Model):
             'line_ids': lines,
         })
         if self.inception_date > self.commencement_date and move_id.date >= self.commencement_date and move_id.date <= self.inception_date:
-            move_id.invoice_date = self.inception_date
             move_id.date = self.inception_date
             move_id.auto_post = True
 
@@ -1570,8 +1587,6 @@ class LeaseeContract(models.Model):
             # 'auto_post': True,
         })
         if invoice.date >= contract.commencement_date and invoice.date <= contract.inception_date:
-            invoice.invoice_date = self.inception_date
-
             invoice.date = self.inception_date
             invoice.auto_post = True
 
@@ -1930,7 +1945,6 @@ class LeaseeContract(models.Model):
                 # 'auto_post': True,
             })
             if move.date >= self.commencement_date and move.date <= self.inception_date:
-                move.invoice_date = self.inception_date
                 move.date = self.inception_date
                 move.auto_post = True
 
@@ -2054,7 +2068,6 @@ class LeaseeContract(models.Model):
                 # 'auto_post': True,
             })
             if move.date >= contract.commencement_date and move.date <= contract.inception_date:
-                move.invoice_date = contract.inception_date
                 move.date = contract.inception_date
                 move.auto_post = True
 
@@ -2309,7 +2322,6 @@ class LeaseeContract(models.Model):
                 # 'auto_post': True,
             })
             if move.date >= self.commencement_date and move.date <= self.inception_date:
-                move.invoice_date = self.inception_date
                 move.date = self.inception_date
                 move.auto_post = True
 
