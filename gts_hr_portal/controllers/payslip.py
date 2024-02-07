@@ -1,17 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import binascii
-from datetime import date, datetime
-
 from odoo import fields, http, _
-from odoo.exceptions import AccessError, MissingError
+from odoo.exceptions import  MissingError
 from odoo.http import request
 from odoo.addons.portal.controllers.portal import CustomerPortal, \
     pager as portal_pager, get_records_pager
-from odoo.osv import expression
-from odoo.exceptions import UserError, AccessError, ValidationError
-
-from odoo.tools import ustr, consteq
+from odoo.exceptions import AccessError
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -89,3 +83,40 @@ class CustomerPortal(CustomerPortal):
         pdfhttpheaders = [('Content-Type', 'application/pdf'),
                           ('Content-Length', len(pdf))]
         return request.make_response(pdf, headers=pdfhttpheaders)
+
+    @http.route(['/my/payslip/<int:payslip_id>'], type='http', auth="public",
+                website=True)
+    def portal_payslip_page(self, payslip_id, report_type=None, access_token=None,
+                          message=False, download=False, **kw):
+        print("8")
+        try:
+            payslip_sudo = self._document_check_access('hr.payslip', payslip_id,
+                                                     access_token=access_token)
+        except (AccessError, MissingError):
+            return request.redirect('/my')
+
+        if report_type in ('html', 'pdf', 'text'):
+            return self._show_report(model=payslip_sudo, report_type=report_type,
+                                     report_ref='hr_payroll.action_report_payslip',
+                                     download=download)
+        if payslip_sudo:
+            now = fields.Date.today()
+            if payslip_sudo and request.session.get(
+                    'view_payslip_%s' % payslip_sudo.id) != now and request.env.user.share and access_token:
+                request.session['view_payslip_%s' % payslip_sudo.id] = now
+            print("payslip_sudo",payslip_sudo)
+            values = {
+                'payslip': payslip_sudo,
+                'message': message,
+                'token': access_token,
+                'bootstrap_formatting': True,
+                'report_type': 'html',
+                'page_name': 'payslip_form',
+            }
+            if payslip_sudo.company_id:
+                values['res_company'] = payslip_sudo.company_id
+            if payslip_sudo.name:
+                history = request.session.get('my_contact_history', [])
+            values.update(get_records_pager(history, payslip_sudo))
+            return request.render('gts_hr_portal.payslip_portal_template',
+                                  values)

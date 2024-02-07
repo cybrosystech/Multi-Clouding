@@ -7,15 +7,17 @@ from odoo.tools import float_compare, float_is_zero
 
 
 class HrPayslip(models.Model):
-    _inherit = "hr.payslip"
+    _name = "hr.payslip"
+    _inherit = ['hr.payslip', 'portal.mixin']
 
-    def action_print_payslip(self):
-        return {
-            'name': 'Payslip',
-            'type': 'ir.actions.act_url',
-            'url': '/report/pdf/hr_payroll.report_payslip_lang/%(payslip_id)s' % {
-                'payslip_id': self.id}
-        }
+    def _compute_access_url(self):
+        super(HrPayslip, self)._compute_access_url()
+        for payslip in self:
+            payslip.access_url = '/my/payslip/%s' % (payslip.id)
+
+    def _get_report_base_filename(self):
+        self.ensure_one()
+        return '%s' % (self.name)
 
     def action_create_journal_entry(self):
         struct_ids = self.mapped('struct_id')

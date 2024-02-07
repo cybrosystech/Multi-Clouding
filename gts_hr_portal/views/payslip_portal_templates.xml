@@ -14,7 +14,8 @@
             </li>
         </xpath>
     </template>
-    <template id="portal_my_home_payslip" name="Portal My Home : Payslip entries"
+    <template id="portal_my_home_payslip"
+              name="Portal My Home : Payslip entries"
               inherit_id="portal.portal_my_home" priority="45">
         <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
             <t t-call="portal.portal_docs_entry">
@@ -56,16 +57,13 @@
                         <td class="text-right">
                             <span t-field="pay.number"/>
                         </td>
-                        <td class="text-right"><span t-field="pay.date_from"/>-<span t-field="pay.date_to"/>
+                        <td class="text-right"><span t-field="pay.date_from"/>-
+                            <span t-field="pay.date_to"/>
                         </td>
                         <td class="text-right">
                             <span>
-                                <a t-attf-href="/report/pdf/hr_payroll.report_payslip_lang/#{pay.id}"
-                                   target="_blank">
-                                    <button type="button"
-                                            class="btn btn-primary btn-md o_website_form_send">
-                                        Print
-                                    </button>
+                                <a t-att-href="pay.get_portal_url()">
+                                    <t t-esc="pay.number"/>
                                 </a>
                             </span>
                         </td>
@@ -75,5 +73,80 @@
         </t>
     </template>
 
+
+    <template id="payslip_portal_template" name="Payslip Portal Template"
+              inherit_id="portal.portal_sidebar" primary="True">
+        <xpath expr="//div[hasclass('o_portal_sidebar')]" position="inside">
+            <div class="row mt16 o_portal_sale_sidebar">
+                <div id="payslip_content"
+                     class="col-12 col-lg justify-content-end">
+                    <div t-attf-class="card #{'pb-5' if report_type == 'html' else ''}">
+                        <div t-call="gts_hr_portal.payslip_portal_content"/>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+    </template>
+
+    <template id="payslip_portal_content" name="Payslip Form">
+        <div t-attf-class="#{'card-body' if report_type == 'html' else ''}">
+            <div id="informations">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <table width="100%">
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Salary Slip No</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td>
+                                    <t t-esc="payslip.number"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Period</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td>
+                                    <t t-esc="payslip.date_from"/>
+                                    -
+                                    <t t-esc="payslip.date_to"/>
+                                </td>
+
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-lg-6">
+                        <table width="100%">
+
+                            <tr>
+                                <td width="35%" style="padding:3px">
+                                    <b>Employee Name</b>
+                                </td>
+                                <td width="5%" style="padding:3px">:</td>
+                                <td>
+                                    <t t-esc="payslip.employee_id.name"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td width="5%">
+                                    <a class="btn btn-secondary btn-block o_download_btn"
+                                       t-att-href="payslip.get_portal_url(report_type='pdf', download=True)"
+                                       title="Download">
+                                        <i class="fa fa-download"/>
+                                        Download
+                                    </a>
+                                </td>
+                                <td></td>
+
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
 
 </odoo>
