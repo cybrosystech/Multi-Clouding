@@ -44,6 +44,25 @@ class HrEmployee(models.Model):
         else:
             pass
 
+class HrEmployeePublic(models.Model):
+    _inherit = 'hr.employee.public'
+
+    child_below_18 = fields.Integer(string="Children below 18")
+    child_below_4 = fields.Integer(string="Children below 4")
+    spouse_working = fields.Selection(string="Spouse Working",
+                                      selection=[('working', 'Working'),
+                                                 ('not_working', 'Not Working'),
+                                                 ], default='not_working')
+
+    date_of_birth_ids = fields.One2many('date.of.birth.line', 'employee_id',
+                                        copy=False)
+    social_security = fields.Char(string="Social Security Number")
+    sub_department_id = fields.Many2one('hr.sub.department',
+                                        string="Sub Department",
+
+                                        )
+
+
 
 class DateOfBirthLine(models.Model):
     _name = 'date.of.birth.line'
