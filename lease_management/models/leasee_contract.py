@@ -855,7 +855,7 @@ class LeaseeContract(models.Model):
                 'leasee_contract_id': self.id,
                 # 'auto_post': True,
             })
-            if invoice.date > self.commencement_date and invoice.date <= self.inception_date:
+            if invoice.date >= self.commencement_date and invoice.date <= self.inception_date:
                 invoice.date = self.inception_date
                 invoice.auto_post = True
 
