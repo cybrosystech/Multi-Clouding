@@ -88,7 +88,6 @@ class CustomerPortal(CustomerPortal):
                 website=True)
     def portal_payslip_page(self, payslip_id, report_type=None, access_token=None,
                           message=False, download=False, **kw):
-        print("8")
         try:
             payslip_sudo = self._document_check_access('hr.payslip', payslip_id,
                                                      access_token=access_token)
@@ -104,7 +103,6 @@ class CustomerPortal(CustomerPortal):
             if payslip_sudo and request.session.get(
                     'view_payslip_%s' % payslip_sudo.id) != now and request.env.user.share and access_token:
                 request.session['view_payslip_%s' % payslip_sudo.id] = now
-            print("payslip_sudo",payslip_sudo)
             values = {
                 'payslip': payslip_sudo,
                 'message': message,
