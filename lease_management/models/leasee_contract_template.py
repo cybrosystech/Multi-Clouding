@@ -2,7 +2,6 @@
 """ init object """
 from odoo import fields, models, api, _
 import logging
-
 LOGGER = logging.getLogger(__name__)
 
 
@@ -65,5 +64,3 @@ class LeaseContractTemplate(models.Model):
         for rec in self:
             rec.type_id = rec.project_site_id.analytic_type_filter_id.id
             rec.location_id = rec.project_site_id.analytic_location_id.id
-
-

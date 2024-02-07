@@ -339,8 +339,6 @@ class LeaseeContract(models.Model):
                     first_installment.date - before_first.date).days
             days_after_reassessment = days - days_before_reassessment
             old_remaining_liability = before_first.remaining_lease_liability + old_subsequent * days_before_reassessment / days
-            # remaining_lease_liability_before = self.get_reassessment_before_remaining_lease(reassessment_installments, days_before_reassessment, days)
-
             self.create_reassessment_move(self,
                                           new_lease_liability - old_remaining_liability,
                                           first_installment.date)
@@ -415,8 +413,13 @@ class LeaseeContract(models.Model):
         self.installment_ids[0].remaining_lease_liability = new_lease_liability
         first_installment = self.installment_ids[1]
         reassessment_installments = self.installment_ids
-        period_ratio = ((
-                                first_installment.date - self.commencement_date).days) / 365
+        if self.inception_date < self.commencement_date :
+            period_ratio = ((
+                                    first_installment.date - self.inception_date).days) / 365
+        else:
+            period_ratio = ((
+                                    first_installment.date - self.commencement_date).days) / 365
+
         interest_recognition = new_lease_liability * (
                 (1 + self.interest_rate / 100) ** period_ratio - 1)
         remaining_liability = new_lease_liability - (
@@ -427,7 +430,6 @@ class LeaseeContract(models.Model):
         })
         prev_install = first_installment
         for i, installment in enumerate(reassessment_installments[2:]):
-            # num_days_year = 365 if contract.is_contract_not_annual() else contract.get_days_per_year(installment.date)
             period_ratio = ((installment.date - prev_install.date).days) / 365
             interest_recognition = remaining_liability * (
                     (1 + self.interest_rate / 100) ** period_ratio - 1)
@@ -454,14 +456,22 @@ class LeaseeContract(models.Model):
                 contract.create_commencement_move()
                 contract.create_initial_bill()
                 contract.create_rov_asset()
-                contract.create_contract_installment_entries(
-                    contract.commencement_date)
-                contract.state = 'active'
+                if contract.inception_date < contract.commencement_date :
+                    contract.create_contract_installment_entries(
+                        contract.inception_date)
+                    contract.state = 'active'
 
-                contract.leasee_action_generate_installments_entries()
-                contract.leasee_action_generate_interest_entries(
-                    contract.commencement_date)
+                    contract.leasee_action_generate_installments_entries()
+                    contract.leasee_action_generate_interest_entries(
+                        contract.inception_date)
+                else:
+                    contract.create_contract_installment_entries(
+                        contract.commencement_date)
+                    contract.state = 'active'
 
+                    contract.leasee_action_generate_installments_entries()
+                    contract.leasee_action_generate_interest_entries(
+                        contract.commencement_date)
                 contract.original_rou = contract.rou_value
                 contract.original_ll = contract.lease_liability
                 if contract.payment_ids:
@@ -526,13 +536,18 @@ class LeaseeContract(models.Model):
 
     def get_installment_period(self, i):
         if self.is_contract_not_annual():
+            if self.inception_date < self.commencement_date:
+                dt = self.inception_date
+            else:
+                dt = self.commencement_date
+
             if self.payment_method == 'beginning':
-                ins_date = self.commencement_date + relativedelta(
+                ins_date = dt + relativedelta(
                     months=i * self.payment_frequency)
             else:
-                ins_date = self.commencement_date + relativedelta(
+                ins_date = dt + relativedelta(
                     months=(i) * self.payment_frequency, days=-1)
-            return (ins_date - self.commencement_date).days / 365
+            return (ins_date - dt).days / 365
         else:
             return i
 
@@ -683,7 +698,10 @@ class LeaseeContract(models.Model):
     def get_present_value_modified(self, future_value, interest, period,
                                    start_date=None, end_period=None,
                                    installment=None):
-        start_date = start_date or self.commencement_date
+        if self.inception_date < self.commencement_date :
+            start_date = start_date or self.inception_date
+        else:
+            start_date = start_date or self.commencement_date
         if not installment:
             installment = self.installment_ids.filtered(
                 lambda i: i.get_period_order() == period)
@@ -713,12 +731,16 @@ class LeaseeContract(models.Model):
         if not self.asset_id:
             method_number = self.lease_contract_period * (
                 1 if self.lease_contract_period_type == 'months' else 12)
+            if self.inception_date < self.commencement_date:
+                asset_date = self.inception_date
+            else:
+                asset_date = self.commencement_date
             vals = {
                 'name': self.name,
                 'model_id': self.asset_model_id.id,
                 'original_value': self.rou_value,
                 'asset_type': 'purchase',
-                'acquisition_date': self.commencement_date,
+                'acquisition_date': asset_date,
                 'currency_id': self.leasee_currency_id.id,
                 'method_number': method_number,
                 'account_analytic_id': self.analytic_account_id.id,
@@ -727,7 +749,7 @@ class LeaseeContract(models.Model):
                 'location_id': self.location_id.id,
                 'prorata': self.prorata,
                 'state': 'draft',
-                'first_depreciation_date': self.commencement_date,
+                'first_depreciation_date': asset_date,
                 'method_period': '1',
             }
 
@@ -740,18 +762,13 @@ class LeaseeContract(models.Model):
                     # 'account_analytic_id': self.asset_model_id.account_analytic_id.id,
                     'method': self.asset_model_id.method,
                 })
-            # else:
             asset = self.env['account.asset'].create(vals)
             asset.name = self.name
             asset.state = 'draft'
-            # if self.asset_model_id.category_id.open_asset:
-            #     asset.validate()
             if self.prorata:
-                asset.prorata_date = self.commencement_date
+                asset.prorata_date = asset_date
             self.asset_id = asset.id
 
-    # def action_create_bill(self):
-    #     pass
 
     def compute_remaining_lease_liability(self):
         for rec in self:
@@ -837,17 +854,31 @@ class LeaseeContract(models.Model):
                     'type_id': self.type_id.id,
                     'location_id': self.location_id.id,
                 }))
-            invoice = self.env['account.move'].create({
-                'partner_id': partner.id,
-                'move_type': 'in_invoice',
-                'currency_id': self.leasee_currency_id.id,
-                'ref': self.name,
-                'invoice_date': self.commencement_date,
-                'invoice_line_ids': invoice_lines,
-                'journal_id': self.installment_journal_id.id,
-                'leasee_contract_id': self.id,
-                'auto_post': True,
-            })
+            if self.inception_date < self.commencement_date :
+                invoice = self.env['account.move'].create({
+                    'partner_id': partner.id,
+                    'move_type': 'in_invoice',
+                    'currency_id': self.leasee_currency_id.id,
+                    'ref': self.name,
+                    'invoice_date': self.inception_date,
+                    'invoice_line_ids': invoice_lines,
+                    'journal_id': self.installment_journal_id.id,
+                    'leasee_contract_id': self.id,
+                    'auto_post': True,
+                })
+            else:
+                invoice = self.env['account.move'].create({
+                    'partner_id': partner.id,
+                    'move_type': 'in_invoice',
+                    'currency_id': self.leasee_currency_id.id,
+                    'ref': self.name,
+                    'invoice_date': self.commencement_date,
+                    'invoice_line_ids': invoice_lines,
+                    'journal_id': self.installment_journal_id.id,
+                    'leasee_contract_id': self.id,
+                    'auto_post': True,
+                })
+
             line = invoice.line_ids.filtered(
                 lambda l: l.account_id == partner.property_account_payable_id)
             if line:
@@ -873,18 +904,32 @@ class LeaseeContract(models.Model):
                 'type_id': self.type_id.id,
                 'location_id': self.location_id.id,
             })]
-            invoice = self.env['account.move'].create({
-                'partner_id': partner.id,
-                'move_type': 'in_refund',
-                'currency_id': self.leasee_currency_id.id,
-                'ref': self.name,
-                # 'invoice_date': datetime.now(),
-                'invoice_date': self.commencement_date,
-                'invoice_line_ids': invoice_lines,
-                'journal_id': self.installment_journal_id.id,
-                'leasee_contract_id': self.id,
-                'auto_post': True,
-            })
+            if self.inception_date < self.commencement_date :
+                invoice = self.env['account.move'].create({
+                    'partner_id': partner.id,
+                    'move_type': 'in_refund',
+                    'currency_id': self.leasee_currency_id.id,
+                    'ref': self.name,
+                    # 'invoice_date': datetime.now(),
+                    'invoice_date': self.inception_date,
+                    'invoice_line_ids': invoice_lines,
+                    'journal_id': self.installment_journal_id.id,
+                    'leasee_contract_id': self.id,
+                    'auto_post': True,
+                })
+            else:
+                invoice = self.env['account.move'].create({
+                    'partner_id': partner.id,
+                    'move_type': 'in_refund',
+                    'currency_id': self.leasee_currency_id.id,
+                    'ref': self.name,
+                    # 'invoice_date': datetime.now(),
+                    'invoice_date': self.commencement_date,
+                    'invoice_line_ids': invoice_lines,
+                    'journal_id': self.installment_journal_id.id,
+                    'leasee_contract_id': self.id,
+                    'auto_post': True,
+                })
             line = invoice.line_ids.filtered(
                 lambda l: l.account_id == partner.property_account_payable_id)
             if line:
@@ -899,9 +944,6 @@ class LeaseeContract(models.Model):
         total_amount = 0
         annual_ins = self.get_installments_per_year() or 1
         if self.payment_method == 'beginning':
-            # installments = self.installment_ids.filtered(lambda i: 1 <= i.get_period_order() <= annual_ins)
-            # for ins in installments:
-            #     total_amount += (ins.amount - ins.subsequent_amount if ins else ins.amount)
             installment = self.installment_ids.filtered(
                 lambda i: i.get_period_order() == 1 and not i.is_long_liability)
             total_amount = installment.amount - installment.subsequent_amount
@@ -917,104 +959,57 @@ class LeaseeContract(models.Model):
     def create_commencement_move(self):
         rou_account = self.asset_model_id.account_asset_id
         short_lease_liability_amount = self.get_commencement_short_amount()
-        lines = [(0, 0, {
-            'name': 'create contract number %s' % self.name,
-            'account_id': rou_account.id,
-            'credit': 0,
-            'debit': (self.rou_value - (
-                self.initial_direct_cost)) if self.leasee_currency_id == self.company_id.currency_id else round(
-                self.leasee_currency_id._convert(
-                    self.rou_value - (self.initial_direct_cost),
-                    self.company_id.currency_id, self.company_id,
-                    self.commencement_date), 2),
-            'amount_currency': self.rou_value - (self.initial_direct_cost),
-            'analytic_account_id': self.analytic_account_id.id,
-            'project_site_id': self.project_site_id.id,
-            'type_id': self.type_id.id,
-            'location_id': self.location_id.id,
-            'currency_id': self.leasee_currency_id.id
-        }), (0, 0, {
-            'name': 'create contract number %s' % self.name,
-            'account_id': self.long_lease_liability_account_id.id or self.leasee_template_id.long_lease_liability_account_id.id,
-            'debit': 0,
-            'credit': (
-                    self.lease_liability - short_lease_liability_amount) if self.leasee_currency_id == self.company_id.currency_id else round(
-                self.leasee_currency_id._convert(
-                    self.lease_liability - short_lease_liability_amount,
-                    self.company_id.currency_id, self.company_id,
-                    self.commencement_date), 2),
-            'amount_currency': -(
-                    self.lease_liability - short_lease_liability_amount),
-            'analytic_account_id': self.analytic_account_id.id,
-            'project_site_id': self.project_site_id.id,
-            'type_id': self.type_id.id,
-            'location_id': self.location_id.id,
-            'currency_id': self.leasee_currency_id.id
-        })]
-
-        if short_lease_liability_amount or self.initial_payment_value:
-            short_amount = short_lease_liability_amount + self.initial_payment_value
-            short_amount1 = round(self.leasee_currency_id._convert(short_amount,
-                                                                   self.company_id.currency_id,
-                                                                   self.company_id,
-                                                                   self.commencement_date),
-                                  3)
-
-            lines.append((0, 0, {
+        if self.inception_date < self.commencement_date :
+            lines = [(0, 0, {
                 'name': 'create contract number %s' % self.name,
-                'account_id': self.lease_liability_account_id.id,
-                'debit': -short_amount1 if short_amount1 < 0 else 0,
-                'credit': short_amount1 if short_amount1 > 0 else 0,
-                'amount_currency': -short_amount if short_amount > 0 else short_amount,
-                'analytic_account_id': self.analytic_account_id.id,
-                'project_site_id': self.project_site_id.id,
-                'type_id': self.type_id.id,
-                'location_id': self.location_id.id,
-                'currency_id': self.leasee_currency_id.id
-            }))
-
-        if self.incentives_received and self.incentives_received_type != 'rent_free':
-            lines.append((0, 0, {
-                'name': 'create contract number %s' % self.name,
-                'account_id': self.incentives_account_id.id,
-                'debit': self.incentives_received if self.leasee_currency_id == self.company_id.currency_id else self.leasee_currency_id._convert(
-                    self.incentives_received, self.company_id.currency_id,
-                    self.company_id, self.commencement_date),
+                'account_id': rou_account.id,
                 'credit': 0,
-                'amount_currency': self.incentives_received,
+                'debit': (self.rou_value - (
+                    self.initial_direct_cost)) if self.leasee_currency_id == self.company_id.currency_id else round(
+                    self.leasee_currency_id._convert(
+                        self.rou_value - (self.initial_direct_cost),
+                        self.company_id.currency_id, self.company_id,
+                        self.inception_date), 2),
+                'amount_currency': self.rou_value - (self.initial_direct_cost),
                 'analytic_account_id': self.analytic_account_id.id,
                 'project_site_id': self.project_site_id.id,
                 'type_id': self.type_id.id,
                 'location_id': self.location_id.id,
                 'currency_id': self.leasee_currency_id.id
-            }))
-
-        if self.estimated_cost_dismantling:
-            lines.append((0, 0, {
+            }), (0, 0, {
                 'name': 'create contract number %s' % self.name,
-                'account_id': self.provision_dismantling_account_id.id,
+                'account_id': self.long_lease_liability_account_id.id or self.leasee_template_id.long_lease_liability_account_id.id,
                 'debit': 0,
-                'credit': self.estimated_cost_dismantling if self.leasee_currency_id == self.company_id.currency_id else self.leasee_currency_id._convert(
-                    self.estimated_cost_dismantling,
-                    self.company_id.currency_id, self.company_id,
-                    self.commencement_date),
-                'amount_currency': -self.estimated_cost_dismantling,
+                'credit': (
+                        self.lease_liability - short_lease_liability_amount) if self.leasee_currency_id == self.company_id.currency_id else round(
+                    self.leasee_currency_id._convert(
+                        self.lease_liability - short_lease_liability_amount,
+                        self.company_id.currency_id, self.company_id,
+                        self.inception_date), 2),
+                'amount_currency': -(
+                        self.lease_liability - short_lease_liability_amount),
                 'analytic_account_id': self.analytic_account_id.id,
                 'project_site_id': self.project_site_id.id,
                 'type_id': self.type_id.id,
                 'location_id': self.location_id.id,
                 'currency_id': self.leasee_currency_id.id
-            }))
-        if self.leasee_currency_id != self.company_id.currency_id:
-            debit = sum(list(map(lambda x: x[2]['debit'], lines)))
-            credit = sum(list(map(lambda x: x[2]['credit'], lines)))
-            total_diff = debit - credit
-            if total_diff < 1:
+            })]
+
+            if short_lease_liability_amount or self.initial_payment_value:
+                short_amount = short_lease_liability_amount + self.initial_payment_value
+                short_amount1 = round(
+                    self.leasee_currency_id._convert(short_amount,
+                                                     self.company_id.currency_id,
+                                                     self.company_id,
+                                                     self.inception_date),
+                    3)
+
                 lines.append((0, 0, {
                     'name': 'create contract number %s' % self.name,
                     'account_id': self.lease_liability_account_id.id,
-                    'debit': abs(total_diff) if total_diff < 0 else 0,
-                    'credit': total_diff if total_diff > 0 else 0,
+                    'debit': -short_amount1 if short_amount1 < 0 else 0,
+                    'credit': short_amount1 if short_amount1 > 0 else 0,
+                    'amount_currency': -short_amount if short_amount > 0 else short_amount,
                     'analytic_account_id': self.analytic_account_id.id,
                     'project_site_id': self.project_site_id.id,
                     'type_id': self.type_id.id,
@@ -1022,18 +1017,184 @@ class LeaseeContract(models.Model):
                     'currency_id': self.leasee_currency_id.id
                 }))
 
-        self.env['account.move'].create({
-            'partner_id': self.vendor_id.id,
-            'move_type': 'entry',
-            'currency_id': self.leasee_currency_id.id,
-            'ref': self.name,
-            'date': self.commencement_date,
-            'journal_id': self.initial_journal_id.id,
-            'leasee_contract_id': self.id,
-            'line_ids': lines,
-            'auto_post': True,
-        })
+            if self.incentives_received and self.incentives_received_type != 'rent_free':
+                lines.append((0, 0, {
+                    'name': 'create contract number %s' % self.name,
+                    'account_id': self.incentives_account_id.id,
+                    'debit': self.incentives_received if self.leasee_currency_id == self.company_id.currency_id else self.leasee_currency_id._convert(
+                        self.incentives_received, self.company_id.currency_id,
+                        self.company_id, self.inception_date),
+                    'credit': 0,
+                    'amount_currency': self.incentives_received,
+                    'analytic_account_id': self.analytic_account_id.id,
+                    'project_site_id': self.project_site_id.id,
+                    'type_id': self.type_id.id,
+                    'location_id': self.location_id.id,
+                    'currency_id': self.leasee_currency_id.id
+                }))
 
+            if self.estimated_cost_dismantling:
+                lines.append((0, 0, {
+                    'name': 'create contract number %s' % self.name,
+                    'account_id': self.provision_dismantling_account_id.id,
+                    'debit': 0,
+                    'credit': self.estimated_cost_dismantling if self.leasee_currency_id == self.company_id.currency_id else self.leasee_currency_id._convert(
+                        self.estimated_cost_dismantling,
+                        self.company_id.currency_id, self.company_id,
+                        self.inception_date),
+                    'amount_currency': -self.estimated_cost_dismantling,
+                    'analytic_account_id': self.analytic_account_id.id,
+                    'project_site_id': self.project_site_id.id,
+                    'type_id': self.type_id.id,
+                    'location_id': self.location_id.id,
+                    'currency_id': self.leasee_currency_id.id
+                }))
+            if self.leasee_currency_id != self.company_id.currency_id:
+                debit = sum(list(map(lambda x: x[2]['debit'], lines)))
+                credit = sum(list(map(lambda x: x[2]['credit'], lines)))
+                total_diff = debit - credit
+                if total_diff < 1:
+                    lines.append((0, 0, {
+                        'name': 'create contract number %s' % self.name,
+                        'account_id': self.lease_liability_account_id.id,
+                        'debit': abs(total_diff) if total_diff < 0 else 0,
+                        'credit': total_diff if total_diff > 0 else 0,
+                        'analytic_account_id': self.analytic_account_id.id,
+                        'project_site_id': self.project_site_id.id,
+                        'type_id': self.type_id.id,
+                        'location_id': self.location_id.id,
+                        'currency_id': self.leasee_currency_id.id
+                    }))
+
+            self.env['account.move'].create({
+                'partner_id': self.vendor_id.id,
+                'move_type': 'entry',
+                'currency_id': self.leasee_currency_id.id,
+                'ref': self.name,
+                'date': self.inception_date,
+                'journal_id': self.initial_journal_id.id,
+                'leasee_contract_id': self.id,
+                'line_ids': lines,
+                'auto_post': True,
+            })
+        else:
+            lines = [(0, 0, {
+                'name': 'create contract number %s' % self.name,
+                'account_id': rou_account.id,
+                'credit': 0,
+                'debit': (self.rou_value - (
+                    self.initial_direct_cost)) if self.leasee_currency_id == self.company_id.currency_id else round(
+                    self.leasee_currency_id._convert(
+                        self.rou_value - (self.initial_direct_cost),
+                        self.company_id.currency_id, self.company_id,
+                        self.commencement_date), 2),
+                'amount_currency': self.rou_value - (self.initial_direct_cost),
+                'analytic_account_id': self.analytic_account_id.id,
+                'project_site_id': self.project_site_id.id,
+                'type_id': self.type_id.id,
+                'location_id': self.location_id.id,
+                'currency_id': self.leasee_currency_id.id
+            }), (0, 0, {
+                'name': 'create contract number %s' % self.name,
+                'account_id': self.long_lease_liability_account_id.id or self.leasee_template_id.long_lease_liability_account_id.id,
+                'debit': 0,
+                'credit': (
+                        self.lease_liability - short_lease_liability_amount) if self.leasee_currency_id == self.company_id.currency_id else round(
+                    self.leasee_currency_id._convert(
+                        self.lease_liability - short_lease_liability_amount,
+                        self.company_id.currency_id, self.company_id,
+                        self.commencement_date), 2),
+                'amount_currency': -(
+                        self.lease_liability - short_lease_liability_amount),
+                'analytic_account_id': self.analytic_account_id.id,
+                'project_site_id': self.project_site_id.id,
+                'type_id': self.type_id.id,
+                'location_id': self.location_id.id,
+                'currency_id': self.leasee_currency_id.id
+            })]
+
+            if short_lease_liability_amount or self.initial_payment_value:
+                short_amount = short_lease_liability_amount + self.initial_payment_value
+                short_amount1 = round(
+                    self.leasee_currency_id._convert(short_amount,
+                                                     self.company_id.currency_id,
+                                                     self.company_id,
+                                                     self.commencement_date),
+                    3)
+
+                lines.append((0, 0, {
+                    'name': 'create contract number %s' % self.name,
+                    'account_id': self.lease_liability_account_id.id,
+                    'debit': -short_amount1 if short_amount1 < 0 else 0,
+                    'credit': short_amount1 if short_amount1 > 0 else 0,
+                    'amount_currency': -short_amount if short_amount > 0 else short_amount,
+                    'analytic_account_id': self.analytic_account_id.id,
+                    'project_site_id': self.project_site_id.id,
+                    'type_id': self.type_id.id,
+                    'location_id': self.location_id.id,
+                    'currency_id': self.leasee_currency_id.id
+                }))
+
+            if self.incentives_received and self.incentives_received_type != 'rent_free':
+                lines.append((0, 0, {
+                    'name': 'create contract number %s' % self.name,
+                    'account_id': self.incentives_account_id.id,
+                    'debit': self.incentives_received if self.leasee_currency_id == self.company_id.currency_id else self.leasee_currency_id._convert(
+                        self.incentives_received, self.company_id.currency_id,
+                        self.company_id, self.commencement_date),
+                    'credit': 0,
+                    'amount_currency': self.incentives_received,
+                    'analytic_account_id': self.analytic_account_id.id,
+                    'project_site_id': self.project_site_id.id,
+                    'type_id': self.type_id.id,
+                    'location_id': self.location_id.id,
+                    'currency_id': self.leasee_currency_id.id
+                }))
+
+            if self.estimated_cost_dismantling:
+                lines.append((0, 0, {
+                    'name': 'create contract number %s' % self.name,
+                    'account_id': self.provision_dismantling_account_id.id,
+                    'debit': 0,
+                    'credit': self.estimated_cost_dismantling if self.leasee_currency_id == self.company_id.currency_id else self.leasee_currency_id._convert(
+                        self.estimated_cost_dismantling,
+                        self.company_id.currency_id, self.company_id,
+                        self.commencement_date),
+                    'amount_currency': -self.estimated_cost_dismantling,
+                    'analytic_account_id': self.analytic_account_id.id,
+                    'project_site_id': self.project_site_id.id,
+                    'type_id': self.type_id.id,
+                    'location_id': self.location_id.id,
+                    'currency_id': self.leasee_currency_id.id
+                }))
+            if self.leasee_currency_id != self.company_id.currency_id:
+                debit = sum(list(map(lambda x: x[2]['debit'], lines)))
+                credit = sum(list(map(lambda x: x[2]['credit'], lines)))
+                total_diff = debit - credit
+                if total_diff < 1:
+                    lines.append((0, 0, {
+                        'name': 'create contract number %s' % self.name,
+                        'account_id': self.lease_liability_account_id.id,
+                        'debit': abs(total_diff) if total_diff < 0 else 0,
+                        'credit': total_diff if total_diff > 0 else 0,
+                        'analytic_account_id': self.analytic_account_id.id,
+                        'project_site_id': self.project_site_id.id,
+                        'type_id': self.type_id.id,
+                        'location_id': self.location_id.id,
+                        'currency_id': self.leasee_currency_id.id
+                    }))
+
+            self.env['account.move'].create({
+                'partner_id': self.vendor_id.id,
+                'move_type': 'entry',
+                'currency_id': self.leasee_currency_id.id,
+                'ref': self.name,
+                'date': self.commencement_date,
+                'journal_id': self.initial_journal_id.id,
+                'leasee_contract_id': self.id,
+                'line_ids': lines,
+                'auto_post': True,
+            })
     def get_annual_period(self, i):
         if self.is_contract_not_annual():
             res = math.floor(i / self.get_installments_per_year())
@@ -1043,9 +1204,12 @@ class LeaseeContract(models.Model):
 
     def create_beginning_installments(self, remaining_lease_liability):
         monthly_freq = {'1': 12, '3': 4, '6': 2}
-        start = self.commencement_date
-        # remaining_lease_liability = self.lease_liability - self.incentives_received
-        # remaining_lease_liability = self.lease_liability
+        if  self.inception_date < self.commencement_date:
+            start = self.inception_date
+        else:
+            start = self.commencement_date
+
+        # start = self.commencement_date
         num_installment = self.compute_installments_num()
         period_range = range(0, num_installment + 1)
         payment_months = self.payment_frequency * (
@@ -1109,9 +1273,18 @@ class LeaseeContract(models.Model):
                     else:
                         increasement_frequency += self.increasement_frequency
             if i == 0:
-                journals = self.env['account.move'].search(
-                    [('leasee_contract_id',
-                      '=', self.id), ('date', '=', self.commencement_date)])
+                if self.inception_date< self.commencement_date:
+                    journals = self.env['account.move'].search(
+                        [('leasee_contract_id',
+                          '=', self.id), ('date', '=', self.inception_date)])
+                else:
+                    journals = self.env['account.move'].search(
+                        [('leasee_contract_id',
+                          '=', self.id), ('date', '=', self.commencement_date)])
+
+                # journals = self.env['account.move'].search(
+                #     [('leasee_contract_id',
+                #       '=', self.id), ('date', '=', self.commencement_date)])
                 if journals:
                     if self.leasee_currency_id != self.company_id.currency_id:
                         amount = journals.amount_total
@@ -1132,27 +1305,49 @@ class LeaseeContract(models.Model):
         monthly_freq = {'1': 12, '3': 4, '6': 2}
         # remaining_lease_liability = self.lease_liability
         amount_advance = 0
-        journals = self.env['account.move'].search(
-            [('leasee_contract_id',
-              '=', self.id), ('date', '=', self.commencement_date)])
-        if journals:
-            amount_advance = journals.amount_total_signed
-        payment_months = self.payment_frequency * (
-            1 if self.payment_frequency_type == 'months' else 12)
-        self.env['leasee.installment'].create({
-            'name': self.name + ' installment - ' + self.commencement_date.strftime(
-                DF),
-            'period': 0,
-            'amount': amount_advance if amount_advance else 0,
-            # 'date': self.commencement_date + relativedelta(months=payment_months, days=-1),
-            'date': self.commencement_date,
-            'leasee_contract_id': self.id,
-            'subsequent_amount': 0,
-            'remaining_lease_liability': remaining_lease_liability,
-        })
+        if self.inception_date < self.commencement_date:
+            journals = self.env['account.move'].search(
+                [('leasee_contract_id',
+                  '=', self.id), ('date', '=', self.inception_date)])
+            if journals:
+                amount_advance = journals.amount_total_signed
+            payment_months = self.payment_frequency * (
+                1 if self.payment_frequency_type == 'months' else 12)
+            self.env['leasee.installment'].create({
+                'name': self.name + ' installment - ' + self.inception_date.strftime(
+                    DF),
+                'period': 0,
+                'amount': amount_advance if amount_advance else 0,
+                # 'date': self.commencement_date + relativedelta(months=payment_months, days=-1),
+                'date': self.inception_date,
+                'leasee_contract_id': self.id,
+                'subsequent_amount': 0,
+                'remaining_lease_liability': remaining_lease_liability,
+            })
 
-        start = self.commencement_date
-        # remaining_lease_liability = self.lease_liability
+            start = self.inception_date
+        else:
+            journals = self.env['account.move'].search(
+                [('leasee_contract_id',
+                  '=', self.id), ('date', '=', self.commencement_date)])
+            if journals:
+                amount_advance = journals.amount_total_signed
+            payment_months = self.payment_frequency * (
+                1 if self.payment_frequency_type == 'months' else 12)
+            self.env['leasee.installment'].create({
+                'name': self.name + ' installment - ' + self.commencement_date.strftime(
+                    DF),
+                'period': 0,
+                'amount': amount_advance if amount_advance else 0,
+                # 'date': self.commencement_date + relativedelta(months=payment_months, days=-1),
+                'date': self.commencement_date,
+                'leasee_contract_id': self.id,
+                'subsequent_amount': 0,
+                'remaining_lease_liability': remaining_lease_liability,
+            })
+
+            start = self.commencement_date
+
         num_installment = self.compute_installments_num()
         period_range = range(1, num_installment + 1)
         remaining_advanced = self.initial_payment_value
@@ -1636,8 +1831,12 @@ class LeaseeContract(models.Model):
                         for n_date in supposed_dates:
                             if n_date >= start_date:
                                 # if contract.commencement_date.month == n_date.month:
+                                if contract.inception_date < contract.commencement_date :
+                                    lease_dt = contract.inception_date
+                                else:
+                                    lease_dt = contract.commencement_date
                                 if (
-                                        ins_period == 1 and contract.commencement_date.month == n_date.month) or (
+                                        ins_period == 1 and lease_dt.month == n_date.month) or (
                                         prev_install and prev_install.date.month == n_date.month):
                                     start_month = n_date.replace(day=1)
                                     if prev_install:
@@ -1653,7 +1852,7 @@ class LeaseeContract(models.Model):
                                                 prev_install.date - before_prev_install.date).days if before_prev_install and before_prev_install.get_period_order() else prev_num_days
                                     else:
                                         remaining_of_month = (
-                                                                     n_date - contract.commencement_date).days + 1
+                                                                     n_date - lease_dt).days + 1
                                         prev_num_days = 1
                                     month_days = (n_date - start_month).days + 1
                                     current_amount = interest_amount * remaining_of_month / num_days
@@ -1689,9 +1888,6 @@ class LeaseeContract(models.Model):
         for contract in self:
             delta = contract.payment_frequency * (
                 1 if contract.payment_frequency_type == 'months' else 12)
-            # instalments = self.env['leasee.installment'].search([
-            #     ('leasee_contract_id', '=', contract.id),
-            # ]).filtered(lambda i: i.date >= start_date)
             instalments = contract.installment_ids.filtered(
                 lambda i: i.date >= start_date)
             for i, installment in enumerate(instalments):
@@ -1721,8 +1917,12 @@ class LeaseeContract(models.Model):
                             installment.date - prev_install.date).days if prev_install else num_days
 
                     for n_date in supposed_dates:
+                        if contract.inception_date < contract.commencement_date:
+                            dt = contract.inception_date
+                        else:
+                            dt = contract.commencement_date
                         if (
-                                ins_period == 1 and contract.commencement_date.month == n_date.month) or (
+                                ins_period == 1 and dt.month == n_date.month) or (
                                 prev_install and prev_install.date.month == n_date.month):
                             start_month = n_date.replace(day=1)
                             if prev_install:
@@ -1738,7 +1938,7 @@ class LeaseeContract(models.Model):
                                         prev_install.date - before_prev_install.date).days if before_prev_install and before_prev_install.get_period_order() else prev_num_days
                             else:
                                 remaining_of_month = (
-                                                             n_date - contract.commencement_date).days + 1
+                                                             n_date - dt).days + 1
                                 prev_num_days = 1
                             month_days = (n_date - start_month).days + 1
                             current_amount = interest_amount * remaining_of_month / num_days
@@ -2305,14 +2505,6 @@ class LeaseeContract(models.Model):
         return lease_liability
 
     def get_reassessment_after_remaining_lease(self, reassessment_installments):
-        # if self.is_contract_not_annual():
-        #     num_installments = self.get_installments_per_year()
-        #     lease_liability = 0
-        #     for ins in reassessment_installments[:num_installments]:
-        #         lease_liability += ins.amount - ins.subsequent_amount
-        # else:
-        #     first_installment = reassessment_installments[0]
-        #     lease_liability = first_installment.amount - first_installment.subsequent_amount
         first_installment = reassessment_installments[0]
         lease_liability = first_installment.amount - first_installment.subsequent_amount
         return lease_liability

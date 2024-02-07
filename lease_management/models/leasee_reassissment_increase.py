@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 """ init object """
-from odoo import fields, models, api, _
-
+from odoo import fields, models
 import logging
-
 LOGGER = logging.getLogger(__name__)
 
 
@@ -14,8 +12,3 @@ class LeaseeReassissmentIncrease(models.Model):
     leasee_contract_id = fields.Many2one(comodel_name="leasee.contract", string="", required=False,ondelete='cascade' )
     installment_amount = fields.Float()
     installment_date = fields.Date()
-
-
-
-
-

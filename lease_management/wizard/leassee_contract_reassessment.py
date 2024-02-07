@@ -26,91 +26,6 @@ class Reassessment(models.TransientModel):
         res['new_installment_amount'] = leasee_contract.installment_amount
         return res
 
-    # @api.constrains('new_installment_amount', 'leasee_contract_id', 'reassessment_start_Date')
-    # def check_new_installment(self):
-    #     pass
-
-    # def action_apply(self):
-    #     contract = self.leasee_contract_id
-    #     old_lease_liability = contract.lease_liability
-    #     old_rou_value = contract.rou_value
-    #     self.env['leasee.reassessment.increase'].create({
-    #         'leasee_contract_id': self.leasee_contract_id.id,
-    #         'installment_amount': self.new_installment_amount,
-    #         'installment_date': self.reassessment_start_Date,
-    #     })
-    #
-    #     installments_to_modify = self.env['leasee.installment'].search([
-    #         ('leasee_contract_id', '=', self.leasee_contract_id.id),
-    #         ('date', '>=', self.reassessment_start_Date),
-    #     ])
-    #     old_installments = contract.installment_ids[1:] - installments_to_modify
-    #
-    #     diff_installments = []
-    #     installment_amount = self.new_installment_amount
-    #     for i, installment in enumerate(installments_to_modify):
-    #         installment.amount = installment_amount
-    #         diff = installment_amount - installment.amount
-    #         diff_installments.append(diff)
-    #         installment_amount = self.leasee_contract_id.get_future_value(installment_amount, contract.increasement_rate, 1)
-    #
-    #     new_rou = contract.rou_value - old_rou_value
-    #     self.create_reassessment_move(contract, new_rou)
-    #
-    #     # prev_installment_amount = contract.lease_liability
-    #     remaining_liability = contract.lease_liability
-    #     if not contract.prorata:
-    #         for i, ins in enumerate(old_installments):
-    #             if i ==0 and contract.payment_method == 'beginning':
-    #                 interest_factor = 1
-    #             else:
-    #                 interest_factor = (1 + contract.interest_rate/ 100)
-    #             remaining_liability = interest_factor * remaining_liability - ins.amount
-    #             # prev_installment_amount =
-    #
-    #         for installment in installments_to_modify:
-    #             # if not prev_installment_amount:
-    #             #     installment.subsequent_amount = installment.subsequent_amount - (diff - new_rou * contract.interest_rate) / 100
-    #             #     # remaining_liability = installment.subsequent_amount / (contract.interest_rate / 100 )
-    #             #     installment.remaining_lease_liability = remaining_liability
-    #             # else:
-    #                 # installment.subsequent_amount = remaining_liability * contract.interest_rate / 100
-    #             installment.subsequent_amount = remaining_liability * contract.interest_rate / 100
-    #             remaining_liability = remaining_liability * (1 + contract.interest_rate / 100 ) - installment.amount
-    #             installment.remaining_lease_liability = round(remaining_liability, 2)
-    #             # if not contract.interest_rate:
-    #             #     installment.remaining_lease_liability += diff
-    #             # prev_installment_amount = installment.amount
-    #     else:
-    #         for i, ins in enumerate(old_installments):
-    #             if contract.payment_method == 'beginning':
-    #                 if i >= 1:
-    #                     period_ratio = ((ins.date - old_installments[i-1].date).days) / 365
-    #                     interest_recognition = remaining_liability * (
-    #                                 (1 + contract.interest_rate / 100) ** period_ratio - 1)
-    #                 else:
-    #                     interest_recognition = 0
-    #             else:
-    #                 if i >= 1:
-    #                     period_ratio = ((ins.date - old_installments[i-1].date).days) / 365
-    #                     interest_recognition = remaining_liability * ((1 + contract.interest_rate / 100) ** period_ratio - 1)
-    #                 else:
-    #                     interest_recognition = 0
-    #
-    #             remaining_liability -= (ins.amount - interest_recognition)
-    #
-    #         prev_install = old_installments[-1]
-    #         for i, installment in enumerate(installments_to_modify):
-    #             period_ratio = ((installment.date - prev_install.date).days) / 365
-    #             interest_recognition = remaining_liability * ((1 + contract.interest_rate / 100) ** period_ratio - 1)
-    #             remaining_liability -= (installment.amount - interest_recognition)
-    #             installment.subsequent_amount = interest_recognition
-    #             installment.remaining_lease_liability = remaining_liability
-    #             prev_install = installment
-    #
-    #     self.update_asset_value(contract.rou_value - old_rou_value)
-    #     self.update_related_journal_items(installments_to_modify)
-
     def action_apply(self, reassessment=None):
         journal_update_date = ''
         subsequent_amount_data = 0
@@ -195,8 +110,6 @@ class Reassessment(models.TransientModel):
             base_amount = amount
             if contract.leasee_currency_id != contract.company_id.currency_id:
                 amount = contract.leasee_currency_id._convert(amount, contract.company_id.currency_id, contract.company_id, self.reassessment_start_Date)
-            print("amount",amount)
-            print("base_amount",base_amount)
             lines = [(0, 0, {
                 'name': 'Reassessment contract number %s' % contract.name,
                 'account_id': rou_account.id,
@@ -221,7 +134,6 @@ class Reassessment(models.TransientModel):
                 'location_id': contract.location_id.id,
                 'currency_id': contract.leasee_currency_id.id
             })]
-            print("linessssss",lines)
             move = self.env['account.move'].create({
                 'partner_id': contract.vendor_id.id,
                 'move_type': 'entry',
@@ -233,7 +145,6 @@ class Reassessment(models.TransientModel):
                 'line_ids': lines,
                 'auto_post': True,
             })
-            print("move",move)
             if contract.leasee_currency_id != contract.company_id.currency_id:
                 test_amount_c = move.line_ids.filtered(lambda x: x.credit > 0)
                 test_amount_c.amount_currency = test_amount_c.amount_currency * -1
