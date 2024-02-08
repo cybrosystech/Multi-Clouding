@@ -1142,8 +1142,6 @@ class LeaseeContract(models.Model):
                 'subsequent_amount': interest_recognition,
                 'remaining_lease_liability': remaining_lease_liability,
             })
-            if inst.date > self.commencement_date and inst.date <= self.inception_date:
-                inst.date = self.inception_date
 
     def create_end_installments(self, remaining_lease_liability):
         monthly_freq = {'1': 12, '3': 4, '6': 2}
@@ -1167,8 +1165,7 @@ class LeaseeContract(models.Model):
             'subsequent_amount': 0,
             'remaining_lease_liability': remaining_lease_liability,
         })
-        if inst.date > self.commencement_date and inst.date <= self.inception_date:
-            inst.date = self.inception_date
+
         start = self.commencement_date
         # remaining_lease_liability = self.lease_liability
         num_installment = self.compute_installments_num()
@@ -1227,8 +1224,7 @@ class LeaseeContract(models.Model):
                 'subsequent_amount': interest_recognition,
                 'remaining_lease_liability': remaining_lease_liability,
             })
-            if inst.date >= self.commencement_date and inst.date <= self.inception_date:
-                inst.date = self.inception_date
+
 
     def create_installments(self, remaining_lease_liability):
         if self.payment_method == 'beginning':
@@ -1587,7 +1583,7 @@ class LeaseeContract(models.Model):
             # 'auto_post': True,
         })
         if invoice.date >= contract.commencement_date and invoice.date <= contract.inception_date:
-            invoice.date = self.inception_date
+            invoice.date = contract.inception_date
             invoice.auto_post = True
 
         line = invoice.line_ids.filtered(
@@ -1659,7 +1655,6 @@ class LeaseeContract(models.Model):
 
                         for n_date in supposed_dates:
                             if n_date >= start_date:
-                                # if contract.commencement_date.month == n_date.month:
                                 if (
                                         ins_period == 1 and contract.commencement_date.month == n_date.month) or (
                                         prev_install and prev_install.date.month == n_date.month):

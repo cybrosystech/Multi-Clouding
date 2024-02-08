@@ -175,8 +175,7 @@ class LeasorContract(models.Model):
                 'leasor_contract_id': self.id,
                 # 'auto_post': True,
             })
-            if self.inception_date > self.commencement_date and invoice.date > self.commencement_date and invoice.date <= self.inception_date:
-                invoice.invoice_date =  self.inception_date
+            if self.inception_date > self.commencement_date and invoice.date >= self.commencement_date and invoice.date <= self.inception_date:
                 invoice.date = self.inception_date
                 invoice.auto_post = True
             line = invoice.line_ids.filtered(lambda l: l.account_id == self.vendor_id.property_account_payable_id)
