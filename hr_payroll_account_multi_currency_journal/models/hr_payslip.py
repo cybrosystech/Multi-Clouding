@@ -10,6 +10,7 @@ class HrPayslip(models.Model):
     HR Payroll Multi-Currency
     allow generate journal entry based on it
     """
+
     def _get_currency_amount(self, currency_from, currency_to, company_id,
                              amount, date=False):
         """
@@ -28,6 +29,7 @@ class HrPayslip(models.Model):
 
     def action_payslip_done(self):
         """ update journal entry created with new amount based on journal currency """
+        print("action_payslip_done")
         res = super(HrPayslip, self).action_payslip_done()
         payslips_to_update = self.filtered(lambda slip: not slip.payslip_run_id)
         payslip_runs = (self - payslips_to_update).mapped('payslip_run_id')
@@ -50,7 +52,7 @@ class HrPayslip(models.Model):
                             currency_to=slip.journal_id.company_id.currency_id,
                             company_id=slip.journal_id.company_id,
                             amount=original_debit if original_debit > 0.0 else original_credit,
-                            date=slip.move_id.date)
+                            date=slip.move_action_payslip_doneid.date)
                         move_line.with_context(check_move_validity=False).write(
                             {"debit": amount if original_debit > 0.0 else 0.0,
                              "credit": amount if original_credit > 0.0 else 0.0,
@@ -75,3 +77,10 @@ class HrPayslip(models.Model):
         related="",
         store=True,
     )
+
+
+class HrPayslipLine(models.Model):
+    _inherit = 'hr.payslip.line'
+    amount = fields.Float()
+    total = fields.Float(compute='_compute_total', string='Total', store=True)
+    currency_id = fields.Many2one('res.currency', related='slip_id.currency_id')

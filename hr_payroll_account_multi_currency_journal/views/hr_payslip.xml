@@ -7,9 +7,25 @@
             <field name="inherit_id" ref="hr_payroll.view_hr_payslip_form"/>
             <field name="arch" type="xml">
                 <field name="name" position="after">
-                    <field name="currency_id" groups="base.group_multi_currency"/>
+                    <field name="currency_id"
+                           groups="base.group_multi_currency"/>
                 </field>
+                <xpath expr="/form/sheet/notebook/page[@name='salary_computation']/field[@name='line_ids']/tree/field[@name='amount']"
+                       position="after">
+                    <field name="currency_id" invisible="1"/>
+                </xpath>
+                <xpath expr="/form/sheet/notebook/page[@name='salary_computation']/field[@name='line_ids']/tree/field[@name='amount']"
+                       position="replace">
+                    <field name="amount" readonly="1" force_save="1" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                </xpath>
+                <xpath expr="/form/sheet/notebook/page[@name='salary_computation']/field[@name='line_ids']/tree/field[@name='total']"
+                       position="replace">
+                    <field name="total" readonly="1" force_save="1" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+
+                </xpath>
             </field>
         </record>
+
+
     </data>
 </odoo>
