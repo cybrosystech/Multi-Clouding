@@ -1,22 +1,13 @@
 # -*- coding: utf-8 -*-
 """ init object """
-import pytz
 import base64
 import io
-from io import BytesIO
-from psycopg2.extensions import AsIs
-from babel.dates import format_date, format_datetime, format_time
-from odoo import fields, models, api, _, tools, SUPERUSER_ID
-from odoo.exceptions import ValidationError, UserError
-from datetime import datetime, date, timedelta
-from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT as DTF
+from odoo import fields, models, _
+from datetime import datetime, date
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DF
 from dateutil.relativedelta import relativedelta
-from odoo.fields import Datetime as fieldsDatetime
 import calendar
-from odoo import http
-from odoo.http import request
-from odoo import tools
+
 
 try:
     from odoo.tools.misc import xlsxwriter
