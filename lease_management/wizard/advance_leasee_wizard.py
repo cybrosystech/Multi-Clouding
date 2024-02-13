@@ -1,16 +1,6 @@
 # -*- coding: utf-8 -*-
 """ init object """
-from odoo import fields, models, api, _ ,tools, SUPERUSER_ID
-from odoo.exceptions import ValidationError,UserError
-from datetime import datetime , date ,timedelta
-from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT as DTF
-from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DF
-from dateutil.relativedelta import relativedelta
-from odoo.fields import Datetime as fieldsDatetime
-import calendar
-from odoo import http
-from odoo.http import request
-from odoo import tools
+from odoo import fields, models, api
 
 
 class AdvanceLeaseeWizard(models.TransientModel):
@@ -36,10 +26,8 @@ class AdvanceLeaseeWizard(models.TransientModel):
         reduction_amount = 0
         ins_values = []
         adv_instalment = self.installment_ids.filtered(lambda x:x.date.year == self.date.year)
-        print('adv_instalment', adv_instalment)
         if adv_instalment:
             if adv_instalment.installment_id.amount == 0:
-                print(adv_instalment, self.date)
                 abc = adv_instalment.date - self.date
                 reduction_amount = (adv_instalment.installment_id.subsequent_amount * abc.days)/365
         contract = self.env['leasee.contract'].browse(self._context.get('active_id'))

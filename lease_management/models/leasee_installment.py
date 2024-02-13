@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 """ init object """
-import math
 
-from dateutil.relativedelta import relativedelta
-from odoo import fields, models, api, _
+from odoo import fields, models
 
 import logging
 
@@ -25,14 +23,11 @@ class LeaseeInstallment(models.Model):
     subsequent_amount = fields.Float(digits=(16, 5))
     interest_amount = fields.Float(digits=(16, 5), compute="compute_interest_amount")
     remaining_lease_liability = fields.Float(digits=(16, 5))
-    # installment_move_id = fields.Many2one(comodel_name="account.move", string="", required=False, )
-    # interest_move_id = fields.Many2one(comodel_name="account.move", string="", required=False, )
     interest_move_ids = fields.One2many(comodel_name="account.move", inverse_name="leasee_installment_id", string="", required=False, index=True)
     is_advance = fields.Boolean(default=False)
     is_long_liability = fields.Boolean(compute='compute_is_long_liability')
 
     def get_period_order(self):
-        print("self",self)
         if not max(self.leasee_contract_id.installment_ids.mapped('period')):
             i = 0
             for inst in self.leasee_contract_id.installment_ids:

@@ -5,15 +5,8 @@ import math
 from odoo import fields, models, api, _, tools, SUPERUSER_ID
 from odoo.exceptions import ValidationError, UserError
 from datetime import datetime, date, timedelta
-from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT as DTF
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DF
 from dateutil.relativedelta import relativedelta
-from odoo.fields import Datetime as fieldsDatetime
-import calendar
-from odoo import http
-from odoo.http import request
-from odoo import tools
-
 import logging
 
 LOGGER = logging.getLogger(__name__)
@@ -273,8 +266,6 @@ class LeaseeContract(models.Model):
             self.update_reassessed_installments_before()
         account_move_lines = self.account_move_ids.filtered(
             lambda x: x.state != 'posted').line_ids
-        # elif 'installment_ids' in vals and self.state in ['active', 'extended']:
-        #     self.update_reassessed_installments_after(before_update_values_dict)
         if account_move_lines:
             for rec in account_move_lines:
                 rec.update({
@@ -339,8 +330,6 @@ class LeaseeContract(models.Model):
                     first_installment.date - before_first.date).days
             days_after_reassessment = days - days_before_reassessment
             old_remaining_liability = before_first.remaining_lease_liability + old_subsequent * days_before_reassessment / days
-            # remaining_lease_liability_before = self.get_reassessment_before_remaining_lease(reassessment_installments, days_before_reassessment, days)
-
             self.create_reassessment_move(self,
                                           new_lease_liability - old_remaining_liability,
                                           first_installment.date)
@@ -662,8 +651,6 @@ class LeaseeContract(models.Model):
                         rec.rou_value = rec.lease_liability + rec.initial_payment_value + rec.initial_direct_cost + rec.estimated_cost_dismantling - rec.incentives_received
                 else:
                     rou_move_lines = self.env['account.move.line'].search([
-                        # ('move_id.state', '=', 'posted'),
-                        # ('move_id.state', 'in', ['posted', 'cancel']),
                         ('move_id.leasee_contract_id', '=', rec.id),
                         ('account_id', '=',
                          rec.asset_model_id.account_asset_id.id),
@@ -713,23 +700,43 @@ class LeaseeContract(models.Model):
         if not self.asset_id:
             method_number = self.lease_contract_period * (
                 1 if self.lease_contract_period_type == 'months' else 12)
-            vals = {
-                'name': self.name,
-                'model_id': self.asset_model_id.id,
-                'original_value': self.rou_value,
-                'asset_type': 'purchase',
-                'acquisition_date': self.commencement_date,
-                'currency_id': self.leasee_currency_id.id,
-                'method_number': method_number,
-                'account_analytic_id': self.analytic_account_id.id,
-                'project_site_id': self.project_site_id.id,
-                'type_id': self.type_id.id,
-                'location_id': self.location_id.id,
-                'prorata': self.prorata,
-                'state': 'draft',
-                'first_depreciation_date': self.commencement_date,
-                'method_period': '1',
-            }
+            if self.inception_date > self.commencement_date:
+                vals = {
+                    'name': self.name,
+                    'model_id': self.asset_model_id.id,
+                    'original_value': self.rou_value,
+                    'asset_type': 'purchase',
+                    'acquisition_date': self.commencement_date,
+                    'currency_id': self.leasee_currency_id.id,
+                    'method_number': method_number,
+                    'accounting_date':self.inception_date,
+                    'account_analytic_id': self.analytic_account_id.id,
+                    'project_site_id': self.project_site_id.id,
+                    'type_id': self.type_id.id,
+                    'location_id': self.location_id.id,
+                    'prorata': self.prorata,
+                    'state': 'draft',
+                    'first_depreciation_date': self.commencement_date,
+                    'method_period': '1',
+                }
+            else:
+                vals = {
+                    'name': self.name,
+                    'model_id': self.asset_model_id.id,
+                    'original_value': self.rou_value,
+                    'asset_type': 'purchase',
+                    'acquisition_date': self.commencement_date,
+                    'currency_id': self.leasee_currency_id.id,
+                    'method_number': method_number,
+                    'account_analytic_id': self.analytic_account_id.id,
+                    'project_site_id': self.project_site_id.id,
+                    'type_id': self.type_id.id,
+                    'location_id': self.location_id.id,
+                    'prorata': self.prorata,
+                    'state': 'draft',
+                    'first_depreciation_date': self.commencement_date,
+                    'method_period': '1',
+                }
 
             if self.asset_model_id:
                 vals.update({
@@ -846,8 +853,12 @@ class LeaseeContract(models.Model):
                 'invoice_line_ids': invoice_lines,
                 'journal_id': self.installment_journal_id.id,
                 'leasee_contract_id': self.id,
-                'auto_post': True,
+                # 'auto_post': True,
             })
+            if invoice.date >= self.commencement_date and invoice.date <= self.inception_date:
+                invoice.date = self.inception_date
+                invoice.auto_post = True
+
             line = invoice.line_ids.filtered(
                 lambda l: l.account_id == partner.property_account_payable_id)
             if line:
@@ -883,8 +894,11 @@ class LeaseeContract(models.Model):
                 'invoice_line_ids': invoice_lines,
                 'journal_id': self.installment_journal_id.id,
                 'leasee_contract_id': self.id,
-                'auto_post': True,
+                # 'auto_post': True,
             })
+            if invoice.date >= self.commencement_date and invoice.date <= self.inception_date:
+                invoice.date = self.inception_date
+                invoice.auto_post = True
             line = invoice.line_ids.filtered(
                 lambda l: l.account_id == partner.property_account_payable_id)
             if line:
@@ -1021,8 +1035,7 @@ class LeaseeContract(models.Model):
                     'location_id': self.location_id.id,
                     'currency_id': self.leasee_currency_id.id
                 }))
-
-        self.env['account.move'].create({
+        move_id = self.env['account.move'].create({
             'partner_id': self.vendor_id.id,
             'move_type': 'entry',
             'currency_id': self.leasee_currency_id.id,
@@ -1031,8 +1044,10 @@ class LeaseeContract(models.Model):
             'journal_id': self.initial_journal_id.id,
             'leasee_contract_id': self.id,
             'line_ids': lines,
-            'auto_post': True,
         })
+        if self.inception_date > self.commencement_date and move_id.date >= self.commencement_date and move_id.date <= self.inception_date:
+            move_id.date = self.inception_date
+            move_id.auto_post = True
 
     def get_annual_period(self, i):
         if self.is_contract_not_annual():
@@ -1118,7 +1133,7 @@ class LeaseeContract(models.Model):
                     else:
                         amount = journals.amount_total_signed
 
-            self.env['leasee.installment'].create({
+            inst = self.env['leasee.installment'].create({
                 'name': self.name + ' installment - ' + new_start.strftime(DF),
                 'period': i,
                 'amount': amount,
@@ -1139,7 +1154,7 @@ class LeaseeContract(models.Model):
             amount_advance = journals.amount_total_signed
         payment_months = self.payment_frequency * (
             1 if self.payment_frequency_type == 'months' else 12)
-        self.env['leasee.installment'].create({
+        inst = self.env['leasee.installment'].create({
             'name': self.name + ' installment - ' + self.commencement_date.strftime(
                 DF),
             'period': 0,
@@ -1200,7 +1215,7 @@ class LeaseeContract(models.Model):
                                                       self.payment_frequency)]
                     else:
                         increasement_frequency += self.increasement_frequency
-            self.env['leasee.installment'].create({
+            inst = self.env['leasee.installment'].create({
                 'name': self.name + ' installment - ' + new_start.strftime(DF),
                 'period': i,
                 'amount': amount,
@@ -1209,6 +1224,7 @@ class LeaseeContract(models.Model):
                 'subsequent_amount': interest_recognition,
                 'remaining_lease_liability': remaining_lease_liability,
             })
+
 
     def create_installments(self, remaining_lease_liability):
         if self.payment_method == 'beginning':
@@ -1489,21 +1505,21 @@ class LeaseeContract(models.Model):
                 child = self.search([('id', 'in', contract.child_ids.ids)],
                                     order='id DESC', limit=1)
                 if child.child_ids:
-                    self.check_child_expiry(child, leasee_contracts,contract)
+                    self.check_child_expiry(child, leasee_contracts, contract)
                 else:
-                    if child.id in leasee_contracts.ids :
+                    if child.id in leasee_contracts.ids:
                         contract.state = 'expired'
                     else:
                         contract.state = 'extended'
             else:
                 contract.state = 'expired'
 
-    def check_child_expiry(self, child, leasee_contracts,contract):
+    def check_child_expiry(self, child, leasee_contracts, contract):
         if child.child_ids:
             child_new = self.search([('id', 'in', child.child_ids.ids)],
-                                order='id DESC', limit=1)
+                                    order='id DESC', limit=1)
             if child_new.child_ids:
-                self.check_child_expiry(child_new,leasee_contracts,contract)
+                self.check_child_expiry(child_new, leasee_contracts, contract)
             else:
                 if child_new.id in leasee_contracts.ids:
                     contract.state = 'expired'
@@ -1564,8 +1580,12 @@ class LeaseeContract(models.Model):
             'invoice_line_ids': invoice_lines,
             'journal_id': contract.installment_journal_id.id,
             'leasee_contract_id': contract.id,
-            'auto_post': True,
+            # 'auto_post': True,
         })
+        if invoice.date >= contract.commencement_date and invoice.date <= contract.inception_date:
+            invoice.date = contract.inception_date
+            invoice.auto_post = True
+
         line = invoice.line_ids.filtered(
             lambda l: l.account_id == partner.property_account_payable_id)
         if line:
@@ -1635,7 +1655,6 @@ class LeaseeContract(models.Model):
 
                         for n_date in supposed_dates:
                             if n_date >= start_date:
-                                # if contract.commencement_date.month == n_date.month:
                                 if (
                                         ins_period == 1 and contract.commencement_date.month == n_date.month) or (
                                         prev_install and prev_install.date.month == n_date.month):
@@ -1816,8 +1835,11 @@ class LeaseeContract(models.Model):
                 'leasee_contract_id': self.id,
                 'line_ids': lines,
                 'leasee_installment_id': installment.id,
-                'auto_post': True,
+                # 'auto_post': True,
             })
+            if move.date >= self.commencement_date and move.date <= self.inception_date:
+                move.date = self.inception_date
+                move.auto_post = True
             return move
 
     def action_open_extended_contract(self):
@@ -1915,8 +1937,11 @@ class LeaseeContract(models.Model):
                 'leasee_installment_id': installment.id,
                 'is_installment_entry': True,
                 'line_ids': lines,
-                'auto_post': True,
+                # 'auto_post': True,
             })
+            if move.date >= self.commencement_date and move.date <= self.inception_date:
+                move.date = self.inception_date
+                move.auto_post = True
 
     def create_contract_installment_entries(self, start_date):
         installments_count = len(self.installment_ids) - 1
@@ -2035,8 +2060,11 @@ class LeaseeContract(models.Model):
                 'journal_id': contract.asset_model_id.journal_id.id,
                 'leasee_contract_id': contract.id,
                 'line_ids': lines,
-                'auto_post': True,
+                # 'auto_post': True,
             })
+            if move.date >= contract.commencement_date and move.date <= contract.inception_date:
+                move.date = contract.inception_date
+                move.auto_post = True
 
     def update_reassessment_asset_value(self, new_value, reassessment_date):
         asset = self.asset_id
@@ -2286,8 +2314,12 @@ class LeaseeContract(models.Model):
                 'journal_id': self.initial_journal_id.id,
                 'leasee_contract_id': self.id,
                 'line_ids': lines,
-                'auto_post': True,
+                # 'auto_post': True,
             })
+            if move.date >= self.commencement_date and move.date <= self.inception_date:
+                move.date = self.inception_date
+                move.auto_post = True
+
             if self.leasee_currency_id != self.company_id.currency_id:
                 test_amount_c = move.line_ids.filtered(lambda x: x.credit > 0)
                 test_amount_c.amount_currency = test_amount_c.amount_currency * -1
@@ -2305,14 +2337,6 @@ class LeaseeContract(models.Model):
         return lease_liability
 
     def get_reassessment_after_remaining_lease(self, reassessment_installments):
-        # if self.is_contract_not_annual():
-        #     num_installments = self.get_installments_per_year()
-        #     lease_liability = 0
-        #     for ins in reassessment_installments[:num_installments]:
-        #         lease_liability += ins.amount - ins.subsequent_amount
-        # else:
-        #     first_installment = reassessment_installments[0]
-        #     lease_liability = first_installment.amount - first_installment.subsequent_amount
         first_installment = reassessment_installments[0]
         lease_liability = first_installment.amount - first_installment.subsequent_amount
         return lease_liability

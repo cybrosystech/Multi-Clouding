@@ -1,17 +1,8 @@
 # -*- coding: utf-8 -*-
 """ init object """
-from odoo import fields, models, api, _ ,tools, SUPERUSER_ID
-from odoo.exceptions import ValidationError,UserError
-from datetime import datetime , date ,timedelta
-from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT as DTF
-from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DF
+from odoo import fields, models, api, _
+from odoo.exceptions import ValidationError
 from dateutil.relativedelta import relativedelta
-from odoo.fields import Datetime as fieldsDatetime
-import calendar
-from odoo import http
-from odoo.http import request
-from odoo import tools
-
 import logging
 
 LOGGER = logging.getLogger(__name__)
@@ -24,8 +15,6 @@ class LeasorContract(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
     name = fields.Char(string="Name", required=True, )
-    # leasee_template_id = fields.Many2one(comodel_name="leasor.contract.template", string="Leasor Contract Template", required=False, )
-
     external_reference_number = fields.Char()
     state = fields.Selection(string="Agreement Status",default="draft", selection=[('draft', 'Draft'), ('active', 'Active'), ('expired', 'Expired'), ('terminated', 'Terminated'), ], required=False, )
 
@@ -184,8 +173,11 @@ class LeasorContract(models.Model):
                 'invoice_line_ids': invoice_lines,
                 'journal_id': self.installment_journal_id.id,
                 'leasor_contract_id': self.id,
-                'auto_post': True,
+                # 'auto_post': True,
             })
+            if self.inception_date > self.commencement_date and invoice.date >= self.commencement_date and invoice.date <= self.inception_date:
+                invoice.date = self.inception_date
+                invoice.auto_post = True
             line = invoice.line_ids.filtered(lambda l: l.account_id == self.vendor_id.property_account_payable_id)
             if line:
                 line.write({

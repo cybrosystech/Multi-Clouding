@@ -61,7 +61,7 @@ class LeaseeContractInheritAdvance(models.Model):
             'type_id': self.type_id.id,
             'location_id': self.location_id.id,
         })]
-        self.env['account.move'].create({
+        invoice=self.env['account.move'].create({
             'partner_id': partner.id,
             'move_type': 'in_invoice',
             'currency_id': self.leasee_currency_id.id,
@@ -71,8 +71,10 @@ class LeaseeContractInheritAdvance(models.Model):
             'invoice_line_ids': invoice_lines,
             'journal_id': self.installment_journal_id.id,
             'lease_security_advance_id': advance_security_id.id,
-            'auto_post': True,
         })
+        if invoice.date >= self.commencement_date and invoice.date <= self.inception_date:
+            invoice.date = self.inception_date
+            invoice.auto_post = True
 
     def action_security_bills(self):
         advance_security_id = self.env['leasee.security.advance'].search(

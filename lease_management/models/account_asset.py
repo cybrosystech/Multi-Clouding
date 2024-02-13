@@ -2,7 +2,7 @@
 """ init object """
 import calendar
 from math import copysign
-from odoo import fields, models, api, _
+from odoo import fields, models, _
 from odoo.exceptions import ValidationError, UserError
 from odoo.tools import float_compare
 from dateutil.relativedelta import relativedelta
@@ -28,7 +28,6 @@ class AccountAsset(models.Model):
 
     def action_set_to_close(self):
         """ Returns an action opening the asset pause wizard."""
-        print("action_set_to_close1")
         self.ensure_one()
         if self.leasee_contract_ids:
             new_wizard = self.env['account.asset.sell'].create({
@@ -48,8 +47,6 @@ class AccountAsset(models.Model):
             return super(AccountAsset, self).action_set_to_close()
 
     def _get_disposal_moves(self, invoice_line_ids, disposal_date):
-        print("_get_disposal_moves3")
-
         def get_line(asset, amount, account):
             return (0, 0, {
                 'name': asset.name,
@@ -252,7 +249,6 @@ class AccountAsset(models.Model):
             amount_to_depreciate, depreciation_date,
             already_depreciated_amount, amount_change_ids, depreciation_months,
             total_days)
-        print("depreciation_date", depreciation_date)
         if self._context.get('decrease'):
             if move_vals:
                 first_date = self.prorata_date
