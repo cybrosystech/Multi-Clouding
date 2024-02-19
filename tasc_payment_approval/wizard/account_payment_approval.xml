@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="account_payment_approval_view_form" model="ir.ui.view">
+        <field name="name">account.payment.approval.form.view</field>
+        <field name="model">account.payment.approval</field>
+        <field name="arch" type="xml">
+            <form string="Payment Approval Batch">
+                <header>
+                    <field name="state" widget="statusbar" nolabel="1"/>
+                    <button string="Request Approval"
+                            name="request_approval_button"
+                            type="object" class="btn-secondary" attrs="{'invisible':['|','|', ('state','in', ['approved', 'selected','in_approval']),
+                    ('request_approve_bool', '=', True),('show_request_approve_button','=',True)]}"/>
+                    <button name="button_approve_payment_cycle" string="Approve"
+                            type="object" class="btn-primary"
+                            attrs="{'invisible':[('show_approve_button','=',False)]}"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="batch_name"/>
+                        <field name="from_date"/>
+                        <field name="to_date"/>
+                        <field name="company_id"/>
+                        <field name="request_approve_bool" invisible="1"/>
+                        <field name="show_request_approve_button"
+                               invisible="1"/>
+                        <field name="show_approve_button" invisible="1"/>
+                        <button string="Generate  Payments"
+                                name="action_generate_approval_batch"
+                                type="object" class="btn-secondary"/>
+
+                    </group>
+                    <notebook>
+                        <page string="Payments">
+                            <field name="payment_ids">
+                                <tree>
+                                    <field name="invoice_number"/>
+                                    <field name="partner_id"/>
+                                    <!--                                    <field name="invoice_date"/>-->
+                                    <!--                                    <field name="invoice_date_due"/>-->
+                                    <field name="currency_id"/>
+                                    <field name="invoice_amount" sum="Total Invoice"/>
+                                    <field name="amount"
+                                           string="Payment Amount" sum="Total Payment"/>
+                                </tree>
+                            </field>
+
+                        </page>
+                        <page string="Approval Cycle" name="approval_cycle">
+                            <field name="payment_approval_cycle_ids"
+                                   readonly="True">
+                                <tree>
+                                    <field name="approval_seq"/>
+                                    <field name="user_approve_ids"
+                                           widget="many2many_tags"/>
+                                    <field name="is_approved"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="account_payment_approval_view_tree" model="ir.ui.view">
+        <field name="name">account.payment.approval.tree.view</field>
+        <field name="model">account.payment.approval</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="batch_name"/>
+                <field name="from_date"/>
+                <field name="to_date"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+    <record id="action_account_payment_approval" model="ir.actions.act_window">
+        <field name="name">Payment Approvals</field>
+        <field name="res_model">account.payment.approval</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new payment approval batch
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+            id="menu_payment_approval"
+            name="Payment Approval"
+            action="action_account_payment_approval"
+            parent="account.menu_finance_payables"
+            sequence="8"
+    />
+</odoo>

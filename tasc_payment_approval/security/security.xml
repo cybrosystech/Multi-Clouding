@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <record id="ir_rule_payment_approval_multi_company" model="ir.rule">
+            <field name="name">Payment Approval: Multi Company</field>
+            <field name="model_id" ref="model_account_payment_approval"/>
+            <field name="domain_force">['|', ('company_id', '=', False),
+                ('company_id', 'in', company_ids)]
+            </field>
+        </record>
+        <record id="ir_rule_payment_approval_check_multi_company"
+                model="ir.rule">
+            <field name="name">Payment Approval Check: Multi Company</field>
+            <field name="model_id" ref="model_payment_approval_check"/>
+            <field name="domain_force">['|', ('company_id', '=', False),
+                ('company_id', 'in', company_ids)]
+            </field>
+        </record>
+    </data>
+</odoo>
