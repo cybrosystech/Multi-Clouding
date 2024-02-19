@@ -29,16 +29,6 @@ class PaymentApprovalCheck(models.Model):
                 count_map[line.approval_seq] = 1
                 latest_to = line.to_amount
 
-    # @api.model
-    # def create(self, vals):
-    #     if vals.get('type'):
-    #         check = self.env['payment.approval.check'].sudo().search(
-    #             [
-    #                 ('company_id', '=', vals['company_id'])])
-    #         if check:
-    #             raise ValidationError(_('This Type is already created'))
-    #     return super(PaymentApprovalCheck, self).create(vals)
-
 
 class PaymentApprovalCheckLine(models.Model):
     _name = 'payment.approval.check.line'

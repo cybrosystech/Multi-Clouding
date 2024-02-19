@@ -2,3 +2,4 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_account_payment_approval_user,access.account.payment.approval.user,model_account_payment_approval,base.group_user,1,1,1,1
 access_payment_approval_check_user,payment.approval.check.user,model_payment_approval_check,base.group_user,1,1,1,1
 access_payment_approval_check_line_user,payment.approval.check.line.user,model_payment_approval_check_line,base.group_user,1,1,1,1
+accessaccount_payment_approval_line_user,account.payment.approval.line.user,model_account_payment_approval_line,base.group_user,1,1,1,1

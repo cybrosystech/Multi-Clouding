@@ -35,14 +35,18 @@
                         <page string="Payments">
                             <field name="payment_ids">
                                 <tree>
-                                    <field name="invoice_number"/>
+                                    <field name="payment_id" invisible="1"/>
+                                    <field name="invoice_number"
+                                           style="width:25px;"/>
                                     <field name="partner_id"/>
                                     <!--                                    <field name="invoice_date"/>-->
                                     <!--                                    <field name="invoice_date_due"/>-->
                                     <field name="currency_id"/>
-                                    <field name="invoice_amount" sum="Total Invoice"/>
-                                    <field name="amount"
-                                           string="Payment Amount" sum="Total Payment"/>
+                                    <field name="invoice_amount"
+                                           sum="Total Invoice"/>
+                                    <field name="payment_amount"
+                                           string="Payment Amount"
+                                           sum="Total Payment"/>
                                 </tree>
                             </field>
 
