@@ -14,6 +14,13 @@ class AccountPayment(models.Model):
     invoice_amount = fields.Float("Invoice Amount",
                                   compute="compute_invoice_number_and_amount",
                                   )
+    payment_approval_status = fields.Selection(
+        [('not_approved', 'Not Approved'),
+         ('selected', 'Selected'),
+         ('in_approval', 'In Approval'),
+         ('approved', 'Approved')
+         ], related='payment_approval_batch_id.state',
+        string="Payment Approval Status", store=True)
 
     @api.depends('reconciled_bill_ids', 'reconciled_invoice_ids')
     def compute_invoice_number_and_amount(self):

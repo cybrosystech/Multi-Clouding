@@ -31,6 +31,12 @@ class PaymentApproval(models.Model):
     company_id = fields.Many2one('res.company', 'Company',
                                  default=lambda self: self.env.company)
 
+    def unlink(self):
+        if self.state != 'not_approved':
+            raise UserError(
+                "You can only delete the Payment Approval in 'Not Approved' state.")
+        super(PaymentApproval, self).unlink()
+
     def button_approve_payment_cycle(self):
         for rec in self:
             min_seq_approval = min(
@@ -42,12 +48,16 @@ class PaymentApproval(models.Model):
                 raise UserError(
                     'You cannot approve this record' + ' ' + str(rec.name))
             last_approval.is_approved = True
-            rec.send_user_notification(last_approval.user_approve_ids)
             if not rec.payment_approval_cycle_ids.filtered(
                     lambda x: x.is_approved is False):
                 rec.state = 'approved'
             else:
-                # payment_approval_cycle_ids = min(rec.payment_approval_cycle_ids.filtered(lambda x: x.is_approved is False).mapped('approval_seq'))
+                new_min_seq = min(rec.payment_approval_cycle_ids.filtered(
+                    lambda x: x.is_approved is False).mapped('approval_seq'))
+                next_approvers = rec.payment_approval_cycle_ids.filtered(
+                    lambda x: x.approval_seq == int(new_min_seq)).mapped(
+                    'user_approve_ids')
+                rec.send_user_notification(next_approvers)
                 rec.state = 'in_approval'
             message = 'Level ' + str(
                 last_approval.approval_seq) + ' Approved by :' + str(
