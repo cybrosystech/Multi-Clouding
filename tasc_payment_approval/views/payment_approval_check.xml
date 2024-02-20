@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <record id="payment_approval_check_view_form" model="ir.ui.view">
+            <field name="name">payment.approval.check.view.form</field>
+            <field name="model">payment.approval.check</field>
+            <field name="arch" type="xml">
+                <form string="">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                            </group>
+                            <group>
+                                <field name="company_id"
+                                       groups="base.group_multi_company"/>
+                            </group>
+                        </group>
+                        <group>
+                            <div>
+                                <field name="payment_approval_line_ids">
+                                    <tree editable="bottom">
+                                        <field name="payment_approval_check_id"
+                                               invisible="1"/>
+                                        <field name="name"/>
+                                        <field name="from_amount"/>
+                                        <field name="to_amount" invisible="1"/>
+                                        <field name="approval_seq"/>
+                                        <field name="user_ids"
+                                               widget="many2many_tags"/>
+                                    </tree>
+                                </field>
+                            </div>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="payment_approval_check_view_tree" model="ir.ui.view">
+            <field name="name">payment.approval.check.view.tree</field>
+            <field name="model">payment.approval.check</field>
+            <field name="arch" type="xml">
+                <tree string="">
+                    <field name="name"/>
+                    <field name="company_id"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_payment_approval_check"
+                model="ir.actions.act_window">
+            <field name="name">Payment Approval Check</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">payment.approval.check</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                </p>
+            </field>
+        </record>
+
+        <menuitem id="menu_payment_approval_check"
+                  name="Payment Approval Check"
+                  parent="account.menu_finance_configuration"
+                  action="action_payment_approval_check"
+        />
+    </data>
+</odoo>
