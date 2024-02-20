@@ -10,10 +10,11 @@
     'website': "",
     'category': 'Accounting',
     'version': '14.0.1.0.0',
-    'depends': ['account','analytic_account_types'],
+    'depends': ['account', 'analytic_account_types'],
 
     'data':
         [
+            'data/mail_template.xml',
             'security/ir.model.access.csv',
             'security/security.xml',
             'wizard/account_payment_approval.xml',
@@ -22,4 +23,7 @@
         ],
     'qweb': [
     ],
+    'installable': True,
+    'auto_install': False,
+    'application': False,
 }

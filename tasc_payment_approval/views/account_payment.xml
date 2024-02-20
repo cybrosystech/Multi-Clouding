@@ -8,9 +8,9 @@
         <field name="inherit_id" ref="account.view_account_payment_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='name']" position='after'>
-<!--                <field name="payment_approval_batch_id"/>-->
-                <field name="invoice_number"/>
-<!--                <field name="invoice_amount"/>-->
+                <field name="payment_approval_batch_id" invisible="1"/>
+                <field name="invoice_number" invisible="1"/>
+                <field name="invoice_amount" invisible="1"/>
             </xpath>
         </field>
     </record>

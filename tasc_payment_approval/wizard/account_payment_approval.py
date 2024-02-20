@@ -46,8 +46,8 @@ class PaymentApproval(models.Model):
             if not rec.payment_approval_cycle_ids.filtered(
                     lambda x: x.is_approved is False):
                 rec.state = 'approved'
-                for payment in rec.payment_ids:
-                    payment.payment_id.action_post()
+                # for payment in rec.payment_ids:
+                #     payment.payment_id.action_post()
             else:
                 rec.state = 'in_approval'
             message = 'Level ' + str(
@@ -76,63 +76,74 @@ class PaymentApproval(models.Model):
                 break
 
     def action_generate_approval_batch(self):
+        if self.payment_ids:
+            self.payment_ids = [(5, 0, 0)]
         payments = self.env['account.payment'].search(
             [('payment_approval_batch_id', '=', False),
              ('date', '>=', self.from_date), ('date', '<=', self.to_date),
-             ('state', '=', 'draft')
+             ('company_id', '=', self.company_id.id)
              ])
-
-        self.payment_ids = [(0, 0, {'payment_id': line.id}) for line
-                            in payments]
+        for line in payments:
+            self.env['account.payment.approval.line'].create({
+                'payment_id': line.id,
+                'payment_approval_batch_id': self.id
+            })
 
     def request_approval_button(self):
-        if not self.payment_approval_cycle_ids:
-            payment_approval_check_list = []
-            payment_approval_check = self.env['payment.approval.check'].search(
-                [('company_id', '=', self.env.company.id)], limit=1)
-            tot_amount = sum(self.payment_ids.mapped('payment_amount'))
-            for rec in payment_approval_check.payment_approval_line_ids:
-                if tot_amount >= rec.from_amount:
-                    payment_approval_check_list.append((0, 0, {
-                        'approval_seq': rec.approval_seq,
-                        'user_approve_ids': rec.user_ids.ids,
-                    }))
-            self.write(
-                {'payment_approval_cycle_ids': payment_approval_check_list})
-            self.request_approve_bool = True
-        self.show_request_approve_button = True
-        if self.payment_approval_cycle_ids:
-            min_seq_approval = min(
-                self.payment_approval_cycle_ids.mapped('approval_seq'))
-            notification_to_user = self.payment_approval_cycle_ids.filtered(
-                lambda x: x.approval_seq == int(min_seq_approval))
-            user = notification_to_user.user_approve_ids
-            self.state = 'selected'
-            self.send_user_notification(user)
-            self.request_approve_bool = True
+        if not self.payment_ids:
+            raise UserError(
+                'You must need to generate payments before request for approval!.')
+        else:
+            if not self.payment_approval_cycle_ids:
+                payment_approval_check_list = []
+                payment_approval_check = self.env[
+                    'payment.approval.check'].search(
+                    [('company_id', '=', self.env.company.id)], limit=1)
+                tot_amount = sum(self.payment_ids.mapped('payment_amount'))
+                for rec in payment_approval_check.payment_approval_line_ids:
+                    if tot_amount >= rec.from_amount:
+                        payment_approval_check_list.append((0, 0, {
+                            'approval_seq': rec.approval_seq,
+                            'user_approve_ids': rec.user_ids.ids,
+                        }))
+                self.write(
+                    {'payment_approval_cycle_ids': payment_approval_check_list})
+                self.request_approve_bool = True
+            self.show_request_approve_button = True
+            if self.payment_approval_cycle_ids:
+                min_seq_approval = min(
+                    self.payment_approval_cycle_ids.mapped('approval_seq'))
+                notification_to_user = self.payment_approval_cycle_ids.filtered(
+                    lambda x: x.approval_seq == int(min_seq_approval))
+                user = notification_to_user.user_approve_ids
+                self.state = 'selected'
+                self.send_user_notification(user)
+                self.request_approve_bool = True
 
     def send_user_notification(self, user):
+        print("vbnm,")
         for us in user:
             reseiver = us.partner_id
             if reseiver:
                 for move in self:
                     email_template_id = self.env.ref(
-                        'analytic_account_types.email_template_send_mail_approval_account')
+                        'tasc_payment_approval.email_template_send_mail_approval_payment')
                     ctx = self._context.copy()
                     ctx.update({'name': us.name})
                     if email_template_id:
-                        email_template_id.with_context(ctx).send_mail(self.id,
+                        email_template_id.with_context(ctx).send_mail(move.id,
                                                                       force_send=True,
                                                                       email_values={
                                                                           'email_to': us.email,
                                                                           'model': None,
                                                                           'res_id': None})
-
+        print("ppppppppppp")
 
 class PaymentApprovalLine(models.Model):
     _name = 'account.payment.approval.line'
 
-    payment_id = fields.Many2one('account.payment')
+    payment_id = fields.Many2one('account.payment',
+                                 domain="[('company_id','=',company_id)]")
     invoice_number = fields.Char("Invoice number",
                                  related='payment_id.invoice_number')
     partner_id = fields.Many2one('res.partner',
@@ -146,6 +157,10 @@ class PaymentApprovalLine(models.Model):
     payment_approval_batch_id = fields.Many2one('account.payment.approval',
                                                 string="Payment Approval Batch",
                                                 copy=False, ondelete='cascade')
+    company_id = fields.Many2one('res.company',
+                                 related='payment_approval_batch_id.company_id')
+
+    # amount_in_usd = fields.Float(string="Amount in USD",compute='compute_amount_in_usd',store=True)
 
     @api.model
     def create(self, vals):
@@ -160,6 +175,11 @@ class PaymentApprovalLine(models.Model):
         if self.payment_id:
             self.payment_id.payment_approval_batch_id = False
         super(PaymentApprovalLine, self).unlink()
+
+    # @api.depends('payment_amount')
+    # def compute_amount_in_usd(self):
+    #     for rec in self:
+    #         print("rec",rec)
 
 
 class PaymentApprovalCycle(models.Model):
