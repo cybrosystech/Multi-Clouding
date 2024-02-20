@@ -46,9 +46,8 @@ class PaymentApproval(models.Model):
             if not rec.payment_approval_cycle_ids.filtered(
                     lambda x: x.is_approved is False):
                 rec.state = 'approved'
-                # for payment in rec.payment_ids:
-                #     payment.payment_id.action_post()
             else:
+                # payment_approval_cycle_ids = min(rec.payment_approval_cycle_ids.filtered(lambda x: x.is_approved is False).mapped('approval_seq'))
                 rec.state = 'in_approval'
             message = 'Level ' + str(
                 last_approval.approval_seq) + ' Approved by :' + str(
@@ -86,7 +85,6 @@ class PaymentApproval(models.Model):
         for line in payments:
             usd_currency = self.env['res.currency'].search(
                 [('name', '=', 'USD')], limit=1)
-            print("usd_currency", usd_currency.name)
             self.env['account.payment.approval.line'].create({
                 'payment_id': line.id,
                 'payment_approval_batch_id': self.id,
@@ -125,23 +123,24 @@ class PaymentApproval(models.Model):
                 self.request_approve_bool = True
 
     def send_user_notification(self, user):
-        print("vbnm,")
         for us in user:
             reseiver = us.partner_id
             if reseiver:
-                for move in self:
+                for pay in self:
                     email_template_id = self.env.ref(
                         'tasc_payment_approval.email_template_send_mail_approval_payment')
                     ctx = self._context.copy()
-                    ctx.update({'name': us.name})
+                    tot_payment_amount = sum(
+                        pay.payment_ids.mapped('amount_in_usd'))
+                    ctx.update({'name': us.name,
+                                'tot_payment_amount': tot_payment_amount, })
                     if email_template_id:
-                        email_template_id.with_context(ctx).send_mail(move.id,
+                        email_template_id.with_context(ctx).send_mail(pay.id,
                                                                       force_send=True,
                                                                       email_values={
                                                                           'email_to': us.email,
                                                                           'model': None,
                                                                           'res_id': None})
-        print("ppppppppppp")
 
 
 class PaymentApprovalLine(models.Model):
@@ -186,14 +185,11 @@ class PaymentApprovalLine(models.Model):
     @api.depends('payment_amount', 'currency_id')
     def compute_amount_in_usd(self):
         for rec in self:
-            print("rec", rec)
             rec.amount_in_usd = False
             to_currency = self.env['res.currency'].search(
                 [('name', '=', 'USD')], limit=1)
-            print("to_currency", to_currency.name)
             if to_currency:
                 if rec.currency_id.id != to_currency.id:
-                    print("fffffffffffff")
                     amount_usd = rec.currency_id._convert(rec.payment_amount,
                                                           to_currency,
                                                           rec.company_id,

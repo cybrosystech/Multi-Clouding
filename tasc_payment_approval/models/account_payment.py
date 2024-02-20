@@ -28,9 +28,7 @@ class AccountPayment(models.Model):
                     bill_amt += bill.amount_total + bill_amt
                 rec.invoice_number = bill_name
                 rec.invoice_amount = bill_amt
-            else:
-                rec.invoice_number = "Manual"
-            if rec.reconciled_invoice_ids:
+            elif rec.reconciled_invoice_ids:
                 inv_name = ""
                 inv_amt = 0
                 for inv in rec.reconciled_invoice_ids:

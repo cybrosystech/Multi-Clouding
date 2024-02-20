@@ -16,17 +16,17 @@
                 <table width="100%" cellpadding="0" cellspacing="0">
                     <tr>
                         <td class="content-block">
-                            <h3 style="margin: 0;">Pending approval</h3>
+                            <h3 style="margin: 0;">Require your approval.</h3>
                         </td>
                     </tr>
                     <tr>
                         <td class="content-block">
-                            Hello ${ctx['name']},
+                            Dear ${ctx['name']},
                         </td>
                     </tr>
                     <tr>
                         <td class="content-block">
-                            ${object.batch_name} requires your approval.
+                            ${object.batch_name} with amount ${ctx['tot_payment_amount']} requires your approval.
                             Please follow the link below to open the item.
                         </td>
                     </tr>
