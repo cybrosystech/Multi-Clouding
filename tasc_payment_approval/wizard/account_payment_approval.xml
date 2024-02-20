@@ -40,6 +40,7 @@
                                     <field name="invoice_number"
                                            style="width:25px;"/>
                                     <field name="partner_id"/>
+                                    <field name="usd_currency" invisible="1"/>
                                     <!--                                    <field name="invoice_date"/>-->
                                     <!--                                    <field name="invoice_date_due"/>-->
                                     <field name="currency_id"/>
@@ -48,6 +49,11 @@
                                     <field name="payment_amount"
                                            string="Payment Amount"
                                            sum="Total Payment"/>
+                                    <field name="amount_in_usd"
+                                           sum="Total Payment ($)"
+                                           widget="monetary"
+                                           options="{'currency_field': 'usd_currency'}"
+                                    />
                                     <field name="company_id" invisible="1"/>
                                 </tree>
                             </field>
@@ -66,6 +72,11 @@
                         </page>
                     </notebook>
                 </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"
+                           groups="base.group_user"/>
+                    <field name="message_ids"/>
+                </div>
             </form>
         </field>
     </record>

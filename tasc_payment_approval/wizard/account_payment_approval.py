@@ -84,9 +84,13 @@ class PaymentApproval(models.Model):
              ('company_id', '=', self.company_id.id)
              ])
         for line in payments:
+            usd_currency = self.env['res.currency'].search(
+                [('name', '=', 'USD')], limit=1)
+            print("usd_currency", usd_currency.name)
             self.env['account.payment.approval.line'].create({
                 'payment_id': line.id,
-                'payment_approval_batch_id': self.id
+                'payment_approval_batch_id': self.id,
+                'usd_currency': usd_currency.id if usd_currency else False,
             })
 
     def request_approval_button(self):
@@ -99,7 +103,7 @@ class PaymentApproval(models.Model):
                 payment_approval_check = self.env[
                     'payment.approval.check'].search(
                     [('company_id', '=', self.env.company.id)], limit=1)
-                tot_amount = sum(self.payment_ids.mapped('payment_amount'))
+                tot_amount = sum(self.payment_ids.mapped('amount_in_usd'))
                 for rec in payment_approval_check.payment_approval_line_ids:
                     if tot_amount >= rec.from_amount:
                         payment_approval_check_list.append((0, 0, {
@@ -139,6 +143,7 @@ class PaymentApproval(models.Model):
                                                                           'res_id': None})
         print("ppppppppppp")
 
+
 class PaymentApprovalLine(models.Model):
     _name = 'account.payment.approval.line'
 
@@ -160,7 +165,9 @@ class PaymentApprovalLine(models.Model):
     company_id = fields.Many2one('res.company',
                                  related='payment_approval_batch_id.company_id')
 
-    # amount_in_usd = fields.Float(string="Amount in USD",compute='compute_amount_in_usd',store=True)
+    amount_in_usd = fields.Float(string="Payment Amount ($)",
+                                 compute='compute_amount_in_usd')
+    usd_currency = fields.Many2one('res.currency', readonly=True)
 
     @api.model
     def create(self, vals):
@@ -176,10 +183,28 @@ class PaymentApprovalLine(models.Model):
             self.payment_id.payment_approval_batch_id = False
         super(PaymentApprovalLine, self).unlink()
 
-    # @api.depends('payment_amount')
-    # def compute_amount_in_usd(self):
-    #     for rec in self:
-    #         print("rec",rec)
+    @api.depends('payment_amount', 'currency_id')
+    def compute_amount_in_usd(self):
+        for rec in self:
+            print("rec", rec)
+            rec.amount_in_usd = False
+            to_currency = self.env['res.currency'].search(
+                [('name', '=', 'USD')], limit=1)
+            print("to_currency", to_currency.name)
+            if to_currency:
+                if rec.currency_id.id != to_currency.id:
+                    print("fffffffffffff")
+                    amount_usd = rec.currency_id._convert(rec.payment_amount,
+                                                          to_currency,
+                                                          rec.company_id,
+                                                          fields.Date.context_today(
+                                                              self),
+                                                          round=True)
+                    rec.amount_in_usd = amount_usd
+                else:
+                    rec.amount_in_usd = rec.payment_amount
+            else:
+                rec.amount_in_usd = rec.payment_amount
 
 
 class PaymentApprovalCycle(models.Model):
