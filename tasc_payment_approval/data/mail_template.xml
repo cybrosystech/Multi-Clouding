@@ -26,7 +26,7 @@
                     </tr>
                     <tr>
                         <td class="content-block">
-                            ${object.batch_name} with amount ${ctx['tot_payment_amount']} requires your approval.
+                            ${object.batch_name} with amount $ ${ctx['tot_payment_amount']} requires your approval.
                             Please follow the link below to open the item.
                         </td>
                     </tr>

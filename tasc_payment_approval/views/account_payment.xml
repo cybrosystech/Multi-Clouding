@@ -9,9 +9,22 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='name']" position='after'>
                 <field name="payment_approval_batch_id" invisible="1"/>
+                <field name="payment_approval_status" invisible="1"/>
                 <field name="invoice_number" invisible="1"/>
                 <field name="invoice_amount" invisible="1"/>
             </xpath>
+        </field>
+    </record>
+
+    <record id="view_account_payment_tree" model="ir.ui.view">
+        <field name="name">account.supplier.payment.tree</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_tree"/>
+        <field name="arch" type="xml">
+            <field name="currency_id" position="after">
+                <field name="payment_approval_batch_id"/>
+                <field name="payment_approval_status"/>
+            </field>
         </field>
     </record>
 </odoo>
