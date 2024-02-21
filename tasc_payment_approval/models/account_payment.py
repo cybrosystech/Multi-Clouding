@@ -15,7 +15,7 @@ class AccountPayment(models.Model):
                                   compute="compute_invoice_number_and_amount",
                                   )
     payment_approval_status = fields.Selection(
-        [('not_approved', 'Not Approved'),
+        [('draft', 'Draft'),
          ('selected', 'Selected'),
          ('in_approval', 'In Approval'),
          ('approved', 'Approved')
