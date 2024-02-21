@@ -24,7 +24,6 @@ class assets_report(models.AbstractModel):
     filter_hierarchy = True
     filter_unfold_all = True
 
-
     def _get_report_name(self):
         return _('Depreciation Table Report')
 
@@ -39,7 +38,7 @@ class assets_report(models.AbstractModel):
         return [
             [
                 {'name': ''},
-                {'name': _('Characteristics'), 'colspan': 8},
+                {'name': _('Characteristics'), 'colspan': 9},
                 {'name': _('Assets'), 'colspan': 4},
                 {'name': _('Depreciation'), 'colspan': 4},
                 {'name': _('Book Value')},
@@ -54,6 +53,7 @@ class assets_report(models.AbstractModel):
                 {'name': _('Co Location'), 'class': 'text-center'},
                 {'name': _('Project/Site'), 'class': 'text-center'},
                 {'name': _('Capex Type'), 'class': 'text-center'},
+                {'name': _('Asset Sequence Number'), 'class': 'text-center'},
                 {'name': _('Rate'), 'class': 'number', 'title': _(
                     'In percent.<br>For a linear method, the depreciation rate is computed per year.<br>For a declining method, it is the declining factor'),
                  'data-toggle': 'tooltip'},
@@ -79,16 +79,21 @@ class assets_report(models.AbstractModel):
                 options['hierarchy'] = self.filter_hierarchy
 
     def get_account_codes(self, account):
-        return [(name, name) for name in self._get_account_group_with_company(account.code, account.company_id.id)[1:]]
+        return [(name, name) for name in
+                self._get_account_group_with_company(account.code,
+                                                     account.company_id.id)[1:]]
 
-    def _get_account_group(self, account_code, parent_group=None, group_dict=None):
+    def _get_account_group(self, account_code, parent_group=None,
+                           group_dict=None):
         """ Get the list of parent groups for this account
         return: list containing the main group key, then the name of every group
                 for this account, beginning by the more general, until the
                 name of the account itself.
             This method is deprecated. Call instead _get_account_group_with_company
         """
-        return self._get_account_group_with_company(account_code, self.env.company.id, parent_group, group_dict)
+        return self._get_account_group_with_company(account_code,
+                                                    self.env.company.id,
+                                                    parent_group, group_dict)
 
     def _with_context_company2code2account(self):
         if self.env.context.get('company2code2account') is not None:
@@ -100,7 +105,8 @@ class assets_report(models.AbstractModel):
 
         return self.with_context(company2code2account=company2code2account)
 
-    def _get_account_group_with_company(self, account_code, company_id, parent_group=None, group_dict=None):
+    def _get_account_group_with_company(self, account_code, company_id,
+                                        parent_group=None, group_dict=None):
         """ Get the list of parent groups for this account
         return: list containing the main group key, then the name of every group
                 for this account, beginning by the more general, until the
@@ -110,16 +116,21 @@ class assets_report(models.AbstractModel):
         if not account_code:
             # This is used if there is no account_asset_id
             account_code = '##'
-        group_dict = group_dict or self.env['account.report']._get_account_groups_for_asset_report()
+        group_dict = group_dict or self.env[
+            'account.report']._get_account_groups_for_asset_report()
         self = self._with_context_company2code2account()
-        account_id = self.env.context['company2code2account'].get(company_id, {}).get(account_code)
-        account_suffix = [] if parent_group else [account_id.display_name if account_id else _("No asset account")]
+        account_id = self.env.context['company2code2account'].get(company_id,
+                                                                  {}).get(
+            account_code)
+        account_suffix = [] if parent_group else [
+            account_id.display_name if account_id else _("No asset account")]
         for k, v in group_dict.items():
             key_split = k.split('-')
             account_code_short = account_code[:len(str(key_split[0]))]
             if not v.get('children') and account_code_short == k:
                 return (parent_group or [k]) + [v['name']] + account_suffix
-            elif v.get('children') and key_split[0] <= account_code_short <= key_split[1]:
+            elif v.get('children') and key_split[0] <= account_code_short <= \
+                    key_split[1]:
                 return self._get_account_group_with_company(
                     account_code_short,
                     company_id,
@@ -128,7 +139,8 @@ class assets_report(models.AbstractModel):
                 ) + account_suffix
         return (parent_group or [account_code[:2]]) + account_suffix
 
-    def _get_rate_cached(self, from_currency, to_currency, company, date, cache):
+    def _get_rate_cached(self, from_currency, to_currency, company, date,
+                         cache):
         if from_currency == to_currency:
             return 1
         key = (from_currency, to_currency, company, date)
@@ -145,7 +157,7 @@ class assets_report(models.AbstractModel):
             'other_capex': 'Other CAPEX'
         }
         if capex:
-            return capex_type[''+capex]
+            return capex_type['' + capex]
         else:
             return ''
 
@@ -157,7 +169,9 @@ class assets_report(models.AbstractModel):
         asset_lines = self._get_assets_lines(options)
         curr_cache = {}
 
-        for company_id, company_asset_lines in groupby(asset_lines, key=lambda x: x['company_id']):
+        for company_id, company_asset_lines in groupby(asset_lines,
+                                                       key=lambda x: x[
+                                                           'company_id']):
             parent_lines = []
             children_lines = defaultdict(list)
             company = self.env['res.company'].browse(company_id)
@@ -168,23 +182,38 @@ class assets_report(models.AbstractModel):
                 else:
                     parent_lines += [al]
             for al in parent_lines:
-                if al['asset_method'] == 'linear' and al['asset_method_number']:  # some assets might have 0 depreciations because they dont lose value
-                    asset_depreciation_rate = ('{:.2f} %').format((100.0 / al['asset_method_number']) * (12 / int(al['asset_method_period'])))
+                if al['asset_method'] == 'linear' and al[
+                    'asset_method_number']:  # some assets might have 0 depreciations because they dont lose value
+                    asset_depreciation_rate = ('{:.2f} %').format(
+                        (100.0 / al['asset_method_number']) * (
+                                    12 / int(al['asset_method_period'])))
                 elif al['asset_method'] == 'linear':
                     asset_depreciation_rate = ('{:.2f} %').format(0.0)
                 else:
-                    asset_depreciation_rate = ('{:.2f} %').format(float(al['asset_method_progress_factor']) * 100)
+                    asset_depreciation_rate = ('{:.2f} %').format(
+                        float(al['asset_method_progress_factor']) * 100)
 
-                al_currency = self.env['res.currency'].browse(al['asset_currency_id'])
-                al_rate = self._get_rate_cached(al_currency, company_currency, company, al['asset_acquisition_date'], curr_cache)
+                al_currency = self.env['res.currency'].browse(
+                    al['asset_currency_id'])
+                al_rate = self._get_rate_cached(al_currency, company_currency,
+                                                company,
+                                                al['asset_acquisition_date'],
+                                                curr_cache)
 
-                depreciation_opening = company_currency.round(al['depreciated_start'] * al_rate) - company_currency.round(al['depreciation'] * al_rate)
-                depreciation_closing = company_currency.round(al['depreciated_end'] * al_rate)
+                depreciation_opening = company_currency.round(
+                    al['depreciated_start'] * al_rate) - company_currency.round(
+                    al['depreciation'] * al_rate)
+                depreciation_closing = company_currency.round(
+                    al['depreciated_end'] * al_rate)
                 depreciation_minus = 0.0
 
-                opening = (al['asset_acquisition_date'] or al['asset_date']) < fields.Date.to_date(options['date']['date_from'])
-                asset_opening = company_currency.round(al['asset_original_value'] * al_rate) if opening else 0.0
-                asset_add = 0.0 if opening else company_currency.round(al['asset_original_value'] * al_rate)
+                opening = (al['asset_acquisition_date'] or al[
+                    'asset_date']) < fields.Date.to_date(
+                    options['date']['date_from'])
+                asset_opening = company_currency.round(
+                    al['asset_original_value'] * al_rate) if opening else 0.0
+                asset_add = 0.0 if opening else company_currency.round(
+                    al['asset_original_value'] * al_rate)
                 asset_minus = 0.0
 
                 if al['import_depreciated']:
@@ -194,20 +223,35 @@ class assets_report(models.AbstractModel):
                     depreciation_closing += al['import_depreciated']
 
                 for child in children_lines[al['asset_id']]:
-                    child_currency = self.env['res.currency'].browse(child['asset_currency_id'])
-                    child_rate = self._get_rate_cached(child_currency, company_currency, company, child['asset_acquisition_date'], curr_cache)
+                    child_currency = self.env['res.currency'].browse(
+                        child['asset_currency_id'])
+                    child_rate = self._get_rate_cached(child_currency,
+                                                       company_currency,
+                                                       company, child[
+                                                           'asset_acquisition_date'],
+                                                       curr_cache)
 
-                    depreciation_opening += company_currency.round(child['depreciated_start'] * child_rate) - company_currency.round(child['depreciation'] * child_rate)
-                    depreciation_closing += company_currency.round(child['depreciated_end'] * child_rate)
+                    depreciation_opening += company_currency.round(child[
+                                                                       'depreciated_start'] * child_rate) - company_currency.round(
+                        child['depreciation'] * child_rate)
+                    depreciation_closing += company_currency.round(
+                        child['depreciated_end'] * child_rate)
 
-                    opening = (child['asset_acquisition_date'] or child['asset_date']) < fields.Date.to_date(options['date']['date_from'])
-                    asset_opening += company_currency.round(child['asset_original_value'] * child_rate) if opening else 0.0
-                    asset_add += 0.0 if opening else company_currency.round(child['asset_original_value'] * child_rate)
+                    opening = (child['asset_acquisition_date'] or child[
+                        'asset_date']) < fields.Date.to_date(
+                        options['date']['date_from'])
+                    asset_opening += company_currency.round(child[
+                                                                'asset_original_value'] * child_rate) if opening else 0.0
+                    asset_add += 0.0 if opening else company_currency.round(
+                        child['asset_original_value'] * child_rate)
 
                 depreciation_add = depreciation_closing - depreciation_opening
                 asset_closing = asset_opening + asset_add
 
-                if al['asset_state'] == 'close' and al['asset_disposal_date'] and al['asset_disposal_date'] <= fields.Date.to_date(options['date']['date_to']):
+                if al['asset_state'] == 'close' and al[
+                    'asset_disposal_date'] and al[
+                    'asset_disposal_date'] <= fields.Date.to_date(
+                        options['date']['date_to']):
                     depreciation_minus = depreciation_closing
                     # depreciation_opening and depreciation_add are computed from first_move (assuming it is a depreciation move),
                     # but when previous condition is True and first_move and last_move are the same record, then first_move is not a
@@ -231,20 +275,47 @@ class assets_report(models.AbstractModel):
                     state = ['posted']
                     if options['all_entries']:
                         state = ['draft', 'posted']
-                    if asset.depreciation_move_ids.filtered(lambda x: x.date >=fields.Date.to_date(options['date']['date_from']) and  x.date <=fields.Date.to_date(options['date']['date_to']) and 'Disposal' in x.ref):
-                        partial_moves = asset.depreciation_move_ids.filtered(lambda x: 'Disposal' in x.ref)
+                    if asset.depreciation_move_ids.filtered(
+                            lambda x: x.date >= fields.Date.to_date(
+                                    options['date'][
+                                        'date_from']) and x.date <= fields.Date.to_date(
+                                    options['date'][
+                                        'date_to']) and 'Disposal' in x.ref):
+                        partial_moves = asset.depreciation_move_ids.filtered(
+                            lambda x: 'Disposal' in x.ref)
                         max_date = max(partial_moves.mapped('date'))
                         if options['date']['period_type'] == 'fiscalyear':
-                            depreciated_partial_moves = asset.depreciation_move_ids.filtered(lambda x: x.date.year == max_date.year and x.date <= max_date and 'Disposal' not in x.ref and x.state in state)
+                            depreciated_partial_moves = asset.depreciation_move_ids.filtered(
+                                lambda
+                                    x: x.date.year == max_date.year and x.date <= max_date and 'Disposal' not in x.ref and x.state in state)
                         else:
-                            depreciated_partial_moves = asset.depreciation_move_ids.filtered(lambda x: x.date >=fields.Date.to_date(options['date']['date_from']) and  x.date <= fields.Date.to_date(options['date']['date_to']) and 'Disposal' not in x.ref and x.state in state)
-                        asset_minus = sum(partial_moves.mapped('amount_total_signed'))
+                            depreciated_partial_moves = asset.depreciation_move_ids.filtered(
+                                lambda x: x.date >= fields.Date.to_date(
+                                    options['date'][
+                                        'date_from']) and x.date <= fields.Date.to_date(
+                                    options['date'][
+                                        'date_to']) and 'Disposal' not in x.ref and x.state in state)
+                        asset_minus = sum(
+                            partial_moves.mapped('amount_total_signed'))
                         asset_closing -= asset_minus
-                        depreciation_add = sum(depreciated_partial_moves.mapped('amount_total_signed'))
-                        depreciation_minus = (sum(asset.depreciation_move_ids.filtered(lambda x: x.date <= max_date and 'Disposal' not in x.ref).mapped('amount_total')) * asset_minus) / asset.original_value
+                        depreciation_add = sum(depreciated_partial_moves.mapped(
+                            'amount_total_signed'))
+                        depreciation_minus = (
+                                                         sum(asset.depreciation_move_ids.filtered(
+                                                             lambda
+                                                                 x: x.date <= max_date and 'Disposal' not in x.ref).mapped(
+                                                             'amount_total')) * asset_minus) / asset.original_value
                         depreciation_closing = depreciation_opening + depreciation_add - depreciation_minus
-                    elif asset.depreciation_move_ids.filtered(lambda x: x.date <=fields.Date.to_date(options['date']['date_from']) and 'Disposal' in x.ref):
-                        depreciation_opening = sum(asset.depreciation_move_ids.filtered(lambda x: x.date <fields.Date.to_date(options['date']['date_from']) and 'Disposal' not in x.ref).mapped('amount_total_signed'))
+                    elif asset.depreciation_move_ids.filtered(
+                            lambda x: x.date <= fields.Date.to_date(
+                                    options['date'][
+                                        'date_from']) and 'Disposal' in x.ref):
+                        depreciation_opening = sum(
+                            asset.depreciation_move_ids.filtered(
+                                lambda x: x.date < fields.Date.to_date(
+                                    options['date'][
+                                        'date_from']) and 'Disposal' not in x.ref).mapped(
+                                'amount_total_signed'))
                         partial_moves = asset.depreciation_move_ids.filtered(
                             lambda x: 'Disposal' in x.ref)
                         depreciated_partial_moves = asset.depreciation_move_ids.filtered(
@@ -253,23 +324,42 @@ class assets_report(models.AbstractModel):
                                     'date_from']) and x.date <= fields.Date.to_date(
                                 options['date'][
                                     'date_to']) and 'Disposal' not in x.ref and x.state in state)
-                        depreciation_add = sum(depreciated_partial_moves.mapped('amount_total_signed'))
+                        depreciation_add = sum(depreciated_partial_moves.mapped(
+                            'amount_total_signed'))
                         max_date = max(partial_moves.mapped('date'))
-                        asset_opening = asset_opening - sum(partial_moves.mapped('amount_total_signed'))
-                        asset_minus_demo = (sum(asset.depreciation_move_ids.filtered(lambda x: x.date <= max_date and 'Disposal' not in x.ref and x.state in state).mapped('amount_total')) * sum(partial_moves.mapped('amount_total_signed'))) / asset.original_value
+                        asset_opening = asset_opening - sum(
+                            partial_moves.mapped('amount_total_signed'))
+                        asset_minus_demo = (
+                                                       sum(asset.depreciation_move_ids.filtered(
+                                                           lambda
+                                                               x: x.date <= max_date and 'Disposal' not in x.ref and x.state in state).mapped(
+                                                           'amount_total')) * sum(
+                                                   partial_moves.mapped(
+                                                       'amount_total_signed'))) / asset.original_value
                         asset_closing = asset_opening
                         depreciation_opening = depreciation_opening - asset_minus_demo
                         depreciation_closing = depreciation_opening + depreciation_add - depreciation_minus
                 asset_gross = asset_closing - depreciation_closing
 
-                total = [x + y for x, y in zip(total, [asset_opening, asset_add, asset_minus, asset_closing, depreciation_opening, depreciation_add, depreciation_minus, depreciation_closing, asset_gross])]
+                total = [x + y for x, y in zip(total, [asset_opening, asset_add,
+                                                       asset_minus,
+                                                       asset_closing,
+                                                       depreciation_opening,
+                                                       depreciation_add,
+                                                       depreciation_minus,
+                                                       depreciation_closing,
+                                                       asset_gross])]
 
-                id = "_".join([self._get_account_group_with_company(al['account_code'], al['company_id'])[0], str(al['asset_id'])])
+                id = "_".join([self._get_account_group_with_company(
+                    al['account_code'], al['company_id'])[0],
+                               str(al['asset_id'])])
                 name = str(al['asset_name'])
                 line = {
                     'id': id,
                     'level': 1,
-                    'name': name if self._context.get('print_mode') or len(name) < MAX_NAME_LENGTH else name[:MAX_NAME_LENGTH - 2] + '...',
+                    'name': name if self._context.get('print_mode') or len(
+                        name) < MAX_NAME_LENGTH else name[
+                                                     :MAX_NAME_LENGTH - 2] + '...',
                     'account_code': al['account_code'],
                     'columns': [
                         {'name': al['asset_acquisition_date'] and format_date(
@@ -283,20 +373,33 @@ class assets_report(models.AbstractModel):
                             'Declining')) or _('Dec. then Straight'),
                          'no_format_name': ''},
                         {'name': al['total_move_count'], 'no_format_name': ''},
-                        {'name': al['analytic_colocation'], 'no_format_name': ''},
+                        {'name': al['analytic_colocation'],
+                         'no_format_name': ''},
                         {'name': al['analytic_project'], 'no_format_name': ''},
                         {'name': self.get_capex_type(al['capex_type']),
                          'no_format_name': ''},
+                        {'name': al['sequence_number'],
+                         'no_format_name': ''},
                         {'name': asset_depreciation_rate, 'no_format_name': ''},
-                        {'name': self.format_value(asset_opening), 'no_format_name': asset_opening},  # Assets
-                        {'name': self.format_value(asset_add), 'no_format_name': asset_add},
-                        {'name': self.format_value(asset_minus), 'no_format_name': asset_minus},
-                        {'name': self.format_value(asset_closing), 'no_format_name': asset_closing},
-                        {'name': self.format_value(depreciation_opening), 'no_format_name': depreciation_opening},  # Depreciation
-                        {'name': self.format_value(depreciation_add), 'no_format_name': depreciation_add},
-                        {'name': self.format_value(depreciation_minus), 'no_format_name': depreciation_minus},
-                        {'name': self.format_value(depreciation_closing), 'no_format_name': depreciation_closing},
-                        {'name': self.format_value(asset_gross), 'no_format_name': asset_gross},  # Gross
+                        {'name': self.format_value(asset_opening),
+                         'no_format_name': asset_opening},  # Assets
+                        {'name': self.format_value(asset_add),
+                         'no_format_name': asset_add},
+                        {'name': self.format_value(asset_minus),
+                         'no_format_name': asset_minus},
+                        {'name': self.format_value(asset_closing),
+                         'no_format_name': asset_closing},
+                        {'name': self.format_value(depreciation_opening),
+                         'no_format_name': depreciation_opening},
+                        # Depreciation
+                        {'name': self.format_value(depreciation_add),
+                         'no_format_name': depreciation_add},
+                        {'name': self.format_value(depreciation_minus),
+                         'no_format_name': depreciation_minus},
+                        {'name': self.format_value(depreciation_closing),
+                         'no_format_name': depreciation_closing},
+                        {'name': self.format_value(asset_gross),
+                         'no_format_name': asset_gross},  # Gross
                     ],
                     'unfoldable': False,
                     'unfolded': False,
@@ -369,6 +472,7 @@ class assets_report(models.AbstractModel):
                                    asset.method_progress_factor as asset_method_progress_factor,
                                    asset.state as asset_state,
                                    asset.capex_type as capex_type,
+                                   asset.sequence_number as sequence_number,
                                    account.code as account_code,
                                    account.name as account_name,
                                    account.id as account_id,
@@ -494,6 +598,7 @@ class assets_report(models.AbstractModel):
                                    asset.method_progress_factor as asset_method_progress_factor,
                                    asset.state as asset_state,
                                    asset.capex_type as capex_type,
+                                   asset.sequence_number as sequence_number,
                                    account.code as account_code,
                                    account.name as account_name,
                                    account.id as account_id,
@@ -581,7 +686,9 @@ class assets_report(models.AbstractModel):
                 company_ids = tuple(self.env.company.ids)
 
             self.flush()
-            self.env.cr.execute(sql,{'date_to': date_to, 'date_from': date_from, 'company_ids': company_ids})
+            self.env.cr.execute(sql,
+                                {'date_to': date_to, 'date_from': date_from,
+                                 'company_ids': company_ids})
             results = self.env.cr.dictfetchall()
             self.env.cr.execute(
                 "DROP TABLE temp_account_move")  # Because tests are run in the same transaction, we need to clean here the SQL INHERITS
@@ -597,7 +704,9 @@ class assets_report(models.AbstractModel):
             'name': "Depreciation Schedule Custom",
             'type': 'ir.actions.client',
             'tag': 'account_report',
-            'context': "{'model':'account.assets.custom.report','assets_limit': %s,'assets_offset': %s}" %(self.env.context['assets_limit'], int(self.env.context['assets_offset'])+200)
+            'context': "{'model':'account.assets.custom.report','assets_limit': %s,'assets_offset': %s}" % (
+            self.env.context['assets_limit'],
+            int(self.env.context['assets_offset']) + 200)
         }
 
 
@@ -650,7 +759,8 @@ def get_report_informations(self, options):
     if options.get('date') and options.get('all_entries') is not None:
         date_to = options['date'].get('date_to') or options['date'].get(
             'date') or fields.Date.today()
-        period_domain = ['|',('state', '=', 'draft'),('state', '=', 'to_approve'), ('date', '<=', date_to)]
+        period_domain = ['|', ('state', '=', 'draft'),
+                         ('state', '=', 'to_approve'), ('date', '<=', date_to)]
         options['unposted_in_period'] = bool(
             self.env['account.move'].search_count(period_domain))
 
@@ -662,7 +772,7 @@ def get_report_informations(self, options):
                 [('company_id', '=', self.env.company.id)]):
             if journals_selected and journals_selected == set(
                     self._get_filter_journals().ids) - set(
-                    journal_group.excluded_journal_ids.ids):
+                journal_group.excluded_journal_ids.ids):
                 options['name_journal_group'] = journal_group.name
                 break
 
@@ -681,17 +791,20 @@ def get_report_informations(self, options):
             }
     return info
 
+
 def open_unposted_moves(self, options, params=None):
     ''' Open the list of draft journal entries that might impact the reporting'''
-    action = self.env["ir.actions.actions"]._for_xml_id("account.action_move_journal_line")
+    action = self.env["ir.actions.actions"]._for_xml_id(
+        "account.action_move_journal_line")
     action = clean_action(action, env=self.env)
-    domain = ['|',('state', '=', 'draft'),('state', '=', 'to_approve')]
+    domain = ['|', ('state', '=', 'draft'), ('state', '=', 'to_approve')]
     if options.get('date'):
-        #there's no condition on the date from, as a draft entry might change the initial balance of a line
-        date_to = options['date'].get('date_to') or options['date'].get('date') or fields.Date.today()
+        # there's no condition on the date from, as a draft entry might change the initial balance of a line
+        date_to = options['date'].get('date_to') or options['date'].get(
+            'date') or fields.Date.today()
         domain += [('date', '<=', date_to)]
     action['domain'] = domain
-    #overwrite the context to avoid default filtering on 'misc' journals
+    # overwrite the context to avoid default filtering on 'misc' journals
     action['context'] = {}
     return action
 
