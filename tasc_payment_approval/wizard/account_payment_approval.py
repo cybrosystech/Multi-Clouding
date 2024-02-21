@@ -15,12 +15,12 @@ class PaymentApproval(models.Model):
     payment_ids = fields.One2many('account.payment.approval.line',
                                   'payment_approval_batch_id',
                                   )
-    state = fields.Selection([('not_approved', 'Not Approved'),
+    state = fields.Selection([('draft', 'Draft'),
                               ('selected', 'Selected'),
                               ('in_approval', 'In Approval'),
                               ('approved', 'Approved')
                               ],
-                             required=True, default='not_approved')
+                             required=True, default='draft', tracking=True)
     payment_approval_cycle_ids = fields.One2many(
         comodel_name="purchase.approval.cycle", inverse_name="payment_id",
         string="", required=False, )
@@ -32,10 +32,20 @@ class PaymentApproval(models.Model):
                                  default=lambda self: self.env.company)
 
     def unlink(self):
-        if self.state != 'not_approved':
+        if self.state != 'draft':
             raise UserError(
-                "You can only delete the Payment Approval in 'Not Approved' state.")
+                "You can only delete the Payment Approval in 'Draft' state.")
         super(PaymentApproval, self).unlink()
+
+    def button_reject_payment_cycle(self):
+        self.state = 'draft'
+        self.show_approve_button = False
+        self.request_approve_bool = False
+        self.show_request_approve_button = False
+        self.payment_approval_cycle_ids = False
+        message = 'Rejected by :' + str(
+            self.env.user.name)
+        self.message_post(body=message)
 
     def button_approve_payment_cycle(self):
         for rec in self:

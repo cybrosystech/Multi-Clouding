@@ -15,6 +15,9 @@
                     <button name="button_approve_payment_cycle" string="Approve"
                             type="object" class="btn-primary"
                             attrs="{'invisible':[('show_approve_button','=',False)]}"/>
+                    <button name="button_reject_payment_cycle" string="Reject"
+                            type="object" class="btn-primary"
+                            attrs="{'invisible':[('show_approve_button','=',False)]}"/>
                 </header>
                 <sheet>
                     <group>
@@ -29,7 +32,7 @@
                         <button string="Generate  Payments"
                                 name="action_generate_approval_batch"
                                 type="object" class="btn-secondary"
-                                attrs="{'invisible':[('state','!=','not_approved')]}"/>
+                                attrs="{'invisible':[('state','!=','draft')]}"/>
 
                     </group>
                     <notebook>
