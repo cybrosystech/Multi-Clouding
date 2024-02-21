@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <record id="view_account_asset_form" model="ir.ui.view">
+            <field name="name">account.asset.view.form.tasc.account.asset
+            </field>
+            <field name="model">account.asset</field>
+            <field name="inherit_id"
+                   ref="account_asset.view_account_asset_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='original_value']"
+                       position="before">
+                    <field name="sequence_number"
+                    />
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_account_asset_purchase_tree" model="ir.ui.view">
+            <field name="name">account.asset.view.tree.tasc.account.asset
+            </field>
+            <field name="model">account.asset</field>
+            <field name="inherit_id"
+                   ref="account_asset.view_account_asset_purchase_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='name']"
+                       position="after">
+                    <field name="sequence_number"
+                    />
+                    <field name="serial_no"
+                    />
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
