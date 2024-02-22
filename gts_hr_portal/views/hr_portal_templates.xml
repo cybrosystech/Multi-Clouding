@@ -79,8 +79,6 @@
                 </thead>
             </t>
             <t t-if="leaves" t-call="portal.portal_table">
-                <!--                <span>My Leaves-->
-                <!--                </span>-->
                 <thead>
                     <th colspan="8"
                         style="text-align:center;background-color:#7BA1B2;">My
@@ -88,8 +86,6 @@
                     </th>
                 </thead>
                 <t t-foreach="grouped_leave" t-as="group_leave">
-                    <!--                    <t t-if="grouped_leave"></t>-->
-
                     <thead>
                         <tr class="active"
                             t-attf-class="{{'thead-light' if not groupby == 'none' else ''}}">
@@ -116,7 +112,7 @@
                     </thead>
 
                     <t t-foreach="group_leave" t-as="leave">
-                        <t t-if="leave.employee_id.user_id.id==request.env.user.id">
+                        <t t-if="leave.employee_id.sudo().user_id.id==request.env.user.id">
                             <tr>
                                 <td></td>
                                 <td>
@@ -142,7 +138,7 @@
                                     </center>
                                 </td>
                                 <td>
-                                    <t t-if="leave.state=='confirm' and leave.is_manager_approved==False and leave.employee_id.parent_id.user_id.id==request.env.user.id">
+                                    <t t-if="leave.state=='confirm' and leave.sudo().holiday_status_id.leave_validation_type in ['both','manager'] and leave.employee_id.parent_id.sudo().user_id.id==request.env.user.id">
                                         <a t-attf-href="/approve/leave/#{leave.sudo().id}">
                                             <i class="fa fa-check" role="img"
                                                aria-label="Approve"
@@ -155,7 +151,7 @@
                                         </a>
 
                                     </t>
-                                    <t t-if="leave.state=='validate1' and leave.is_manager_approved==True and leave.employee_id.leave_manager_id.id==request.env.user.id">
+                                    <t t-if="leave.state in ['validate1','confirm'] and leave.holiday_status_id.leave_validation_type in ['both','hr'] and leave.employee_id.sudo().leave_manager_id.id==request.env.user.id">
                                         <a t-attf-href="/approve/leave/manager/#{leave.sudo().id}">
                                             <i class="fa fa-check" role="img"
                                                aria-label="Approve"
@@ -210,7 +206,7 @@
                     </thead>
 
                     <t t-foreach="group_leave" t-as="leave">
-                        <t t-if="leave.employee_id.parent_id.user_id.id==request.env.user.id or leave.employee_id.leave_manager_id.id==request.env.user.id">
+                        <t t-if="leave.employee_id.parent_id.sudo().user_id.id==request.env.user.id or leave.employee_id.sudo().leave_manager_id.id==request.env.user.id">
                             <tr>
                                 <td></td>
                                 <td>
@@ -236,7 +232,7 @@
                                     </center>
                                 </td>
                                 <td>
-                                    <t t-if="leave.state=='confirm' and leave.is_manager_approved==False and leave.employee_id.parent_id.user_id.id==request.env.user.id">
+                                    <t t-if="leave.state=='confirm' and leave.sudo().holiday_status_id.leave_validation_type in ['both','manager'] and leave.employee_id.parent_id.sudo().user_id.id==request.env.user.id">
                                         <a t-attf-href="/approve/leave/#{leave.sudo().id}">
                                             <i class="fa fa-check" role="img"
                                                aria-label="Approve"
@@ -249,7 +245,7 @@
                                         </a>
 
                                     </t>
-                                    <t t-if="leave.state=='validate1' and leave.is_manager_approved==True and leave.employee_id.leave_manager_id.id==request.env.user.id">
+                                    <t t-if="leave.state in ['validate1','confirm'] and leave.holiday_status_id.sudo().leave_validation_type in ['both','hr'] and leave.employee_id.sudo().leave_manager_id.id==request.env.user.id">
                                         <a t-attf-href="/approve/leave/manager/#{leave.sudo().id}">
                                             <i class="fa fa-check" role="img"
                                                aria-label="Approve"
@@ -535,7 +531,7 @@
                                     </div>
                                     <t>
                                         <t t-set="responsible"
-                                           t-value="employee.sudo() and employee.sudo().parent_id.user_id "/>
+                                           t-value="employee.sudo() and employee.sudo().parent_id.sudo().user_id "/>
 
                                     </t>
                                     <t t-if="responsible">

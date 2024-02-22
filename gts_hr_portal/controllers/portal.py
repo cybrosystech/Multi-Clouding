@@ -39,8 +39,16 @@ class CustomerPortal(CustomerPortal):
                 auth="user", website=True)
     def approve_leave(self, leave_id, page=1, **kw):
         leave = request.env['hr.leave'].browse(leave_id)
-        leave.state = 'validate1'
-        leave.is_manager_approved = True
+        if leave.holiday_status_id.leave_validation_type == 'manager':
+            leave.state = 'validate'
+        if leave.holiday_status_id.leave_validation_type == 'both':
+            leave.state = 'validate1'
+        template = request.env.ref(
+            'gts_hr_portal.email_template_leave_approve_manager').sudo()
+        template.with_context(date_from=leave.date_from.date(),
+                              date_to=leave.date_to.date(),
+                              state=leave.state).send_mail(leave.id,
+                                                           force_send=True)
         request.render("gts_hr_portal.portal_my_leaves")
         employee = leave.employee_id.id
         return request.render("gts_hr_portal.leave_approve",
@@ -51,7 +59,15 @@ class CustomerPortal(CustomerPortal):
                 auth="user", website=True)
     def approve_leave_timeoff_approver(self, leave_id, page=1, **kw):
         leave = request.env['hr.leave'].browse(leave_id)
+        if leave.holiday_status_id.leave_validation_type == 'hr' or  leave.holiday_status_id.leave_validation_type == 'both' :
+            leave.state = 'validate'
         leave.sudo().state = 'validate'
+        template = request.env.ref(
+            'gts_hr_portal.email_template_leave_approve_timeoff_approver').sudo()
+        template.with_context(date_from=leave.date_from.date(),
+                              date_to=leave.date_to.date(),
+                              state=leave.state).send_mail(leave.id,
+                                                           force_send=True)
         employee = leave.employee_id.id
         return request.render("gts_hr_portal.leave_approve",
                               {'employee': employee,
@@ -231,7 +247,7 @@ class CustomerPortal(CustomerPortal):
         _logger.info("today : %s" % today)
         Employee = request.env['hr.employee']
         LeaveObj = request.env['hr.leave']
-        employee = Employee.search([('user_id', '=', request.env.user.id)],
+        employee = Employee.sudo().search([('user_id', '=', request.env.user.id)],
                                    limit=1)
         values['validation_errors'] = {}
         leave_data = self._leave_cleanup_data(values)
@@ -249,7 +265,7 @@ class CustomerPortal(CustomerPortal):
                                                  request_date_to,
                                                  leave_data_copy.get(
                                                      'employee_id'))['days'] + 1
-                leave = LeaveObj.create(leave_data_copy)
+                leave = LeaveObj.sudo().create(leave_data_copy)
                 template = request.env.ref(
                     'gts_hr_portal.email_template_leave_request').sudo()
                 template.with_context(date_from=leave.date_from.date(),date_to=leave.date_to.date(), state=leave.state).send_mail(leave.id,
@@ -274,9 +290,6 @@ class CustomerPortal(CustomerPortal):
             values['validation_errors'] = validation_errors
             values.update(leave_data)
             values = self._leave_get_default_data(employee, values)
-
-
-
         return request.render("gts_hr_portal.leave_apply", values)
 
     def _leave_get_default_data(self, employee, values):
