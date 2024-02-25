@@ -4,13 +4,17 @@
         <record id="email_template_leave_request" model="mail.template">
             <field name="name">Leave Request</field>
             <field name="model_id" ref="hr_holidays.model_hr_leave"/>
-            <field name="subject">Leave Request -  ${object.employee_id.name} : FROM ${ctx['date_from']} TO ${ctx['date_to']} </field>
-            <field name="email_from">${(object.employee_id.user_id.email)}</field>
-            <field name="email_to">
-                ${object.employee_id.leave_manager_id.email}
+            <field name="subject">Leave Request - ${object.employee_id.name} :
+                FROM ${ctx['date_from']} TO ${ctx['date_to']}
             </field>
-             <field name="email_cc">
-               ${object.employee_id.parent_id.user_id.email}
+            <field name="email_from">
+                ${(object.employee_id.sudo().user_id.sudo().email)}
+            </field>
+            <field name="email_to">
+                ${object.employee_id.parent_id.sudo().user_id.sudo().email}
+            </field>
+            <field name="email_cc">
+                ${object.employee_id.sudo().leave_manager_id.sudo().email}
             </field>
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px;">
@@ -18,11 +22,15 @@
                         Hello,
                         <br/>
                         <br/>
-                        ${(object.employee_id.name)} has request for Leave (${(object.holiday_status_id.name)}) from ${ctx['date_from']} to ${ctx['date_to']}
-                         <a href="/web#id=${(object.id)}&amp;model=hr.leave&amp;view_type=form" style="background-color: #9E588B; margin-top: 10px; padding: 10px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 16px;">View Request</a>.
+                        ${(object.employee_id.name)} has request for Leave
+                        (${(object.holiday_status_id.name)}) from
+                        ${ctx['date_from']} to ${ctx['date_to']}
+                        <a href="/web#id=${(object.id)}&amp;model=hr.leave&amp;view_type=form"
+                           style="background-color: #9E588B; margin-top: 10px; padding: 10px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 16px;">
+                            View Request</a>.
                         <br/>
                         <br/>
-                        Leave Description :  ${(object.name)}
+                        Leave Description : ${(object.name)}
                         <br/>
                         Leave Type: ${(object.holiday_status_id.name)}
                         <br/>
@@ -36,5 +44,100 @@
                 </div>
             </field>
         </record>
+
+
+        <record id="email_template_leave_approve_manager" model="mail.template">
+            <field name="name">Leave Approve Manager</field>
+            <field name="model_id" ref="hr_holidays.model_hr_leave"/>
+            <field name="subject">Leave Approved - ${object.employee_id.name} :
+                FROM ${ctx['date_from']} TO ${ctx['date_to']}
+            </field>
+            <field name="email_from">
+                ${object.employee_id.parent_id.sudo().user_id.sudo().email}
+            </field>
+            <field name="email_to">
+                ${(object.employee_id.sudo().user_id.sudo().email)}
+            </field>
+            <field name="email_cc">
+                ${object.employee_id.sudo().leave_manager_id.sudo().email}
+                <!--                % if object.holiday_status_id.leave_validation_type == 'both':-->
+                <!--                ${object.employee_id.sudo().leave_manager_id.sudo().email}-->
+                <!--                % endif-->
+            </field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Hello ${(object.employee_id.name)},
+                        <br/>
+                        <br/>
+                        Your leave for (${(object.holiday_status_id.name)}) from
+                        ${ctx['date_from']} to ${ctx['date_to']} is approved by
+                        manager ${(object.employee_id.sudo().parent_id.name)}
+                        <a href="/web#id=${(object.id)}&amp;model=hr.leave&amp;view_type=form"
+                           style="background-color: #9E588B; margin-top: 10px; padding: 10px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 16px;">
+                            View Request</a>.
+                        <br/>
+                        <br/>
+                        Leave Description : ${(object.name)}
+                        <br/>
+                        Leave Type: ${(object.holiday_status_id.name)}
+                        <br/>
+                        Date From: ${ctx['date_from']}
+                        <br/>
+                        Date To: ${ctx['date_to']}
+                        <br/>
+                        Total Number of Days: ${(object.number_of_days)}
+                        <br/>
+                    </p>
+                </div>
+            </field>
+        </record>
+
+        <record id="email_template_leave_approve_timeoff_approver"
+                model="mail.template">
+            <field name="name">Leave Approve Time off officer</field>
+            <field name="model_id" ref="hr_holidays.model_hr_leave"/>
+            <field name="subject">Leave Approved - ${object.employee_id.name} :
+                FROM ${ctx['date_from']} TO ${ctx['date_to']}
+            </field>
+            <field name="email_from">
+                ${object.employee_id.sudo().leave_manager_id.sudo().email}
+            </field>
+            <field name="email_to">
+                ${(object.employee_id.sudo().user_id.sudo().email)}
+            </field>
+            <field name="email_cc">
+                ${object.employee_id.parent_id.sudo().user_id.sudo().email}
+            </field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Hello ${(object.employee_id.name)},
+                        <br/>
+                        <br/>
+                        Your leave for (${(object.holiday_status_id.name)}) from
+                        ${ctx['date_from']} to ${ctx['date_to']} is approved by
+                        time off approver
+                        ${(object.employee_id.sudo().leave_manager_id.name)}
+                        <a href="/web#id=${(object.id)}&amp;model=hr.leave&amp;view_type=form"
+                           style="background-color: #9E588B; margin-top: 10px; padding: 10px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 16px;">
+                            View Request</a>.
+                        <br/>
+                        <br/>
+                        Leave Description : ${(object.name)}
+                        <br/>
+                        Leave Type: ${(object.holiday_status_id.name)}
+                        <br/>
+                        Date From: ${ctx['date_from']}
+                        <br/>
+                        Date To: ${ctx['date_to']}
+                        <br/>
+                        Total Number of Days: ${(object.number_of_days)}
+                        <br/>
+                    </p>
+                </div>
+            </field>
+        </record>
+
     </data>
 </odoo>
