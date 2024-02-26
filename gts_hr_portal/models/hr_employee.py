@@ -9,6 +9,45 @@ def extract_email(email):
     addresses = email_split(email)
     return addresses[0] if addresses else ''
 
+class HrEmployeePublic(models.Model):
+    _inherit = "hr.employee.public"
+
+    marital = fields.Selection([
+        ('single', 'Single'),
+        ('married', 'Married'),
+        ('cohabitant', 'Legal Cohabitant'),
+        ('widower', 'Widower'),
+        ('divorced', 'Divorced')
+    ], string='Marital Status', groups="hr.group_hr_user,base.group_portal",
+        default='single', tracking=True)
+    children = fields.Integer(string='Number of Children',
+                              groups="base.group_portal,hr.group_hr_user",
+                              tracking=True)
+    bank_account_id = fields.Many2one(
+        'res.partner.bank', 'Bank Account Number',
+        domain="[('partner_id', '=', address_home_id), '|', ('company_id', '=', False), ('company_id', '=', company_id)]",
+        groups="base.group_portal,hr.group_hr_user",
+        tracking=True,
+        help='Employee bank salary account')
+    worked_days_line_ids = fields.One2many(
+        'hr.payslip.worked_days', 'payslip_id', string='Payslip Worked Days',
+        copy=True,
+        compute='_compute_worked_days_line_ids', store=True, readonly=False,
+        states={'done': [('readonly', True)], 'cancel': [('readonly', True)],
+                'paid': [('readonly', True)]})
+    identification_id = fields.Char(string='Identification No',
+                                    groups="base.group_portal,hr.group_hr_user",
+                                    tracking=True)
+
+    first_contract_date = fields.Date(compute='_compute_first_contract_date',
+                                      groups="base.group_portal,hr.group_hr_user",
+                                      store=True)
+
+    contract_id = fields.Many2one(
+        'hr.contract', string='Current Contract',
+        groups="base.group_portal,hr.group_hr_user",
+        domain="[('company_id', '=', company_id), ('employee_id', '=', id)]",
+        help='Current contract of the employee')
 
 class HrEmployee(models.Model):
     _inherit = "hr.employee"
