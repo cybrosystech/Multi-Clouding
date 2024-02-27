@@ -10,15 +10,15 @@ class HrPayslipMpatch(HrPayslip):
                                     raise_if_not_found=False)
         for payslip in self:
             total = 0
-            for exp in payslip.expense_sheet_ids.expense_line_ids:
-                if exp.currency_id.id != payslip.currency_id.id:
-                    tot = exp.currency_id._convert(exp.total_amount,
+            for exp in payslip.expense_sheet_ids.expense_line_ids.filtered(lambda x:x.product_id.product_expense_type == 'others'):
+                if self.env.company.currency_id.id != payslip.currency_id.id:
+                    tot = self.env.company.currency_id._convert(exp.total_amount_company,
                                                      payslip.currency_id,
-                                                     payslip.company_id,
+                                                     self.env.company,
                                                     exp.date)
                     total+= tot
                 else:
-                    total+=exp.total_amount
+                    total+=exp.total_amount_company
 
             if not total or not expense_type:
                 payslip.input_line_ids = payslip.input_line_ids
