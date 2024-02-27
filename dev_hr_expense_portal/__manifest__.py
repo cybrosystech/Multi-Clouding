@@ -41,7 +41,7 @@
         'security/ir.model.access.csv',
         'security/security.xml',
         'views/res_config_settings_views.xml',
-        'views/hr_employee_views.xml',
+        # 'views/hr_employee_views.xml',
         'views/hr_expense_views.xml',
         'views/hr_expense_portal.xml',
         'views/product_template_views.xml',
