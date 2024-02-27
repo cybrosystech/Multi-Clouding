@@ -42,7 +42,7 @@ class hr_expense(models.Model):
                                  ondelete='restrict')
     unit_amount = fields.Float("Unit Price",
                                compute='_compute_from_product_id_company_id',
-                               store=True, required=True, copy=True,readonly=False,
+                               required=True, copy=True,readonly=False,
                                states={
                                    'waiting_approval': [('readonly', False)],
                                    'draft': [('readonly', False)],
