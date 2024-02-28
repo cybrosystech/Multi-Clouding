@@ -6,17 +6,11 @@ from odoo import models, fields, api
 class ResConfigSettings(models.TransientModel):
     _inherit = 'res.config.settings'
 
-    # expense_journal_id = fields.Many2one('account.journal',
-    #                                      string="Journal",
-    #                                      domain="[('company_id', '=', company_id)]",
-    #                                      config_parameter='dev_hr_expense_portal.expense_journal_id',
-    #                                      help="Select a journal to be used in "
-    #                                           "expense report creation.")
-
     expense_journal_ids = fields.Many2many('account.journal',
-                                         string="Journal",
-                                         help="Select a journal to be used in "
-                                              "expense report creation.")
+                                           string="Journal",
+                                           help="Select a journal to be used in "
+                                                "expense report creation.",
+                                           company_dependent=True)
 
     @api.model
     def get_values(self):
@@ -36,8 +30,6 @@ class ResConfigSettings(models.TransientModel):
             'dev_hr_expense_portal.expense_journal_ids',
             self.expense_journal_ids.ids or False)
         return res
-
-
 
     #
     # @api.model
