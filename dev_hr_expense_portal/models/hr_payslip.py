@@ -83,15 +83,3 @@ class HrPayslipMpatch(HrPayslip):
             payslip.update({'input_line_ids': input_lines_vals})
 
     HrPayslip._compute_input_line_ids = _compute_input_line_ids
-
-
-    class HrPayslip(models.Model):
-        _inherit = 'hr.payslip'
-
-        input_line_ids = fields.One2many(compute='_compute_input_line_ids',
-                                         readonly=False,
-                                         states={'done': [('readonly', True)],
-                                                 'cancel': [
-                                                     ('readonly', True)]})
-
-
