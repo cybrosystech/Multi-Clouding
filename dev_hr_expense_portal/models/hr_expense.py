@@ -7,6 +7,7 @@
 #    For Module Support : devintelle@gmail.com  or Skype : devintelle
 #
 ##############################################################################
+from ast import literal_eval
 
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError, UserError
@@ -42,7 +43,8 @@ class hr_expense(models.Model):
                                  ondelete='restrict')
     unit_amount = fields.Float("Unit Price",
                                compute='_compute_from_product_id_company_id',
-                               store=True, required=True, copy=True,readonly=False,
+                               store=True, required=True, copy=True,
+                               readonly=False,
                                states={
                                    'waiting_approval': [('readonly', False)],
                                    'draft': [('readonly', False)],
@@ -133,20 +135,38 @@ class hr_expense(models.Model):
         for emp in employees_ids:
             expense_ids = self.env['hr.expense'].search(
                 [('employee_id', '=', emp.id), ('id', 'in', self.ids),
-                 '|',('state', '=', 'draft'),('state', '=', 'approved'), ('sheet_id', '=', False)])
+                 '|', ('state', '=', 'draft'), ('state', '=', 'approved'),
+                 ('sheet_id', '=', False)])
             total_amount = sum(expense_ids.mapped('total_amount'))
             full_month_name = fields.Datetime.now().strftime("%B")
             expense_report_summary = emp.name + " - " + full_month_name + "(" + str(
                 total_amount) + ") "
             if expense_ids:
-                journal = self.env['ir.config_parameter'].sudo().get_param(
-                    'dev_hr_expense_portal.expense_journal_id')
-                expense_ids._create_sheet_all_employees_from_expenses(
-                    expense_report_summary, journal)
+                # journal = literal_eval(self.env['ir.config_parameter'].sudo().get_param(
+                #     'dev_hr_expense_portal.expense_journal_ids'))
+                with_user = self.env['ir.config_parameter'].sudo()
+                journal = with_user.get_param(
+                    'dev_hr_expense_portal.expense_journal_ids')
+                print("journal", journal, type(journal))
+
+                new_journals = journal.translate(
+                    {ord(c): None for c in "[]"})
+                li = list(new_journals.split(","))
+                journal_ids = self.env['account.journal'].search(
+                    [('id', 'in', li),
+                     ('company_id', '=', self.env.company.id)], limit=1).ids
+                if journal_ids:
+                    print("journal_ids", journal_ids)
+                    expense_ids._create_sheet_all_employees_from_expenses(
+                        expense_report_summary, journal_ids[0])
+                else:
+                    raise UserError(
+                        _("Please set an expense journal for the company on the settings."))
 
     def _create_sheet_all_employees_from_expenses(self, expense_report_summary,
                                                   journal):
-        if any(expense.state not in ['approved','draft']  or expense.sheet_id for expense in
+        if any(expense.state not in ['approved', 'draft'] or expense.sheet_id
+               for expense in
                self):
             raise UserError(_("You cannot report twice the same line!"))
         if len(self.mapped('employee_id')) != 1:

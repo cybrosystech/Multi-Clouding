@@ -17,9 +17,11 @@
                              id="expense_journal_divv">
                             <div class="o_setting_left_pane"/>
                             <div class="o_setting_right_pane">
-                                <label for="expense_journal_id"
+                                <label for="expense_journal_ids"
                                        string="Expense Journal"/>
-                                <field name="expense_journal_id"
+<!--                                <field name="expense_journal_id"-->
+<!--                                />-->
+                                    <field name="expense_journal_ids" widget="many2many_tags"
                                 />
                                 <div class="text-muted">
                                     Journal to be chosen for expense reports.
