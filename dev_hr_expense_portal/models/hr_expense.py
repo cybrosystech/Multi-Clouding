@@ -142,23 +142,11 @@ class hr_expense(models.Model):
             expense_report_summary = emp.name + " - " + full_month_name + "(" + str(
                 total_amount) + ") "
             if expense_ids:
-                # journal = literal_eval(self.env['ir.config_parameter'].sudo().get_param(
-                #     'dev_hr_expense_portal.expense_journal_ids'))
-                with_user = self.env['ir.config_parameter'].sudo()
-                journal = with_user.get_param(
-                    'dev_hr_expense_portal.expense_journal_ids')
-                print("journal", journal, type(journal))
-
-                new_journals = journal.translate(
-                    {ord(c): None for c in "[]"})
-                li = list(new_journals.split(","))
-                journal_ids = self.env['account.journal'].search(
-                    [('id', 'in', li),
-                     ('company_id', '=', self.env.company.id)], limit=1).ids
-                if journal_ids:
-                    print("journal_ids", journal_ids)
+                expense_journal = self.env['expense.journal'].search([('company_id','=',self.env.company.id)],limit=1)
+                if expense_journal:
+                    print("journal_ids", expense_journal)
                     expense_ids._create_sheet_all_employees_from_expenses(
-                        expense_report_summary, journal_ids[0])
+                        expense_report_summary, expense_journal.journal_id.id)
                 else:
                     raise UserError(
                         _("Please set an expense journal for the company on the settings."))

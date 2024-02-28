@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="expense_journal_view_form" model="ir.ui.view">
+        <field name="name">expense.journal.view.form</field>
+        <field name="model">expense.journal</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="company_id"/>
+
+                        </group>
+                        <group>
+                            <field name="journal_id"/>
+
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="expense_journal_view_tree" model="ir.ui.view">
+        <field name="name">expense.journal.view.tree</field>
+        <field name="model">expense.journal</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="journal_id"/>
+                <field name="company_id"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_expense_journal" model="ir.actions.act_window">
+        <field name="name">Expense Journal</field>
+        <field name="res_model">expense.journal</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+    <menuitem action="action_expense_journal" id="menu_expense_journal"
+              parent="base.menu_custom" name="Expense Journal"/>
+</odoo>
