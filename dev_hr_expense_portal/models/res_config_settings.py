@@ -6,7 +6,7 @@ class ResConfigSettings(models.TransientModel):
 
     expense_journal_id = fields.Many2one('account.journal',
                                          string="Journal",
-                                         required=True,
+                                         domain="['|',('company_id', '=', company_id),('company_id', '=', False)]",
                                          config_parameter='dev_hr_expense_portal.expense_journal_id',
                                          help="Select a journal to be used in "
                                               "expense report creation.")
