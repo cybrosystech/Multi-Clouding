@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Salary Other Input -->
+        <record id="overtime_other_input" model="hr.payslip.input.type">
+            <field name="name">Overtime</field>
+            <field name="code">OVT</field>
+        </record>
+        <record id="perdiem_other_input" model="hr.payslip.input.type">
+            <field name="name">Per Diem</field>
+            <field name="code">PED</field>
+        </record>
+    </data>
+</odoo>

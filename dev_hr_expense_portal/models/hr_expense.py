@@ -7,6 +7,7 @@
 #    For Module Support : devintelle@gmail.com  or Skype : devintelle
 #
 ##############################################################################
+from ast import literal_eval
 
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError, UserError
@@ -43,6 +44,7 @@ class hr_expense(models.Model):
     unit_amount = fields.Float("Unit Price",
                                compute='_compute_from_product_id_company_id',
                                store=True, required=True, copy=True,
+                               readonly=False,
                                states={
                                    'waiting_approval': [('readonly', False)],
                                    'draft': [('readonly', False)],
@@ -133,20 +135,25 @@ class hr_expense(models.Model):
         for emp in employees_ids:
             expense_ids = self.env['hr.expense'].search(
                 [('employee_id', '=', emp.id), ('id', 'in', self.ids),
-                 ('state', '=', 'approved'), ('sheet_id', '=', False)])
+                 '|', ('state', '=', 'draft'), ('state', '=', 'approved'),
+                 ('sheet_id', '=', False)])
             total_amount = sum(expense_ids.mapped('total_amount'))
             full_month_name = fields.Datetime.now().strftime("%B")
             expense_report_summary = emp.name + " - " + full_month_name + "(" + str(
                 total_amount) + ") "
             if expense_ids:
-                journal = self.env['ir.config_parameter'].sudo().get_param(
-                    'dev_hr_expense_portal.expense_journal_id')
-                expense_ids._create_sheet_all_employees_from_expenses(
-                    expense_report_summary, journal)
+                expense_journal = self.env['expense.journal'].search([('company_id','=',self.env.company.id)],limit=1)
+                if expense_journal:
+                    expense_ids._create_sheet_all_employees_from_expenses(
+                        expense_report_summary, expense_journal.journal_id.id)
+                else:
+                    raise UserError(
+                        _("Please set an expense journal for the company on the settings."))
 
     def _create_sheet_all_employees_from_expenses(self, expense_report_summary,
                                                   journal):
-        if any(expense.state != 'approved' or expense.sheet_id for expense in
+        if any(expense.state not in ['approved', 'draft'] or expense.sheet_id
+               for expense in
                self):
             raise UserError(_("You cannot report twice the same line!"))
         if len(self.mapped('employee_id')) != 1:
@@ -167,6 +174,7 @@ class hr_expense(models.Model):
         })
         for exp in self:
             exp.sheet_id = sheet.id
+            exp.state = 'approved'
         return sheet
 
 
@@ -177,6 +185,20 @@ class HrExpense(models.Model):
                                   readonly=False,
                                   default=lambda
                                       self: self.env.company.currency_id)
+
+    @api.depends('employee_id')
+    def _compute_is_editable(self):
+        is_account_manager = self.env.user.has_group(
+            'account.group_account_user') or self.env.user.has_group(
+            'account.group_account_manager')
+        for expense in self:
+            if expense.state in ['draft','waiting_approval'] or expense.sheet_id.state in ['draft',
+                                                                      'submit']:
+                expense.is_editable = True
+            elif expense.sheet_id.state == 'approve':
+                expense.is_editable = is_account_manager
+            else:
+                expense.is_editable = False
 
 
 class HrExpenseSheet(models.Model):
