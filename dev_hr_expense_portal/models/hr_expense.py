@@ -144,7 +144,6 @@ class hr_expense(models.Model):
             if expense_ids:
                 expense_journal = self.env['expense.journal'].search([('company_id','=',self.env.company.id)],limit=1)
                 if expense_journal:
-                    print("journal_ids", expense_journal)
                     expense_ids._create_sheet_all_employees_from_expenses(
                         expense_report_summary, expense_journal.journal_id.id)
                 else:
@@ -186,6 +185,20 @@ class HrExpense(models.Model):
                                   readonly=False,
                                   default=lambda
                                       self: self.env.company.currency_id)
+
+    @api.depends('employee_id')
+    def _compute_is_editable(self):
+        is_account_manager = self.env.user.has_group(
+            'account.group_account_user') or self.env.user.has_group(
+            'account.group_account_manager')
+        for expense in self:
+            if expense.state in ['draft','waiting_approval'] or expense.sheet_id.state in ['draft',
+                                                                      'submit']:
+                expense.is_editable = True
+            elif expense.sheet_id.state == 'approve':
+                expense.is_editable = is_account_manager
+            else:
+                expense.is_editable = False
 
 
 class HrExpenseSheet(models.Model):

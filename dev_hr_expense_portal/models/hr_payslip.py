@@ -9,6 +9,7 @@ class HrPayslipMpatch(HrPayslip):
         expense_type = self.env['hr.payslip.input.type'].search(
             [('code', '=', 'EXPENSES'),
              ('country_id', '=', self.env.company.country_id.id)], limit=1)
+
         overtime_type = self.env['hr.payslip.input.type'].search(
             [('code', '=', 'OVT'),
              ('country_id', '=', self.env.company.country_id.id)], limit=1)
