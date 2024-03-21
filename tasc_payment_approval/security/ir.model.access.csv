@@ -3,3 +3,6 @@ access_account_payment_approval_user,access.account.payment.approval.user,model_
 access_payment_approval_check_user,payment.approval.check.user,model_payment_approval_check,base.group_user,1,1,1,1
 access_payment_approval_check_line_user,payment.approval.check.line.user,model_payment_approval_check_line,base.group_user,1,1,1,1
 accessaccount_payment_approval_line_user,account.payment.approval.line.user,model_account_payment_approval_line,base.group_user,1,1,1,1
+access_purpose_code_user,access.purpose.code.user,model_purpose_code,base.group_user,1,1,1,1
+access_default_purpose_code_user,access.default.purpose.code.user,model_default_purpose_code,base.group_user,1,1,1,1
+
