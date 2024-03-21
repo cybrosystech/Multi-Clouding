@@ -4,6 +4,14 @@ from odoo import models, fields, api
 class AccountPayment(models.Model):
     _inherit = 'account.payment'
 
+    @api.model
+    def _default_purpose_code_id(self):
+        default_purpose_code = self.env['default.purpose.code'].search([('company_id','=',self.env.company.id)])
+        if default_purpose_code:
+            return default_purpose_code.purpose_code_id.id
+        else:
+            return False
+
     payment_approval_batch_id = fields.Many2one('account.payment.approval',
                                                 string="Payment Approval Batch",
                                                 copy=False)
@@ -21,6 +29,9 @@ class AccountPayment(models.Model):
          ('approved', 'Approved')
          ], related='payment_approval_batch_id.state',
         string="Payment Approval Status", store=True)
+    purpose_code_id = fields.Many2one('purpose.code',
+                                      domain="[('company_ids', 'in', company_id)]",
+                                      default=_default_purpose_code_id)
 
     @api.depends('reconciled_bill_ids', 'reconciled_invoice_ids')
     def compute_invoice_number_and_amount(self):

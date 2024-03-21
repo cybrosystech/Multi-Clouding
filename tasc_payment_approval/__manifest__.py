@@ -17,9 +17,12 @@
             'data/mail_template.xml',
             'security/ir.model.access.csv',
             'security/security.xml',
+            'views/purpose_code_view.xml',
             'wizard/account_payment_approval.xml',
+            'wizard/account_register_payment_view.xml',
             'views/account_payment.xml',
             'views/payment_approval_check.xml',
+            'views/default_purpose_code_view.xml',
         ],
     'qweb': [
     ],

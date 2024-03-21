@@ -21,11 +21,19 @@
                 </header>
                 <sheet>
                     <group>
-                        <field name="batch_name"/>
-                        <field name="from_date"/>
-                        <field name="to_date"/>
-                        <field name="company_id"/>
-                        <field name="request_approve_bool" invisible="1"/>
+                        <field name="batch_name"
+                               attrs="{'readonly':[('state','=','approved')]}"/>
+                        <field name="from_date"
+                               attrs="{'readonly':[('state','=','approved')]}"/>
+                        <field name="to_date"
+                               attrs="{'readonly':[('state','=','approved')]}"/>
+                        <field name="company_id"
+                               attrs="{'readonly':[('state','=','approved')]}"/>
+                        <field name="bank_integration_status"
+                               groups="base.group_erp_manager,base.group_system"
+                        />
+                        <field name="request_approve_bool" invisible="1"
+                               attrs="{'readonly':[('state','=','approved')]}"/>
                         <field name="show_request_approve_button"
                                invisible="1"/>
                         <field name="show_approve_button" invisible="1"/>
@@ -37,15 +45,14 @@
                     </group>
                     <notebook>
                         <page string="Payments">
-                            <field name="payment_ids">
+                            <field name="payment_ids"
+                                   attrs="{'readonly':[('state','=','approved')]}">
                                 <tree>
                                     <field name="payment_id" invisible="1"/>
                                     <field name="invoice_number"
                                            style="width:25px;"/>
                                     <field name="partner_id"/>
                                     <field name="usd_currency" invisible="1"/>
-                                    <!--                                    <field name="invoice_date"/>-->
-                                    <!--                                    <field name="invoice_date_due"/>-->
                                     <field name="currency_id"/>
                                     <field name="invoice_amount"
                                            sum="Total Invoice"/>
@@ -93,6 +100,10 @@
                 <field name="from_date"/>
                 <field name="to_date"/>
                 <field name="state"/>
+                <field name="company_id"/>
+                <field name="bank_integration_status"
+                       groups="base.group_erp_manager,base.group_system"
+                />
             </tree>
         </field>
     </record>
