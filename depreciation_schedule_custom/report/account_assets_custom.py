@@ -610,6 +610,7 @@ class assets_report(models.AbstractModel):
                                    account.company_id as company_id,
                                    analytic.name as analytic_colocation,
                                    project_site.name as analytic_project,
+                                   (SELECT name as asset_model from account_asset acc_asset WHERE acc_asset.id=asset.model_id) ,
                                    COALESCE(first_move.asset_depreciated_value, move_before.asset_depreciated_value, 0.0) as depreciated_start,
                                    COALESCE(first_move.asset_remaining_value, move_before.asset_remaining_value, 0.0) as remaining_start,
                                    COALESCE(last_move.asset_depreciated_value, move_before.asset_depreciated_value, 0.0) as depreciated_end,
