@@ -6,12 +6,14 @@
             <field name="model">account.analytic.account</field>
             <field name="inherit_id" ref="account_budget.view_account_analytic_account_form_inherit_budget"/>
             <field name="arch" type="xml">
-                <xpath expr="//field[@name='parent_id']" position="after">
-                    <field name="analytic_type_filter_id" attrs="{'invisible':[('analytic_account_type','!=','project_site')]}"/>
-                    <field name="analytic_location_id" attrs="{'invisible':[('analytic_account_type','!=','project_site')]}"/>
+                <xpath expr="//field[@name='plan_id']" position="after">
+                    <field name="analytic_type_filter_id"  invisible="analytic_account_type != 'project_site'"/>
+                    <field name="analytic_location_id" invisible="analytic_account_type != 'project_site'" />
+                    <field name="group"/>
                 </xpath>
+
                 <xpath expr="//notebook/page[@name='budget_items']" position="attributes">
-                    <attribute name="attrs">{'invisible':[('analytic_account_type','!=','cost_center')]}</attribute>
+                    <attribute name="invisible">analytic_account_type != 'cost_center'</attribute>
                 </xpath>
                 <xpath expr="//notebook/page[@name='budget_items']//field/tree/field[@name='percentage']" position="after">
                      <field name="remaining_amount"/>
@@ -22,7 +24,8 @@
                     <field name="actual_percentage"/>
                 </xpath>
                 <xpath expr="//notebook" position="inside">
-                    <page string="Budget Items" name="budget_items_proj" attrs="{'invisible':[('analytic_account_type','!=','project_site')]}">
+<!--                    <page string="Budget Items" name="budget_items_proj" invisible="analytic_account_type != 'project_site'">-->
+                         <page string="Budget Items" name="budget_items_proj" invisible="plan_id.analytic_account_type != 'project_site'">
                                 <field name="crossovered_budget_proj_line" widget="one2many" colspan="4" nolabel="1" mode="tree">
                                     <tree string="Budget Items" editable="top">
                                         <field name="crossovered_budget_id"/>
@@ -53,7 +56,8 @@
                                     </form>
                                 </field>
                         </page>
-                    <page string="Budget Items" name="budget_items_type" attrs="{'invisible':[('analytic_account_type','!=','type')]}">
+<!--                    <page string="Budget Items" name="budget_items_type" invisible="analytic_account_type != 'type'">-->
+                                <page string="Budget Items" name="budget_items_type" invisible="plan_id.analytic_account_type != 'type'">
                                 <field name="crossovered_budget_type_line" widget="one2many" colspan="4" nolabel="1" mode="tree">
                                     <tree string="Budget Items" editable="top">
                                         <field name="crossovered_budget_id"/>
@@ -84,7 +88,7 @@
                                     </form>
                                 </field>
                         </page>
-                    <page string="Budget Items" name="budget_items_loc" attrs="{'invisible':[('analytic_account_type','!=','location')]}">
+                        <page string="Budget Items" name="budget_items_loc"  invisible="plan_id.analytic_account_type != 'location'">
                                 <field name="crossovered_budget_loc_line" widget="one2many" colspan="4" nolabel="1" mode="tree">
                                     <tree string="Budget Items" editable="top">
                                         <field name="crossovered_budget_id"/>

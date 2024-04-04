@@ -7,15 +7,33 @@
                     <div class="page">
                         <div class="row">
                             <div class="col-6">
-                                <h6><strong>Journal No :</strong> <t t-esc="o.name"/></h6>
-                                <h6><strong>Reference :</strong> <t t-esc="o.ref"/></h6>
-                                <h6><strong>Accounting Date :</strong> <t t-esc="o.date"/></h6>
+                                <h6>
+                                    <strong>Journal No :</strong>
+                                    <t t-esc="o.name"/>
+                                </h6>
+                                <h6>
+                                    <strong>Reference :</strong>
+                                    <t t-esc="o.ref"/>
+                                </h6>
+                                <h6>
+                                    <strong>Accounting Date :</strong>
+                                    <t t-esc="o.date"/>
+                                </h6>
                             </div>
                             <div class="col-6">
-                                <h6><strong>Journal :</strong> <t t-esc="o.journal_id.name"/></h6>
-                                <h6><strong>Currency :</strong> <t t-esc="o.currency_id.name"/></h6>
+                                <h6>
+                                    <strong>Journal :</strong>
+                                    <t t-esc="o.journal_id.name"/>
+                                </h6>
+                                <h6>
+                                    <strong>Currency :</strong>
+                                    <t t-esc="o.currency_id.name"/>
+                                </h6>
                                 <t t-if="o.partner_id">
-                                    <h6><strong>Vendor :</strong> <t t-esc="o.partner_id.name"/></h6>
+                                    <h6>
+                                        <strong>Vendor :</strong>
+                                        <t t-esc="o.partner_id.name"/>
+                                    </h6>
                                 </t>
                             </div>
                         </div>
@@ -39,7 +57,9 @@
                                         <td t-esc="line.name"/>
                                         <td t-esc="line.analytic_account_id.name"/>
                                         <td t-esc="line.project_site_id.name"/>
-                                        <td ><t t-if="line.amount_currency" t-esc="line.amount_currency"/></td>
+                                        <td>
+                                            <t t-if="line.amount_currency" t-esc="line.amount_currency"/>
+                                        </td>
                                         <td t-esc="'{:20,.2f}'.format(line.debit)"/>
                                         <td t-esc="'{:20,.2f}'.format(line.credit)"/>
                                         <td t-esc="', '.join(map(lambda x: (x.name), line.mapped('tax_ids')))"/>
@@ -51,8 +71,12 @@
                                     <td/>
                                     <td/>
                                     <td>Total</td>
-                                    <td><t t-esc="'{:20,.2f}'.format(sum(o.line_ids.mapped(lambda x: x.debit)))"/> </td>
-                                    <td><t t-esc="'{:20,.2f}'.format(sum(o.line_ids.mapped(lambda x: x.credit)))"/></td>
+                                    <td>
+                                        <t t-esc="'{:20,.2f}'.format(sum(o.line_ids.mapped(lambda x: x.debit)))"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="'{:20,.2f}'.format(sum(o.line_ids.mapped(lambda x: x.credit)))"/>
+                                    </td>
                                     <td/>
                                 </tr>
                             </tbody>

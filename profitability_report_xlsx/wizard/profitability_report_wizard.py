@@ -129,7 +129,7 @@ class ProfitabilityReportWizard(models.TransientModel):
             return profitability.lease_finance_cost
 
     def default_analytic_account_group(self):
-        group = self.env['account.analytic.group'].search(
+        group = self.env['account.analytic.plan'].search(
             [('name', 'ilike', 'owned')])
         if not group:
             raise UserError("Please configure analytic group account for Owned")
@@ -200,7 +200,7 @@ class ProfitabilityReportWizard(models.TransientModel):
                                           ('custom', 'Custom')]),
                               string='Periods', required=True,
                               default='this_month')
-    analatyc_account_group = fields.Many2one('account.analytic.group',
+    analatyc_account_group = fields.Many2one('account.analytic.plan',
                                              default=default_analytic_account_group)
     from_date = fields.Date('From')
     to_date = fields.Date('To')

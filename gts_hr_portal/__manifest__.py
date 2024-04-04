@@ -16,11 +16,13 @@
         portal leave apply,
         """,
     'category': 'HR',
-    "version": "14.0.0.1",
+    "version": "17.0.1.0.0",
     "author": "Geo Technosoft",
     "website": "http://www.geotechnosoft.com",
     "license": "OPL-1",
-    'depends': ['base', 'mail', 'website', 'hr_holidays', 'hr','calendar','resource', 'hr_attendance','hr_contract','hr_payroll', 'tasc_hr'],
+    'depends': ['base', 'mail', 'website', 'hr_holidays', 'hr', 'calendar',
+                'resource', 'hr_attendance', 'hr_contract', 'hr_payroll',
+                'tasc_hr'],
     'data': [
         'security/security.xml',
         'data/mail_template.xml',
@@ -28,9 +30,17 @@
         'views/hr_payslip_views.xml',
         'views/hr_portal_templates.xml',
         'views/payslip_portal_templates.xml',
-        'views/assets.xml',
+        # 'views/assets.xml',
         'views/report_payslip_templates.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            'gts_hr_portal/static/src/css/style.css',
+        ],
+        'web.assets_frontend': [
+            'gts_hr_portal/static/src/js/attendance.js',
+        ],
+    },
     'images': ['static/description/banner.png'],
     'price': '59',
     'currency': 'USD',
@@ -38,4 +48,3 @@
     'installable': True,
     'application': True,
 }
-

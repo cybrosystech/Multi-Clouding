@@ -8,11 +8,10 @@
     'author': "",
     'website': "",
     'category': 'Accounting',
-    'version': '14.0.1.0.0',
+    'version': '17.0.1.0.0',
     'depends': ['account_asset', 'account_reports'],
 
     'data':
         [
-            'report/account_deferred_expense_report_view.xml',
         ]
 }

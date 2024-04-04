@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
-
     <record id="account_payment_approval_view_form" model="ir.ui.view">
         <field name="name">account.payment.approval.form.view</field>
         <field name="model">account.payment.approval</field>
@@ -10,49 +9,51 @@
                     <field name="state" widget="statusbar" nolabel="1"/>
                     <button string="Request Approval"
                             name="request_approval_button"
-                            type="object" class="btn-secondary" attrs="{'invisible':['|','|', ('state','in', ['approved', 'selected','in_approval']),
-                    ('request_approve_bool', '=', True),('show_request_approve_button','=',True)]}"/>
+                            type="object" class="btn-secondary"
+                            invisible="state in ['approved', 'selected','in_approval'] or request_approve_bool == True or show_request_approve_button == True"/>
                     <button name="button_approve_payment_cycle" string="Approve"
                             type="object" class="btn-primary"
-                            attrs="{'invisible':[('show_approve_button','=',False)]}"/>
+                            invisible="show_approve_button == False"
+                    />
                     <button name="button_reject_payment_cycle" string="Reject"
                             type="object" class="btn-primary"
-                            attrs="{'invisible':[('show_approve_button','=',False)]}"/>
+                            invisible="show_approve_button == False"
+                    />
                 </header>
                 <sheet>
                     <group>
-                        <field name="batch_name"
-                               attrs="{'readonly':[('state','=','approved')]}"/>
+                        <field name="batch_name" readonly="state == 'approved'"
+                        />
                         <field name="from_date"
-                               attrs="{'readonly':[('state','=','approved')]}"/>
+                               readonly="state == 'approved'"/>
                         <field name="to_date"
-                               attrs="{'readonly':[('state','=','approved')]}"/>
+                               readonly="state == 'approved'"/>
                         <field name="company_id"
-                               attrs="{'readonly':[('state','=','approved')]}"/>
+                               readonly="state == 'approved'"/>
                         <field name="bank_integration_status"
                                groups="base.group_erp_manager,base.group_system"
                         />
                         <field name="request_approve_bool" invisible="1"
-                               attrs="{'readonly':[('state','=','approved')]}"/>
+                        />
                         <field name="show_request_approve_button"
                                invisible="1"/>
                         <field name="show_approve_button" invisible="1"/>
                         <button string="Generate  Payments"
                                 name="action_generate_approval_batch"
                                 type="object" class="btn-secondary"
-                                attrs="{'invisible':[('state','!=','draft')]}"/>
+                                invisible="state != 'draft'"/>
 
                     </group>
                     <notebook>
                         <page string="Payments">
-                            <field name="payment_ids"
-                                   attrs="{'readonly':[('state','=','approved')]}">
+                            <field name="payment_ids" readonly="state == 'approved'">
                                 <tree>
                                     <field name="payment_id" invisible="1"/>
                                     <field name="invoice_number"
                                            style="width:25px;"/>
                                     <field name="partner_id"/>
-                                    <field name="usd_currency" invisible="1"/>
+                                    <field name="usd_currency" invisible="1"
+                                           column_invisible="1"/>
                                     <field name="currency_id"/>
                                     <field name="invoice_amount"
                                            sum="Total Invoice"/>

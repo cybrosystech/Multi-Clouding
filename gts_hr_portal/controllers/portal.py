@@ -59,6 +59,7 @@ class CustomerPortal(CustomerPortal):
                 auth="user", website=True)
     def approve_leave_timeoff_approver(self, leave_id, page=1, **kw):
         leave = request.env['hr.leave'].browse(leave_id)
+        # leave.sudo().state = 'validate'
         if leave.holiday_status_id.leave_validation_type == 'hr' or  leave.holiday_status_id.leave_validation_type == 'both' :
             leave.state = 'validate'
         leave.sudo().state = 'validate'
@@ -68,6 +69,7 @@ class CustomerPortal(CustomerPortal):
                               date_to=leave.date_to.date(),
                               state=leave.state).send_mail(leave.id,
                                                            force_send=True)
+
         employee = leave.employee_id.id
         return request.render("gts_hr_portal.leave_approve",
                               {'employee': employee,
@@ -167,13 +169,13 @@ class CustomerPortal(CustomerPortal):
         }
         if groupby == 'state':
             grouped_leave = [request.env['hr.leave'].concat(*g) for k, g in
-                               groupbyelem(leaves, itemgetter('state'))]
+                             groupbyelem(leaves, itemgetter('state'))]
         else:
             grouped_leave = [leaves]
         values.update({
             'date': date_begin,
             'leaves': leaves.sudo(),
-            'grouped_leave':grouped_leave,
+            'grouped_leave': grouped_leave,
             'page_name': 'leave',
             'pager': pager,
             'archive_groups': archive_groups,
@@ -247,7 +249,7 @@ class CustomerPortal(CustomerPortal):
         _logger.info("today : %s" % today)
         Employee = request.env['hr.employee']
         LeaveObj = request.env['hr.leave']
-        employee = Employee.sudo().search([('user_id', '=', request.env.user.id)],
+        employee = Employee.search([('user_id', '=', request.env.user.id)],
                                    limit=1)
         values['validation_errors'] = {}
         leave_data = self._leave_cleanup_data(values)
@@ -260,16 +262,18 @@ class CustomerPortal(CustomerPortal):
                     leave_data_copy.get('request_date_from'), '%Y-%m-%d')
                 request_date_to = datetime.strptime(
                     leave_data_copy.get('request_date_to'), '%Y-%m-%d')
-                leave_data_copy['number_of_days'] = \
-                    LeaveObj._get_number_of_days(request_date_from,
-                                                 request_date_to,
-                                                 leave_data_copy.get(
-                                                     'employee_id'))['days'] + 1
-                leave = LeaveObj.sudo().create(leave_data_copy)
+                # leave_data_copy['number_of_days'] = \
+                #     LeaveObj._get_number_of_days(request_date_from,
+                #                                  request_date_to,
+                #                                  leave_data_copy.get(
+                #                                      'employee_id'))['days'] + 1
+                leave = LeaveObj.create(leave_data_copy)
                 template = request.env.ref(
                     'gts_hr_portal.email_template_leave_request').sudo()
-                template.with_context(date_from=leave.date_from.date(),date_to=leave.date_to.date(), state=leave.state).send_mail(leave.id,
-                                   force_send=True)
+                template.with_context(date_from=leave.date_from.date(),
+                                      date_to=leave.date_to.date(),
+                                      state=leave.state).send_mail(leave.id,
+                                                                   force_send=True)
             except (UserError, AccessError, ValidationError) as exc:
                 _logger.error(_("Error 1 while creating leave: %s ") % exc)
                 validation_errors.update({'error': {'error_text': exc}})
@@ -290,6 +294,7 @@ class CustomerPortal(CustomerPortal):
             values['validation_errors'] = validation_errors
             values.update(leave_data)
             values = self._leave_get_default_data(employee, values)
+
         return request.render("gts_hr_portal.leave_apply", values)
 
     def _leave_get_default_data(self, employee, values):
@@ -310,6 +315,19 @@ class CustomerPortal(CustomerPortal):
                     'request_date_to', False):
                 errors.update({'request_date_from': {
                     'error_text': _("Date From must be less than Date To!")}})
+
+        all_leaves = request.env['hr.leave'].search([
+            ('date_from', '<', post.get('request_date_to')),
+            ('date_to', '>', post.get('request_date_from')),
+            ('employee_id', '=', post.get('employee_id')),
+            ('state', 'not in', ['cancel', 'refuse']),
+        ])
+        if all_leaves:
+            errors.update({'request_dates': {
+                'error_text': _(
+                    "You've already booked time off which overlaps with "
+                    "this period:")
+            }})
         return errors
 
     def _leave_cleanup_data(self, values):

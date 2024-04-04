@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
-    <record model="ir.module.category" id="budget_check_in_out_category">
+    <!--    <record model="ir.module.category" id="budget_check_in_out_category">-->
+    <!--        <field name="name">Budget Check</field>-->
+    <!--        <field name="description">Approver access level in budget Check</field>-->
+    <!--        <field name="sequence">20</field>-->
+    <!--    </record>-->
+
+    <record model="ir.module.category" id="module_budget_check_in_out_category">
         <field name="name">Budget Check</field>
         <field name="description">Approver access level in budget Check</field>
         <field name="sequence">20</field>
@@ -8,7 +14,7 @@
 
     <record id="group_budget_check_approver" model="res.groups">
         <field name="name">Approver</field>
-        <field name="category_id" ref="budget_check_in_out_category"/>
+        <field name="category_id" ref="module_budget_check_in_out_category"/>
     </record>
 
 </odoo>

@@ -10,12 +10,16 @@
 
 {
     'name': 'Employee Expense Portal, Expense Portal, Expense Request Portal',
-    'version': '15.0.1.0',
+    'version': '17.0.1.0.0',
     'sequence': 1,
     'category': 'Human Resources',
     'description':
         """
-         The Odoo Portal Expenses App allows portal users to view and create expense records using the Odoo application. User can able to sort, filter, search and group expense using different criterias. This makes it easy for portal users to submit and track their expenses
+         The Odoo Portal Expenses App allows portal users to view and create
+          expense records using the Odoo application. User can able to sort,
+           filter, search and group expense using different criterias. 
+           This makes it easy for portal users to submit and track their
+            expenses
          
          expense portal
          hr expense
@@ -35,18 +39,30 @@
          Employee Expense approval Portal
          
     """,
-    'summary': 'Odoo app allows portal users to view and create expense, expense portal, hr expense, hr expense portal, website hr expense, create and view expense from portal, expense management, employee expenses, employee expenses portal, expense reimbursement, expense approval system, employee expense software, expense tracking portal, business travel expenses, expense approval, employee expense approval, employee expense approval portal',
-    'depends': ['product','sale_expense','hr_payroll_expense', 'portal', 'analytic_account_types'],
+    'summary': 'Odoo app allows portal users to view and create expense,'
+               ' expense portal, hr expense, hr expense portal, website '
+               'hr expense, create and view expense from portal, expense '
+               'management, employee expenses, employee expenses portal, '
+               'expense reimbursement, expense approval system, employee '
+               'expense software, expense tracking portal, business travel '
+               'expenses, expense approval, employee expense approval,'
+               ' employee expense approval portal',
+    'depends': ['product', 'sale_expense', 'hr_payroll_expense', 'portal',
+                'analytic_account_types', 'website'],
     'data': [
-        'data/hr_payroll_expense_data.xml',
         'security/ir.model.access.csv',
         'security/security.xml',
-        # 'views/hr_employee_views.xml',
+        # 'views/res_config_settings_views.xml',
         'views/hr_expense_views.xml',
         'views/hr_expense_portal.xml',
         'views/product_template_views.xml',
-        'views/expense_journal_views.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            'dev_hr_expense_portal/static/src/views/*.xml',
+            'dev_hr_expense_portal/static/src/views/*.js',
+        ],
+    },
     'demo': [],
     'test': [],
     'css': [],

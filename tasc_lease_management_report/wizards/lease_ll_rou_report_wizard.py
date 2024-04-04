@@ -1,8 +1,11 @@
 import base64
 import datetime
 import io
+import json
+
 import xlsxwriter
 from odoo import fields, models, _
+from odoo.tools import date_utils
 
 
 class LeaseLlAndRouReportWizard(models.TransientModel):
@@ -103,7 +106,7 @@ class LeaseLlAndRouReportWizard(models.TransientModel):
             'name': 'Lease LL and ROU Report',
             'url': '/web/content/%s/%s/excel_sheet/%s?download=true' % (
                 self._name, self.id, self.excel_sheet_name),
-            'target': 'self'
+            'target': 'new',
         }
 
     def get_report_data(self):

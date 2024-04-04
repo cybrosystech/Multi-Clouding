@@ -26,25 +26,27 @@ class AccountAsset(models.Model):
     leasee_contract_ids = fields.One2many(comodel_name="leasee.contract",
                                           inverse_name="asset_id")
 
-    def action_set_to_close(self):
-        """ Returns an action opening the asset pause wizard."""
+    def action_asset_modify(self):
+        """ Returns an action opening the asset modification wizard.
+        """
         self.ensure_one()
         if self.leasee_contract_ids:
-            new_wizard = self.env['account.asset.sell'].create({
+            new_wizard = self.env['asset.modify'].create({
                 'asset_id': self.id,
                 'from_leasee_contract': True,
-                'action': 'dispose',
+                'modify_action': 'dispose',
             })
             return {
-                'name': _('Sell Asset'),
+                'name': _('Modify Asset'),
                 'view_mode': 'form',
-                'res_model': 'account.asset.sell',
+                'res_model': 'asset.modify',
                 'type': 'ir.actions.act_window',
                 'target': 'new',
                 'res_id': new_wizard.id,
+                'context': self.env.context,
             }
         else:
-            return super(AccountAsset, self).action_set_to_close()
+            return super(AccountAsset, self).action_asset_modify()
 
     def _get_disposal_moves(self, invoice_line_ids, disposal_date):
         def get_line(asset, amount, account):
@@ -55,13 +57,10 @@ class AccountAsset(models.Model):
                                               precision_digits=prec) > 0 else -amount,
                 'credit': amount if float_compare(amount, 0.0,
                                                   precision_digits=prec) > 0 else 0.0,
-                'analytic_account_id': account_analytic_id.id if asset.asset_type == 'sale' or asset.leasee_contract_ids else False,
-                'analytic_tag_ids': [(6, 0,
-                                      analytic_tag_ids.ids)] if asset.asset_type == 'sale' else False,
+                'analytic_account_id': account_analytic_id.id if asset.leasee_contract_ids else False,
                 'currency_id': current_currency.id,
                 'amount_currency': -asset.value_residual,
                 'project_site_id': asset.project_site_id.id,
-                'type_id': asset.type_id.id,
                 'location_id': asset.location_id.id,
             })
 
@@ -82,8 +81,7 @@ class AccountAsset(models.Model):
                             'There are depreciation posted in the future, please revert them.')
                 disposal_date = self.env.context.get(
                     'disposal_date') or disposal_date
-                account_analytic_id = asset.account_analytic_id
-                analytic_tag_ids = asset.analytic_tag_ids
+                account_analytic_id = asset.analytic_account_id
                 company_currency = asset.company_id.currency_id
                 current_currency = asset.currency_id
                 prec = company_currency.decimal_places
@@ -121,12 +119,9 @@ class AccountAsset(models.Model):
                 difference_account = asset.company_id.gain_account_id if difference > 0 else asset.company_id.loss_account_id
                 value_residual = asset.value_residual
                 if self.leasee_contract_ids:
-                    # initial_amount = asset.book_value
-
                     if asset.children_ids:
                         initial_amount += sum(
                             asset.children_ids.mapped('original_value'))
-                        # value_residual += sum(asset.children_ids.mapped('value_residual'))
                         child_depreciation_moves = asset.children_ids.depreciation_move_ids.filtered(
                             lambda r: r.state == 'posted' and not (
                                     r.reversal_move_id and
@@ -148,7 +143,6 @@ class AccountAsset(models.Model):
                     remaining_leasee_amount = -1 * (
                         self.leasee_contract_ids.remaining_lease_liability)
                     leasee_difference = -value_residual - remaining_leasee_amount
-                    # leasee_difference = -asset.book_value - remaining_leasee_amount
                     leasee_difference_account = asset.company_id.gain_account_id if difference > 0 else asset.company_id.loss_account_id
                     short_leasee_account = self.leasee_contract_ids.lease_liability_account_id
                     short_lease_liability_amount = self.leasee_contract_ids.remaining_short_lease_liability
@@ -232,23 +226,17 @@ class AccountAsset(models.Model):
                                        'credit': new_value if line.credit else 0})
                          for line in end_move.line_ids]
         })
-        end_move.auto_post = False
+        end_move.auto_post = 'no'
         end_move.action_post()
 
-    def set_to_close(self, invoice_line_id,partial, date=None):
+    def set_to_close(self, invoice_line_ids, date=None, message=None):
         if self.env.context.get('disposal_date'):
             date = self.env.context.get('disposal_date')
-        return super(AccountAsset, self).set_to_close(invoice_line_id, partial, date)
+        return super(AccountAsset, self).set_to_close(invoice_line_ids, date,
+                                                      message)
 
-    def _recompute_board(self, depreciation_number, starting_sequence,
-                         amount_to_depreciate, depreciation_date,
-                         already_depreciated_amount, amount_change_ids,
-                         depreciation_months, total_days):
-        move_vals = super(AccountAsset, self)._recompute_board(
-            depreciation_number, starting_sequence,
-            amount_to_depreciate, depreciation_date,
-            already_depreciated_amount, amount_change_ids, depreciation_months,
-            total_days)
+    def _recompute_board(self,start_depreciation_date=False):
+        move_vals = super(AccountAsset, self)._recompute_board(start_depreciation_date)
         if self._context.get('decrease'):
             if move_vals:
                 first_date = self.prorata_date
@@ -259,38 +247,16 @@ class AccountAsset(models.Model):
                     days = month_days - first_date.day + 1
                     prorata_factor = days / month_days
                 else:
-                    total_days = (depreciation_date.year % 4) and 365 or 366
+                    total_days = (self.prorata_date.year % 4) and 365 or 366
                     days = (self.company_id.compute_fiscalyear_dates(
                         first_date)['date_to'] - first_date).days + 1
                     prorata_factor = days / total_days
 
-                move_vals[1]['line_ids'][0][2]['debit'] = \
-                    move_vals[-2]['line_ids'][0][2]['debit']
-                move_vals[1]['line_ids'][0][2]['credit'] = \
-                    move_vals[-2]['line_ids'][0][2]['credit']
-                move_vals[1]['line_ids'][0][2]['amount_currency'] = \
-                    move_vals[-2]['line_ids'][0][2]['amount_currency']
-                move_vals[1]['line_ids'][1][2]['debit'] = \
-                    move_vals[-2]['line_ids'][1][2]['debit']
-                move_vals[1]['line_ids'][1][2]['credit'] = \
-                    move_vals[-2]['line_ids'][1][2]['credit']
-                move_vals[1]['line_ids'][1][2]['amount_currency'] = \
-                    move_vals[-2]['line_ids'][1][2]['amount_currency']
-
-                move_vals[0]['line_ids'][0][2]['debit'] = \
-                    move_vals[-2]['line_ids'][0][2]['debit'] * prorata_factor
-                move_vals[0]['line_ids'][0][2]['credit'] = \
-                    move_vals[-2]['line_ids'][0][2]['credit'] * prorata_factor
-                move_vals[0]['line_ids'][0][2]['amount_currency'] = \
-                    move_vals[-2]['line_ids'][0][2][
-                        'amount_currency'] * prorata_factor
-                move_vals[0]['line_ids'][1][2]['debit'] = \
-                    move_vals[-2]['line_ids'][1][2]['debit'] * prorata_factor
-                move_vals[0]['line_ids'][1][2]['credit'] = \
-                    move_vals[-2]['line_ids'][1][2]['credit'] * prorata_factor
-                move_vals[0]['line_ids'][1][2]['amount_currency'] = \
-                    move_vals[-2]['line_ids'][1][2][
-                        'amount_currency'] * prorata_factor
+                for key in ['debit', 'credit', 'amount_currency']:
+                    move_vals[1]['line_ids'][0][2][key] = move_vals[-2]['line_ids'][0][2][key]
+                    move_vals[1]['line_ids'][1][2][key] = move_vals[-2]['line_ids'][1][2][key]
+                    move_vals[0]['line_ids'][0][2][key] = move_vals[-2]['line_ids'][0][2][key] * prorata_factor
+                    move_vals[0]['line_ids'][1][2][key] = move_vals[-2]['line_ids'][1][2][key] * prorata_factor
 
                 asset_depreciated_value = 0
                 for vals in move_vals[:-1]:
@@ -306,27 +272,19 @@ class AccountAsset(models.Model):
                 move_vals[-1]['amount_total'] = amount
                 move_vals[-1]['asset_depreciated_value'] = self.original_value
                 move_vals[-1]['asset_remaining_value'] = 0
-                move_vals[-1]['line_ids'][0][2]['debit'] = copy_if_not_zero(
-                    amount, move_vals[-2]['line_ids'][0][2]['debit'])
-                move_vals[-1]['line_ids'][0][2]['credit'] = copy_if_not_zero(
-                    amount, move_vals[-2]['line_ids'][0][2]['credit'])
-                move_vals[-1]['line_ids'][0][2][
-                    'amount_currency'] = copy_if_not_zero(amount, move_vals[-2][
-                    'line_ids'][0][2]['amount_currency'])
-                move_vals[-1]['line_ids'][1][2]['debit'] = copy_if_not_zero(
-                    amount, move_vals[-2]['line_ids'][1][2]['debit'])
-                move_vals[-1]['line_ids'][1][2]['credit'] = copy_if_not_zero(
-                    amount, move_vals[-2]['line_ids'][1][2]['credit'])
-                move_vals[-1]['line_ids'][1][2][
-                    'amount_currency'] = copy_if_not_zero(amount, move_vals[-2][
-                    'line_ids'][1][2]['amount_currency'])
+                for key in ['debit', 'credit', 'amount_currency']:
+                    move_vals[-1]['line_ids'][0][2][key] = copy_if_not_zero(
+                        amount, move_vals[-2]['line_ids'][0][2][key])
+                    move_vals[-1]['line_ids'][1][2][key] = copy_if_not_zero(
+                        amount, move_vals[-2]['line_ids'][1][2][key])
 
         return move_vals
 
     def leasee_asset_entry_post(self, limits):
         assets = self.env['account.asset'].search([('name', 'ilike', 'Leasee'),
                                                    ('state', '=', 'draft'),
-                                                   ('company_id', '=', self.env.company.id)],
+                                                   ('company_id', '=',
+                                                    self.env.company.id)],
                                                   limit=limits)
         asset_count = 0
         for rec in assets:
@@ -334,7 +292,8 @@ class AccountAsset(models.Model):
             asset_count += 1
         asset = self.env['account.asset'].search([('name', 'ilike', 'Leasee'),
                                                   ('state', '=', 'draft'),
-                                                  ('company_id', '=', self.env.company.id)])
+                                                  ('company_id', '=',
+                                                   self.env.company.id)])
         if len(asset) > 0 and asset_count == limits:
             LOGGER.info(str(limits) + ' Asset Entries activated')
             date = fields.Datetime.now()
@@ -358,15 +317,17 @@ class AccountAsset(models.Model):
         LOGGER.info('Leasee Contract Entry Posting updated')
 
     def non_leasee_asset_entry_post(self, limits):
-        assets = self.env['account.asset'].search([('name', 'not like', 'Leasee'),
-                                                   ('state', '=', 'draft')],
-                                                  limit=limits)
+        assets = self.env['account.asset'].search(
+            [('name', 'not like', 'Leasee'),
+             ('state', '=', 'draft')],
+            limit=limits)
         asset_count = 0
         for rec in assets:
             rec.validate()
             asset_count += 1
-        asset = self.env['account.asset'].search([('name', 'not like', 'Leasee'),
-                                                  ('state', '=', 'draft')])
+        asset = self.env['account.asset'].search(
+            [('name', 'not like', 'Leasee'),
+             ('state', '=', 'draft')])
         if len(asset) > 0 and asset_count == limits:
             LOGGER.info(str(limits) + ' Asset Entries activated')
             date = fields.Datetime.now()

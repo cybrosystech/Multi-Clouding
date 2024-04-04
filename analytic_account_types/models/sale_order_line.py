@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api, _
-from odoo.exceptions import ValidationError,UserError
+from odoo.exceptions import UserError
 
 
 class SaleOrder(models.Model):
@@ -11,12 +11,16 @@ class SaleOrder(models.Model):
                                          required=False, )
     sale_approval_cycle_ids = fields.One2many(comodel_name="purchase.approval.cycle", inverse_name="sale_id",
                                               string="", required=False, copy=False)
-    out_budget = fields.Boolean(string="Out Budget", compute="check_out_budget")
-    show_approve_button = fields.Boolean(string="", compute='check_show_approve_button')
+    out_budget = fields.Boolean(string="Out Budget", compute="check_out_budget",copy=False)
+    show_approve_button = fields.Boolean(string="", compute='check_show_approve_button',copy=False)
     show_request_approve_button = fields.Boolean(string="", copy=False)
     show_button_confirm = fields.Boolean(string="", copy=False)
     state = fields.Selection(selection_add=[('to_approve', 'To Approve'), ('sent',), ],
                              ondelete={'to_approve': 'set default', 'draft': 'set default', })
+
+    def _can_be_confirmed(self):
+        self.ensure_one()
+        return self.state in {'draft', 'sent','to_approve'}
 
     def action_cancel(self):
         res = super(SaleOrder, self).action_cancel()
@@ -28,7 +32,7 @@ class SaleOrder(models.Model):
         self.show_request_approve_button = False
         return res
 
-    @api.depends()
+    @api.depends('sale_approval_cycle_ids','sale_approval_cycle_ids.is_approved')
     def check_show_approve_button(self):
         self.show_approve_button = False
         current_approve = self.sale_approval_cycle_ids.filtered(lambda x: x.is_approved).mapped('approval_seq')
@@ -139,18 +143,17 @@ class SalesOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
     cost_center_id = fields.Many2one(comodel_name="account.analytic.account", string="Cost Center",
-                                     domain=[('analytic_account_type', '=', 'cost_center')], required=False, )
+                                      required=False,domain=[('analytic_account_type', '=', 'cost_center')] )
     project_site_id = fields.Many2one(comodel_name="account.analytic.account", string="Project/Site",
-                                      domain=[('analytic_account_type', '=', 'project_site')], required=False, )
-    type_id = fields.Many2one(comodel_name="account.analytic.account", string="Type",
-                              domain=[('analytic_account_type', '=', 'type')], required=False, )
-    location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location",
-                                  domain=[('analytic_account_type', '=', 'location')], required=False, )
+                                      domain=[('analytic_account_type', '=', 'project_site')],
+                                      required=False, )
     budget_id = fields.Many2one(comodel_name="crossovered.budget", string="Budget", required=False, )
     budget_line_id = fields.Many2one(comodel_name="crossovered.budget.lines", string="Budget Line", required=False, )
 
     remaining_amount = fields.Float(string="Remaining Amount", required=False, compute='get_budget_remaining_amount')
     local_subtotal = fields.Float(compute='compute_local_subtotal', store=True)
+    location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location",
+                                  domain=[('analytic_account_type', '=', 'location')], required=False, )
 
     @api.depends('price_subtotal')
     def compute_local_subtotal(self):
@@ -182,35 +185,11 @@ class SalesOrderLine(models.Model):
                             invoices_budget += line.price_subtotal
 
             rec.remaining_amount = 0.0
-            rec.remaining_amount = rec.budget_line_id.remaining_amount - order_lines_without_inv - invoices_budget
-
-    @api.onchange('project_site_id')
-    def get_location_and_types(self):
-        for rec in self:
-            rec.type_id = rec.project_site_id.analytic_type_filter_id.id
-            rec.location_id = rec.project_site_id.analytic_location_id.id
-
-    def open_account_analytic_types(self):
-        return {
-            'name': 'Analytic Account Types',
-            'type': 'ir.actions.act_window',
-            'view_mode': 'form',
-            'res_model': 'wizard.analytic.account.types',
-            'context': {'default_so_line': self.id,
-                        'default_cost_center_id': self.cost_center_id.id,
-                        'default_project_site_id': self.project_site_id.id,
-                        'default_type_id': self.type_id.id,
-                        'default_location_id': self.location_id.id,
-                        'default_budget_id': self.budget_id.id,
-                        'default_budget_line_id': self.budget_line_id.id,
-                        },
-            'target': 'new',
-        }
+            if rec.budget_line_id:
+                rec.remaining_amount = rec.budget_line_id.remaining_amount - order_lines_without_inv - invoices_budget
 
     def _prepare_invoice_line(self, **optional_values):
         res = super(SalesOrderLine, self)._prepare_invoice_line(**optional_values)
         res.update({
-                       'analytic_account_id': self.cost_center_id.id if self.cost_center_id else self.order_id.analytic_account_id.id
-                       , 'project_site_id': self.project_site_id.id, 'type_id': self.type_id.id,
-                       'location_id': self.location_id.id, 'budget_id': self.budget_id.id, })
+            'budget_id': self.budget_id.id, })
         return res

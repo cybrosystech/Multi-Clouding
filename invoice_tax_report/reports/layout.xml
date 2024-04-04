@@ -1,140 +1,131 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data>
-
-        <template id="external_layout_inv_tax_template">
-            <!-- Multicompany -->
-            <t t-if="not o and doc">
-                <t t-set="o" t-value="doc"/>
-            </t>
-            <t t-if="o and 'company_id' in o">
-                <t t-set="company" t-value="o.company_id"/>
-            </t>
-            <t t-if="not o or not 'company_id' in o">
-                <t t-set="company" t-value="res_company"/>
-            </t>
-
-<!--            <t t-call="sale_reports.external_layout_header_so_template_report"/>-->
-           <div t-attf-class="header o_company_#{company.id}_layout" t-att-style="report_header_style">
-                <div class="o_boxed_header">
-                    <div class="row mb8">
-                        <div class="col-7">
-                            <h4 class="mt0" t-field="company.report_header"/>
-                            <div name="company_address" >
-                                <span style="font-weight:bold"  t-field="company.name"/>
-                            </div>
-                            <div style="margin-bottom: -1rem;">
-                                <address t-field="company.partner_id" t-options='{"widget": "contact", "fields": ["address"], "no_marker": True}' />
-                            </div>
-                            <div>
-                                TRN:
-                                <span t-field="company.vat"/>
-                            </div>
+    <template id="external_layout_inv_tax_template">
+        <!-- Multicompany -->
+        <t t-if="not o and doc">
+            <t t-set="o" t-value="doc"/>
+        </t>
+        <t t-if="o and 'company_id' in o">
+            <t t-set="company" t-value="o.company_id"/>
+        </t>
+        <t t-if="not o or not 'company_id' in o">
+            <t t-set="company" t-value="res_company"/>
+        </t>
+        <!--            <t t-call="sale_reports.external_layout_header_so_template_report"/>-->
+        <div t-attf-class="header o_company_#{company.id}_layout" t-att-style="report_header_style">
+            <div class="o_boxed_header">
+                <div class="row mb8">
+                    <div class="col-7">
+                        <h4 class="mt0" t-field="company.report_header"/>
+                        <div name="company_address">
+                            <span style="font-weight:bold" t-field="company.name"/>
                         </div>
-                        <div class="col-5">
-                            <img t-if="company.logo" style="max-width: 100%; height: 70px;" t-att-src="image_data_uri(company.logo)" alt="Logo"/>
+                        <div style="margin-bottom: -1rem;">
+                            <address t-field="company.partner_id"
+                                     t-options='{"widget": "contact", "fields": ["address"], "no_marker": True}'/>
                         </div>
-                </div>
-                </div>
-               <div class="col-12">
-                        <div style="border-bottom: 1px solid black;"/>
-               </div>
-            </div>
-
-            <div t-attf-class="article" t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id" t-att-data-oe-lang="o and o.env.context.get('lang')">
-                <div class="pt-5">
-                    <t t-call="web.address_layout"/>
-                </div>
-                <t t-raw="0"/>
-            </div>
-
-            <div t-attf-class="footer o_boxed_footer o_company_#{company.id}_layout">
-                <div class="text-center">
-                    <span style="text-align:center">TASC Towers Holding Limited is registered as a private holding limited company in Dubai International Financial Center (registration number CL3459,</span><br/><span>VAT registration number 100524962600003)</span>
-                    <br/>
-                    <span style="text-align:center">email: accounts@tasctowers.com</span>
-                    <br/>
-<!--                    <div t-field="company.report_footer"/>-->
-<!--                <div t-if="report_type == 'pdf'">-->
-<!--                    Page: <span class="page"/> / <span class="topage"/>-->
-<!--                </div>-->
-                </div>
-        </div>
-
-        </template>
-
-
-        <template id="external_layout_uk_inv_tax_template">
-            <!-- Multicompany -->
-            <t t-if="not o and doc">
-                <t t-set="o" t-value="doc"/>
-            </t>
-            <t t-if="o and 'company_id' in o">
-                <t t-set="company" t-value="o.company_id"/>
-            </t>
-            <t t-if="not o or not 'company_id' in o">
-                <t t-set="company" t-value="res_company"/>
-            </t>
-
-            <!--            <t t-call="sale_reports.external_layout_header_so_template_report"/>-->
-            <div t-attf-class="header o_company_#{company.id}_layout"
-                 t-att-style="report_header_style">
-                <div class="o_boxed_header">
-                    <div class="row mb8">
-                        <div class="col-7">
-                            <h4 class="mt0" t-field="company.report_header"/>
-                            <div name="company_address">
-                                <span style="font-weight:bold"
-                                      t-field="company.name"/>
-                            </div>
-                            <div style="margin-bottom: -1rem;">
-                                <address t-field="company.partner_id"
-                                         t-options='{"widget": "contact", "fields": ["address"], "no_marker": True}'/>
-                            </div>
-                            <div>
-                                Registration Number:
-                                <span t-field="company.company_registry"/>
-                            </div>
-                            <div>
-                                VAT Number:
-                                <span t-field="company.vat"/>
-                            </div>
-                        </div>
-                        <div class="col-5">
-                            <img t-if="company.logo"
-                                 style="max-width: 100%; height: 70px;"
-                                 t-att-src="image_data_uri(company.logo)"
-                                 alt="Logo"/>
+                        <div>
+                            TRN:
+                            <span t-field="company.vat"/>
                         </div>
                     </div>
-                </div>
-                <div class="col-12" style="border-bottom: 1px solid black;"/>
-            </div>
-
-            <div t-attf-class="article" t-att-data-oe-model="o and o._name"
-                 t-att-data-oe-id="o and o.id"
-                 t-att-data-oe-lang="o and o.env.context.get('lang')">
-                <div class="pt-5">
-                    <t t-call="web.address_layout"/>
-                </div>
-                <t t-raw="0"/>
-            </div>
-
-            <div t-attf-class="footer">
-                <div class="col-12" style="border-bottom: 1px solid black;"/>
-                <div class="col-12 text-center" style="font-size: 12px;">
-                    <span t-esc="company.footer_detail"/>
-                    <span> </span>
-                    (Registration number : <span t-esc="company.company_registry"/> ,
-                    VAT Registration number : <span t-esc="company.vat"/>
-                    )
-                    <br/>
-                    E-mail : <span t-esc="company.email"/>
+                    <div class="col-5">
+                        <img t-if="company.logo" style="max-width: 100%; height: 70px;"
+                             t-att-src="image_data_uri(company.logo)" alt="Logo"/>
+                    </div>
                 </div>
             </div>
-
-        </template>
-
-
-    </data>
+            <div class="col-12">
+                <div style="border-bottom: 1px solid black;"/>
+            </div>
+        </div>
+        <div t-attf-class="article" t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id"
+             t-att-data-oe-lang="o and o.env.context.get('lang')">
+            <div class="pt-5">
+                <t t-call="web.address_layout"/>
+            </div>
+            <t t-raw="0"/>
+        </div>
+        <div t-attf-class="footer o_boxed_footer o_company_#{company.id}_layout">
+            <div class="text-center">
+                <span style="text-align:center">TASC Towers Holding Limited is registered as a private holding
+                    limited company in Dubai International Financial Center (registration number CL3459,
+                </span>
+                <br/>
+                <span>VAT registration number 100524962600003)</span>
+                <br/>
+                <span style="text-align:center">email: accounts@tasctowers.com</span>
+                <br/>
+            </div>
+        </div>
+    </template>
+    <template id="external_layout_uk_inv_tax_template">
+        <!-- Multicompany -->
+        <t t-if="not o and doc">
+            <t t-set="o" t-value="doc"/>
+        </t>
+        <t t-if="o and 'company_id' in o">
+            <t t-set="company" t-value="o.company_id"/>
+        </t>
+        <t t-if="not o or not 'company_id' in o">
+            <t t-set="company" t-value="res_company"/>
+        </t>
+        <div t-attf-class="header o_company_#{company.id}_layout"
+             t-att-style="report_header_style">
+            <div class="o_boxed_header">
+                <div class="row mb8">
+                    <div class="col-7">
+                        <h4 class="mt0" t-field="company.report_header"/>
+                        <div name="company_address">
+                            <span style="font-weight:bold"
+                                  t-field="company.name"/>
+                        </div>
+                        <div style="margin-bottom: -1rem;">
+                            <address t-field="company.partner_id"
+                                     t-options='{"widget": "contact", "fields": ["address"], "no_marker": True}'/>
+                        </div>
+                        <div>
+                            Registration Number:
+                            <span t-field="company.company_registry"/>
+                        </div>
+                        <div>
+                            VAT Number:
+                            <span t-field="company.vat"/>
+                        </div>
+                    </div>
+                    <div class="col-5">
+                        <img t-if="company.logo"
+                             style="max-width: 100%; height: 70px;"
+                             t-att-src="image_data_uri(company.logo)"
+                             alt="Logo"/>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12" style="border-bottom: 1px solid black;"/>
+        </div>
+        <div t-attf-class="article" t-att-data-oe-model="o and o._name"
+             t-att-data-oe-id="o and o.id"
+             t-att-data-oe-lang="o and o.env.context.get('lang')">
+            <div class="pt-5">
+                <t t-call="web.address_layout"/>
+            </div>
+            <t t-raw="0"/>
+        </div>
+        <div t-attf-class="footer">
+            <div class="col-12" style="border-bottom: 1px solid black;"/>
+            <div class="col-12 text-center" style="font-size: 12px;">
+                <span t-esc="company.footer_detail"/>
+                <span/>
+                (Registration number :
+                <span t-esc="company.company_registry"/>
+                ,
+                VAT Registration number :
+                <span t-esc="company.vat"/>
+                )
+                <br/>
+                E-mail :
+                <span t-esc="company.email"/>
+            </div>
+        </div>
+    </template>
 </odoo>

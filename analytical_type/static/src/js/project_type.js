@@ -173,27 +173,7 @@ NewLineRenderer.LineRenderer.include({
             }
         });
     },
-//    _onFieldChanged: function (event) {
-//        event.stopPropagation();
-//        var fieldName = event.target.name;
-//        if (fieldName === 'partner_id') {
-//            var partner_id = event.data.changes.partner_id;
-//            this.trigger_up('change_partner', {'data': partner_id});
-//        } else {
-//            console.log(event.target.name)
-//            if (event.data.changes.amount && isNaN(event.data.changes.amount)) {
-//                return;
-//            }
-//            this.trigger_up('update_proposition', {'data': event.data.changes});
-//        }
-//        if (fieldName === 'project_site_id'){
-//        console.log(event.target)
-////            var $create = $(qweb.render("reconciliation.line.create", {}));
-//            var fd = 3
-////            fd.appendTo($create.find('.create_location_id .o_td_field'));
-//            $('.create_location_id .o_td_field').val('fd');
-//        }
-//    },
+
 });
 });
 

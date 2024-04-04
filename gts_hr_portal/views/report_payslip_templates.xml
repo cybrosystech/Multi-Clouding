@@ -18,9 +18,30 @@
                     <span style="text-align:center;"
                           t-field="o.employee_id.sudo().name"/>
                     ,
-                    <div t-field="o.employee_id.address_home_id"
-                         t-options='{"widget": "contact", "fields": ["address","phone"], "no_marker": true}'
-                    />
+                    <div>
+                        <span t-field="o.employee_id.private_street"/>
+                    </div>
+                    <div>
+                        <span t-field="o.employee_id.private_street2"/>
+                           </div>
+                    <div>
+                        <span t-field="o.employee_id.private_city"/>
+                           </div>
+                    <div>
+                        <span t-field="o.employee_id.private_state_id"/>
+                           </div>
+                    <div>
+                        <span t-field="o.employee_id.private_country_id"/>
+                           </div>
+                    <div>
+                        <span t-field="o.employee_id.private_zip"/>
+                           </div>
+                    <div>
+                        <span t-field="o.employee_id.private_phone"/>
+                    </div>
+                    <!--                    <div t-field="o.employee_id.address_id"-->
+                    <!--                         t-options='{"widget": "contact", "fields": ["address","phone"], "no_marker": true}'-->
+                    <!--                    />-->
                 </div>
             </div>
         </div>
@@ -81,9 +102,9 @@
                         <li class="list-inline-item d-inline">
                             Powered by
                             <img
-                                 src="/gts_hr_portal/static/src/img/Odoo.png"
-                                 style="max-height: 19px;max-width: 40px;float:right;margin-top:1px;"
-                                 alt="Logo"/>
+                                    src="/gts_hr_portal/static/src/img/Odoo.png"
+                                    style="max-height: 19px;max-width: 40px;float:right;margin-top:1px;"
+                                    alt="Logo"/>
                         </li>
                     </ul>
                 </div>
@@ -117,7 +138,7 @@
             <t t-foreach="inside_foreach_docs or docs" t-as="o">
                 <t t-call="gts_hr_portal.external_layout_gts_hr_portal">
                     <t t-set="o"
-                       t-value="o.with_context(lang=o.employee_id.address_home_id.lang or o.env.lang)"/>
+                       t-value="o.with_context(lang=o.employee_id.lang or o.env.lang)"/>
                     <div class="page" style="font-size: 10px !important;">
                         <br/>
                         <br/>
@@ -128,7 +149,7 @@
                         <table name="employee-infos"
                                class="table table-sm table-borderless">
                             <thead
-                                    style="font-size:13px !important;border-top: 3px solid #2A5D8A !important;;border-bottom: 1px solid #2A5D8A !important;color:#2A5D8A !important;">
+                                    style="font-size:13px !important;border-top: 3px solid #2A5D8A !important;;border-bottom: 1px solid #2A5D8A !important;color:#2A5D8A !important;text-align:left;">
                                 <tr>
                                     <th class="w-25">
                                         <strong>Payroll Id</strong>
@@ -154,7 +175,8 @@
                                           t-field="o.employee_id.sudo().name"/>
                                 </td>
                                 <td>
-                                    <span t-field="o.sudo().create_date" t-options='{"widget": "date","format": "dd-MM-yyyy"}'/>
+                                    <span t-field="o.sudo().create_date"
+                                          t-options='{"widget": "date","format": "dd-MM-yyyy"}'/>
                                 </td>
                                 <td>
                                     <span t-field="o.sudo().employee_id.social_security"/>
@@ -179,7 +201,7 @@
                                     <thead
                                             style="font-size:13px !important;border-top: 1px solid #2A5D8A !important;border-bottom: 1px solid #2A5D8A !important;color:#2A5D8A !important;">
                                         <tr>
-                                            <th class="w-25">Payments</th>
+                                            <th class="w-25" style="text-align:left;">Payments</th>
                                             <th class="w-25"
                                                 style="text-align:right;">
                                                 Amount
@@ -214,7 +236,7 @@
                                     <thead
                                             style="font-size:13px !important;border-top: 1px solid #2A5D8A !important;;border-bottom: 1px solid #2A5D8A !important;color:#2A5D8A !important;">
                                         <tr>
-                                            <th class="w-25">Deductions</th>
+                                            <th class="w-25" style="text-align:left;">Deductions</th>
                                             <th class="w-25"
                                                 style="text-align:right;">
                                                 Amount
@@ -241,7 +263,7 @@
 
                                         </span>
                                         <tr>
-                                            <th>
+                                            <th style="text-align:left;">
                                                 Total
                                             </th>
                                             <th style="text-align:right;">
@@ -259,7 +281,7 @@
                                         </tr>
 
                                         <tr>
-                                            <th colspan="2">TAX</th>
+                                            <th colspan="2" style="text-align:left;">TAX</th>
                                         </tr>
                                         <t t-set="tot_tax" t-value="0"/>
 
@@ -290,7 +312,7 @@
                                             </t>
                                         </span>
                                         <tr>
-                                            <th>
+                                            <th style="text-align:left;">
                                                 Total
                                             </th>
                                             <th style="text-align:right;">
@@ -308,7 +330,7 @@
                             <div class="col" style="width:50%;border:1px;">
                                 <table class="table table-sm">
                                     <tr>
-                                        <th style="width:60%;" class="w-25">
+                                        <th style="width:60%;text-align:left;" class="w-25">
                                             Gross Pay
                                         </th>
                                         <th style="width:40%;text-align:right;"
@@ -323,7 +345,7 @@
                             <div class="col" style="width:50%;border:1px;">
                                 <table class="table table-sm">
                                     <tr>
-                                        <th style="width:60%;" class="w-25">
+                                        <th style="width:60%;text-align:left;" class="w-25">
                                             Total Tax And
                                             Deductions
                                         </th>
@@ -554,11 +576,21 @@
         </t>
     </template>
 
+    <!--    <template id="hr_payroll.report_payslip_lang">-->
+    <!--        <t t-foreach="docs" t-as="o">-->
+    <!--            <t t-set="inside_foreach_docs" t-value="o"/>-->
+    <!--            <t t-call="hr_payroll.report_payslip"-->
+    <!--               t-lang="o.sudo().employee_id.sudo().address_home_id.lang"/>-->
+    <!--        </t>-->
+    <!--    </template>-->
     <template id="hr_payroll.report_payslip_lang">
-        <t t-foreach="docs" t-as="o">
-            <t t-set="inside_foreach_docs" t-value="o"/>
-            <t t-call="hr_payroll.report_payslip"
-               t-lang="o.sudo().employee_id.sudo().address_home_id.lang"/>
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="o"
+                   t-value="o.with_context(lang=o.employee_id.lang or o.env.lang)"/>
+                <t t-call="hr_payroll.report_payslip"
+                   t-lang="o.employee_id.lang or o.env.lang"/>
+            </t>
         </t>
     </template>
 </odoo>

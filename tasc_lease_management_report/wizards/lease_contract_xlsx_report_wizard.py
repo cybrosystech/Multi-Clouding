@@ -6,6 +6,8 @@ from operator import itemgetter
 import xlsxwriter
 from odoo import fields, models, _
 from odoo.tools.safe_eval import dateutil
+from odoo.tools import get_lang
+
 
 
 class LeaseContractXlsxWizard(models.TransientModel):
@@ -102,7 +104,7 @@ class LeaseContractXlsxWizard(models.TransientModel):
             'name': 'Payment Aging',
             'url': '/web/content/%s/%s/excel_sheet/%s?download=true' % (
                 self._name, self.id, self.excel_sheet_name),
-            'target': 'self'
+            'target': 'new'
         }
 
     def get_report_data(self):
@@ -139,12 +141,16 @@ class LeaseContractXlsxWizard(models.TransientModel):
             years=5)
         if lease_contracts:
             # Less than 1 year
+            lang = self.env.user.lang or get_lang(self.env).code
+            project_site = f"COALESCE(project_site.name->>'{lang}', project_site.name->>'en_US')" if \
+                self.pool[
+                    'account.analytic.account'].name.translate else 'project_site.name'
 
             self._cr.execute(
                 'select sum(journal.amount_total) total, leasee.id as lease_id,'
                 'leasee.name as lease_name,'
                 'leasee.external_reference_number,currency.name as currency_name,'
-                'project_site.name from leasee_contract as leasee inner'
+                f'{project_site} from leasee_contract as leasee inner'
                 ' join account_move  as journal on '
                 'journal.leasee_contract_id=leasee.id inner join '
                 'res_currency as currency on '
@@ -281,7 +287,7 @@ class LeaseContractXlsxWizard(models.TransientModel):
                         'leasor_name': lease,
                         'external_reference_number': amount_lists[0][
                             "external_reference_number"],
-                        'project_site': amount_lists[0]["name"],
+                        'project_site': amount_lists[0]["coalesce"],
                         'total_amount_next_year': amount_less_than_1_year[0][
                             "total"] if len(
                             amount_less_than_1_year) >= 1 else 0.0,

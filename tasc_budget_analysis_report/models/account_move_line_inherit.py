@@ -1,6 +1,8 @@
-from odoo import models, api, fields
+from odoo import models, fields, _
 from odoo.addons.approve_status.model.account_move_inherit import \
     AccountMoveInherit
+
+from odoo.exceptions import UserError
 
 
 class AccountMoveBudgetConf(models.Model):
@@ -12,6 +14,58 @@ class AccountMoveBudgetConf(models.Model):
         required=False, )
     leasee_contract_id = fields.Many2one(comodel_name="leasee.contract",
                                          index=True)
+
+    def button_draft(self):
+        if any(move.state not in ('cancel', 'posted','to_approve') for move in self):
+            raise UserError(
+                _("Only posted/cancelled journal entries can be reset to draft."))
+
+        exchange_move_ids = set()
+        if self:
+            self.env['account.full.reconcile'].flush_model(['exchange_move_id'])
+            self.env['account.partial.reconcile'].flush_model(
+                ['exchange_move_id'])
+            self._cr.execute(
+                """
+                    SELECT DISTINCT sub.exchange_move_id
+                    FROM (
+                        SELECT exchange_move_id
+                        FROM account_full_reconcile
+                        WHERE exchange_move_id IN %s
+
+                        UNION ALL
+
+                        SELECT exchange_move_id
+                        FROM account_partial_reconcile
+                        WHERE exchange_move_id IN %s
+                    ) AS sub
+                """,
+                [tuple(self.ids), tuple(self.ids)],
+            )
+            exchange_move_ids = set([row[0] for row in self._cr.fetchall()])
+
+        for move in self:
+            if move.id in exchange_move_ids:
+                raise UserError(
+                    _('You cannot reset to draft an exchange difference journal entry.'))
+            if move.tax_cash_basis_rec_id or move.tax_cash_basis_origin_move_id:
+                # If the reconciliation was undone, move.tax_cash_basis_rec_id will be empty;
+                # but we still don't want to allow setting the caba entry to draft
+                # (it'll have been reversed automatically, so no manual intervention is required),
+                # so we also check tax_cash_basis_origin_move_id, which stays unchanged
+                # (we need both, as tax_cash_basis_origin_move_id did not exist in older versions).
+                raise UserError(
+                    _('You cannot reset to draft a tax cash basis journal entry.'))
+            if move.restrict_mode_hash_table and move.state == 'posted':
+                raise UserError(
+                    _('You cannot modify a posted entry of this journal because it is in strict mode.'))
+            # We remove all the analytics entries for this journal
+            move.mapped('line_ids.analytic_line_ids').unlink()
+
+        self.mapped('line_ids').remove_move_reconcile()
+        self.write({'state': 'draft', 'is_move_sent': False})
+        self.request_approve_bool = False
+        self.show_approve_button = False
 
     def configure_budget_line(self):
         if self.line_ids:
@@ -105,17 +159,16 @@ def request_approval_button(self):
         out_budget = self.env['budget.in.out.check.invoice'].search(
             [('type', '=', 'out_budget'),
              ('company_id', '=', self.env.company.id)], limit=1)
-        if self.budget_collect_ids:
-            max_value = max(self.budget_collect_ids.mapped('demand_amount'))
+        if self.move_type == 'entry':
+            max_value = sum(self.line_ids.mapped('debit'))  # Old Field is debit
         else:
-            max_value = max(self.budget_collect_copy_ids.mapped('demand_amount_copy'))
+            max_value = sum(self.invoice_line_ids.mapped('local_subtotal'))
         for rec in out_budget.budget_line_ids:
             if max_value >= rec.from_amount:
                 out_budget_list.append((0, 0, {
                     'approval_seq': rec.approval_seq,
                     'user_approve_ids': rec.user_ids.ids,
                 }))
-
         self.write({'purchase_approval_cycle_ids': out_budget_list})
         self.request_approve_bool = True
     if not self.out_budget and not self.purchase_approval_cycle_ids:

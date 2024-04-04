@@ -7,41 +7,55 @@
             <field name="inherit_id" ref="purchase.purchase_order_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//button[@name='button_confirm'][1]" position="attributes">
-                    <attribute name="attrs">{'invisible':['|',('state','!=','draft'),('show_button_confirm','=',False)]}</attribute>
+                    <attribute name="invisible"> state != 'draft' or show_button_confirm == False</attribute>
+<!--                    <attribute name="attrs">{'invisible':['|',('state','!=','draft'),('show_button_confirm','=',False)]}</attribute>-->
                 </xpath>
                 <xpath expr="//button[@name='button_confirm'][2]" position="attributes">
                     <attribute name="invisible">1</attribute>
                 </xpath>
                  <xpath expr="//button[@name='button_cancel']" position="attributes">
-                    <attribute name="states">draft,to_approve,to approve,sent,purchase</attribute>
+                    <attribute name="invisible">state not in ['draft','to_approve','to approve','sent','purchase']</attribute>
                 </xpath>
                 <xpath expr="//button[@name='button_confirm']" position="after">
                     <field name="show_approve_button" invisible="1"/>
                     <field name="show_request_approve_button" invisible="1"/>
                     <field name="show_button_confirm" invisible="1"/>
-                    <button name="request_approval_button" string="Request Approval" type="object" class="btn-primary" attrs="{'invisible':[('show_request_approve_button','=',True)]}"/>
-                    <button name="button_approve_purchase_cycle" string="Approve" type="object" class="btn-primary" attrs="{'invisible':[('show_approve_button','=',False)]}"/>
+                    <button name="request_approval_button" string="Request Approval" type="object" class="btn-primary"
+                    invisible="show_request_approve_button == True or state not in ['draft']"/>
+                    <button name="button_approve_purchase_cycle" string="Approve" type="object" class="btn-primary"
+                    invisible="show_approve_button == False"/>
                 </xpath>
                 
                 <!-- position: after|before|replace|attributes|inside -->
-                <xpath expr="//notebook/page/field/tree/field[@name='account_analytic_id']" position="attributes">
-                    <attribute name="string">Cost Centers</attribute>
+                <xpath expr="//notebook/page/field/tree/field[@name='analytic_distribution']" position="attributes">
+<!--                    <attribute name="string">Cost Centers</attribute>-->
                     <attribute name="optional">show</attribute>
                     <attribute name="required">1</attribute>
                 </xpath>
-                <xpath expr="//notebook/page/field/tree/field[@name='account_analytic_id']" position="after">
+                <xpath expr="//notebook/page/field/tree/field[@name='analytic_distribution']" position="before">
                     <!--<field name="cost_center_id" optional="show"/>-->
-                    <button name="open_account_analytic_types" type="object" string="Set Cost Center"
-                            attrs="{'invisible': [('state', '!=', 'draft')]}"  class="oe_edit_only" />
-                    <field name="project_site_id" optional="show" required="1" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
-                    <field name="type_id" optional="show" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
-                    <field name="location_id" optional="show" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
-                    <field name="budget_id" optional="show" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
-                    <field name="budget_line_id" optional="show" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
-                    <field name="remaining_amount" optional="show" readonly="1"/>
-                    <field name="local_subtotal" optional="hide" readonly="1" /> <!-- attrs="{'readonly': [('state', 'not in', ['draft'])]}" -->
+<!--                    <button name="open_account_analytic_types" type="object" string="Set Cost Center"-->
+<!--                             class="oe_edit_only"-->
+<!--                    invisible="state != 'draft'"/>-->
+                                        <field name="cost_center_id" optional="show"
+                    readonly="state not in ['draft']"/>
+                    <field name="project_site_id" optional="show" required="1"
+                    readonly="state not in ['draft']"/>
                 </xpath>
-                <!-- position: after|before|replace|attributes|inside -->
+                <xpath expr="//notebook/page/field/tree/field[@name='analytic_distribution']" position="after">
+                    <!--<field name="cost_center_id" optional="show"/>-->
+<!--                    <button name="open_account_analytic_types" type="object" string="Set Cost Center"-->
+<!--                             class="oe_edit_only"-->
+<!--                    invisible="state != 'draft'"/>-->
+<!--                    <field name="project_site_id" optional="show" required="1"-->
+<!--                    readonly="state not in ['draft']"/>-->
+<!--                    <field name="type_id" optional="show" readonly="state not in ['draft']"/>-->
+<!--                    <field name="location_id" optional="show" readonly="state not in ['draft']"/>-->
+                    <field name="budget_id" optional="show" readonly="state not in ['draft']"/>
+                    <field name="budget_line_id" optional="show" readonly="state not in ['draft']"/>
+                    <field name="remaining_amount" optional="show" readonly="1"/>
+                    <field name="local_subtotal" optional="hide" readonly="1" />
+                </xpath>
                 <xpath expr="//notebook" position="inside">
                     <page string="Out Budget Amounts" name="budget_amounts">
                         <div>

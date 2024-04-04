@@ -58,10 +58,11 @@ class LeaseeContractInheritAdvance(models.Model):
             'quantity': 1,
             'analytic_account_id': self.analytic_account_id.id,
             'project_site_id': self.project_site_id.id,
-            'type_id': self.type_id.id,
-            'location_id': self.location_id.id,
+            # 'type_id': self.type_id.id,
+            # 'location_id': self.location_id.id,
+            'analytic_distribution': self.analytic_distribution,
         })]
-        invoice=self.env['account.move'].create({
+        invoice = self.env['account.move'].create({
             'partner_id': partner.id,
             'move_type': 'in_invoice',
             'currency_id': self.leasee_currency_id.id,
@@ -71,10 +72,11 @@ class LeaseeContractInheritAdvance(models.Model):
             'invoice_line_ids': invoice_lines,
             'journal_id': self.installment_journal_id.id,
             'lease_security_advance_id': advance_security_id.id,
+            # 'auto_post': 'at_date',
         })
         if invoice.date >= self.commencement_date and invoice.date <= self.inception_date:
             invoice.date = self.inception_date
-            invoice.auto_post = True
+            invoice.auto_post = 'at_date'
 
     def action_security_bills(self):
         advance_security_id = self.env['leasee.security.advance'].search(
@@ -91,7 +93,6 @@ class LeaseeContractInheritAdvance(models.Model):
                 'type': 'ir.actions.act_window',
                 'domain': domain,
             }
-
             return view_tree
 
     def action_activate(self):
@@ -101,7 +102,8 @@ class LeaseeContractInheritAdvance(models.Model):
     def process_termination(self, disposal_date):
         if self.security_advance_id:
             security_moves = self.env['account.move'].search(
-                [('lease_security_advance_id', '=', self.security_advance_id.id),
+                [(
+                 'lease_security_advance_id', '=', self.security_advance_id.id),
                  ('date', '>', disposal_date)])
             security_moves.button_draft()
             security_moves.button_cancel()

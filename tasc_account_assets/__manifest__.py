@@ -3,7 +3,7 @@
     'name': "Asset Customizations",
     'summary': """ Show total for depreciable value field  """,
     'author': 'Cybrosys Techno Solutions',
-    "version": "14.0.1.0.0",
+    "version": "17.0.1.0.0",
     "category": "Accounting",
     "depends": ["assets_partial_sale"],
     "data": ['data/ir_cron_data.xml',

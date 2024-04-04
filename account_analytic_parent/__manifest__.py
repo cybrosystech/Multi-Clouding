@@ -12,7 +12,7 @@
     "name": "Account Analytic Parent",
     "summary": """
         This module reintroduces the hierarchy to the analytic accounts.""",
-    "version": "14.0.1.0.0",
+    "version": "17.0.1.0.0",
     "license": "AGPL-3",
     "author": "Matmoz d.o.o., "
     "Luxim d.o.o., "
@@ -24,9 +24,6 @@
     "website": "https://github.com/OCA/account-analytic",
     "depends": ["account", "analytic", "account_asset"],
     "data": [
-        "views/account_analytic_account_view.xml",
-        "views/account_deferred_revenue.xml",
+
     ],
-    "demo": ["data/analytic_account_demo.xml"],
-    "post_init_hook": "post_init_hook",
 }

@@ -52,12 +52,12 @@
           <field name="model">account.analytic.account</field>
           <field name="inherit_id" ref="analytic.view_account_analytic_account_form"/>
           <field name="arch" type="xml">
-
-              <!-- position: after|before|replace|attributes|inside -->
-              <xpath expr="//field[@name='partner_id']" position="after">
+              <field name="currency_id" position="after">
+                <field name="site_address"/>
+            </field>
+               <xpath expr="//field[@name='partner_id']" position="after">
                   <field name="analytic_account_type"/>
               </xpath>
-
           </field>
       </record>
   </data>

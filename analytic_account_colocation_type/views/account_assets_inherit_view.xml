@@ -1,14 +1,15 @@
 <odoo>
-    <record id="account_assets_view_inherit" model="ir.ui.view">
-        <field name="name">view_inherit_view_account_asset_form_co_location</field>
-        <field name="model">account.asset</field>
-        <field name="inherit_id" ref="analytic_account_types.view_inherit_view_account_asset_form"/>
-        <field name="arch" type="xml">
-            <xpath expr="//field[@name='location_id']" position="after">
-                <field name="co_location" groups="analytic.group_analytic_accounting"/>
-            </xpath>
-        </field>
-    </record>
+<!--    <record id="account_assets_view_inherit" model="ir.ui.view">-->
+<!--        <field name="name">view_inherit_view_account_asset_form_co_location</field>-->
+<!--        <field name="model">account.asset</field>-->
+<!--        <field name="inherit_id" ref="account_asset.view_account_asset_form"/>-->
+<!--        <field name="arch" type="xml">-->
+<!--            <xpath expr="//field[@name='analytic_distribution']" position="after">-->
+<!--                <field name="co_location" groups="analytic.group_analytic_accounting"/>-->
+<!--&lt;!&ndash;                <field name="site_address"/>&ndash;&gt;-->
+<!--            </xpath>-->
+<!--        </field>-->
+<!--    </record>-->
 
     <record id="analytic_line_view_inherit_co_location" model="ir.ui.view">
         <field name="name">account.analytic.line.form.inherit.account.co.location</field>
@@ -32,31 +33,31 @@
         </field>
     </record>
 
-    <record id="view_inherit_view_move_form_co_location" model="ir.ui.view">
-        <field name="name">view_inherit_view_move_form_co_location</field>
-        <field name="model">account.move</field>
-        <field name="inherit_id" ref="analytic_account_types.view_inherit_view_move_form"/>
-        <field name="arch" type="xml">
-            <xpath expr="//notebook/page/field/tree/field[@name='location_id']" position="after">
-                <field name="co_location_id" optional="show"  attrs="{'readonly': [('parent_state', '=', 'posted')]}"/>
-            </xpath>
-            <xpath expr="//notebook/page[2]/field[@name='line_ids']/tree/field[@name='location_id']"
-                   position="after">
-                <field name="co_location_id" optional="show"/>
-            </xpath>
-        </field>
-    </record>
+<!--    <record id="view_inherit_view_move_form_co_location" model="ir.ui.view">-->
+<!--        <field name="name">view_inherit_view_move_form_co_location</field>-->
+<!--        <field name="model">account.move</field>-->
+<!--        <field name="inherit_id" ref="tasc_analytic_account_types.view_inherit_view_move_form"/>-->
+<!--        <field name="arch" type="xml">-->
+<!--            <xpath expr="//notebook/page/field/tree/field[@name='location_id']" position="after">-->
+<!--                <field name="co_location_id" optional="show" readonly="parent_state == 'posted'"/>-->
+<!--            </xpath>-->
+<!--            <xpath expr="//notebook/page[2]/field[@name='line_ids']/tree/field[@name='location_id']"-->
+<!--                   position="after">-->
+<!--                <field name="co_location_id" optional="show"/>-->
+<!--            </xpath>-->
+<!--        </field>-->
+<!--    </record>-->
 
-    <record id="view_inherit_purchase_order_form_co_location" model="ir.ui.view">
-        <field name="name">view_inherit_purchase_order_form_co_location</field>
-        <field name="model">purchase.order</field>
-        <field name="inherit_id" ref="analytic_account_types.view_inherit_purchase_order_form"/>
-        <field name="arch" type="xml">
-            <xpath expr="//notebook/page/field/tree/field[@name='location_id']" position="after">
-                <field name="co_location_id" optional="show" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
-            </xpath>
-        </field>
-    </record>
+<!--    <record id="view_inherit_purchase_order_form_co_location" model="ir.ui.view">-->
+<!--        <field name="name">view_inherit_purchase_order_form_co_location</field>-->
+<!--        <field name="model">purchase.order</field>-->
+<!--        <field name="inherit_id" ref="tasc_analytic_account_types.view_inherit_purchase_order_form"/>-->
+<!--        <field name="arch" type="xml">-->
+<!--            <xpath expr="//notebook/page/field/tree/field[@name='location_id']" position="after">-->
+<!--                <field name="co_location_id" optional="show" readonly="state not in ['draft']"/>-->
+<!--            </xpath>-->
+<!--        </field>-->
+<!--    </record>-->
 
     <record id="view_inherit_view_order_form_co_location" model="ir.ui.view">
         <field name="name">view_inherit_view_order_form_co_location</field>
@@ -64,7 +65,7 @@
         <field name="inherit_id" ref="analytic_account_types.view_inherit_view_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//notebook/page/field/tree/field[@name='location_id']" position="after">
-                <field name="co_location_id" optional="show" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                <field name="co_location_id" invisible="1"/>
             </xpath>
         </field>
     </record>
@@ -75,7 +76,9 @@
         <field name="inherit_id" ref="analytic_account_types.view_inherit_view_account_analytic_account_form_inherit_budget"/>
         <field name="arch" type="xml">
             <field name="analytic_location_id" position="after">
-                <field name="co_location" attrs="{'invisible':[('analytic_account_type','!=','project_site')]}"/>
+                <field name="co_location"
+                invisible="analytic_account_type != 'project_site' "/>
+<!--                <field name="co_location"/>-->
             </field>
         </field>
     </record>

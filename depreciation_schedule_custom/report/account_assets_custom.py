@@ -14,21 +14,23 @@ import re
 MAX_NAME_LENGTH = 50
 
 
-class assets_report(models.AbstractModel):
-    _inherit = 'account.report'
+class AssetReport(models.Model):
     _name = 'account.assets.custom.report'
+    _inherit = ['account.report']
     _description = 'Account Assets Report Custom'
 
     filter_date = {'mode': 'range', 'filter': 'this_year'}
-    filter_all_entries = False
-    filter_hierarchy = True
-    filter_unfold_all = True
+    # filter_all_entries = False
+    # filter_hierarchy = True
+    # filter_unfold_all = True
+
+    section_report_ids = fields.Many2many(string="Sections", comodel_name='account.report', relation="account_asset_custom_report_section_rel", column1="main_asset_report_id", column2="asset_sub_report_id")
 
     def _get_report_name(self):
         return _('Depreciation Table Report')
 
     def _get_templates(self):
-        templates = super(assets_report, self)._get_templates()
+        templates = super(AssetReport, self)._get_templates()
         templates['main_template'] = 'account_asset.main_template_asset_report'
         return templates
 
@@ -38,7 +40,7 @@ class assets_report(models.AbstractModel):
         return [
             [
                 {'name': ''},
-                {'name': _('Characteristics'), 'colspan': 10},
+                {'name': _('Characteristics'), 'colspan': 9},
                 {'name': _('Assets'), 'colspan': 4},
                 {'name': _('Depreciation'), 'colspan': 4},
                 {'name': _('Book Value')},
@@ -50,8 +52,6 @@ class assets_report(models.AbstractModel):
                 {'name': _('First Depreciation'), 'class': 'text-center'},
                 {'name': _('Method'), 'class': 'text-center'},
                 {'name': _('Remaining Life'), 'class': 'text-center'},
-                {'name': _('Asset Model'), 'class': 'text-center'},
-
                 {'name': _('Co Location'), 'class': 'text-center'},
                 {'name': _('Project/Site'), 'class': 'text-center'},
                 {'name': _('Capex Type'), 'class': 'text-center'},
@@ -375,7 +375,6 @@ class assets_report(models.AbstractModel):
                             'Declining')) or _('Dec. then Straight'),
                          'no_format_name': ''},
                         {'name': al['total_move_count'], 'no_format_name': ''},
-                        {'name': al['asset_model'], 'no_format_name': ''},
                         {'name': al['analytic_colocation'],
                          'no_format_name': ''},
                         {'name': al['analytic_project'], 'no_format_name': ''},
@@ -476,14 +475,12 @@ class assets_report(models.AbstractModel):
                                    asset.state as asset_state,
                                    asset.capex_type as capex_type,
                                    asset.sequence_number as sequence_number,
-                                   asset.model_id as asset_model,
                                    account.code as account_code,
                                    account.name as account_name,
                                    account.id as account_id,
                                    account.company_id as company_id,
                                    analytic.name as analytic_colocation,
                                    project_site.name as analytic_project,
-                                   (SELECT name as asset_model from account_asset acc_asset WHERE acc_asset.id=asset.model_id) ,
                                    COALESCE(first_move.asset_depreciated_value, move_before.asset_depreciated_value, 0.0) as depreciated_start,
                                    COALESCE(first_move.asset_remaining_value, move_before.asset_remaining_value, 0.0) as remaining_start,
                                    COALESCE(last_move.asset_depreciated_value, move_before.asset_depreciated_value, 0.0) as depreciated_end,
@@ -610,7 +607,6 @@ class assets_report(models.AbstractModel):
                                    account.company_id as company_id,
                                    analytic.name as analytic_colocation,
                                    project_site.name as analytic_project,
-                                   (SELECT name as asset_model from account_asset acc_asset WHERE acc_asset.id=asset.model_id) ,
                                    COALESCE(first_move.asset_depreciated_value, move_before.asset_depreciated_value, 0.0) as depreciated_start,
                                    COALESCE(first_move.asset_remaining_value, move_before.asset_remaining_value, 0.0) as remaining_start,
                                    COALESCE(last_move.asset_depreciated_value, move_before.asset_depreciated_value, 0.0) as depreciated_end,

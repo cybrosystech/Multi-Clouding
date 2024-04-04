@@ -6,7 +6,7 @@
     'company': 'Cybrosys Techno Solutions',
     'website': 'https://www.cybrosys.com',
     'category': 'Human Resources/Contracts',
-    'version': '14.0.1.0.0',
+    'version': '17.0.1.0.0',
     'depends': ['hr','hr_contract'],
     'data':
         [

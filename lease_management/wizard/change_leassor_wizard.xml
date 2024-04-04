@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        
+
         <record id="view_change_leasor_wizard_form" model="ir.ui.view">
             <field name="name">change.leasor.wizard.form</field>
             <field name="model">change.leasor.wizard</field>
@@ -10,37 +10,45 @@
                     <sheet>
                         <group>
                             <field name="change_date"/>
-                            <field name="leasor_type"  />
-                            <field name="vendor_id" attrs="{'invisible':[('leasor_type','!=','single')],'required':[('leasor_type','=','single')]}"/>
+                            <field name="leasor_type"/>
+                            <field name="vendor_id"
+                                   invisible="leasor_type != 'single'"
+                                   required="leasor_type == 'single'"/>
                             <notebook>
-                                <page string="Multi Leasors" attrs="{'invisible':[('leasor_type','=','single')]}">
-                                    <field name="multi_leasor_ids"  >
+                                <page string="Multi Leasors"
+                                invisible="leasor_type == 'single'">
+                                    <field name="multi_leasor_ids">
                                         <tree editable="bottom">
-                                            <field name="partner_id" />
-                                            <field name="type" />
-                                            <field name="amount" attrs="{'invisible': [('type', '!=', 'amount')], 'required': [('type', '=', 'amount')]}"/>
-                                            <field name="percentage" attrs="{'invisible': [('type', '!=', 'percentage')], 'required': [('type', '=', 'percentage')]}" />
+                                            <field name="partner_id"/>
+                                            <field name="type"/>
+                                            <field name="amount"
+                                            invisible="type != 'amount'" required="type == 'amount'"/>
+                                            <field name="percentage"
+                                                   invisible="type != 'percentage'" required="type == 'percentage'"/>
                                         </tree>
                                     </field>
                                 </page>
-                        </notebook>
+                            </notebook>
                         </group>
                     </sheet>
                     <footer>
-                        <button name="action_apply"   string="Apply" type="object" class="oe_highlight"/>
-                        <button string="Cancel" special="cancel" class="oe_link"/>
+                        <button name="action_apply" string="Apply" type="object"
+                                class="oe_highlight"/>
+                        <button string="Cancel" special="cancel"
+                                class="oe_link"/>
                     </footer>
                 </form>
             </field>
         </record>
-        
-        <record id="view_change_leasor_wizard_action" model="ir.actions.act_window">
+
+        <record id="view_change_leasor_wizard_action"
+                model="ir.actions.act_window">
             <field name="name">Change Leasor</field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">change.leasor.wizard</field>
             <field name="view_mode">form</field>
             <field name="target">new</field>
         </record>
-        
+
     </data>
 </odoo>

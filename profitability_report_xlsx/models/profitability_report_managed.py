@@ -4,7 +4,7 @@ import calendar
 import io
 
 from odoo.exceptions import UserError
-from odoo.tools import date_utils
+from odoo.tools import date_utils, get_lang
 from odoo.tools.safe_eval import datetime
 from datetime import timedelta
 import xlsxwriter
@@ -124,9 +124,8 @@ class ProfitabilityReportManaged(models.Model):
         if profitability_managed.from_date and profitability_managed.to_date:
             if profitability_managed.from_date > profitability_managed.to_date:
                 raise UserError("Start date should be less than end date")
-        group = self.env['account.analytic.group'].search(
-            [('name', 'ilike', 'managed'),
-             ('company_id', '=', profitability_managed.company_id.id)])
+        plan = self.env['account.analytic.plan'].search(
+            [('name', 'ilike', 'managed')])
         data = {
             'ids': self.ids,
             'model': self._name,
@@ -146,7 +145,7 @@ class ProfitabilityReportManaged(models.Model):
             'from': from_date if from_date else profitability_managed.from_date,
             'to': to_date if to_date else profitability_managed.to_date,
             'company_id': profitability_managed.company_id.id,
-            'analytic_account_group': group.id,
+            'analytic_account_plan': plan.id,
             'Current_months': Current_months,
             'limit': limit
         }
@@ -204,9 +203,8 @@ class ProfitabilityReportManaged(models.Model):
         if profitability_managed.from_date and profitability_managed.to_date:
             if profitability_managed.from_date > profitability_managed.to_date:
                 raise UserError("Start date should be less than end date")
-        group = self.env['account.analytic.group'].search(
-            [('name', 'ilike', 'managed'),
-             ('company_id', '=', profitability_managed.company_id.id)])
+        plan = self.env['account.analytic.plan'].search(
+            [('name', 'ilike', 'managed')])
         data = {
             'ids': self.ids,
             'model': self._name,
@@ -226,7 +224,7 @@ class ProfitabilityReportManaged(models.Model):
             'from': from_date if from_date else profitability_managed.from_date,
             'to': to_date if to_date else profitability_managed.to_date,
             'company_id': profitability_managed.company_id.id,
-            'analytic_account_group': group.id,
+            'analytic_account_plan': plan.id,
             'Current_months': Current_months,
             'limit': limit
         }
@@ -284,9 +282,8 @@ class ProfitabilityReportManaged(models.Model):
         if profitability_managed.from_date and profitability_managed.to_date:
             if profitability_managed.from_date > profitability_managed.to_date:
                 raise UserError("Start date should be less than end date")
-        group = self.env['account.analytic.group'].search(
-            [('name', 'ilike', 'managed'),
-             ('company_id', '=', profitability_managed.company_id.id)])
+        plan = self.env['account.analytic.plan'].search(
+            [('name', 'ilike', 'managed')])
         data = {
             'ids': self.ids,
             'model': self._name,
@@ -306,7 +303,7 @@ class ProfitabilityReportManaged(models.Model):
             'from': from_date if from_date else profitability_managed.from_date,
             'to': to_date if to_date else profitability_managed.to_date,
             'company_id': profitability_managed.company_id.id,
-            'analytic_account_group': group.id,
+            'analytic_account_plan': plan.id,
             'Current_months': Current_months,
             'limit': limit
         }
@@ -364,9 +361,8 @@ class ProfitabilityReportManaged(models.Model):
         if profitability_managed.from_date and profitability_managed.to_date:
             if profitability_managed.from_date > profitability_managed.to_date:
                 raise UserError("Start date should be less than end date")
-        group = self.env['account.analytic.group'].search(
-            [('name', 'ilike', 'managed'),
-             ('company_id', '=', profitability_managed.company_id.id)])
+        plan = self.env['account.analytic.plan'].search(
+            [('name', 'ilike', 'managed')])
         data = {
             'ids': self.ids,
             'model': self._name,
@@ -386,7 +382,7 @@ class ProfitabilityReportManaged(models.Model):
             'from': from_date if from_date else profitability_managed.from_date,
             'to': to_date if to_date else profitability_managed.to_date,
             'company_id': profitability_managed.company_id.id,
-            'analytic_account_group': group.id,
+            'analytic_account_plan': plan.id,
             'Current_months': Current_months,
             'limit': limit
         }
@@ -398,17 +394,23 @@ class ProfitabilityReportManaged(models.Model):
 
     def get_profitability_managed(self, data, profitability_managed_report,
                                   profitability_managed):
+        lang = self.env.user.lang or get_lang(self.env).code
+
         projects = ''
         if profitability_managed_report:
             profitability_managed_report_load = json.loads(
                 profitability_managed_report)
-            query = '''
-                                    select id,name from account_analytic_account as analatyc_account
+
+            name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
+                self.pool[
+                    'account.analytic.account'].name.translate else 'analatyc_account.name'
+            query = f'''
+                                    select id,{name} as name from account_analytic_account as analatyc_account
                                     WHERE analatyc_account.analytic_account_type = 'project_site'
                                     and analatyc_account.company_id = ''' + str(
                 data['company_id']) + '''
-                                    and analatyc_account.group_id = ''' + str(
-                data['analytic_account_group'])
+                                    and analatyc_account.plan_id = ''' + str(
+                data['analytic_account_plan'])
 
             cr = self._cr
             cr.execute(query)
@@ -600,13 +602,16 @@ class ProfitabilityReportManaged(models.Model):
             return profitability_managed_report_load
         else:
             dummy_prof_list = []
-            query = '''
-                                            select id,name from account_analytic_account as analatyc_account 
+            name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
+                self.pool[
+                    'account.analytic.account'].name.translate else 'analatyc_account.name'
+            query = f'''
+                                            select id,{name} as name from account_analytic_account as analatyc_account 
                                             WHERE analatyc_account.analytic_account_type = 'project_site'
                                             and analatyc_account.company_id = ''' + str(
                 data['company_id']) + ''' 
-                                            and analatyc_account.group_id = ''' + str(
-                data['analytic_account_group'])
+                                            and analatyc_account.plan_id = ''' + str(
+                data['analytic_account_plan'])
 
             cr = self._cr
             cr.execute(query)

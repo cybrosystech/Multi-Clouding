@@ -9,7 +9,7 @@
                 <button name="action_generate_elimination_journal" type="object"
                         string="Elimination Journal" class="oe_highlight"
                         groups="account_consolidation.group_consolidation_user"
-                        attrs="{'invisible': ['|', ('state', '=', 'closed'), ('id', '=', False)]}"/>
+                invisible="state == 'closed' or id == False"/>
             </button>
         </field>
     </record>

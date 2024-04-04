@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from odoo import models, fields
 from odoo.exceptions import UserError
 from odoo.tools import date_utils, io, xlsxwriter
@@ -25,7 +26,6 @@ class VendorReportWizard(models.TransientModel):
         if self.date_from and self.date_to:
             if self.date_from > self.date_to:
                 raise UserError("Start date should be less than end date")
-
         data = {
             'ids': self.ids,
             'date_from': self.date_from,
@@ -71,7 +71,6 @@ class VendorReportWizard(models.TransientModel):
             date_from = datetime.strptime(data['date_from'], '%Y-%m-%d')
         if data['date_to']:
             date_to = datetime.strptime(data['date_to'], '%Y-%m-%d')
-
         journals = self.env['account.move'].search(
             ['|',('move_type', '=', 'in_invoice'),('move_type', '=', 'in_refund'),
              ('company_id', '=', int(data['company_id'])),
@@ -109,7 +108,6 @@ class VendorReportWizard(models.TransientModel):
         sheet.merge_range('S2:V2', 'Book Currency' + str(
             self.env.company.currency_id.symbol),
                           head)
-
         sheet.write('A3', 'Bill Date', head)
         sheet.write('B3', 'Accounting Date', head)
         sheet.write('C3', 'Supplier', head)
@@ -132,13 +130,12 @@ class VendorReportWizard(models.TransientModel):
         sheet.write('T3', 'Vat Amount', head)
         sheet.write('U3', 'Total', head)
         sheet.write('V3', 'payment Amount', head)
-
         row_num = 2
         col_num = 0
         for rec in journals:
             payment_widget = ''
             paid_amount = 0
-            if json.loads(rec.invoice_payments_widget):
+            if rec.invoice_payments_widget and json.loads(rec.invoice_payments_widget):
                 payment_widget = ', '.join(map(lambda x: x['date'], json.loads(
                     rec.invoice_payments_widget)['content']))
                 paid_amount = sum(map(lambda x: x['amount'], json.loads(
@@ -161,8 +158,6 @@ class VendorReportWizard(models.TransientModel):
                         tax_amount = -abs(tax_amount)
                         tot = -abs(tot)
                         paid_amount = -abs(paid_amount)
-
-
                     sheet.write(row_num + 1, col_num, rec.invoice_date,
                                 date_format)
                     sheet.write(row_num + 1, col_num + 1, rec.date,
@@ -189,7 +184,6 @@ class VendorReportWizard(models.TransientModel):
                     sheet.write(row_num + 1, col_num + 10,
                                 rec.currency_id.name,
                                 date_format)
-
                     sheet.write(row_num + 1, col_num + 11, sub_total, num)
                     sheet.write(row_num + 1, col_num + 12, tax_amount, num)
                     sheet.write(row_num + 1, col_num + 13, sub_total +
@@ -230,7 +224,6 @@ class VendorReportWizard(models.TransientModel):
                         tot2 = -abs(tot2)
                         tot3 = -abs(tot3)
                         tot4 = -abs(tot4)
-
                     sheet.write(row_num + 1, col_num, rec.invoice_date,
                                 date_format)
                     sheet.write(row_num + 1, col_num + 1, rec.date,
@@ -279,7 +272,6 @@ class VendorReportWizard(models.TransientModel):
                     sheet.write(row_num + 1, col_num + 21, tot4,
                                 num)
                     row_num = row_num + 1
-
         workbook.close()
         output.seek(0)
         response.stream.write(output.read())

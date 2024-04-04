@@ -1,13 +1,22 @@
 # -*- coding: utf-8 -*-
 """ init object """
+import pytz
 import base64
 import io
-from odoo import fields, models, _
-from datetime import datetime , date
+from io import BytesIO
+from psycopg2.extensions import AsIs
+from babel.dates import format_date, format_datetime, format_time
+from odoo import fields, models, api, _ ,tools, SUPERUSER_ID
+from odoo.exceptions import ValidationError,UserError
+from datetime import datetime , date ,timedelta
+from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT as DTF
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DF
-
+from dateutil.relativedelta import relativedelta
+from odoo.fields import Datetime as fieldsDatetime
 import calendar
-
+from odoo import http
+from odoo.http import request
+from odoo import tools
 
 try:
     from odoo.tools.misc import xlsxwriter
@@ -25,7 +34,6 @@ class APRecon(models.TransientModel):
             return first_day_this_month
 
     def _get_date_to(self):
-        # import calendar
         today = datetime.now().today()
         last_day = calendar.monthrange(today.year,today.month)
         last_day_this_month = date(day=last_day[1], month=today.month, year=today.year)
@@ -153,7 +161,7 @@ class APRecon(models.TransientModel):
             'type': 'ir.actions.act_url',
             'name': 'AP Reconcile',
             'url': '/web/content/%s/%s/excel_sheet/%s?download=true' % (self._name, self.id, self.excel_sheet_name),
-            'target': 'self'
+            'target': 'new'
         }
 
     def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data, header_format):
@@ -211,3 +219,13 @@ class APRecon(models.TransientModel):
             worksheet.write(row, col, line['operating_exp_paid'], STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['bill_status'], STYLE_LINE_Data)
+
+
+
+
+
+
+
+
+
+

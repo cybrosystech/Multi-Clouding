@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <record model="ir.actions.act_window" id="analytic.account_analytic_line_action">
-            <field name="domain">['|','|','|',('project_site_id','=', active_id),('type_id','=', active_id),('location_id','=', active_id),('account_id','=', active_id)]</field>
-        </record>
+<!--        <record model="ir.actions.act_window" id="analytic.account_analytic_line_action">-->
+<!--            <field name="domain">['|','|','|',('project_site_id','=', active_id),('type_id','=', active_id),('location_id','=', active_id),('account_id','=', active_id)]</field>-->
+<!--        </record>-->
         <record id="view_account_analytic_line_form_inherit_account" model="ir.ui.view">
             <field name="name">account.analytic.line.form.inherit.account</field>
             <field name="model">account.analytic.line</field>
@@ -25,6 +25,27 @@
                         <field name="project_site_id" optional="show"/>
                         <field name="type_id" optional="show"/>
                         <field name="location_id" optional="show"/>
+                    </xpath>
+            </field>
+        </record>
+
+        <record id="view_account_analytic_line_filter_analytic_account_types" model="ir.ui.view">
+            <field name="name">account.analytic.line.filter.inherit.analytic_account_types</field>
+            <field name="model">account.analytic.line</field>
+            <field name="inherit_id" ref="analytic.view_account_analytic_line_filter"/>
+            <field name="arch" type="xml">
+                    <xpath expr="//search" position="inside">
+<!--                        <field name="project_site_id"/>-->
+<!--                        <field name="type_id"/>-->
+<!--                        <field name="location_id"/>-->
+                       <filter string="Project Site" name="project_sites" domain="[('account_id.plan_id.name', '=', 'project_site')]"/>
+                       <filter string="Type" name="type_id" domain="[('account_id.plan_id.name', '=', 'type')]"/>
+                       <filter string="Location" name="location_id" domain="[('account_id.plan_id.name', '=', 'location')]"/>
+
+<!--                        <filter string="Project Site" name="project_sites" />-->
+<!--                       <filter string="Type" name="type_id" />-->
+<!--                       <filter string="Location" name="location_id" />-->
+
                     </xpath>
             </field>
         </record>

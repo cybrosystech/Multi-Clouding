@@ -1,6 +1,5 @@
+# -*- coding: utf-8 -*-
 from datetime import datetime
-import time
-
 from odoo import models, api
 
 
@@ -79,7 +78,6 @@ class ReportVendor(models.AbstractModel):
                 'taxes': '',
                 'tax_id': rec.partner_id.vat,
             })
-
         return {
             'doc_ids': self.ids,
             'docs': docs,

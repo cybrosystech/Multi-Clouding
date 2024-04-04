@@ -45,10 +45,6 @@ class WizardAnalyticAccountTypes(models.Model):
             self.po_line.budget_line_id = self.budget_line_id.id
             self.po_line.order_id.get_budgets_in_out_budget_tab()
         if self.move_line:
-            self.move_line.analytic_account_id = self.cost_center_id.id
-            self.move_line.project_site_id = self.project_site_id.id
-            self.move_line.type_id = self.type_id.id
-            self.move_line.location_id = self.location_id.id
             self.move_line.budget_id = self.budget_id.id
             self.move_line.budget_line_id = self.budget_line_id.id
             self.move_line.move_id.get_budgets_in_out_budget_tab()

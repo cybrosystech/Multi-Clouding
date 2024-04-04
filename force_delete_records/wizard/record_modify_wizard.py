@@ -18,7 +18,7 @@ class ModelRecordUnlink(models.Model):
     @api.onchange('company_id', 'state', 'journal_state', 'state_entry')
     def _onchange_compute_assets(self):
         if self.state_entry == 'assets':
-            domain = [('asset_type', '=', 'purchase')]
+            domain = []
             environment = self.env['account.asset']
         else:
             domain = []
@@ -29,13 +29,12 @@ class ModelRecordUnlink(models.Model):
             domain += [('state', '=', self.state)]
         if self.journal_state:
             domain += [('state', '=', self.journal_state)]
-        print(domain, environment)
         assets = environment.search(domain)
         self.records = len(assets)
 
     def delete_records(self):
         if self.state_entry == 'assets':
-            domain = [('asset_type', '=', 'purchase')]
+            domain = []
             environment = self.env['account.asset']
         else:
             domain = []
@@ -54,6 +53,3 @@ class ModelRecordUnlink(models.Model):
                 rec.state = 'draft'
         else:
             assets.with_context(force_delete=True).unlink()
-            # for rec in assets:
-            #     print(rec)
-            #     rec.with_context(force_delete=True).unlink()

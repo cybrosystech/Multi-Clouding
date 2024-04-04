@@ -51,11 +51,10 @@ class ModelRecordUnlink(models.Model):
                          ('company_id', '=', self.company_id.id)],
                         limit=self.limit).filtered(
                         lambda l: l.move_id.date.year == int(self.year))
-            print("items", items)
             for item in items:
                 item.analytic_account_id = self.to_value.id
                 analytic_line = self.env['account.analytic.line'].search(
-                    [('move_id', '=', item.id)])
+                    [('move_line_id', '=', item.id)])
                 analytic_line.account_id = self.to_value.id
         else:
             if self.journal_state:
@@ -89,7 +88,7 @@ class ModelRecordUnlink(models.Model):
             for item in items:
                 item.project_site_id = self.to_value.id
                 analytic_line = self.env['account.analytic.line'].search(
-                    [('move_id', '=', item.id)])
+                    [('move_line_id', '=', item.id)])
                 analytic_line.project_site_id = self.to_value.id
 
     @api.onchange('from_value', 'company_id', 'journal_state', 'year')

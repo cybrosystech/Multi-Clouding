@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api, _
-from odoo.exceptions import ValidationError, UserError
+from odoo.exceptions import ValidationError
 
 
 class InOutBudgets(models.Model):
@@ -16,7 +16,6 @@ class InOutBudgets(models.Model):
                                       required=False, )
     company_id = fields.Many2one('res.company', 'Company', default=lambda self: self.env.company)
 
-
     @api.constrains('budget_line_ids')
     def check_lines(self):
         for rec in self:
@@ -29,6 +28,7 @@ class InOutBudgets(models.Model):
                         _('Cannot add the same sequence more than once, asequence of  %s is repeated') % line.name)
                 count_map[line.approval_seq] = 1
                 latest_to = line.to_amount
+
     @api.model
     def create(self, vals):
         check = self.env['budget.in.out.check'].sudo().search([('type', '=', vals['type']),('company_id', '=', vals['company_id'])])

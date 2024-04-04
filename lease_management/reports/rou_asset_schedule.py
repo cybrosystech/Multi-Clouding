@@ -23,7 +23,6 @@ class RouAssetSchedule(models.TransientModel):
         return first_day_this_month
 
     def _get_date_to(self):
-        # import calendar
         today = datetime.now().today()
         last_day = calendar.monthrange(today.year, today.month)
         last_day_this_month = date(day=last_day[1], month=today.month,
@@ -67,11 +66,9 @@ class RouAssetSchedule(models.TransientModel):
                 'depreciation_term': contract.method_number,
                 'opening_balance': contract.original_value,
                 'initial_measurement': 0,
-                # 'impairment': ins.asset_id.book_value,
                 'impairment': 0,
                 'direct_cost_added': 0,
                 'depreciation': 0,
-                # 'adjustment_lease_liability': ins.asset_id.gross_increase_value,
                 'adjustment_lease_liability': 0,
                 'rou_sub_leased': 0,
                 'rou_increase_decrease': 0,
@@ -115,11 +112,9 @@ class RouAssetSchedule(models.TransientModel):
                                                      ins.asset_id.method_number + 1) - period_no,
                         'opening_balance': prev.asset_remaining_value,
                         'initial_measurement': 0,
-                        # 'impairment': ins.asset_id.book_value,
                         'impairment': 0,
                         'direct_cost_added': 0,
                         'depreciation': 0,
-                        # 'adjustment_lease_liability': ins.asset_id.gross_increase_value,
                         'adjustment_lease_liability': 0,
                         'rou_sub_leased': leasor_contract.installment_amount,
                         'rou_increase_decrease': 0,
@@ -144,11 +139,9 @@ class RouAssetSchedule(models.TransientModel):
                         'opening_balance': (
                                 ins.amount_total + ins.asset_remaining_value),
                         'initial_measurement': 0,
-                        # 'impairment': ins.asset_id.book_value,
                         'impairment': 0,
                         'direct_cost_added': initial_direct_cost if period_no == 1 else 0,
                         'depreciation': ins.amount_total,
-                        # 'adjustment_lease_liability': ins.asset_id.gross_increase_value,
                         'adjustment_lease_liability': 0,
                         'rou_sub_leased': leasor_contract.installment_amount,
                         'rou_increase_decrease': 0,
@@ -173,11 +166,9 @@ class RouAssetSchedule(models.TransientModel):
                     'depreciation_term': children.method_number,
                     'opening_balance': 0,
                     'initial_measurement': 0,
-                    # 'impairment': ins.asset_id.book_value,
                     'impairment': 0,
                     'direct_cost_added': 0,
                     'depreciation': 0,
-                    # 'adjustment_lease_liability': ins.asset_id.gross_increase_value,
                     'adjustment_lease_liability': 0,
                     'rou_sub_leased': 0,
                     'rou_increase_decrease': 0,
@@ -225,11 +216,9 @@ class RouAssetSchedule(models.TransientModel):
                                                          ins.asset_id.method_number + 1) - period_no,
                             'opening_balance': 0,
                             'initial_measurement': 0,
-                            # 'impairment': ins.asset_id.book_value,
                             'impairment': 0,
                             'direct_cost_added': 0,
                             'depreciation': 0,
-                            # 'adjustment_lease_liability': ins.asset_id.gross_increase_value,
                             'adjustment_lease_liability': 0,
                             'rou_sub_leased': leasor_contract.installment_amount,
                             'rou_increase_decrease': 0,
@@ -257,11 +246,9 @@ class RouAssetSchedule(models.TransientModel):
                             'opening_balance': (
                                     ins.amount_total + ins.asset_remaining_value),
                             'initial_measurement': 0,
-                            # 'impairment': ins.asset_id.book_value,
                             'impairment': 0,
                             'direct_cost_added': initial_direct_cost if period_no == 1 else 0,
                             'depreciation': ins.amount_total,
-                            # 'adjustment_lease_liability': ins.asset_id.gross_increase_value,
                             'adjustment_lease_liability': 0,
                             'rou_sub_leased': leasor_contract.installment_amount,
                             'rou_increase_decrease': 0,
@@ -371,7 +358,7 @@ class RouAssetSchedule(models.TransientModel):
             'name': 'RoU Asset Schedule',
             'url': '/web/content/%s/%s/excel_sheet/RoU Asset Schedule.xlsx?download=true' % (
                 self._name, self.id),
-            'target': 'self'
+            'target': 'new'
         }
 
     def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data,
@@ -410,16 +397,8 @@ class RouAssetSchedule(models.TransientModel):
         worksheet.write(row, col, _('ROU Sub-Leased'), header_format)
         col += 1
         worksheet.write(row, col, _('ROU increase/decrease'), header_format)
-        # col += 1
-        # worksheet.write(row, col, _('Losses on onerous leases (+)'), header_format)
-        # col += 1
-        # worksheet.write(row, col, _('Loss on Sub-lease Activation (-)'), header_format)
         col += 1
         worksheet.write(row, col, _('Closing Balance'), header_format)
-        # col += 1
-        # worksheet.write(row, col, _('Period End Date'), header_format)
-        # col += 1
-        # worksheet.write(row, col, _('Comment'), header_format)
         col += 1
         worksheet.write(row, col, _('Posted to G/L'), header_format)
         col += 1
@@ -461,16 +440,8 @@ class RouAssetSchedule(models.TransientModel):
             col += 1
             worksheet.write(row, col, line['rou_increase_decrease'],
                             STYLE_LINE_Data)
-            # col += 1
-            # worksheet.write(row, col, line['loss_leases'], STYLE_LINE_Data)
-            # col += 1
-            # worksheet.write(row, col, line['loss_sub_lease'], STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['closing_balance'], STYLE_LINE_Data)
-            # col += 1
-            # worksheet.write(row, col, line['period_end_date'], STYLE_LINE_Data)
-            # col += 1
-            # worksheet.write(row, col, line['comment'], STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['posted_gl'], STYLE_LINE_Data)
             col += 1
