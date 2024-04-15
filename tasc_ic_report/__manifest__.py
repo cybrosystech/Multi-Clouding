@@ -5,7 +5,7 @@
     'author': "",
     "version": "17.0.1.0.0",
     "category": "Accounting",
-    "depends": [],
+    "depends": ["account"],
     "data": [],
     "license": 'AGPL-3',
     'installable': True,
