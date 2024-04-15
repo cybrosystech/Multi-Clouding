@@ -19,22 +19,9 @@
     'depends': ['sale_management','sale','account',
                 'purchase',
                 'stock',
-                #'mrp',
                 'base_import'],
 
     # always loaded
-    'data': [
-        # 'security/ir.model.access.csv',
-        'views/sale_order_line_views.xml',
-        'views/purchase_order_line_views.xml',
-        #'views/bom_line_views.xml',
-        'views/stock_move_line_views.xml',
-        'views/account_invoce_line_views.xml',
-        'views/web.xml',
-    ],
-    # only loaded in demonstration mode
-    #'demo': [
-    #    'demo/demo.xml',
-    #],
-    #'qweb':['static/src/xml/*.xml']
+    'data': [],
+
 }
