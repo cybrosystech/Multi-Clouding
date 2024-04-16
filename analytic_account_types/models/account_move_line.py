@@ -513,7 +513,7 @@ class AccountMoveLine(models.Model):
 
     remaining_amount = fields.Float(string="Remaining Amount", required=False,
                                     compute='get_budget_remaining_amount',
-                                    store=True)
+                                    )
     local_subtotal = fields.Float(compute='compute_local_subtotal', store=True)
     price_unit = fields.Float(string='Unit Pricess', digits=dp.get_precision(
         str(lambda self: self.env.company.name)))
