@@ -23,14 +23,14 @@ class AccountMove(models.Model):
         comodel_name="purchase.approval.cycle", inverse_name="move_id",
         string="", required=False, )
     out_budget = fields.Boolean(string="Out Budget", compute="check_out_budget",
-                                store=True, copy=False)
+                                 copy=False)
     show_approve_button = fields.Boolean(string="",
                                          compute='check_show_approve_button',
-                                         store=True, copy=False)
+                                         copy=False)
     show_request_approve_button = fields.Boolean(string="", copy=False)
     is_from_purchase = fields.Boolean(string="",
                                       compute='check_if_from_purchase',
-                                      store=True, copy=False)
+                                      copy=False)
     is_from_sales = fields.Boolean(string="", compute='check_if_from_sales',
                                    store=True, copy=False)
     show_confirm_button = fields.Boolean(string="",
