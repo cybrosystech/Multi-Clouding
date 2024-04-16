@@ -32,13 +32,13 @@ class AccountMove(models.Model):
                                       compute='check_if_from_purchase',
                                       copy=False)
     is_from_sales = fields.Boolean(string="", compute='check_if_from_sales',
-                                   store=True, copy=False)
+                                   copy=False)
     show_confirm_button = fields.Boolean(string="",
                                          compute='check_show_confirm_and_post_buttons',
-                                         store=True, copy=False)
+                                         copy=False)
     show_post_button = fields.Boolean(string="",
                                       compute='check_show_confirm_and_post_buttons',
-                                      store=True, copy=False)
+                                      copy=False)
     state = fields.Selection(
         selection_add=[('to_approve', 'To Approve'), ('posted',), ],
         ondelete={'to_approve': 'set default', 'draft': 'set default', })
