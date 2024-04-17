@@ -6,6 +6,10 @@
     "maintainers": ["ifujis"],
     "website": "https://github.com/tasctowers",
     "summary": "Adds OAuth Authorization Code Flow authentication to Odoo",
-    "depends": ["auth_oauth","hr"],
-    "data": [],
+    "external_dependencies": {"python": ["python-jose"]},
+    "depends": ["auth_oauth", "hr"],
+    "data": [
+            "views/auth_oauth_provider.xml",
+            "views/res_users_views.xml"
+    ],
 }

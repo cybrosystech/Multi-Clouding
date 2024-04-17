@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+        <record id="view_users_form" model="ir.ui.view">
+            <field name="name">res.users.form.inherit.oauth</field>
+            <field name="model">res.users</field>
+            <field name="type">form</field>
+            <field name="inherit_id" ref="auth_oauth.view_users_form"/>
+            <field name="arch" type="xml">
+                <field name="oauth_provider_id" position="before">
+                    <field name="oauth_enforced" />
+                </field>
+                <field name="oauth_access_token" position="attributes">
+                    <attribute name="style">word-break: break-all;</attribute>
+                </field>
+            </field>
+        </record>
+
+        <record id="view_users_form_hide_accsec" model="ir.ui.view">
+            <field name="name">res.users.preferences.form.inherit.oauth</field>
+            <field name="model">res.users</field>
+            <field name="inherit_id" ref="base.view_users_form_simple_modif"/>
+            <field name="arch" type="xml">
+                <notebook position="before">
+                        <field name="oauth_enforced" invisible="1"/>
+                </notebook>
+                <xpath expr="//page[2]" position="attributes">
+                    <attribute name="invisible">oauth_enforced == True</attribute>
+                </xpath>
+                <field name="email" position="attributes">
+                    <attribute name="invisible">oauth_enforced == True</attribute>
+                </field>
+            </field>
+         </record>
+</odoo>
