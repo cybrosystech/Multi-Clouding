@@ -17,7 +17,9 @@
     "support": "admin@iziapp.id",
     "website": "https://www.iziapp.id",
     "license": "OPL-1",
-    "images": [],
+    "images": [
+        'static/description/banner.jpg'
+    ],
 
     "price": 0.00,
     "currency": "USD",
@@ -26,7 +28,14 @@
     'depends': ['izi_data', 'mail'],
 
     # always loaded
-    'data': [],
+    'data': [
+        # 'security/ir.model.access.csv',
+        # 'data/example.xml',
+        # 'views/views.xml',
+        # 'views/templates.xml',
+    ],
     # only loaded in demonstration mode
-    'demo': [],
+    'demo': [
+        # 'demo/demo.xml',
+    ],
 }
