@@ -501,6 +501,7 @@ class LeaseManagementReport(models.Model):
         }
 
     def lease_reports_cron(self, end_limit):
+        print("lease_reports_cron")
         lease_management_report = self.env['leasee.management.report'].search(
             [], limit=1)
 
@@ -537,15 +538,18 @@ class LeaseManagementReport(models.Model):
             })
         else:
             lease_management_report.interest_amort_limit = lease_management_report.end_limit
+        print("lease_reports_cron_end")
 
     @api.model
     def lease_reports_cron_update(self):
+        print("lease_reports_cron_update")
         date = fields.Datetime.now()
         schedule = self.env.ref(
             'tasc_lease_management_report.action_lease_reports')
         schedule.update({
             'nextcall': date + datetime.timedelta(seconds=10),
         })
+        print("lease_reports_cron_update_end")
 
     @api.model
     def payment_aging_reports_cron_update(self):

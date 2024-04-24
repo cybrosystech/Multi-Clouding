@@ -29,7 +29,7 @@ class JournalEntryPostingConfig(models.Model):
 
     def journal_entry_posting_general(self):
         cron_id = self.env.ref(
-            'tasc_journal_entry_posting.journal_entry_posting_config_cron_general').id
+            'journal_entry_posting.journal_entry_posting_config_cron_general').id
         journal = self.env['journal.entry.posting.config'].search(
             [('cron_id', '=', cron_id)], limit=1)
         journals = self.env['account.move.line'].search(
@@ -52,7 +52,7 @@ class JournalEntryPostingConfig(models.Model):
              ('company_id', 'in', journal.company_ids.ids),
              ('journal_id', 'in', journal.journals.ids)])
         schedule = self.env.ref(
-            'tasc_journal_entry_posting.journal_entry_posting_config_cron_update_general')
+            'journal_entry_posting.journal_entry_posting_config_cron_update_general')
         if journals_lim and schedule.active:
             date = fields.Datetime.now()
             schedule.update({
@@ -63,7 +63,7 @@ class JournalEntryPostingConfig(models.Model):
 
     def journal_entry_posting(self):
         cron_id = self.env.ref(
-            'tasc_journal_entry_posting.journal_entry_posting_config_cron').id
+            'journal_entry_posting.journal_entry_posting_config_cron').id
         journal = self.env['journal.entry.posting.config'].search(
             [('cron_id', '=', cron_id)], limit=1)
         journals = self.env['account.move.line'].search(
@@ -86,7 +86,7 @@ class JournalEntryPostingConfig(models.Model):
              ('company_id', 'in', journal.company_ids.ids),
              ('journal_id', 'in', journal.journals.ids)])
         schedule = self.env.ref(
-            'tasc_journal_entry_posting.journal_entry_posting_config_cron_update')
+            'journal_entry_posting.journal_entry_posting_config_cron_update')
         if journals_lim and schedule.active:
             date = fields.Datetime.now()
             schedule.update({
@@ -97,7 +97,7 @@ class JournalEntryPostingConfig(models.Model):
 
     def journal_entry_posting_baghdad(self):
         cron_id = self.env.ref(
-            'tasc_journal_entry_posting.journal_entry_posting_config_cron_baghdad').id
+            'journal_entry_posting.journal_entry_posting_config_cron_baghdad').id
         journal = self.env['journal.entry.posting.config'].search(
             [('cron_id', '=', cron_id)], limit=1)
         journals = self.env['account.move.line'].search(
@@ -119,7 +119,7 @@ class JournalEntryPostingConfig(models.Model):
              ('date', '<=', journal.to_date),
              ('company_id', 'in', journal.company_ids.ids),
              ('journal_id', 'in', journal.journals.ids)])
-        schedule = self.env.ref('tasc_journal_entry_posting.journal_entry_posting_config_cron_update_baghdad')
+        schedule = self.env.ref('journal_entry_posting.journal_entry_posting_config_cron_update_baghdad')
         if journals_lim and schedule.active:
             date = fields.Datetime.now()
             schedule.update({
@@ -130,7 +130,7 @@ class JournalEntryPostingConfig(models.Model):
 
     def journal_entry_posting_erbill(self):
         cron_id = self.env.ref(
-            'tasc_journal_entry_posting.journal_entry_posting_config_cron_erbill').id
+            'journal_entry_posting.journal_entry_posting_config_cron_erbill').id
         journal = self.env['journal.entry.posting.config'].search(
             [('cron_id', '=', cron_id)], limit=1)
         journals = self.env['account.move.line'].search(
@@ -153,7 +153,7 @@ class JournalEntryPostingConfig(models.Model):
              ('company_id', 'in', journal.company_ids.ids),
              ('journal_id', 'in', journal.journals.ids)])
         schedule = self.env.ref(
-            'tasc_journal_entry_posting.journal_entry_posting_config_cron_update_erbill')
+            'journal_entry_posting.journal_entry_posting_config_cron_update_erbill')
         if journals_lim and schedule.active:
             date = fields.Datetime.now()
             schedule.update({
@@ -164,7 +164,7 @@ class JournalEntryPostingConfig(models.Model):
 
     def journal_entry_posting_cron_update_general(self):
         schedule = self.env.ref(
-            'tasc_journal_entry_posting.journal_entry_posting_config_cron_general')
+            'journal_entry_posting.journal_entry_posting_config_cron_general')
         if schedule.active:
             date = fields.Datetime.now()
 
@@ -174,7 +174,7 @@ class JournalEntryPostingConfig(models.Model):
 
     def journal_entry_posting_cron_update(self):
         schedule = self.env.ref(
-            'tasc_journal_entry_posting.journal_entry_posting_config_cron')
+            'journal_entry_posting.journal_entry_posting_config_cron')
         if schedule.active:
             # LOGGER.info(str(limits) + ' Entries activated')
             date = fields.Datetime.now()
@@ -185,7 +185,7 @@ class JournalEntryPostingConfig(models.Model):
 
     def journal_entry_posting_cron_update_baghdad(self):
         schedule = self.env.ref(
-            'tasc_journal_entry_posting.journal_entry_posting_config_cron_baghdad')
+            'journal_entry_posting.journal_entry_posting_config_cron_baghdad')
         if schedule.active:
             date = fields.Datetime.now()
 
@@ -195,7 +195,7 @@ class JournalEntryPostingConfig(models.Model):
 
     def journal_entry_posting_cron_update_erbill(self):
         schedule = self.env.ref(
-            'tasc_journal_entry_posting.journal_entry_posting_config_cron_erbill')
+            'journal_entry_posting.journal_entry_posting_config_cron_erbill')
         if schedule.active:
             date = fields.Datetime.now()
 

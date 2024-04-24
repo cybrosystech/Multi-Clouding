@@ -93,39 +93,6 @@
             <field name="doall" eval="False"/>
         </record>
 
-<!--         <record model="ir.cron" id="leasee_action_generate_installments_moves">-->
-<!--            <field name="name">Leasee Contract Generate Installments Journal Entries</field>-->
-<!--            <field name="model_id" ref="model_leasee_contract"/>-->
-<!--            <field name="state">code</field>-->
-<!--            <field name="code">model.create_installment_entry()</field>-->
-<!--            <field name="interval_number">1</field>-->
-<!--            <field name="interval_type">days</field>-->
-<!--            <field name="numbercall">-1</field>-->
-<!--            <field name="doall" eval="False"/>-->
-<!--        </record>-->
-
-<!--         <record model="ir.cron" id="leasee_action_generate_installments">-->
-<!--            <field name="name">Leasee Contract Generate Installments Journal Entries</field>-->
-<!--            <field name="model_id" ref="model_leasee_contract"/>-->
-<!--            <field name="state">code</field>-->
-<!--            <field name="code">model.leasee_action_generate_installments_entries()</field>-->
-<!--            <field name="interval_number">1</field>-->
-<!--            <field name="interval_type">days</field>-->
-<!--            <field name="numbercall">-1</field>-->
-<!--            <field name="doall" eval="False"/>-->
-<!--        </record>-->
-
-<!--         <record model="ir.cron" id="leasee_action_generate_interest_expense">-->
-<!--            <field name="name">Leasee Contract Generate Interest Expense Journal Entries</field>-->
-<!--            <field name="model_id" ref="model_leasee_contract"/>-->
-<!--            <field name="state">code</field>-->
-<!--            <field name="code">model.leasee_action_generate_interest_entries()</field>-->
-<!--            <field name="interval_number">1</field>-->
-<!--            <field name="interval_type">days</field>-->
-<!--            <field name="numbercall">-1</field>-->
-<!--            <field name="doall" eval="False"/>-->
-<!--        </record>-->
-
     <!--        mail activity type-->
 
         <record id="mail_activity_type_alert_date_expiration_reached" model="mail.activity.type">

@@ -45,7 +45,7 @@ class AccountMoveConfig(models.Model):
              ('company_id', '=', journal_config.company_id.id),
              ('journal_id', 'in', journal_config.journals.ids)])
         schedule = self.env.ref(
-            'tasc_journal_entry_posting.account_move_config_cron_update')
+            'journal_entry_posting.account_move_config_cron_update')
         if journals_lim and schedule.active:
             # LOGGER.info(str(limits) + ' Entries activated')
             date = fields.Datetime.now()
@@ -58,7 +58,7 @@ class AccountMoveConfig(models.Model):
 
     def journal_entry_posting_cron_update(self):
         schedule = self.env.ref(
-            'tasc_journal_entry_posting.account_move_config_cron')
+            'journal_entry_posting.account_move_config_cron')
         if schedule.active:
             # LOGGER.info(str(limits) + ' Entries activated')
             date = fields.Datetime.now()
@@ -70,7 +70,7 @@ class AccountMoveConfig(models.Model):
     def schedule_journal_action(self):
         self.scheduled_user = self.env.user.id
         schedule = self.env.ref(
-            'tasc_journal_entry_posting.account_move_config_cron')
+            'journal_entry_posting.account_move_config_cron')
         journal_config = self.env['account.move.config'].search(
             [('state', '=', 'scheduled')])
         if journal_config:

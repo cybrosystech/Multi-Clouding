@@ -23,7 +23,7 @@ class Acc(models.Model):
         domain=[('analytic_account_type', '=', 'type')], )
 
     site_address = fields.Char(string='Site Address')
-    group = fields.Selection([
+    group_id = fields.Selection([
         ('managed', 'Managed'),
         ('owned', 'Owned')], 'Group',)
 

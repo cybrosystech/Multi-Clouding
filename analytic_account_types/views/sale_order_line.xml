@@ -28,14 +28,14 @@
 
 
                 <!-- position: after|before|replace|attributes|inside -->
-                 <xpath expr="//notebook/page/field/tree/field[@name='analytic_distribution']" position="before">
+                 <xpath expr="//notebook/page[@name='order_lines']/field[@name='order_line']/tree/field[@name='analytic_distribution']" position="before">
                        <field name="cost_center_id" optional="show" required="1"
                      readonly="state not in ['draft']"/>
                      <field name="project_site_id" optional="show" required="1"
                      readonly="state not in ['draft']"/>
-                     <field name="location_id" invisible="1"/>
+                     <field name="location_id" invisible="1" column_invisible="1"/>
                  </xpath>
-                <xpath expr="//notebook/page/field/tree/field[@name='name']" position="after">
+                <xpath expr="//notebook/page[@name='order_lines']/field[@name='order_line']/tree/field[@name='name']" position="after">
                     <field name="budget_id" optional="show" readonly="state not in ['draft']"/>
                     <field name="budget_line_id" optional="show"
                            readonly="state not in ['draft']"/>

@@ -12,6 +12,5 @@
     'depends': ['account_asset', 'account_reports'],
 
     'data':
-        [
-        ]
+        []
 }

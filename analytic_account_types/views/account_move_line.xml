@@ -61,8 +61,8 @@
                     <attribute name="invisible">1</attribute>
                 </xpath>
 
-                <!-- position: after|before|replace|attributes|inside -->
-                <xpath expr="//notebook/page/field/tree/field[@name='analytic_distribution']"
+<!--                &lt;!&ndash; position: after|before|replace|attributes|inside &ndash;&gt;-->
+                <xpath expr="//notebook/page[@name='invoice_tab']/field[@name='invoice_line_ids']/tree/field[@name='analytic_distribution']"
                        position="before">
                     <field name="analytic_account_id" optional="show"
                            attrs="{'readonly': [('parent_state', '=', 'posted')]}"/>
@@ -71,7 +71,7 @@
 
                 </xpath>
 
-                <xpath expr="//notebook/page/field/tree/field[@name='analytic_distribution']"
+                <xpath expr="//notebook/page[@name='invoice_tab']/field[@name='invoice_line_ids']/tree/field[@name='analytic_distribution']"
                        position="after">
                     <field name="parent_state" invisible="1"
                            column_invisible="1"/>
@@ -86,16 +86,16 @@
                 </xpath>
 
                 <!-- position: after|before|replace|attributes|inside -->
-                <xpath expr="//notebook/page[2]/field[@name='line_ids']/tree/field[@name='analytic_distribution']"
+                <xpath expr="//notebook/page[@name='aml_tab']/field[@name='line_ids']/tree/field[@name='analytic_distribution']"
                        position="attributes">
                     <attribute name="required">1</attribute>
                 </xpath>
-                <xpath expr="//notebook/page[2]/field[@name='line_ids']/tree/field[@name='analytic_distribution']"
+                <xpath expr="//notebook/page[@name='aml_tab']/field[@name='line_ids']/tree/field[@name='analytic_distribution']"
                        position="before">
                     <field name="analytic_account_id" optional="show"/>
                     <field name="project_site_id" optional="show" required="1"/>
                 </xpath>
-                <xpath expr="//notebook/page[2]/field[@name='line_ids']/tree/field[@name='analytic_distribution']"
+                <xpath expr="//notebook/page[@name='aml_tab']/field[@name='line_ids']/tree/field[@name='analytic_distribution']"
                        position="after">
                     <field name="budget_id" optional="hide"/>
                     <field name="budget_line_id" optional="hide"/>

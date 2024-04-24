@@ -1,16 +1,37 @@
 <odoo>
     <data>
+        <record model="ir.ui.view" id="view_account_analytic_account_form">
+            <field name="name">account.analytic.account.form.inherit.analytic_account_types</field>
+            <field name="model">account.analytic.account</field>
+            <field name="inherit_id" ref="analytic.view_account_analytic_account_form"/>
+            <field name="priority" eval="50"/>
+            <field name="arch" type="xml">
+                 <xpath expr="//field[@name='plan_id']" position="after">
+                      <field name="analytic_type_filter_id"  invisible="analytic_account_type != 'project_site'"/>
+                    <field name="analytic_location_id" invisible="analytic_account_type != 'project_site'" />
+                    <field name="group_id"/>
+                 </xpath>
+                  <field name="currency_id" position="after">
+                <field name="site_address"/>
+            </field>
+               <xpath expr="//field[@name='partner_id']" position="after">
+                  <field name="analytic_account_type"/>
+              </xpath>
+            </field>
+
+        </record>
+
         <!-- Inherit Form View to Modify it -->
         <record id="view_inherit_view_account_analytic_account_form_inherit_budget" model="ir.ui.view">
             <field name="name">view_inheritview_account_analytic_account_form_inherit_budget</field>
             <field name="model">account.analytic.account</field>
             <field name="inherit_id" ref="account_budget.view_account_analytic_account_form_inherit_budget"/>
             <field name="arch" type="xml">
-                <xpath expr="//field[@name='plan_id']" position="after">
-                    <field name="analytic_type_filter_id"  invisible="analytic_account_type != 'project_site'"/>
-                    <field name="analytic_location_id" invisible="analytic_account_type != 'project_site'" />
-                    <field name="group"/>
-                </xpath>
+<!--                <xpath expr="//field[@name='plan_id']" position="after">-->
+<!--                    <field name="analytic_type_filter_id"  invisible="analytic_account_type != 'project_site'"/>-->
+<!--                    <field name="analytic_location_id" invisible="analytic_account_type != 'project_site'" />-->
+<!--                    <field name="group"/>-->
+<!--                </xpath>-->
 
                 <xpath expr="//notebook/page[@name='budget_items']" position="attributes">
                     <attribute name="invisible">analytic_account_type != 'cost_center'</attribute>
