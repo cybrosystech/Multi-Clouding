@@ -281,7 +281,6 @@ class AccountAsset(models.Model):
         return move_vals
 
     def leasee_asset_entry_post(self, limits):
-        print("leasee_asset_entry_post")
         assets = self.env['account.asset'].search([('name', 'ilike', 'Leasee'),
                                                    ('state', '=', 'draft'),
                                                    ('company_id', '=',
@@ -307,10 +306,8 @@ class AccountAsset(models.Model):
             message = '10 records has been updated'
             channel = self.env.ref('mail.channel_all_employees')
             channel.sudo().message_post(body=message)
-            print("leasee_asset_entry_post_end")
 
     def update_asset_cron(self):
-        print("update_asset_cron")
         date = fields.Datetime.now()
         schedule = self.env.ref(
             'lease_management.action_draft_leasee_asset_posting')
@@ -318,10 +315,8 @@ class AccountAsset(models.Model):
             'nextcall': date + timedelta(seconds=30)
         })
         LOGGER.info('Leasee Contract Entry Posting updated')
-        print("update_asset_cron_end")
 
     def non_leasee_asset_entry_post(self, limits):
-        print("non_leasee_asset_entry_post")
         assets = self.env['account.asset'].search(
             [('name', 'not like', 'Leasee'),
              ('state', '=', 'draft')],
@@ -345,10 +340,8 @@ class AccountAsset(models.Model):
             message = '10 records has been updated'
             channel = self.env.ref('mail.channel_all_employees')
             channel.sudo().message_post(body=message)
-            print("non_leasee_asset_entry_post_end")
 
     def update_non_leasee_asset_cron(self):
-        print("update_non_leasee_asset_cron")
         date = fields.Datetime.now()
         schedule = self.env.ref(
             'lease_management.action_draft_non_leasee_asset_posting')
@@ -356,4 +349,3 @@ class AccountAsset(models.Model):
             'nextcall': date + timedelta(seconds=30)
         })
         LOGGER.info('Non Leasee Contract Entry Posting updated')
-        print("update_non_leasee_asset_cron_end")

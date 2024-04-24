@@ -168,9 +168,9 @@ class Reassessment(models.TransientModel):
                     if invoice:
                         self.update_invoice_amount(invoice, amount)
             if i:
-                delay = ins.interest_move_ids.sudo().with_delay(priority=1, eta=5)
-                delay.with_context(force_delete=True).unlink()
-                # ins.interest_move_ids.sudo().unlink()
+                # delay = ins.interest_move_ids.sudo().with_delay(priority=1, eta=5)
+                # delay.with_context(force_delete=True).unlink()
+                ins.interest_move_ids.sudo().unlink()
         contract.create_contract_installment_entries(installments_to_modify[1].date)
         contract.leasee_action_generate_interest_entries_reassessment(installments_to_modify[1].date)
 

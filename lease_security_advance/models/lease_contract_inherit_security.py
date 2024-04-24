@@ -112,7 +112,6 @@ class LeaseeContractInheritAdvance(models.Model):
 
     @api.model
     def security_advance_activation(self, limits):
-        print("security_advance_activation")
         lease_contract = self.env['leasee.contract'].search(
             [('state', '=', 'active'), ('company_id', '=', self.env.company.id),
              ('security_advance_id', '=', False),
@@ -132,15 +131,12 @@ class LeaseeContractInheritAdvance(models.Model):
             schedule.update({
                 'nextcall': date + timedelta(seconds=20)
             })
-        print("security_advance_activation_end")
 
     @api.model
     def security_advance_cron_update(self):
-        print("security_advance_cron_update")
         date = fields.Datetime.now()
         schedule = self.env.ref(
             'lease_security_advance.action_advance_security_activation')
         schedule.update({
             'nextcall': date + timedelta(seconds=30)
         })
-        print("security_advance_cron_update_end")
