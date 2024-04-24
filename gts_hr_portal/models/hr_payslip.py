@@ -6,7 +6,6 @@ from odoo.tools.safe_eval import safe_eval
 from odoo.tools import float_compare, float_is_zero
 from odoo.addons.hr_payroll_account.models.hr_payroll_account import HrPayslip
 
-
 class HrPayslipMpatch(HrPayslip):
     def _prepare_line_values(self, line, account_id, date, debit, credit,amt_currency):
         return {
