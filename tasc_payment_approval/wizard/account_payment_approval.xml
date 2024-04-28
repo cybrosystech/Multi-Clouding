@@ -31,8 +31,8 @@
                         <field name="company_id"
                                readonly="state == 'approved'"/>
                         <field name="bank_integration_status"
-                               groups="base.group_erp_manager,base.group_system"
-                        />
+                       groups="base.group_erp_manager,base.group_system,account.group_account_manager"
+                />
                         <field name="request_approve_bool" invisible="1"
                         />
                         <field name="show_request_approve_button"
@@ -103,7 +103,7 @@
                 <field name="state"/>
                 <field name="company_id"/>
                 <field name="bank_integration_status"
-                       groups="base.group_erp_manager,base.group_system"
+                       groups="base.group_erp_manager,base.group_system,account.group_account_manager"
                 />
             </tree>
         </field>

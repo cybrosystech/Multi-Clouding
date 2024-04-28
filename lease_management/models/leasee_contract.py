@@ -1527,6 +1527,7 @@ class LeaseeContract(models.Model):
     def leasee_action_generate_installments_entries(self):
         instalments = self.env['leasee.installment'].search([
             ('installment_invoice_id', '=', False),
+            ('leasee_contract_id.company_id', '=', self.company_id.id),
             ('leasee_contract_id', '!=', False),
             ('period', '>', 0),
         ])
