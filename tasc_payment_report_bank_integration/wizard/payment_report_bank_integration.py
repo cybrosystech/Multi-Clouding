@@ -15,7 +15,7 @@ class PaymentReportBankIntegration(models.Model):
     date_to = fields.Date(string="Payment Date To")
     journal_id = fields.Many2one('account.journal',
                                  domain="[('company_id','=',company_id),"
-                                        "('type','=','bank')]",required=True)
+                                        "('type','=','bank')]", required=True)
     excel_sheet = fields.Binary('Download Report')
     excel_sheet_name = fields.Char(string='Name', size=64)
 
@@ -101,7 +101,7 @@ class PaymentReportBankIntegration(models.Model):
             'name': 'Payment Report - Bank Integration',
             'url': '/web/content/%s/%s/excel_sheet/%s?download=true' % (
                 self._name, self.id, self.excel_sheet_name),
-            'target': 'self'
+            'target': 'new'
         }
 
     def get_report_data(self):

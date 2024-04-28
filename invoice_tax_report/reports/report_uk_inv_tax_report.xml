@@ -1,185 +1,179 @@
+<?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
-    <data>
-        <report id="action_uk_inv_tax_template_report"
-                string="TASC Invoice Tax Report"
-                model="account.move"
-                report_type="qweb-pdf"
-                name="invoice_tax_report.uk_inv_tax_report"
-                file="invoice_tax_report.uk_inv_tax_report"
-        />
-
-        <record id="action_uk_inv_tax_template_report" model="ir.actions.report">
-            <field name="paperformat_id"
-                   ref="invoice_tax_report.paperformat_inv_tax_template_report"/>
-            <field name="print_report_name">
-                (object._get_report_base_filename())
-            </field>
-        </record>
-
-        <template id="invoice_tax_report.uk_inv_tax_report">
-            <t t-call="web.html_container">
-                <t t-foreach="docs" t-as="doc">
-                    <t t-call="invoice_tax_report.report_uk_inv_tax_document_order"
-                       t-lang="doc.partner_id.lang"/>
-                </t>
+    <record id="action_uk_inv_tax_template_report" model="ir.actions.report">
+        <field name="paperformat_id"
+               ref="invoice_tax_report.paperformat_inv_tax_template_report"/>
+        <field name="name">TASC Invoice Tax Report</field>
+        <field name="model">account.move</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">invoice_tax_report.uk_inv_tax_report</field>
+        <field name="report_file">invoice_tax_report.uk_inv_tax_report</field>
+        <field name="print_report_name">(object._get_report_base_filename())</field>
+        <field name="binding_model_id" ref="account.model_account_move"/>
+    </record>
+    <template id="invoice_tax_report.uk_inv_tax_report">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="invoice_tax_report.report_uk_inv_tax_document_order"
+                   t-lang="doc.partner_id.lang"/>
             </t>
-        </template>
-
-        <template id="report_uk_inv_tax_document_order">
-            <t t-call="invoice_tax_report.external_layout_uk_inv_tax_template">
-                <t t-set="doc"
-                   t-value="doc.with_context({'lang':doc.partner_id.lang})"/>
-                <div class="page">
-                    <div class="oe_structure"/>
-                    <p style="text-align:center;font-weight:bold;font-size:18px;">
-                        Tax Invoice
-                    </p>
-                    <div class="row">
-                        <div class="col-6">
-                            <div>
-                                <span style="font-weight:bold">Bill To:</span>
-                            </div>
-                            <div>
-                                <span t-field="doc.partner_id"
-                                      t-options='{"widget": "contact", "fields": ["name", "address"]}'/>
-                            </div>
-
-                            <div>
-                                <span style="font-weight:bold">Tax ID:</span>
-                                <span t-field="doc.partner_id.vat"/>
-                            </div>
+        </t>
+    </template>
+    <template id="report_uk_inv_tax_document_order">
+        <t t-call="invoice_tax_report.external_layout_uk_inv_tax_template">
+            <t t-set="doc"
+               t-value="doc.with_context({'lang':doc.partner_id.lang})"/>
+            <div class="page">
+                <div class="oe_structure"/>
+                <p style="text-align:center;font-weight:bold;font-size:18px;">
+                    Tax Invoice
+                </p>
+                <div class="row">
+                    <div class="col-6">
+                        <div>
+                            <span style="font-weight:bold">Bill To:</span>
+                        </div>
+                        <div>
+                            <span t-field="doc.partner_id"
+                                  t-options='{"widget": "contact", "fields": ["name", "address"]}'/>
                         </div>
 
-                        <div class="col-6">
-                            <div>
-                                <span style="font-weight:bold">Invoice Date:
-                                </span>
-                                <span t-field="doc.invoice_date"/>
-                            </div>
-                            <div>
-                                <span style="font-weight:bold">Invoice No.:
-                                </span>
-                                <span t-field="doc.name"/>
-                            </div>
-                            <div>
-                                <t t-if="doc.invoice_payment_term_id">
-                                    <span style="font-weight:bold">Payment
-                                        Terms:
-                                    </span>
-                                    <span t-field="doc.invoice_payment_term_id.name"/>
-                                </t>
-                                <t t-else="">
-                                    <span style="font-weight:bold">Due Date:
-                                    </span>
-                                    <span t-field="doc.invoice_date_due"/>
-                                </t>
-                            </div>
-
+                        <div>
+                            <span style="font-weight:bold">Tax ID:</span>
+                            <span t-field="doc.partner_id.vat"/>
                         </div>
-
                     </div>
 
-                    <style>
-                        .custom_table_lines thead th, .custom_table_lines tbody
-                        td{
-                        border: 2px solid #636161;
-                        padding: 5px;
-                        }
-                        .custom_table_lines thead th{
-                        background: #ccc;
-                        color: #636161;
-                        }
-                        .box{
-                        width: 100%;
-                        border: 1px solid #ccc !important;
-                        margin-bottom: 10px;
-                        padding: 5px;
-                        }
-                        .totals_box{
-                        border: 1px solid #ccc !important;
-                        margin-bottom: 10px;
-                        padding: 5px;
-                        float: right;
-                        width: 25%;
-                        }
-                        .totals_box{
-                        width: 25%;
-                        position: relative;
-                        right: 0;
-                        }
-                        .totals_amount_line{
-                        padding: 40px 20px;
-                        }
-                    </style>
-                    <br/>
-                    <div>
-                        <table class="custom_table_lines" width="100%">
-                            <thead>
+                    <div class="col-6">
+                        <div>
+                            <span style="font-weight:bold">Invoice Date:
+                            </span>
+                            <span t-field="doc.invoice_date"/>
+                        </div>
+                        <div>
+                            <span style="font-weight:bold">Invoice No.:
+                            </span>
+                            <span t-field="doc.name"/>
+                        </div>
+                        <div>
+                            <t t-if="doc.invoice_payment_term_id">
+                                <span style="font-weight:bold">Payment
+                                    Terms:
+                                </span>
+                                <span t-field="doc.invoice_payment_term_id.name"/>
+                            </t>
+                            <t t-else="">
+                                <span style="font-weight:bold">Due Date:
+                                </span>
+                                <span t-field="doc.invoice_date_due"/>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+                <style>
+                    .custom_table_lines thead th, .custom_table_lines tbody
+                    td{
+                    border: 2px solid #636161;
+                    padding: 5px;
+                    }
+                    .custom_table_lines thead th{
+                    background: #ccc;
+                    color: #636161;
+                    }
+                    .box{
+                    width: 100%;
+                    border: 1px solid #ccc !important;
+                    margin-bottom: 10px;
+                    padding: 5px;
+                    }
+                    .totals_box{
+                    border: 1px solid #ccc !important;
+                    margin-bottom: 10px;
+                    padding: 5px;
+                    float: right;
+                    width: 25%;
+                    }
+                    .totals_box{
+                    width: 25%;
+                    position: relative;
+                    right: 0;
+                    }
+                    .totals_amount_line{
+                    padding: 40px 20px;
+                    }
+                </style>
+                <br/>
+                <div>
+                    <table class="custom_table_lines" width="100%">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>Service Description</th>
+                                <th>Qty</th>
+                                <th>Unit price
+                                    <br/>
+                                    <t t-esc="doc.currency_id.name"/>
+                                </th>
+                                <th>Amount
+                                    <br/>
+                                    <t t-esc="doc.currency_id.name"/>
+                                </th>
+                                <th>VAT %</th>
+                                <th>VAT Amount
+                                    <br/>
+                                    <t t-esc="doc.currency_id.name"/>
+                                </th>
+                                <th>Total Amount
+                                    <br/>
+                                    <t t-esc="doc.currency_id.name"/>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-set="line_index" t-value="0"/>
+
+                            <t t-foreach="doc.invoice_line_ids" t-as="line">
                                 <tr>
-                                    <th>No.</th>
-                                    <th>Service Description</th>
-                                    <th>Qty</th>
-                                    <th>Unit price
-                                        <br/>
-                                        <t t-esc="doc.currency_id.name"/>
-                                    </th>
-                                    <th>Amount
-                                        <br/>
-                                        <t t-esc="doc.currency_id.name"/>
-                                    </th>
-                                    <th>VAT %</th>
-                                    <th>VAT Amount
-                                        <br/>
-                                        <t t-esc="doc.currency_id.name"/>
-                                    </th>
-                                    <th>Total Amount
-                                        <br/>
-                                        <t t-esc="doc.currency_id.name"/>
-                                    </th>
+                                    <td>
+                                        <span t-set="line_index"
+                                              t-value="line_index+1"/>
+
+                                        <span t-esc="line_index"/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="line.name"/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="line.quantity"/>
+                                    </td>
+                                    <td>
+                                        <span t-field="line.price_unit"/>
+                                    </td>
+
+
+                                    <td>
+                                        <span t-esc="'{:20,.2f}'.format(line.price_subtotal)"/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="line.tax_ids.description or line.tax_ids.name"/>
+                                    </td>
+                                    <td>
+                                        <t t-set="tax_amnt"
+                                           t-value="round(sum([(line.price_subtotal * line.tax_ids.amount)/100]), 2)"/>
+                                        <span t-esc="'{:20,.2f}'.format(round(sum([(line.price_subtotal * line.tax_ids.amount)/100]), 2))"/>
+                                    </td>
+                                    <td>
+                                        <span t-esc="'{:20,.2f}'.format(round(sum([line.price_subtotal + tax_amnt]), 2))"/>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                <t t-set="line_index" t-value="0"/>
-
-                                <t t-foreach="doc.invoice_line_ids" t-as="line">
-                                    <tr>
-                                        <td>
-                                            <span t-set="line_index"
-                                                  t-value="line_index+1"/>
-
-                                            <span t-esc="line_index"/>
-                                        </td>
-                                        <td>
-                                            <span t-esc="line.name"/>
-                                        </td>
-                                        <td>
-                                            <span t-esc="line.quantity"/>
-                                        </td>
-                                        <td>
-                                            <span t-field="line.price_unit"/>
-                                        </td>
-
-
-                                        <td>
-                                            <span t-esc="'{:20,.2f}'.format(line.price_subtotal)"/>
-                                        </td>
-                                        <td>
-                                            <span t-esc="line.tax_ids.description or line.tax_ids.name"/>
-                                        </td>
-                                        <td>
-                                            <t t-set="tax_amnt" t-value="round(sum([(line.price_subtotal * line.tax_ids.amount)/100]), 2)"/>
-                                            <span t-esc="'{:20,.2f}'.format(round(sum([(line.price_subtotal * line.tax_ids.amount)/100]), 2))"/>
-                                        </td>
-                                        <td>
-                                            <span t-esc="'{:20,.2f}'.format(round(sum([line.price_subtotal + tax_amnt]), 2))"/>
-                                        </td>
-                                    </tr>
-                                </t>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="row">
-                        <div class="col-9 text-right">
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <div class="col-6"/>
+                    <div class="col-6 row">
+                        <div class="col-7 text-right" style="text-align: right;">
                             <t t-set="taxes"
                                t-value="', '.join(map(lambda x: (x.name), doc.invoice_line_ids.mapped('tax_ids')))"/>
                             <span style="font-weight:bold">Total Excluding VAT
@@ -199,6 +193,7 @@
                             <span style="font-weight:bold">Total Including VAT
                             </span>
                         </div>
+                        <div class="col-2"/>
                         <div class="col-3 text-right">
                             <t t-set="amount_untaxed"
                                t-value="'{:20,.2f}'.format(doc.amount_untaxed)"/>
@@ -215,52 +210,56 @@
                                   t-esc="'{:20,.2f}'.format(doc.amount_total)"/>
                         </div>
                     </div>
-                    <div class="row" style="margin-top: 6rem;">
-                        <div class="col-12">
-                            <span>
-                                <span style="text-decoration:underline;font-weight:bold">
-                                    BANK DETAILS :
-                                </span>
-                                <br/>
-                                Transfer the amount to the business account
-                                below.
-                                <br/>
-                                Please remit payment by electronic transfer to
-                                the following account, quoting the invoice
-                                number as the reference:
-                                <br/>
-                                Bank Name : <t t-esc="doc.company_id.bank_name"/>
-                                <br/>
-                                Bank Account Name : <t t-esc="doc.company_id.bank_account_name"/>
-                                <br/>
-                                IBAN : <t t-esc="doc.company_id.iban"/>
-                                <br/>
-                                Short Code : <t t-esc="doc.company_id.short_code"/>
-                                <br/>
-                                SWIFT: <t t-esc="doc.company_id.swift"/>
-                                <br/>
+                </div>
+                <div class="row" style="margin-top: 6rem;">
+                    <div class="col-12">
+                        <span>
+                            <span style="text-decoration:underline;font-weight:bold">
+                                BANK DETAILS :
                             </span>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-12">
-                            <img t-if="doc.company_id.company_stamp"
-                                 class="float-right"
-                                 style="max-width: 100%; height: 70px;"
-                                 t-att-src="image_data_uri(doc.company_id.company_stamp)"
-                                 alt="Stamp"/>
-                        </div>
-                    </div>
-                    <div class="row" style="margin-top: 2rem;">
-                        <div class="col-12">
-                            <span style="font-weight:bold;">This is an automated
-                                invoice and no signature required.
-                            </span>
-                        </div>
+                            <br/>
+                            Transfer the amount to the business account
+                            below.
+                            <br/>
+                            Please remit payment by electronic transfer to
+                            the following account, quoting the invoice
+                            number as the reference:
+                            <br/>
+                            Bank Name :
+                            <t t-esc="doc.company_id.bank_name"/>
+                            <br/>
+                            Bank Account Name :
+                            <t t-esc="doc.company_id.bank_account_name"/>
+                            <br/>
+                            IBAN :
+                            <t t-esc="doc.company_id.iban"/>
+                            <br/>
+                            Short Code :
+                            <t t-esc="doc.company_id.short_code"/>
+                            <br/>
+                            SWIFT:
+                            <t t-esc="doc.company_id.swift"/>
+                            <br/>
+                        </span>
                     </div>
                 </div>
-            </t>
-        </template>
-
-    </data>
+                <div class="row">
+                    <div class="col-12">
+                        <img t-if="doc.company_id.company_stamp"
+                             class="float-right"
+                             style="max-width: 100%; height: 70px;"
+                             t-att-src="image_data_uri(doc.company_id.company_stamp)"
+                             alt="Stamp"/>
+                    </div>
+                </div>
+                <div class="row" style="margin-top: 2rem;">
+                    <div class="col-12">
+                        <span style="font-weight:bold;">This is an automated
+                            invoice and no signature required.
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
 </odoo>

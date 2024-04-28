@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Lease Management Report',
-    "version": "14.0.1.0.0",
+    "version": "17.0.1.0.0",
     "category": "Accounting",
     'summary': 'Lease Management Report',
     'description': """ Generates an xlsx report of lease.""",
@@ -9,7 +9,7 @@
     'maintainer': '',
     'company': '',
     'website': '',
-    'depends': ['lease_management'],
+    'depends': ['lease_management_inherit'],
     'data': [
         'security/ir.model.access.csv',
         'data/leasee_contract_data.xml',

@@ -1,6 +1,6 @@
 {
     "name": "TASC Towers Holding branding",
-    "version": "14.0.0.0.1",
+    "version": "17.0.1.0.0",
     "license": "AGPL-3",
     "author": ("TTH"),
     "maintainers": ["ifujis"],
@@ -9,11 +9,7 @@
     "depends": ["web",
                 "auth_oauth"
     ],
-    "data": ["views/favicon.xml",
-            'views/custom_views.xml',
-            'views/web_login.xml',
-            'views/mail_layout.xml',
-            'data/mail_data.xml'
+    "data": [
     ],
-    "qweb": ["static/src/xml/menu.xml"],
+    "qweb": [],
 }

@@ -5,56 +5,129 @@
         <field name="model">hr.contract</field>
         <field name="inherit_id" ref="hr_contract.hr_contract_view_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//page[@name='information']/group[@name='main_info']/group[@name='salary_and_advantages']"
+            <xpath expr="//page[@name='information']/group[@name='salary_info']/group[@name='salary']"
                    position="inside">
+
                 <label for="housing"/>
-                <div class="o_row" name="housing">
-                    <field name="housing" nolabel="1"/>
-                    <span>/ month</span>
+                <div class="o_row mw-50" name="housing">
+                    <field name="housing" class="oe_inline o_hr_narrow_field"
+                           nolabel="1"/>
+                    <div class="mb-3" name="housing_period_label">/ month</div>
                 </div>
                 <label for="mobile_allowance"/>
-                <div class="o_row" name="mobile_allowance">
-                    <field name="mobile_allowance" nolabel="1"/>
-                    <span>/ month</span>
-                </div>
-                <field name="miscellaneous_1" invisible="1"/>
-                <field name="miscellaneous_2" invisible="1"/>
-                <label for="transport"/>
-                <div class="o_row" name="transport">
-                    <field name="transport" nolabel="1"/>
-                    <span>/ month</span>
-                </div>
-                <label for="other"/>
-                <div class="o_row" name="other">
-                    <field name="other" nolabel="1"/>
-                    <span>/ month</span>
+                <div class="o_row mw-50" name="mobile_allowance">
+                    <field name="mobile_allowance"
+                           class="oe_inline o_hr_narrow_field"
+                           nolabel="1"/>
+                    <div class="mb-3" name="mobile_allowance_period_label">/
+                        month
+                    </div>
                 </div>
 
+                <label for="transport"/>
+                <div class="o_row mw-50" name="transport">
+                    <field name="transport" class="oe_inline o_hr_narrow_field"
+                           nolabel="1"/>
+                    <div class="mb-3" name="transport_period_label">/ month
+                    </div>
+                </div>
+                <label for="other"/>
+                <div class="o_row mw-50" name="other">
+                    <field name="other" class="oe_inline o_hr_narrow_field"
+                           nolabel="1"/>
+                    <div class="mb-3" name="other_period_label">/ month
+                    </div>
+                </div>
                 <label for="nursery"/>
-                <div class="o_row" name="nursery">
-                    <field name="nursery" nolabel="1"/>
-                    <span>/ month</span>
+                <div class="o_row mw-50" name="nursery">
+                    <field name="nursery" class="oe_inline o_hr_narrow_field"
+                           nolabel="1"/>
+                    <div class="mb-3" name="nursery_period_label">/ month
+                    </div>
                 </div>
+
                 <label for="entertainment"/>
-                <div class="o_row" name="entertainment">
-                    <field name="entertainment" nolabel="1"/>
-                    <span>/ month</span>
+                <div class="o_row mw-50" name="entertainment">
+                    <field name="entertainment"
+                           class="oe_inline o_hr_narrow_field"
+                           nolabel="1"/>
+                    <div class="mb-3" name="entertainment_period_label">/ month
+                    </div>
                 </div>
+
                 <label for="overtime"/>
-                <div class="o_row" name="overtime">
-                    <field name="overtime" nolabel="1"/>
-                    <span>/ month</span>
+                <div class="o_row mw-50" name="overtime">
+                    <field name="overtime" class="oe_inline o_hr_narrow_field"
+                           nolabel="1"/>
+                    <div class="mb-3" name="overtime_period_label">/ month
+                    </div>
                 </div>
+
                 <label for="per_diem"/>
-                <div class="o_row" name="per_diem">
-                    <field name="per_diem" nolabel="1"/>
-                    <span>/ month</span>
+                <div class="o_row mw-50" name="per_diem">
+                    <field name="per_diem" class="oe_inline o_hr_narrow_field"
+                           nolabel="1"/>
+                    <div class="mb-3" name="per_diem_period_label">/ month
+                    </div>
                 </div>
+
                 <label for="zain_invoice"/>
-                <div class="o_row" name="zain_invoice">
-                    <field name="zain_invoice" nolabel="1"/>
-                    <span>/ month</span>
+                <div class="o_row mw-50" name="zain_invoice">
+                    <field name="zain_invoice"
+                           class="oe_inline o_hr_narrow_field"
+                           nolabel="1"/>
+                    <div class="mb-3" name="zain_invoice_period_label">/ month
+                    </div>
                 </div>
+
+                <!--                <label for="housing"/>-->
+                <!--                <div class="o_row" name="housing">-->
+                <!--                    <field name="housing" nolabel="1"/>-->
+                <!--                    <span>/ month</span>-->
+                <!--                </div>-->
+                <!--                <label for="mobile_allowance"/>-->
+                <!--                <div class="o_row" name="mobile_allowance">-->
+                <!--                    <field name="mobile_allowance" nolabel="1"/>-->
+                <!--                    <span>/ month</span>-->
+                <!--                </div>-->
+                <!--                <field name="miscellaneous_1" invisible="1"/>-->
+                <!--                <field name="miscellaneous_2" invisible="1"/>-->
+                <!--                <label for="transport"/>-->
+                <!--                <div class="o_row" name="transport">-->
+                <!--                    <field name="transport" nolabel="1"/>-->
+                <!--                    <span>/ month</span>-->
+                <!--                </div>-->
+                <!--                <label for="other"/>-->
+                <!--                <div class="o_row" name="other">-->
+                <!--                    <field name="other" nolabel="1"/>-->
+                <!--                    <span>/ month</span>-->
+                <!--                </div>-->
+
+                <!--                <label for="nursery"/>-->
+                <!--                <div class="o_row" name="nursery">-->
+                <!--                    <field name="nursery" nolabel="1"/>-->
+                <!--                    <span>/ month</span>-->
+                <!--                </div>-->
+                <!--                <label for="entertainment"/>-->
+                <!--                <div class="o_row" name="entertainment">-->
+                <!--                    <field name="entertainment" nolabel="1"/>-->
+                <!--                    <span>/ month</span>-->
+                <!--                </div>-->
+                <!--                <label for="overtime"/>-->
+                <!--                <div class="o_row" name="overtime">-->
+                <!--                    <field name="overtime" nolabel="1"/>-->
+                <!--                    <span>/ month</span>-->
+                <!--                </div>-->
+                <!--                <label for="per_diem"/>-->
+                <!--                <div class="o_row" name="per_diem">-->
+                <!--                    <field name="per_diem" nolabel="1"/>-->
+                <!--                    <span>/ month</span>-->
+                <!--                </div>-->
+                <!--                <label for="zain_invoice"/>-->
+                <!--                <div class="o_row" name="zain_invoice">-->
+                <!--                    <field name="zain_invoice" nolabel="1"/>-->
+                <!--                    <span>/ month</span>-->
+                <!--                </div>-->
             </xpath>
         </field>
     </record>

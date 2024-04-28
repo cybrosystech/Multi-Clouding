@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """ init object """
-from odoo import fields, models, api, _
+from odoo import fields, models
 
 import logging
 
@@ -8,7 +8,6 @@ LOGGER = logging.getLogger(__name__)
 
 
 class NameModel(models.TransientModel):
-    _inherit = 'account.asset.sell'
+    _inherit = 'asset.modify'
 
     from_leasee_contract = fields.Boolean(default=False)
-    contract_end_date = fields.Date(required=False,)

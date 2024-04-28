@@ -63,6 +63,8 @@ class LeaseePeriodExtend(models.TransientModel):
             'account_id': rou_account.id,
             'credit': 0,
             'debit': amount,
+            'display_type': 'product',
+
             'analytic_account_id': contract.analytic_account_id.id,
             'project_site_id': contract.project_site_id.id,
             'type_id': contract.type_id.id,
@@ -72,6 +74,8 @@ class LeaseePeriodExtend(models.TransientModel):
             'account_id': contract.lease_liability_account_id.id,
             'debit': 0,
             'credit': amount,
+            'display_type': 'product',
+
             'analytic_account_id': contract.analytic_account_id.id,
             'project_site_id': contract.project_site_id.id,
             'type_id': contract.type_id.id,
@@ -95,7 +99,6 @@ class LeaseePeriodExtend(models.TransientModel):
         new_period = (self.new_contract_period) * (1 if contract.lease_contract_period_type == 'months' else 12)
         self.env['asset.modify'].create({
             'name': "Extend Leasee Contract",
-            # 'date': asset.acquisition_date,
             'date': contract.estimated_ending_date + relativedelta(days=1),
             'method_number': new_period,
             'asset_id': asset.id,
@@ -110,3 +113,26 @@ class LeaseePeriodExtend(models.TransientModel):
             'old_period': self.leasee_contract_id.lease_contract_period,
             'new_period': self.new_contract_period,
         })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

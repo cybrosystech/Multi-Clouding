@@ -26,10 +26,9 @@ class AssetModify(models.TransientModel):
                 'name': self.asset_id.name + ': ' + self.name,
                 'currency_id': self.asset_id.currency_id.id,
                 'company_id': self.asset_id.company_id.id,
-                'asset_type': self.asset_id.asset_type,
                 'method': self.asset_id.method,
-                'prorata': self.asset_id.prorata,
-                'prorata_date': self.date if self.asset_id.prorata else None,
+                'prorata_computation_type': self.asset_id.prorata_computation_type,
+                'prorata_date': self.date if self.asset_id.prorata_computation_type else None,
                 'method_number': self.method_number,
                 'method_period': self.method_period,
                 'acquisition_date': self.date,
@@ -40,11 +39,7 @@ class AssetModify(models.TransientModel):
                 'account_depreciation_id': self.account_depreciation_id.id,
                 'account_depreciation_expense_id': self.account_depreciation_expense_id.id,
                 'journal_id': self.asset_id.journal_id.id,
-                # 'parent_id': self.asset_id.id,
-                'account_analytic_id': self.asset_id.account_analytic_id.id,
-                'project_site_id': self.asset_id.project_site_id.id,
-                'type_id': self.asset_id.type_id.id,
-                'location_id': self.asset_id.location_id.id,
+                'analytic_distribution': self.asset_id.analytic_distribution,
             })
             asset_increase.with_context(ignore_prorata=False).validate()
             asset_increase.write({'parent_id': self.asset_id.id})
@@ -61,17 +56,17 @@ class AssetModify(models.TransientModel):
                 self.asset_id.message_post(body=_("Asset unpaused"))
             else:
                 self = self.with_context(ignore_prorata=True)
-            remaining_installments = self.asset_id.depreciation_move_ids.filtered(lambda m: m.date >= self.date)
+            remaining_installments = self.asset_id.depreciation_move_ids.filtered(
+                lambda m: m.date >= self.date)
             asset_increase = self.env['account.asset'].create({
                 'name': self.asset_id.name + ': ' + self.name,
                 'currency_id': self.asset_id.currency_id.id,
                 'company_id': self.asset_id.company_id.id,
-                'asset_type': self.asset_id.asset_type,
                 'method': self.asset_id.method,
-                'prorata': self.asset_id.prorata,
-                'prorata_date': self.date if self.asset_id.prorata else None,
+                'prorata_computation_type': self.asset_id.prorata_computation_type,
+                'prorata_date': self.date if self.asset_id.prorata_computation_type else None,
                 'method_number': len(remaining_installments) - 1,
-                'method_period': self.asset_id.method_period ,
+                'method_period': self.asset_id.method_period,
                 'acquisition_date': self.date,
                 'value_residual': 0,
                 'salvage_value': 0,
@@ -80,15 +75,13 @@ class AssetModify(models.TransientModel):
                 'account_depreciation_id': self.account_depreciation_id.id,
                 'account_depreciation_expense_id': self.account_depreciation_expense_id.id,
                 'journal_id': self.asset_id.journal_id.id,
-                'account_analytic_id': self.asset_id.account_analytic_id.id,
-                'project_site_id': self.asset_id.project_site_id.id,
-                'type_id': self.asset_id.type_id.id,
-                'location_id': self.asset_id.location_id.id,
+                'analytic_distribution': self.asset_id.analytic_distribution,
             })
-            asset_increase.with_context(decrease=True if self.value_residual < 0 else False,ignore_prorata=False).validate()
+            asset_increase.with_context(
+                decrease=True if self.value_residual < 0 else False,
+                ignore_prorata=False).validate()
             asset_increase.write({'parent_id': self.asset_id.id})
 
             return {'type': 'ir.actions.act_window_close'}
         else:
             return super(AssetModify, self).modify()
-

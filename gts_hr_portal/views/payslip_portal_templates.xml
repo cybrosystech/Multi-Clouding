@@ -21,7 +21,9 @@
             <t t-call="portal.portal_docs_entry">
                 <t t-set="title">Payslips</t>
                 <t t-set="url" t-value="'/my/payslip'"/>
+                <t t-set="text">View, Download Payslips</t>
                 <t t-set="placeholder_count" t-value="'payslip_count'"/>
+                <t t-set="config_card" t-value="True"/>
             </t>
         </xpath>
     </template>

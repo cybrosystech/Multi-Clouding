@@ -6,33 +6,38 @@
         <field name="model">hr.employee</field>
         <field name="inherit_id" ref="hr.view_employee_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//page[@name='personal_information']/group[1]/group[4]"
+            <xpath expr="//page[@name='personal_information']/group[1]/group[2]/field[@name='spouse_complete_name']"
+                   position="after">
+                <field name="spouse_working"
+                       invisible="marital not in ['married','cohabitant']"
+                       groups="hr.group_hr_user"/>
+            </xpath>
+            <xpath expr="//page[@name='personal_information']/group[1]/group[2]"
                    position="inside">
+
                 <field name="date_of_birth_ids">
                     <form>
                         <field name="dob"/>
-                        <field name="employee_id" invisible="1"/>
+                        <field name="employee_id" column_invisible="1"
+                               invisible="1"/>
                     </form>
                     <tree editable="bottom">
                         <field name="dob"/>
-                        <field name="employee_id" invisible="1"/>
+                        <field name="employee_id" column_invisible="1"
+                               invisible="1"/>
                     </tree>
                 </field>
                 <field name="child_below_18"/>
                 <field name="child_below_4"/>
             </xpath>
-            <xpath expr="//page[@name='personal_information']/group[1]/group[3]"
-                   position="inside">
-                <field name="spouse_working"
-                       attrs="{'invisible': [('marital', 'not in', ['married', 'cohabitant'])]}"
-                       groups="hr.group_hr_user"/>
-            </xpath>
-            <xpath expr="//page[@name='personal_information']/group[1]/group[2]"
+
+            <xpath expr="//page[@name='personal_information']/group[1]/group[5]"
                    position="inside">
                 <field name="social_security"/>
             </xpath>
             <xpath expr="//form/sheet/group[1]/group[2]/field[@name='department_id']"
                    position="after">
+                <field name="sub_department_ids" invisible="1"/>
                 <field name="sub_department_id"/>
             </xpath>
         </field>

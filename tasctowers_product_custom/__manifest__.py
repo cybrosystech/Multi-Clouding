@@ -1,21 +1,24 @@
 # Copyright 2013 Savoir-faire Linux
 {
-    "name": "product_custom",
-    "summary": "product_custom",
+    "name": "Product Custom",
+    "summary": "Adding company field to product category and product",
+    "description": "1.Adding company field to product category and product"
+                   "2. Adding multi company record rule to product, product "
+                   "category.",
     'sequence': 1,
     'category': 'sale',
-    'version': '0.1',
+    'version': '1.0',
     "depends": [
         'base',
         "sale",
         'stock'
     ],
     'data': [
-        # "security/ir.model.access.csv",
         'security/security.xml',
         'views/product.xml'
     ],
     'installable': True,
+    'auto_install': False,
+    'application': False,
 }
-# License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 

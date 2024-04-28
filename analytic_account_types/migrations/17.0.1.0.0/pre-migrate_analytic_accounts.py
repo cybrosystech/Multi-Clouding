@@ -1,0 +1,7 @@
+import logging
+
+_logger = logging.getLogger(__name__)
+
+
+def migrate(cr, version):
+    _logger.info("Pre migration process")

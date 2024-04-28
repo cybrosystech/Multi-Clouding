@@ -35,13 +35,13 @@ class AccountAssetBulkSaleDisposal(models.Model):
             'res_id': dd.id,
         }
 
-    def set_to_close_bulk(self, invoice_line_id, partial, partial_amount, date=None):
+    def set_to_close_bulk(self, invoice_line_ids, partial, partial_amount, date=None):
         self.ensure_one()
         disposal_date = date or fields.Date.today()
-        if invoice_line_id and self.children_ids.filtered(lambda a: a.state in ('draft', 'open') or a.value_residual > 0):
+        if invoice_line_ids and self.children_ids.filtered(lambda a: a.state in ('draft', 'open') or a.value_residual > 0):
             raise UserError(_("You cannot automate the journal entry for an asset that has a running gross increase. Please use 'Dispose' on the increase(s)."))
         full_asset = self + self.children_ids
-        full_asset._get_disposal_moves_bulk([invoice_line_id] * len(full_asset), disposal_date, partial, partial_amount)
+        full_asset._get_disposal_moves_bulk([invoice_line_ids] * len(full_asset), disposal_date, partial, partial_amount)
         if not partial:
             full_asset.write({'state': 'close'})
         # if move_ids:
@@ -56,16 +56,17 @@ class AccountAssetBulkSaleDisposal(models.Model):
                                               precision_digits=prec) > 0 else -amount,
                 'credit': amount if float_compare(amount, 0.0,
                                                   precision_digits=prec) > 0 else 0.0,
-                'analytic_account_id': account_analytic_id.id if asset.asset_type == 'sale' or asset.leasee_contract_ids else False,
-                'analytic_tag_ids': [(6, 0,
-                                      analytic_tag_ids.ids)] if asset.asset_type == 'sale' else False,
+                # 'analytic_account_id': account_analytic_id.id if asset.leasee_contract_ids else False,
+                # 'analytic_tag_ids': [(6, 0,
+                #                       analytic_tag_ids.ids)] if asset.asset_type == 'sale' else False,
                 'currency_id': current_currency.id,
-                'amount_currency': -asset.value_residual,
-                'project_site_id': asset.project_site_id.id,
-                'type_id': asset.type_id.id,
-                'location_id': asset.location_id.id,
+                # 'amount_currency': asset.value_residual if float_compare(amount, 0.0,
+                #                               precision_digits=prec) > 0 else -(asset.value_residual),
+                # 'project_site_id': asset.project_site_id.id,
+                # 'type_id': asset.type_id.id,
+                # 'location_id': asset.location_id.id,
+                'analytic_distribution': asset.analytic_distribution,
             })
-
         if len(self.leasee_contract_ids) == 1:
             move_ids = []
             assert len(self) == len(invoice_line_ids)
@@ -83,8 +84,8 @@ class AccountAssetBulkSaleDisposal(models.Model):
                             'There are depreciation posted in the future, please revert them.')
                 disposal_date = self.env.context.get(
                     'disposal_date') or disposal_date
-                account_analytic_id = asset.account_analytic_id
-                analytic_tag_ids = asset.analytic_tag_ids
+                # account_analytic_id = asset.account_analytic_id
+                # analytic_tag_ids = asset.analytic_tag_ids
                 company_currency = asset.company_id.currency_id
                 current_currency = asset.currency_id
                 prec = company_currency.decimal_places
@@ -94,7 +95,7 @@ class AccountAssetBulkSaleDisposal(models.Model):
                     lambda x: x.state == 'draft')
 
                 old_values = {
-                    'method_number': asset.method_number,
+                   asset.id : asset.method_number,
                 }
                 # Remove all unposted depr. lines
                 commands = [(2, line_id.id, False) for line_id in
@@ -225,11 +226,12 @@ class AccountAssetBulkSaleDisposal(models.Model):
                     else:
                         raise UserError(
                             'There are depreciation posted in the future, please revert them.')
-                account_analytic_id = asset.account_analytic_id
-                project_site_id = asset.project_site_id
-                type_id = asset.type_id
-                location_id = asset.location_id
-                analytic_tag_ids = asset.analytic_tag_ids
+                # account_analytic_id = asset.account_analytic_id
+                # project_site_id = asset.project_site_id
+                # type_id = asset.type_id
+                # location_id = asset.location_id
+                # analytic_tag_ids = asset.analytic_tag_ids
+                analytic_distribution = asset.analytic_distribution
                 company_currency = asset.company_id.currency_id
                 current_currency = asset.currency_id
                 prec = company_currency.decimal_places
@@ -237,7 +239,7 @@ class AccountAssetBulkSaleDisposal(models.Model):
                     lambda x: x.state == 'draft')
                 if unposted_depreciation_move_ids:
                     old_values = {
-                        'method_number': asset.method_number,
+                        asset.id:{'method_number': asset.method_number},
                     }
 
                     # Remove all unposted depr. lines
@@ -283,6 +285,7 @@ class AccountAssetBulkSaleDisposal(models.Model):
                         value_residual = asset.value_residual
                     if not invoice_line_id:
                         del line_datas[2]
+
                     vals = {
                         'amount_total': current_currency._convert(
                             asset.value_residual, company_currency,
@@ -324,12 +327,12 @@ class AccountAssetBulkSaleDisposal(models.Model):
                                      'method_number': asset_sequence})
                     tracked_fields = self.env['account.asset'].fields_get(
                         ['method_number'])
-                    changes, tracking_value_ids = asset._message_track(
+                    changes = asset._message_track(
                         tracked_fields, old_values)
                     if changes:
                         asset.message_post(body=_(
                             'Asset sold or disposed. Accounting entry awaiting for validation.'),
-                            tracking_value_ids=tracking_value_ids)
+                            tracking_value_ids=changes[asset.id][1])
                     move_ids += self.env['account.move'].search(
                         [('asset_id', '=', asset.id),
                          ('state', '=', 'draft')]).ids

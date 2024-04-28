@@ -102,7 +102,7 @@ class LLAgingReportWizard(models.Model):
             'name': 'LL Aging Report',
             'url': '/web/content/%s/%s/excel_sheet/%s?download=true' % (
                 self._name, self.id, self.excel_sheet_name),
-            'target': 'self'
+            'target': 'new'
         }
 
     def get_report_data(self):
@@ -706,8 +706,12 @@ class LLAgingReportWizard(models.Model):
             worksheet.write(row, col, line['external_reference_number'],
                             STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['project_site'], STYLE_LINE_Data)
-            col += 1
+            if not line['project_site']:
+                worksheet.write(row, col, '', STYLE_LINE_Data)
+                col += 1
+            else:
+                worksheet.write(row, col, line['project_site'], STYLE_LINE_Data)
+                col += 1
             worksheet.write(row, col, line['less_than_one_year'],
                             STYLE_LINE_Data)
             col += 1

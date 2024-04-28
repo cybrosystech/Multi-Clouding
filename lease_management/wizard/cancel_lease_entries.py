@@ -32,7 +32,6 @@ class CancelLeaseEntries(models.TransientModel):
                           ('leasee_contract_id', '!=', False),
                           '&', ('company_id', '=', self.env.company.id)]
             account_moves = self.env['account.move'].search(domain).filtered(lambda m: m.date <= self.date)
-            # account_moves.button_draft()
             account_moves.button_cancel()
             payments = self.env['account.payment'].search([
                 ('date', '<=', self.date),

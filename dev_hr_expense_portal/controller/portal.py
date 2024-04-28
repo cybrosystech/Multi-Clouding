@@ -4,11 +4,9 @@ from collections import OrderedDict
 from odoo import fields, http, _
 from odoo.exceptions import AccessError, MissingError
 from odoo.http import request
-from odoo.addons.payment.controllers.portal import PaymentProcessing
 from odoo.addons.portal.controllers.mail import _message_post_helper
 from odoo.addons.portal.controllers.portal import CustomerPortal, \
     pager as portal_pager, get_records_pager
-from odoo.osv import expression
 import werkzeug
 from datetime import datetime, date
 from odoo.tools import groupby as groupbyelem
@@ -21,11 +19,13 @@ from odoo.osv.expression import OR
 
 class CustomerPortal(CustomerPortal):
 
-    def _prepare_portal_layout_values(self):
-        values = super(CustomerPortal, self)._prepare_portal_layout_values()
+    def _prepare_home_portal_values(self, counters):
+        values = super(CustomerPortal, self)._prepare_home_portal_values(
+            counters)
         expense_id = request.env['hr.expense']
         expense_count = expense_id.sudo().search_count([
-            ('product_id.product_expense_type', 'not in', ['overtime','per_diem']),
+            ('product_id.product_expense_type', 'not in',
+             ['overtime', 'per_diem']),
             '|', '|', ('employee_id.user_id', '=', request.env.user.id),
             ('employee_id.parent_id.user_id', '=', request.env.user.id),
             ('employee_id.expense_manager_id', '=', request.env.user.id)
@@ -60,7 +60,8 @@ class CustomerPortal(CustomerPortal):
             '|', '|', ('employee_id.user_id', '=', request.env.user.id),
             ('employee_id.parent_id.user_id', '=', request.env.user.id),
             ('employee_id.expense_manager_id', '=', request.env.user.id),
-            ('product_id.product_expense_type', 'not in', ['overtime','per_diem'])
+            ('product_id.product_expense_type', 'not in',
+             ['overtime', 'per_diem'])
         ]
 
         searchbar_sortings = {
@@ -192,8 +193,8 @@ class CustomerPortal(CustomerPortal):
             step=self._items_per_page
         )
         expense = expense_id.sudo().search(domain, order=sort_order,
-                                    limit=self._items_per_page,
-                                    offset=pager['offset'])
+                                           limit=self._items_per_page,
+                                           offset=pager['offset'])
         request.session['my_contact_history'] = expense.ids[:100]
 
         if groupby == 'product_id':
@@ -263,6 +264,16 @@ class CustomerPortal(CustomerPortal):
         if hr_expense_sudo and request.session.get(
                 'view_scrap_%s' % hr_expense_sudo.id) != now and request.env.user.share and access_token:
             request.session['view_rma_%s' % hr_expense_sudo.id] = now
+
+        analytic_dist = ""
+        if hr_expense_sudo.analytic_distribution:
+            for li in list(hr_expense_sudo.analytic_distribution.keys()):
+                my_list = li.split(",")
+                for item in my_list:
+                    if item != '':
+                        analytic_account = request.env[
+                            'account.analytic.account'].browse(int(item))
+                        analytic_dist += analytic_account.name + ","
         values = {
             'hr_expense': hr_expense_sudo,
             'message': message,
@@ -271,6 +282,7 @@ class CustomerPortal(CustomerPortal):
             'report_type': 'html',
             'page_name': 'expense_form',
             'p_name': hr_expense_sudo.name,
+            'analytic_distribution': analytic_dist,
 
         }
         if hr_expense_sudo.company_id:
@@ -305,21 +317,28 @@ class CustomerPortal(CustomerPortal):
         employee_id = request.env['hr.employee'].sudo().search(
             [('user_id', '=', request.env.user.id)]).id
         amount = product_id.standard_price
+        analytic_account_id = post['cost_center']
+        project_site_id = post['project_site']
+        analytic_dist = {}
+        analytic_distributions = ''
+        if analytic_account_id:
+            analytic_distributions = analytic_distributions + ',' + str(
+                analytic_account_id)
+        if project_site_id:
+            analytic_distributions = analytic_distributions + ',' + str(
+                project_site_id)
+
+        analytic_dist.update({analytic_distributions: 100})
         expense_id = pool['hr.expense'].sudo().create({
             'name': post['name'],
             'product_id': product_id and product_id.id,
             'product_uom_id': product_id.uom_id and product_id.uom_id.id or False,
-            'quantity': post['quantity'],
-            'reference': post['bill_reference'],
+            'quantity': float(post['quantity']),
             'employee_id': employee_id,
             'currency_id': int(post['currency_id']),
-            'unit_amount': post['unit_price'] if post['unit_price'] else amount,
-            'analytic_account_id': post['cost_center'] if post[
-                'cost_center'] else False,
-            'project_site_id': post['project_site'] if post[
-                'project_site'] else False,
+            'total_amount_currency': post['unit_price'] if post['unit_price'] else amount,
+            'analytic_distribution': analytic_dist,
             'state': 'waiting_approval',
-            'account_id': product_id.property_account_expense_id.id,
         })
         if expense_id:
             attachment = {
@@ -555,8 +574,8 @@ class CustomerPortal(CustomerPortal):
             step=self._items_per_page
         )
         expense = expense_id.sudo().search(domain, order=sort_order,
-                                    limit=self._items_per_page,
-                                    offset=pager['offset'])
+                                           limit=self._items_per_page,
+                                           offset=pager['offset'])
         request.session['my_contact_history'] = expense.ids[:100]
 
         if groupby == 'product_id':
@@ -620,21 +639,28 @@ class CustomerPortal(CustomerPortal):
         employee_id = request.env['hr.employee'].sudo().search(
             [('user_id', '=', request.env.user.id)]).id
         amount = product_id.standard_price
+        analytic_account_id = post['cost_center']
+        project_site_id = post['project_site']
+        analytic_dist = {}
+        analytic_distributions = ''
+        if analytic_account_id:
+            analytic_distributions = analytic_distributions + ',' + str(
+                analytic_account_id)
+        if project_site_id:
+            analytic_distributions = analytic_distributions + ',' + str(
+                project_site_id)
+
+        analytic_dist.update({analytic_distributions: 100})
         expense_id = pool['hr.expense'].sudo().create({
             'name': post['name'],
             'product_id': product_id and product_id.id,
             'product_uom_id': product_id.uom_id and product_id.uom_id.id or False,
             'quantity': post['quantity'],
-            'reference': post['bill_reference'],
             'employee_id': employee_id,
             'currency_id': int(post['currency_id']),
-            'unit_amount': post['unit_price'] if post['unit_price'] else amount,
-            'analytic_account_id': post['cost_center'] if post[
-                'cost_center'] else False,
-            'project_site_id': post['project_site'] if post[
-                'project_site'] else False,
+            'total_amount_currency': post['unit_price'] if post['unit_price'] else amount,
+            'analytic_distribution': analytic_dist,
             'state': 'waiting_approval',
-            'account_id': product_id.property_account_expense_id.id,
         })
         if expense_id:
             attachment = {
@@ -741,6 +767,16 @@ class CustomerPortal(CustomerPortal):
         if hr_expense_sudo and request.session.get(
                 'view_scrap_%s' % hr_expense_sudo.id) != now and request.env.user.share and access_token:
             request.session['view_rma_%s' % hr_expense_sudo.id] = now
+
+        analytic_dist = ""
+        if hr_expense_sudo.analytic_distribution:
+            for li in list(hr_expense_sudo.analytic_distribution.keys()):
+                my_list = li.split(",")
+                for item in my_list:
+                    if item != '':
+                        analytic_account = request.env[
+                            'account.analytic.account'].browse(int(item))
+                        analytic_dist += analytic_account.name + ","
         values = {
             'hr_expense': hr_expense_sudo,
             'message': message,
@@ -749,6 +785,7 @@ class CustomerPortal(CustomerPortal):
             'report_type': 'html',
             'page_name': 'overtime_form',
             'p_name': hr_expense_sudo.name,
+            'analytic_distribution': analytic_dist,
 
         }
         if hr_expense_sudo.company_id:
@@ -777,6 +814,16 @@ class CustomerPortal(CustomerPortal):
         if hr_expense_sudo and request.session.get(
                 'view_scrap_%s' % hr_expense_sudo.id) != now and request.env.user.share and access_token:
             request.session['view_rma_%s' % hr_expense_sudo.id] = now
+
+        analytic_dist = ""
+        if hr_expense_sudo.analytic_distribution:
+            for li in list(hr_expense_sudo.analytic_distribution.keys()):
+                my_list = li.split(",")
+                for item in my_list:
+                    if item != '':
+                        analytic_account = request.env[
+                            'account.analytic.account'].browse(int(item))
+                        analytic_dist += analytic_account.name + ","
         values = {
             'hr_expense': hr_expense_sudo,
             'message': message,
@@ -785,6 +832,7 @@ class CustomerPortal(CustomerPortal):
             'report_type': 'html',
             'page_name': 'overtime_form',
             'p_name': hr_expense_sudo.name,
+            'analytic_distribution': analytic_dist,
 
         }
         if hr_expense_sudo.company_id:
@@ -938,8 +986,8 @@ class CustomerPortal(CustomerPortal):
             step=self._items_per_page
         )
         expense = expense_id.sudo().search(domain, order=sort_order,
-                                    limit=self._items_per_page,
-                                    offset=pager['offset'])
+                                           limit=self._items_per_page,
+                                           offset=pager['offset'])
         request.session['my_contact_history'] = expense.ids[:100]
 
         if groupby == 'product_id':
@@ -1003,21 +1051,28 @@ class CustomerPortal(CustomerPortal):
         employee_id = request.env['hr.employee'].sudo().search(
             [('user_id', '=', request.env.user.id)]).id
         amount = product_id.standard_price
+        analytic_account_id = post['cost_center']
+        project_site_id = post['project_site']
+        analytic_dist = {}
+        analytic_distributions = ''
+        if analytic_account_id:
+            analytic_distributions = analytic_distributions + ',' + str(
+                analytic_account_id)
+        if project_site_id:
+            analytic_distributions = analytic_distributions + ',' + str(
+                project_site_id)
+
+        analytic_dist.update({analytic_distributions: 100})
         expense_id = pool['hr.expense'].sudo().create({
             'name': post['name'],
             'product_id': product_id and product_id.id,
             'product_uom_id': product_id.uom_id and product_id.uom_id.id or False,
             'quantity': post['quantity'],
-            'reference': post['bill_reference'],
             'employee_id': employee_id,
             'currency_id': int(post['currency_id']),
-            'unit_amount': post['unit_price'] if post['unit_price'] else amount,
-            'analytic_account_id': post['cost_center'] if post[
-                'cost_center'] else False,
-            'project_site_id': post['project_site'] if post[
-                'project_site'] else False,
+            'total_amount_currency': post['unit_price'] if post['unit_price'] else amount,
+            'analytic_distribution': analytic_dist,
             'state': 'waiting_approval',
-            'account_id': product_id.property_account_expense_id.id,
         })
         if expense_id:
             attachment = {

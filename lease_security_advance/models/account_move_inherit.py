@@ -25,5 +25,3 @@ class AccountMoveLineConstraints(models.Model):
             self.env.cr.execute("""
                         ALTER TABLE account_move_line DROP CONSTRAINT account_move_line_check_amount_currency_balance_sign;
                     """)
-
-

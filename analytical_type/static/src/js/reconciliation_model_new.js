@@ -102,10 +102,5 @@ NewStatementModel.StatementModel.include({
         return result;
     },
 });
-//NewManualModel.ManualModel.include({
-//    quickCreateFields: ['account_id', 'journal_id', 'amount', 'analytic_account_id','cost_center_id', 'name', 'tax_ids', 'force_tax_included', 'analytic_tag_ids', 'date', 'to_check'],
-//
-//    modes: ['create', 'match'],
-//
-//    });
+
 });

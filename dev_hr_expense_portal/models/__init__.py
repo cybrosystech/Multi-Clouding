@@ -12,6 +12,4 @@ from . import hr_expense
 from . import product_template
 from . import hr_employee
 from . import hr_payslip
-from . import expense_journal
 
-# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

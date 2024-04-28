@@ -12,9 +12,8 @@
                         alt="Logo"
                         style="max-height:20px;max-width:20px;"/>
                 <strong>Net Pay :</strong>
-                <!--                <span t-esc="'%.2f'% tot_net"-->
-                <!--                />-->
-                <span t-esc="'{:20,.2f}'.format(tot_net)"/>
+                <span t-esc="tot_net"
+                />
                 <span t-esc="o.sudo().currency_id.name"/>
             </td>
         </xpath>

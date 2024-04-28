@@ -6,7 +6,7 @@
     "name": """Analytic Dashboard Template: Sale""",
     "summary": """Free sales analysis template for IZI Dashboard""",
     "category": "Reporting",
-    "version": "14.0.0.1.0",
+    "version": "17.0.1.0.0",
     "development_status": "Alpha",  # Options: Alpha|Beta|Production/Stable|Mature
     "auto_install": False,
     "installable": True,
@@ -37,7 +37,7 @@
         # 'security/res_groups.xml',
 
         # data
-        'data/izi_data_template.xml',
+        # 'data/izi_data_template.xml',
 
         # global action
         # 'views/action/action.xml',
@@ -83,10 +83,10 @@
         # "static/src/xml/{QWEBFILE1}.xml",
     ],
 
-    "post_load": None,
-    # "pre_init_hook": "pre_init_hook",
-    # "post_init_hook": "post_init_hook",
-    "uninstall_hook": None,
+    # "post_load": None,
+    # # "pre_init_hook": "pre_init_hook",
+    # # "post_init_hook": "post_init_hook",
+    # "uninstall_hook": None,
 
     "external_dependencies": {"python": [], "bin": []},
     # "live_test_url": "",

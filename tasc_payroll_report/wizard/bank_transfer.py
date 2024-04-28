@@ -23,7 +23,6 @@ class PayrollSummary(models.Model):
 
     def print_report_xlsx(self):
         report_data = self.get_report_data()
-        print("report_data", report_data)
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
 
@@ -113,12 +112,10 @@ class PayrollSummary(models.Model):
             'name': 'Payment Summary',
             'url': '/web/content/%s/%s/excel_sheet/%s?download=true' % (
                 self._name, self.id, self.excel_sheet_name),
-            'target': 'self'
+            'target': 'new'
         }
 
     def get_report_data(self):
-        print("get_report_data")
-        print("month", self.date.month, type(self.date.month))
         if self.date:
             struct_ids = self.env['hr.payslip'].search(
                 [('state', '!=', 'cancel'), ('date_from', '!=', False),
@@ -135,7 +132,6 @@ class PayrollSummary(models.Model):
     def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data,
                        STYLE_LINE_Data_emp_name,
                        header_format, STYLE_LINE_HEADER):
-        print("add_xlsx_sheet")
         self.ensure_one()
         worksheet = workbook.add_worksheet(_('Bank Transfer Report'))
         lang = self.env.user.lang
@@ -182,15 +178,12 @@ class PayrollSummary(models.Model):
                     lambda l: l.date_from.month == int(
                         self.date.month) and l.date_from.year == int(
                         self.date.year))
-                print("payslip_lines", payslip_lines)
                 row += 1
                 if payslip_lines:
                     for p in payslip_lines:
                         precision = p.currency_id.decimal_places
-                        print("prec", precision)
                         string_val = "0" * precision
                         float_str = '#,##0.' + string_val
-                        print("float_str", float_str)
                         floating_point_bordered = workbook.add_format(
                             {'num_format': float_str})
                         col = 0
@@ -327,16 +320,13 @@ class PayrollSummary(models.Model):
                     lambda l: l.date_from.month == int(
                         self.date.month) and l.date_from.year == int(
                         self.date.year))
-                print("payslip_lines", payslip_lines)
 
                 row += 1
                 if payslip_lines:
                     for p in payslip_lines:
                         precision = p.currency_id.decimal_places
-                        print("prec", precision)
                         string_val = "0" * precision
                         float_str = '#,##0.' + string_val
-                        print("float_str", float_str)
                         floating_point_bordered = workbook.add_format(
                             {'num_format': float_str})
                         # working_days = p.worked_days_line_ids.mapped(

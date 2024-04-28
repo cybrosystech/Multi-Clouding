@@ -6,7 +6,7 @@
         <field name="arch" type="xml">
             <xpath expr="//button[@name='button_approve_purchase_cycle']" position="after">
                 <button name="button_reject_purchase_cycle" string="Reject" type="object" class="btn-primary"
-                            attrs="{'invisible':[('show_approve_button','=',False)]}"/>
+                invisible="show_approve_button == False"/>
             </xpath>
         </field>
     </record>

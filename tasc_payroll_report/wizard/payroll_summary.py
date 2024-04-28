@@ -130,7 +130,7 @@ class PayrollSummary(models.Model):
             'name': 'Payment Summary',
             'url': '/web/content/%s/%s/excel_sheet/%s?download=true' % (
                 self._name, self.id, self.excel_sheet_name),
-            'target': 'self'
+            'target': 'new'
         }
 
     def get_report_data(self):
@@ -187,23 +187,18 @@ class PayrollSummary(models.Model):
             col += 1
             worksheet.write(row, col, _('Working Days'), header_format)
             col += 1
-            for line in struct.rule_ids:
-                worksheet.write(row, col, _(line.name), header_format)
-                col += 1
             payslip_lines = self.env['hr.payslip'].search(
                 [('state', '!=', 'cancel'), ('struct_id', '=', struct.id),
                  ('date_from', '!=', False)]).filtered(
                 lambda l: l.date_from.month == int(
                     self.month) and l.date_from.year == int(self.year))
+            # datas = self.prepare_datas(payslip_lines, s)
             row += 1
             if payslip_lines:
                 for p in payslip_lines:
-                    print("pppppp", p)
                     precision = p.currency_id.decimal_places
-                    print("prec", precision)
                     string_val = "0" * precision
                     float_str = '#,##0.' + string_val
-                    print("float_str", float_str)
                     floating_point_bordered = workbook.add_format(
                         {'num_format': float_str})
 
@@ -266,16 +261,34 @@ class PayrollSummary(models.Model):
                         worksheet.write(row, col,
                                         0,
                                         STYLE_LINE_Data)
-                    col += 1
-                    for l in p.line_ids:
-                        if l.total:
-                            worksheet.write(row, col, l.total,
-                                            floating_point_bordered)
-                        else:
-                            worksheet.write(row, col, 0,
-                                            floating_point_bordered)
-                        col += 1
                     row += 1
-            else:
-                raise UserError(
-                    _("No Payslips are found!!!"))
+
+            row = 1
+            rules = struct.rule_ids.ids
+            for line in struct.rule_ids:
+                col += 1
+                worksheet.write(row, col, _(line.name), header_format)
+
+            data = self.prepare_data(payslip_lines, struct)
+            if payslip_lines:
+                c = 6
+                r = 2
+                for i in range(0, len(data)):
+                    for val in data[i].values():
+                        c += 1
+
+                        worksheet.write(r, c, val, floating_point_bordered)
+                    c = 6
+                    r += 1
+
+    def prepare_data(self, payslip_lines, struct_id):
+        data = []
+        i = 0
+        for slip in payslip_lines:
+            rules = struct_id.rule_ids.ids
+            out = dict.fromkeys(rules, 0)
+            data.append(out)
+            for line in slip.line_ids:
+                data[i][line.salary_rule_id.id] = line.total
+            i += 1
+        return data

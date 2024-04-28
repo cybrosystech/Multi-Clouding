@@ -1,21 +1,15 @@
+# -*- coding: utf-8 -*-
 {
-    'name': 'Tasc Trail Balance Report',
+    'name': 'Tasc Trial Balance Report',
     'summary': """""",
-
     'description': """""",
-
-    'author': "",
-    'website': "",
+    'author': "Cybrosys Techno Solutions",
+    'website': "https://www.cybrosys.com",
     'category': 'Accounting',
-    'version': '14.0.1.0.0',
+    'version': '17.0.1.0.0',
     'depends': ['account_reports', 'cash_flow_statement_report'],
-
     'data':
         [
-            'views/assets.xml',
-            'views/tasc_trail_balance_report_view.xml',
-            'views/tasc_trail_balance_search_view.xml',
+            'views/tasc_trial_balance_report_view.xml',
         ],
-    'qweb': [
-    ],
 }

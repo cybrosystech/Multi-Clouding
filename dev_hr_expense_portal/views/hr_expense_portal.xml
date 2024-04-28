@@ -1,24 +1,114 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <template id="portal_my_home_hr_expense" name="Portal My Home : HR Expense"
-              inherit_id="portal.portal_my_home" priority="20">
-        <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+        <template id="sale.portal_my_home_sale" name="Show Quotations / Sales Orders" customize_show="True" inherit_id="portal.portal_my_home" priority="20">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
+            <t t-set="portal_client_category_enable" t-value="False"/>
+            <t t-set="portal_alert_category_enable" t-value="False"/>
+        </xpath>
+<!--        <div id="portal_alert_category" position="inside">-->
+<!--            <t t-call="portal.portal_docs_entry">-->
+<!--                <t t-set="bg_color" t-value="'alert alert-primary'"/>-->
+<!--                <t t-set="placeholder_count" t-value="'quotation_count'"/>-->
+<!--                <t t-set="title">Quotations to review</t>-->
+<!--                <t t-set="url" t-value="'/my/quotes'"/>-->
+<!--                <t t-set="show_count" t-value="True"/>-->
+<!--            </t>-->
+<!--        </div>-->
+<!--        <div id="portal_client_category" position="inside">-->
+<!--            <t t-call="portal.portal_docs_entry">-->
+<!--                <t t-set="icon" t-value="'/sale/static/src/img/bag.svg'"/>-->
+<!--                <t t-set="title">Sales Orders</t>-->
+<!--                <t t-set="url" t-value="'/my/orders'"/>-->
+<!--                <t t-set="text">Follow, view or pay your orders</t>-->
+<!--                <t t-set="placeholder_count" t-value="'order_count'"/>-->
+<!--            </t>-->
+<!--        </div>-->
+    </template>
+
+        <template id="account.portal_my_home_invoice" name="Show Invoices &amp; Bills" inherit_id="portal.portal_my_home" customize_show="True" priority="30">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
+            <t t-set="portal_client_category_enable" t-value="False"/>
+            <t t-set="portal_vendor_category_enable" t-value="False"/>
+        </xpath>
+<!--        <div id="portal_client_category" position="inside">-->
+<!--            <t t-call="portal.portal_docs_entry">-->
+<!--                <t t-set="icon" t-value="'/account/static/src/img/Bill.svg'"/>-->
+<!--                <t t-set="title">Your Invoices</t>-->
+<!--                <t t-set="url" t-value="'/my/invoices?filterby=invoices'"/>-->
+<!--                <t t-set="text">Follow, download or pay your invoices</t>-->
+<!--                <t t-set="placeholder_count" t-value="'invoice_count'"/>-->
+<!--            </t>-->
+<!--        </div>-->
+<!--        <div id="portal_vendor_category" position="inside">-->
+<!--            <t t-call="portal.portal_docs_entry">-->
+<!--                <t t-set="icon" t-value="'/account/static/src/img/Bill.svg'"/>-->
+<!--                <t t-set="title">Our Invoices</t>-->
+<!--                <t t-set="url" t-value="'/my/invoices?filterby=bills'"/>-->
+<!--                <t t-set="text">Follow, download or pay our invoices</t>-->
+<!--                <t t-set="placeholder_count" t-value="'bill_count'"/>-->
+<!--            </t>-->
+<!--        </div>-->
+    </template>
+    <template id="portal_my_home_hr_expense" name="Show Expenses"
+              customize_show="True" inherit_id="portal.portal_my_home"
+              priority="20">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
+            <t t-set="portal_client_category_enable" t-value="True"/>
+        </xpath>
+
+        <div id="portal_client_category" position="inside">
             <t t-call="portal.portal_docs_entry">
-                <t t-set="title">Expense</t>
+                <t t-set="icon"
+                   t-value="'/dev_hr_expense_portal/static/src/img/expense.svg'"/>
+                <t t-set="title">Expenses</t>
                 <t t-set="url" t-value="'/my/hr_expense'"/>
-                <t t-set="count" t-value="expense_count"/>
+                <t t-set="text">View, Create Expenses</t>
+                <t t-set="placeholder_count" t-value="'expense_count'"/>
+                <t t-set="config_card" t-value="True"/>
             </t>
+        </div>
+    </template>
+
+    <template id="portal_my_home_overtime" name="Show Overtime"
+              customize_show="True" inherit_id="portal.portal_my_home"
+              priority="20">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
+            <t t-set="portal_client_category_enable" t-value="True"/>
+        </xpath>
+
+        <div id="portal_client_category" position="inside">
             <t t-call="portal.portal_docs_entry">
-                <t t-set="title">OverTime</t>
+                <t t-set="icon"
+                   t-value="'/dev_hr_expense_portal/static/src/img/expense.svg'"/>
+                <t t-set="title">Overtime</t>
                 <t t-set="url" t-value="'/my/overtime'"/>
-                <t t-set="count" t-value="overtime_count"/>
+                <t t-set="text">View, Create  overtime</t>
+                <t t-set="placeholder_count" t-value="'overtime_count'"/>
+                <t t-set="config_card" t-value="True"/>
+
             </t>
+        </div>
+    </template>
+
+    <template id="portal_my_home_per_diem" name="Show Per Diem"
+              customize_show="True" inherit_id="portal.portal_my_home"
+              priority="20">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
+            <t t-set="portal_client_category_enable" t-value="True"/>
+        </xpath>
+
+        <div id="portal_client_category" position="inside">
             <t t-call="portal.portal_docs_entry">
+                <t t-set="icon"
+                   t-value="'/dev_hr_expense_portal/static/src/img/expense.svg'"/>
                 <t t-set="title">Per Diem</t>
                 <t t-set="url" t-value="'/my/per_diem'"/>
-                <t t-set="count" t-value="per_diem_count"/>
+                <t t-set="text">View, Create  Per Diem</t>
+                <t t-set="placeholder_count" t-value="'per_diem_count'"/>
+                <t t-set="config_card" t-value="True"/>
+
             </t>
-        </xpath>
+        </div>
     </template>
 
     <template id="portal_my_home_menu_expense" name="Portal layout : HR Expense"
@@ -43,20 +133,21 @@
                 <t t-esc="p_name"/>
             </li>
             <a t-if="page_name == 'expense_tree' or expense_tree" role="button"
-               class="btn btn-primary float-right" data-toggle="modal"
-               style="margin-left:200px;" data-target="#modeledit" href="#">
+               class="btn btn-primary float-right" data-bs-toggle="modal"
+               style="margin-left:20px;" data-bs-target="#modeledit" href="#">
                 Create Expense Request
             </a>
+
             <a t-if="page_name == 'overtime_tree' or overtime_tree"
                role="button"
-               class="btn btn-primary float-right" data-toggle="modal"
-               style="margin-left:200px;" data-target="#modeledit" href="#">
+               class="btn btn-primary float-right" data-bs-toggle="modal"
+               style="margin-left:20px;" data-bs-target="#modeledit" href="#">
                 Create Overtime Request
             </a>
             <a t-if="page_name == 'per_diem_tree' or per_diem_tree"
                role="button"
-               class="btn btn-primary float-right" data-toggle="modal"
-               style="margin-left:200px;" data-target="#modeledit" href="#">
+               class="btn btn-primary float-right" data-bs-toggle="modal"
+               style="margin-left:20px;" data-bs-target="#modeledit" href="#">
                 Create Per Diem Request
             </a>
             <t t-if="p_name">
@@ -75,7 +166,7 @@
         <t t-call="portal.portal_layout">
             <div role="dialog" class="modal fade" id="modeledit">
                 <div class="modal-dialog">
-                    <form action="/dev_expense/expense_create" method="post"
+                    <form action="/dev_expense/expense_create" method="POST"
                           class="modal-content" enctype="multipart/form-data">
                         <input type="hidden" name="csrf_token"
                                t-att-value="request.csrf_token()"/>
@@ -95,7 +186,7 @@
                             </div>
                             <div class="form-group field-login">
                                 <label for="employee_id">Product</label>
-                                <select class="custom-select" name="product_id"
+                                <select class="form-select" name="product_id"
                                         id="product_id" required="True">
                                     <option selected="=selected">
                                     </option>
@@ -116,7 +207,7 @@
                             </div>
                             <div class="form-group field-login">
                                 <label for="currency_id">Currency</label>
-                                <select class="custom-select" name="currency_id"
+                                <select class="form-select" name="currency_id"
                                         id="currency_id" required="True">
                                     <t t-foreach="currency_ids or []"
                                        t-as="currency">
@@ -135,7 +226,7 @@
                             </div>
                             <div class="form-group field-login">
                                 <label for="cost_center">Cost Center</label>
-                                <select class="custom-select" name="cost_center"
+                                <select class="form-select" name="cost_center"
                                         id="cost_center" required="True">
                                     <option selected="selected">
                                     </option>
@@ -176,7 +267,7 @@
 
                             <div class="form-group field-login">
                                 <label for="project_site">Project/Site</label>
-                                <select class="custom-select"
+                                <select class="form-select"
                                         name="project_site"
                                         id="project_site" required="True">
                                     <option selected="selected">
@@ -216,12 +307,6 @@
                                 </select>
                             </div>
                             <div class="form-group field-login">
-                                <label for="description">Bill Reference</label>
-                                <input type="Integer"
-                                       class="form-control form-control-sm"
-                                       name="bill_reference"/>
-                            </div>
-                            <div class="form-group field-login">
                                 <label for="date">Upload Document</label>
                                 <input type="file" class="form-control"
                                        name="expense_file" required="True"
@@ -233,7 +318,8 @@
                                 Submit
                             </button>
                             <button type="button" class="btn btn-primary"
-                                    data-dismiss="modal">Close
+                                    data-bs-dismiss="modal">
+                                Close
                             </button>
                         </footer>
                     </form>
@@ -274,7 +360,6 @@
                             <th class="text-left">Unit Price</th>
                             <th class="text-left">Quantity</th>
                             <th class="text-left">Total</th>
-                            <th class="text-left">Amount Due</th>
                             <th class="text-left">Stage</th>
                             <th class="text-left"></th>
                             <th class="text-left"></th>
@@ -292,31 +377,28 @@
                                     <span t-field="l.employee_id.name"/>
                                 </td>
                                 <td class="text-left ">
-                                    <span class="badge badge-pill badge-info"
-                                          title="Current Product of the Expense"
-                                          t-field="l.sudo().product_id.name"/>
+                                    <span
+                                            title="Current Product of the Expense"
+                                            t-field="l.sudo().product_id.name"/>
                                 </td>
 
                                 <td class="text-left">
                                     <span t-field="l.date"/>
                                 </td>
                                 <td class="text-left">
-                                    <span t-field="l.unit_amount"/>
+                                    <span t-field="l.price_unit"/>
                                 </td>
                                 <td class="text-left">
                                     <span t-field="l.quantity"/>
                                 </td>
                                 <td class="text-left">
                                     <span t-esc="l.total_amount"/>
-                                    <span t-esc="l.currency_id.name"/>
                                 </td>
-                                <td class="text-left">
-                                    <span t-esc="l.amount_residual"/>
-                                    <span t-esc="l.currency_id.name"/>
-                                </td>
-                                <td class="text-left">
-                                    <span class="badge badge-pill badge-info"
-                                          t-field="l.state"/>
+                                <td class="text-center">
+                                    <center>
+                                        <span class="d-md-inline"
+                                              t-field="l.state"/>
+                                    </center>
                                 </td>
                                 <td class="text-left">
                                     <t t-if="l.is_manager_approved==False and l.employee_id.parent_id.user_id.id==request.env.user.id and l.state in ['waiting_approval']">
@@ -403,7 +485,7 @@
                                 </td>
                                 <td width="5%" style="padding:3px">:</td>
                                 <td width="50%" style="padding:3px">
-                                    <span t-field="hr_expense.unit_amount"/>
+                                    <span t-field="hr_expense.price_unit"/>
                                 </td>
                             </tr>
                             <tr>
@@ -431,33 +513,23 @@
                                 <td width="5%" style="padding:3px">:</td>
                                 <td width="50%" style="padding:3px">
                                     <span t-esc="hr_expense.total_amount"/>
-                                    <span t-esc="hr_expense.currency_id.name"/>
+                                    <!--                                    <span t-esc="hr_expense.currency_id.name"/>-->
 
-                                </td>
-                            </tr>
-                            <tr>
-                                <td width="35%" style="padding:3px">
-                                    <b>Amount Due</b>
-                                </td>
-                                <td width="5%" style="padding:3px">:</td>
-                                <td width="50%" style="padding:3px">
-                                    <span t-esc="hr_expense.amount_residual"/>
-                                    <span t-esc="hr_expense.currency_id.name"/>
                                 </td>
                             </tr>
                         </table>
                     </div>
                     <div class="col-lg-6">
                         <table width="100%">
-                            <tr>
-                                <td width="35%" style="padding:3px">
-                                    <b>Bill Reference</b>
-                                </td>
-                                <td width="5%" style="padding:3px">:</td>
-                                <td width="50%" style="padding:3px">
-                                    <span t-field="hr_expense.reference"/>
-                                </td>
-                            </tr>
+                            <!--                            <tr>-->
+                            <!--                                <td width="35%" style="padding:3px">-->
+                            <!--                                    <b>Bill Reference</b>-->
+                            <!--                                </td>-->
+                            <!--                                <td width="5%" style="padding:3px">:</td>-->
+                            <!--                                <td width="50%" style="padding:3px">-->
+                            <!--                                    <span t-field="hr_expense.reference"/>-->
+                            <!--                                </td>-->
+                            <!--                            </tr>-->
                             <tr>
                                 <td width="35%" style="padding:3px">
                                     <b>Expense Date</b>
@@ -478,22 +550,22 @@
                             </tr>
                             <tr>
                                 <td width="35%" style="padding:3px">
-                                    <b>Cost Center</b>
+                                    <b>Analytic Distribution</b>
                                 </td>
                                 <td width="5%" style="padding:3px">:</td>
                                 <td width="50%" style="padding:3px">
-                                    <span t-field="hr_expense.sudo().analytic_account_id"/>
+                                    <span t-esc="analytic_distribution"/>
                                 </td>
                             </tr>
-                            <tr>
-                                <td width="35%" style="padding:3px">
-                                    <b>Project Site</b>
-                                </td>
-                                <td width="5%" style="padding:3px">:</td>
-                                <td width="50%" style="padding:3px">
-                                    <span t-field="hr_expense.project_site_id"/>
-                                </td>
-                            </tr>
+                            <!--                            <tr>-->
+                            <!--                                <td width="35%" style="padding:3px">-->
+                            <!--                                    <b>Project Site</b>-->
+                            <!--                                </td>-->
+                            <!--                                <td width="5%" style="padding:3px">:</td>-->
+                            <!--                                <td width="50%" style="padding:3px">-->
+                            <!--                                    <span t-field="hr_expense.project_site_id"/>-->
+                            <!--                                </td>-->
+                            <!--                            </tr>-->
                             <tr>
                                 <td width="35%" style="padding:3px">
                                     <b>Company</b>
@@ -648,7 +720,7 @@
                                 </td>
                                 <td width="5%" style="padding:3px">:</td>
                                 <td width="50%" style="padding:3px">
-                                    <span t-field="hr_expense.unit_amount"/>
+                                    <span t-field="hr_expense.price_unit"/>
                                 </td>
                             </tr>
                             <tr>
@@ -676,33 +748,32 @@
                                 <td width="5%" style="padding:3px">:</td>
                                 <td width="50%" style="padding:3px">
                                     <span t-esc="hr_expense.total_amount"/>
-                                    <span t-esc="hr_expense.currency_id.name"/>
-
+                                    <!--                                    <span t-esc="hr_expense.currency_id.name"/>-->
                                 </td>
                             </tr>
                             <tr>
-                                <td width="35%" style="padding:3px">
-                                    <b>Amount Due</b>
-                                </td>
+                                <!--                                <td width="35%" style="padding:3px">-->
+                                <!--                                    <b>Amount Due</b>-->
+                                <!--                                </td>-->
                                 <td width="5%" style="padding:3px">:</td>
-                                <td width="50%" style="padding:3px">
-                                    <span t-esc="hr_expense.amount_residual"/>
-                                    <span t-esc="hr_expense.currency_id.name"/>
-                                </td>
+                                <!--                                <td width="50%" style="padding:3px">-->
+                                <!--                                    <span t-esc="hr_expense.amount_residual"/>-->
+                                <!--                                    <span t-esc="hr_expense.currency_id.name"/>-->
+                                <!--                                </td>-->
                             </tr>
                         </table>
                     </div>
                     <div class="col-lg-6">
                         <table width="100%">
-                            <tr>
-                                <td width="35%" style="padding:3px">
-                                    <b>Bill Reference</b>
-                                </td>
-                                <td width="5%" style="padding:3px">:</td>
-                                <td width="50%" style="padding:3px">
-                                    <span t-field="hr_expense.reference"/>
-                                </td>
-                            </tr>
+                            <!--                            <tr>-->
+                            <!--                                <td width="35%" style="padding:3px">-->
+                            <!--                                    <b>Bill Reference</b>-->
+                            <!--                                </td>-->
+                            <!--                                <td width="5%" style="padding:3px">:</td>-->
+                            <!--                                <td width="50%" style="padding:3px">-->
+                            <!--                                    <span t-field="hr_expense.reference"/>-->
+                            <!--                                </td>-->
+                            <!--                            </tr>-->
                             <tr>
                                 <td width="35%" style="padding:3px">
                                     <b>Expense Date</b>
@@ -723,22 +794,22 @@
                             </tr>
                             <tr>
                                 <td width="35%" style="padding:3px">
-                                    <b>Cost Center</b>
+                                    <b>Analytic Distribution</b>
                                 </td>
                                 <td width="5%" style="padding:3px">:</td>
                                 <td width="50%" style="padding:3px">
-                                    <span t-field="hr_expense.sudo().analytic_account_id"/>
+                                    <span t-esc="analytic_distribution"/>
                                 </td>
                             </tr>
-                            <tr>
-                                <td width="35%" style="padding:3px">
-                                    <b>Project Site</b>
-                                </td>
-                                <td width="5%" style="padding:3px">:</td>
-                                <td width="50%" style="padding:3px">
-                                    <span t-field="hr_expense.project_site_id"/>
-                                </td>
-                            </tr>
+                            <!--                            <tr>-->
+                            <!--                                <td width="35%" style="padding:3px">-->
+                            <!--                                    <b>Project Site</b>-->
+                            <!--                                </td>-->
+                            <!--                                <td width="5%" style="padding:3px">:</td>-->
+                            <!--                                <td width="50%" style="padding:3px">-->
+                            <!--                                    <span t-field="hr_expense.project_site_id"/>-->
+                            <!--                                </td>-->
+                            <!--                            </tr>-->
                             <tr>
                                 <td width="35%" style="padding:3px">
                                     <b>Company</b>
@@ -767,7 +838,7 @@
                         <header class="modal-header">
                             <h4 class="modal-title">Overtime Request</h4>
                             <button type="button" class="lose"
-                                    data-dismiss="modal" aria-label="Close">
+                                    data-bs-dismiss="modal" aria-label="Close">
                                 &amp;times;
                             </button>
                         </header>
@@ -780,7 +851,7 @@
                             </div>
                             <div class="form-group field-login">
                                 <label for="employee_id">Product</label>
-                                <select class="custom-select" name="product_id"
+                                <select class="form-select" name="product_id"
                                         id="product_id" required="True">
                                     <option selected="=selected">
                                     </option>
@@ -808,7 +879,7 @@
                             </div>
                             <div class="form-group field-login">
                                 <label for="currency_id">Currency</label>
-                                <select class="custom-select" name="currency_id"
+                                <select class="form-select" name="currency_id"
                                         id="currency_id" required="True">
                                     <t t-foreach="currency_ids or []"
                                        t-as="currency">
@@ -827,7 +898,7 @@
                             </div>
                             <div class="form-group field-login">
                                 <label for="cost_center">Cost Center</label>
-                                <select class="custom-select" name="cost_center"
+                                <select class="form-select" name="cost_center"
                                         id="cost_center" required="True">
                                     <option selected="selected">
                                     </option>
@@ -868,7 +939,7 @@
 
                             <div class="form-group field-login">
                                 <label for="project_site">Project/Site</label>
-                                <select class="custom-select"
+                                <select class="form-select"
                                         name="project_site"
                                         id="project_site" required="True">
                                     <option selected="selected">
@@ -905,12 +976,12 @@
                                     </t>
                                 </select>
                             </div>
-                            <div class="form-group field-login">
-                                <label for="description">Bill Reference</label>
-                                <input type="Integer"
-                                       class="form-control form-control-sm"
-                                       name="bill_reference"/>
-                            </div>
+                            <!--                            <div class="form-group field-login">-->
+                            <!--                                <label for="description">Bill Reference</label>-->
+                            <!--                                <input type="Integer"-->
+                            <!--                                       class="form-control form-control-sm"-->
+                            <!--                                       name="bill_reference"/>-->
+                            <!--                            </div>-->
                             <div class="form-group field-login">
                                 <label for="date">Upload Document</label>
                                 <input type="file" class="form-control"
@@ -923,7 +994,7 @@
                                 Submit
                             </button>
                             <button type="button" class="btn btn-primary"
-                                    data-dismiss="modal">Close
+                                    data-bs-dismiss="modal">Close
                             </button>
                         </footer>
                     </form>
@@ -962,7 +1033,7 @@
                             <th class="text-left">Unit Price</th>
                             <th class="text-left">Quantity</th>
                             <th class="text-left">Total</th>
-                            <th class="text-left">Amount Due</th>
+                            <!--                            <th class="text-left">Amount Due</th>-->
                             <th class="text-left">Stage</th>
                             <th class="text-left"></th>
                             <th class="text-left"></th>
@@ -980,30 +1051,36 @@
                                     <span t-field="l.employee_id.name"/>
                                 </td>
                                 <td class="text-left ">
-                                    <span class="badge badge-pill badge-info"
-                                          title="Current Product of the Expense"
-                                          t-field="l.sudo().product_id.name"/>
+                                    <span
+                                            title="Current Product of the Expense"
+                                            t-field="l.sudo().product_id.name"/>
                                 </td>
                                 <td class="text-left">
                                     <span t-field="l.date"/>
                                 </td>
                                 <td class="text-left">
-                                    <span t-field="l.unit_amount"/>
+                                    <span t-field="l.price_unit"/>
                                 </td>
                                 <td class="text-left">
                                     <span t-field="l.quantity"/>
                                 </td>
                                 <td class="text-left">
                                     <span t-esc="l.total_amount"/>
-                                    <span t-esc="l.currency_id.name"/>
+                                    <!--                                    <span t-esc="l.currency_id.name"/>-->
                                 </td>
-                                <td class="text-left">
-                                    <span t-esc="l.amount_residual"/>
-                                    <span t-esc="l.currency_id.name"/>
-                                </td>
-                                <td class="text-left">
-                                    <span class="badge badge-pill badge-info"
-                                          t-field="l.state"/>
+                                <!--                                <td class="text-left">-->
+                                <!--                                    <span t-esc="l.amount_residual"/>-->
+                                <!--                                    <span t-esc="l.currency_id.name"/>-->
+                                <!--                                </td>-->
+                                <!--                                <td class="text-left">-->
+                                <!--                                    <span class="badge badge-pill badge-info"-->
+                                <!--                                          t-field="l.state"/>-->
+                                <!--                                </td>-->
+                                <td class="text-center badge badge-pill badge-info">
+                                    <center>
+                                        <span class="d-md-inline"
+                                              t-field="l.state"/>
+                                    </center>
                                 </td>
                                 <td class="text-left">
                                     <t t-if="l.is_manager_approved==False and l.employee_id.parent_id.user_id.id==request.env.user.id and l.state in ['waiting_approval']">
@@ -1184,7 +1261,7 @@
                                 </td>
                                 <td width="5%" style="padding:3px">:</td>
                                 <td width="50%" style="padding:3px">
-                                    <span t-field="hr_expense.unit_amount"/>
+                                    <span t-field="hr_expense.price_unit"/>
                                 </td>
                             </tr>
                             <tr>
@@ -1212,33 +1289,33 @@
                                 <td width="5%" style="padding:3px">:</td>
                                 <td width="50%" style="padding:3px">
                                     <span t-esc="hr_expense.total_amount"/>
-                                    <span t-esc="hr_expense.currency_id.name"/>
+                                    <!--                                    <span t-esc="hr_expense.currency_id.name"/>-->
 
                                 </td>
                             </tr>
                             <tr>
-                                <td width="35%" style="padding:3px">
-                                    <b>Amount Due</b>
-                                </td>
+                                <!--                                <td width="35%" style="padding:3px">-->
+                                <!--                                    <b>Amount Due</b>-->
+                                <!--                                </td>-->
                                 <td width="5%" style="padding:3px">:</td>
-                                <td width="50%" style="padding:3px">
-                                    <span t-esc="hr_expense.amount_residual"/>
-                                    <span t-esc="hr_expense.currency_id.name"/>
-                                </td>
+                                <!--                                <td width="50%" style="padding:3px">-->
+                                <!--                                    <span t-esc="hr_expense.amount_residual"/>-->
+                                <!--                                    <span t-esc="hr_expense.currency_id.name"/>-->
+                                <!--                                </td>-->
                             </tr>
                         </table>
                     </div>
                     <div class="col-lg-6">
                         <table width="100%">
-                            <tr>
-                                <td width="35%" style="padding:3px">
-                                    <b>Bill Reference</b>
-                                </td>
-                                <td width="5%" style="padding:3px">:</td>
-                                <td width="50%" style="padding:3px">
-                                    <span t-field="hr_expense.reference"/>
-                                </td>
-                            </tr>
+                            <!--                            <tr>-->
+                            <!--                                <td width="35%" style="padding:3px">-->
+                            <!--                                    <b>Bill Reference</b>-->
+                            <!--                                </td>-->
+                            <!--                                <td width="5%" style="padding:3px">:</td>-->
+                            <!--                                <td width="50%" style="padding:3px">-->
+                            <!--                                    <span t-field="hr_expense.reference"/>-->
+                            <!--                                </td>-->
+                            <!--                            </tr>-->
                             <tr>
                                 <td width="35%" style="padding:3px">
                                     <b>Expense Date</b>
@@ -1266,15 +1343,15 @@
                                     <span t-field="hr_expense.sudo().analytic_account_id"/>
                                 </td>
                             </tr>
-                            <tr>
-                                <td width="35%" style="padding:3px">
-                                    <b>Project Site</b>
-                                </td>
-                                <td width="5%" style="padding:3px">:</td>
-                                <td width="50%" style="padding:3px">
-                                    <span t-field="hr_expense.project_site_id"/>
-                                </td>
-                            </tr>
+                            <!--                            <tr>-->
+                            <!--                                <td width="35%" style="padding:3px">-->
+                            <!--                                    <b>Project Site</b>-->
+                            <!--                                </td>-->
+                            <!--                                <td width="5%" style="padding:3px">:</td>-->
+                            <!--                                <td width="50%" style="padding:3px">-->
+                            <!--                                    <span t-field="hr_expense.project_site_id"/>-->
+                            <!--                                </td>-->
+                            <!--                            </tr>-->
                             <tr>
                                 <td width="35%" style="padding:3px">
                                     <b>Company</b>
@@ -1303,7 +1380,7 @@
                         <header class="modal-header">
                             <h4 class="modal-title">PerDiem Request</h4>
                             <button type="button" class="close"
-                                    data-dismiss="modal" aria-label="Close">
+                                    data-bs-dismiss="modal" aria-label="Close">
                                 &amp;times;
                             </button>
                         </header>
@@ -1316,7 +1393,7 @@
                             </div>
                             <div class="form-group field-login">
                                 <label for="employee_id">Product</label>
-                                <select class="custom-select" name="product_id"
+                                <select class="form-select" name="product_id"
                                         id="product_id" required="True">
                                     <option selected="=selected">
                                     </option>
@@ -1344,7 +1421,7 @@
                             </div>
                             <div class="form-group field-login">
                                 <label for="currency_id">Currency</label>
-                                <select class="custom-select" name="currency_id"
+                                <select class="form-select" name="currency_id"
                                         id="currency_id" required="True">
                                     <t t-foreach="currency_ids or []"
                                        t-as="currency">
@@ -1363,7 +1440,7 @@
                             </div>
                             <div class="form-group field-login">
                                 <label for="cost_center">Cost Center</label>
-                                <select class="custom-select" name="cost_center"
+                                <select class="form-select" name="cost_center"
                                         id="cost_center" required="True">
                                     <option selected="selected">
                                     </option>
@@ -1404,7 +1481,7 @@
 
                             <div class="form-group field-login">
                                 <label for="project_site">Project/Site</label>
-                                <select class="custom-select"
+                                <select class="form-select"
                                         name="project_site"
                                         id="project_site" required="True">
                                     <option selected="selected">
@@ -1441,12 +1518,12 @@
                                     </t>
                                 </select>
                             </div>
-                            <div class="form-group field-login">
-                                <label for="description">Bill Reference</label>
-                                <input type="Integer"
-                                       class="form-control form-control-sm"
-                                       name="bill_reference"/>
-                            </div>
+                            <!--                            <div class="form-group field-login">-->
+                            <!--                                <label for="description">Bill Reference</label>-->
+                            <!--                                <input type="Integer"-->
+                            <!--                                       class="form-control form-control-sm"-->
+                            <!--                                       name="bill_reference"/>-->
+                            <!--                            </div>-->
                             <div class="form-group field-login">
                                 <label for="date">Upload Document</label>
                                 <input type="file" class="form-control"
@@ -1459,7 +1536,7 @@
                                 Submit
                             </button>
                             <button type="button" class="btn btn-primary"
-                                    data-dismiss="modal">Close
+                                    data-bs-dismiss="modal">Close
                             </button>
                         </footer>
                     </form>
@@ -1499,7 +1576,7 @@
                             <th class="text-left">Unit Price</th>
                             <th class="text-left">Quantity</th>
                             <th class="text-left">Total</th>
-                            <th class="text-left">Amount Due</th>
+                            <!--                            <th class="text-left">Amount Due</th>-->
                             <th class="text-left">Stage</th>
                             <th class="text-left"></th>
                             <th class="text-left"></th>
@@ -1517,30 +1594,36 @@
                                     <span t-field="l.employee_id.name"/>
                                 </td>
                                 <td class="text-left ">
-                                    <span class="badge badge-pill badge-info"
-                                          title="Current Product of the Expense"
-                                          t-field="l.sudo().product_id.name"/>
+                                    <span
+                                            title="Current Product of the Expense"
+                                            t-field="l.sudo().product_id.name"/>
                                 </td>
                                 <td class="text-left">
                                     <span t-field="l.date"/>
                                 </td>
                                 <td class="text-left">
-                                    <span t-field="l.unit_amount"/>
+                                    <span t-field="l.price_unit"/>
                                 </td>
                                 <td class="text-left">
                                     <span t-field="l.quantity"/>
                                 </td>
                                 <td class="text-left">
                                     <span t-esc="l.total_amount"/>
-                                    <span t-esc="l.currency_id.name"/>
+                                    <!--                                    <span t-esc="l.currency_id.name"/>-->
                                 </td>
-                                <td class="text-left">
-                                    <span t-esc="l.amount_residual"/>
-                                    <span t-esc="l.currency_id.name"/>
-                                </td>
-                                <td class="text-left">
-                                    <span class="badge badge-pill badge-info"
-                                          t-field="l.state"/>
+                                <!--                                <td class="text-left">-->
+                                <!--                                    <span t-esc="l.amount_residual"/>-->
+                                <!--                                    <span t-esc="l.currency_id.name"/>-->
+                                <!--                                </td>-->
+                                <!--                                <td class="text-left">-->
+                                <!--                                    <span class="badge badge-pill badge-info"-->
+                                <!--                                          t-field="l.state"/>-->
+                                <!--                                </td>-->
+                                <td class="text-center badge badge-pill badge-info">
+                                    <center>
+                                        <span class="d-md-inline"
+                                              t-field="l.state"/>
+                                    </center>
                                 </td>
                                 <td class="text-left">
                                     <t t-if="l.is_manager_approved==False and l.employee_id.parent_id.user_id.id==request.env.user.id and l.state in ['waiting_approval']">

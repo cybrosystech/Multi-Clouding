@@ -4,15 +4,6 @@
         <field name="model">account.asset</field>
         <field name="inherit_id" ref="account_asset.view_account_asset_form"/>
         <field name="arch" type="xml">
-<!--        <Replaced the button pause depreciation to remove the attribute condition for invisible at asset type>        -->
-            <button name="action_asset_pause" position="replace">
-                <button name="action_asset_pause" string="Pause Depreciation" type="object" attrs="{'invisible': [('state', '!=', 'open')]}"/>
-            </button>
-
-            <button name="action_set_to_close" position="replace">
-                <button name="action_set_to_close" string="Sell or Dispose" type="object" class="oe_highlight" attrs="{'invisible': [('state', '!=', 'open')]}"/>
-            </button>
-
             <field name="original_value" position="after">
                 <field name="request_approval_bool" invisible="1"/>
                 <field name="asset_approve_bool" invisible="1"/>
@@ -20,12 +11,16 @@
                 <field name="button_validate_bool" invisible="1"/>
             </field>
             <xpath expr="//button[@name='compute_depreciation_board']" position="before">
-                 <button name="request_approval_asset" string="Request Approval" type="object" class="btn-primary" attrs="{'invisible': ['|', ('request_approval_bool', '=', True), ('state', 'in', ['to_approve', 'model'])]}"/>
-                 <button name="asset_approve" string="Approve" type="object" class="btn-primary" attrs="{'invisible': ['|', ('asset_approve_bool', '=', False), ('approved_life_bool', '=', True)]}"/>
-                 <button name="reject_asset" string="Reject" type="object" class="btn-primary" attrs="{'invisible': ['|', ('asset_approve_bool', '=', False), ('approved_life_bool', '=', True)]}"/>
+                 <button name="request_approval_asset" string="Request Approval" type="object" class="btn-primary"
+                 invisible="request_approval_bool == True or state not in ['draft']"/>
+                 <button name="asset_approve" string="Approve" type="object" class="btn-primary"
+                 invisible="asset_approve_bool == False or approved_life_bool == True"/>
+                 <button name="reject_asset" string="Reject" type="object" class="btn-primary"
+                 invisible="asset_approve_bool == False or approved_life_bool == True"/>
             </xpath>
             <button name="validate" position="replace">
-                <button name="validate" attrs="{'invisible': [('button_validate_bool', '=', False)]}" string="Confirm" type="object" class="oe_highlight"/>
+                <button name="validate" string="Confirm" type="object" class="oe_highlight"
+                invisible="button_validate_bool == False"/>
             </button>
             <xpath expr="//notebook" position="inside">
                 <page name="asset_approval_cycle" string="Approval Cycle">

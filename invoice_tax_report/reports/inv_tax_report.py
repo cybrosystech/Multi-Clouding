@@ -1,10 +1,10 @@
-from odoo import models, api, fields
+# -*- coding: utf-8 -*-
+from odoo import models, api
 from odoo.exceptions import ValidationError
-from PIL import Image
 
 
 class ReportInvoiceTaxReport(models.AbstractModel):
-    _name = 'report.invoice_tax_report.inv_tax_report'
+    _name = 'report.tasc_invoice_tax_report.inv_tax_report'
     _description = 'Invoice Tax report'
 
     @api.model
@@ -19,6 +19,7 @@ class ReportInvoiceTaxReport(models.AbstractModel):
         rate = docs.company_currency_id._get_conversion_rate(
             docs.currency_id, to_currency, docs.company_id,
             docs.date)
+        print('rate', rate)
         return {
             'doc_ids': docids,
             'doc_model': 'account.move',

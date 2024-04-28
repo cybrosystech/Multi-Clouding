@@ -320,7 +320,6 @@ accountReportsWidget.include({
         if (this.report_options.analytic) {
             if (!this.M2MFilters) {
                 var fields = {};
-                console.log('ffffffffff',this.odoo_context)
                 if (this.report_options.analytic_accounts) {
                     fields['analytic_accounts'] = {
                         label: _t('Cost Center'),

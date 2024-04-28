@@ -1,6 +1,7 @@
 from odoo import models, fields
 from odoo.exceptions import UserError
 from odoo.tools.safe_eval import datetime, json
+from odoo.tools import date_utils, get_lang
 import calendar
 from datetime import timedelta
 from odoo.tools import date_utils
@@ -123,9 +124,12 @@ class ProfitabilityReportOwned(models.Model):
         if profitability_owned.from_date and profitability_owned.to_date:
             if profitability_owned.from_date > profitability_owned.to_date:
                 raise UserError("Start date should be less than end date")
-        group = self.env['account.analytic.group'].search(
-            [('name', 'ilike', 'owned'),
-             ('company_id', '=', profitability_owned.company_id.id)])
+        # group = self.env['account.analytic.group'].search(
+        #     [('name', 'ilike', 'owned'),
+        #      ('company_id', '=', profitability_owned.company_id.id)])
+        group = self.env['account.analytic.plan'].search(
+            [('name', 'ilike', 'owned')])
+
         data = {
             'ids': self.ids,
             'model': self._name,
@@ -205,9 +209,11 @@ class ProfitabilityReportOwned(models.Model):
         if profitability_owned.from_date and profitability_owned.to_date:
             if profitability_owned.from_date > profitability_owned.to_date:
                 raise UserError("Start date should be less than end date")
-        group = self.env['account.analytic.group'].search(
-            [('name', 'ilike', 'owned'),
-             ('company_id', '=', profitability_owned.company_id.id)])
+        # group = self.env['account.analytic.group'].search(
+        #     [('name', 'ilike', 'owned'),
+        #      ('company_id', '=', profitability_owned.company_id.id)])
+        group = self.env['account.analytic.plan'].search(
+            [('name', 'ilike', 'owned')])
         data = {
             'ids': self.ids,
             'model': self._name,
@@ -287,9 +293,8 @@ class ProfitabilityReportOwned(models.Model):
         if profitability_owned.from_date and profitability_owned.to_date:
             if profitability_owned.from_date > profitability_owned.to_date:
                 raise UserError("Start date should be less than end date")
-        group = self.env['account.analytic.group'].search(
-            [('name', 'ilike', 'owned'),
-             ('company_id', '=', profitability_owned.company_id.id)])
+        group = self.env['account.analytic.plan'].search(
+            [('name', 'ilike', 'owned')])
         data = {
             'ids': self.ids,
             'model': self._name,
@@ -369,9 +374,8 @@ class ProfitabilityReportOwned(models.Model):
         if profitability_owned.from_date and profitability_owned.to_date:
             if profitability_owned.from_date > profitability_owned.to_date:
                 raise UserError("Start date should be less than end date")
-        group = self.env['account.analytic.group'].search(
-            [('name', 'ilike', 'owned'),
-             ('company_id', '=', profitability_owned.company_id.id)])
+        group = self.env['account.analytic.plan'].search(
+            [('name', 'ilike', 'owned')])
         data = {
             'ids': self.ids,
             'model': self._name,
@@ -405,16 +409,21 @@ class ProfitabilityReportOwned(models.Model):
 
     def get_profitability_owned(self, data, profitability_owned_report,
                                 profitability_owned):
+        lang = self.env.user.lang or get_lang(self.env).code
+
         if profitability_owned_report:
             account_fa_depreciation_ids = []
             profitability_owned_report_load = json.loads(
                 profitability_owned_report)
-            query = '''
-                                        select id,name from account_analytic_account as analatyc_account 
+            name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
+                self.pool[
+                    'account.analytic.account'].name.translate else 'analatyc_account.name'
+            query = f'''
+                                        select id,{name} as name from account_analytic_account as analatyc_account 
                                         WHERE analatyc_account.analytic_account_type = 'project_site'
                                         and analatyc_account.company_id = ''' + str(
                 data['company_id']) + ''' 
-                                        and analatyc_account.group_id = ''' + str(
+                                        and analatyc_account.plan_id = ''' + str(
                 data['analatyc_account_group'])
 
             cr = self._cr
@@ -634,12 +643,15 @@ class ProfitabilityReportOwned(models.Model):
         else:
             account_fa_depreciation_ids = []
             dummy_prof_list = []
-            query = '''
-                            select id,name from account_analytic_account as analatyc_account 
+            name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
+                self.pool[
+                    'account.analytic.account'].name.translate else 'analatyc_account.name'
+            query = f'''
+                            select id,{name} as name from account_analytic_account as analatyc_account 
                             WHERE analatyc_account.analytic_account_type = 'project_site'
                             and analatyc_account.company_id = ''' + str(
                 data['company_id']) + ''' 
-                            and analatyc_account.group_id = ''' + str(
+                            and analatyc_account.plan_id = ''' + str(
                 data['analatyc_account_group'])
 
             cr = self._cr
@@ -904,7 +916,6 @@ class ProfitabilityReportOwned(models.Model):
 
         sheet.write('B3', 'Site Number', sub_heading)
         sheet.write('C3', 'Site code', sub_heading)
-
         sheet.write('B4', 'Site Number', sub_heading1)
         sheet.write('C4', 'Site code', sub_heading1)
         sheet.write('D4', 'Service Revenue', sub_heading1)
@@ -926,7 +937,6 @@ class ProfitabilityReportOwned(models.Model):
         sheet.write('U4', 'ROU Depreciation', sub_heading1)
         sheet.write('V4', 'FA Depreciation', sub_heading1)
         sheet.write('W4', 'Leases Finance Cost', sub_heading1)
-
         sheet.merge_range('B2:S2', profitability_object.current_filter,
                           main_head)
         sheet.merge_range('U2:W2', '', main_head)

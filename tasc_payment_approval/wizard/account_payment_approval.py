@@ -1,5 +1,3 @@
-import base64
-import csv
 from odoo import api, models, fields
 from odoo.exceptions import UserError
 
@@ -33,9 +31,8 @@ class PaymentApproval(models.Model):
     company_id = fields.Many2one('res.company', 'Company',
                                  default=lambda self: self.env.company)
     bank_integration_status = fields.Selection(
-        [('pending', 'Pending'),('in_progress','In Progress'),
-         ('success', 'Success'),('fail', 'Failed')], default='pending')
-
+        [('pending', 'Pending'), ('in_progress', 'In Progress'),
+         ('success', 'Success'), ('fail', 'Failed')], default='pending')
 
     def unlink(self):
         if self.state != 'draft':

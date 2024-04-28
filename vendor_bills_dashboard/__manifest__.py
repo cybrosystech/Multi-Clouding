@@ -10,13 +10,17 @@
     'author': "",
     'website': "",
     'category': 'Accounting',
-    'version': '14.0.1.1.0',
-    'depends': ['account', 'account_analytic_parent', 'approve_status'],
+    'version': '17.0.1.0.0',
+    'depends': ['account', 'approve_status'],
 
     'data':
         [
             'views/account_dashboard_inherit.xml',
             'views/account_move_filter_inherit.xml',
             'data/vendor_bills_approval.xml'
-        ]
+        ],
+    "license": 'AGPL-3',
+    'installable': True,
+    'auto_install': False,
+    'application': False,
 }

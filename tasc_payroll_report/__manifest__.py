@@ -9,8 +9,8 @@
     'author': "",
     'website': "",
     'category': 'Accounting',
-    'version': '14.0.1.0.0',
-    'depends': ['hr_payroll'],
+    'version': '17.0.1.0.0',
+    'depends': ['account','hr_payroll'],
 
     'data':
         [

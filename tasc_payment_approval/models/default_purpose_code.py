@@ -1,4 +1,4 @@
-from odoo import api,fields, models
+from odoo import fields, models
 
 
 class DefaultPurposeCode(models.Model):
@@ -10,4 +10,3 @@ class DefaultPurposeCode(models.Model):
     _sql_constraints = [
         ('company_unique', 'unique(company_id)', 'Company Already Exist.')
     ]
-

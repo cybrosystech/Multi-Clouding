@@ -7,11 +7,16 @@
     'author': "",
     'website': "",
     'category': 'Accounting',
-    'version': '14.0.1.0.0',
+    'version': '1.0',
     'depends': ['analytic_account_types', 'base'],
 
     'data':
         [
             'views/account_assets_inherit_view.xml'
-        ]
+        ],
+    "license": 'AGPL-3',
+    'installable': True,
+    'auto_install': False,
+    'application': False,
+
 }

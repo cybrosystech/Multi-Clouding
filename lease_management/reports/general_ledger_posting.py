@@ -9,7 +9,6 @@ from odoo.tools.misc import get_lang
 from odoo.fields import Datetime as fieldsDatetime
 import calendar
 
-
 try:
     from odoo.tools.misc import xlsxwriter
 except ImportError:
@@ -26,7 +25,6 @@ class GeneralLedgerPostingWizard(models.TransientModel):
             return first_day_this_month
 
     def _get_date_to(self):
-        # import calendar
         today = datetime.now().today()
         last_day = calendar.monthrange(today.year,today.month)
         last_day_this_month = date(day=last_day[1], month=today.month, year=today.year)
@@ -52,7 +50,6 @@ class GeneralLedgerPostingWizard(models.TransientModel):
         if self.analytic_account_ids:
             domain.append(('analytic_account_id', 'in', self.analytic_account_ids.ids))
         if self.leasee_contract_ids:
-            # domain.append(('move_id.leasee_contract_id', 'in', self.leasee_contract_ids.ids))
             domain += ['|', ('move_id.leasee_contract_id', 'child_of', self.leasee_contract_ids.ids)]
             assets = self.leasee_contract_ids.mapped('asset_id')
             domain += [('move_id.asset_id', 'child_of', assets.ids)]
@@ -68,16 +65,14 @@ class GeneralLedgerPostingWizard(models.TransientModel):
                 'account_name': line.account_id.name,
                 'description': line.name.split(':', 1)[0] if line.name else line.product_id.name,
                 'amount': line.amount_currency,
-                'lease_no': line.move_id.leasee_contract_id.name if line.move_id.leasee_contract_id.name else line.name.split(':', 1)[0],
+                'lease_no': line.move_id.leasee_contract_id.name if line.move_id.leasee_contract_id.name else line.name.split(':', 1)[0] if line.name else '',
                 'lease_state': line.move_id.leasee_contract_id.state or '',
                 'move_state': line.move_id.state or '',
                 'dimension_1': line.analytic_account_id.name or '',
                 'dimension_2': line.project_site_id.name or '',
-                'dimension_3': line.type_id.name or '',
-                'dimension_4': line.location_id.name or '',
+                'dimension_3': '',
+                'dimension_4': '',
                 'company_name': line.company_id.name,
-                # 'accounting_period_end_date': 1,
-                # 'line_no': 1,
                 'download_datetime': fieldsDatetime.now().strftime(DTF),
                 'debit': line.debit,
                 'credit': line.credit,
@@ -166,7 +161,7 @@ class GeneralLedgerPostingWizard(models.TransientModel):
             'type': 'ir.actions.act_url',
             'name': 'General Ledger Posting',
             'url': '/web/content/%s/%s/excel_sheet/%s?download=true' % (self._name, self.id, self.excel_sheet_name),
-            'target': 'self'
+            'target': 'new'
         }
 
     def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data, header_format):
@@ -215,10 +210,6 @@ class GeneralLedgerPostingWizard(models.TransientModel):
 
         col += 1
         worksheet.write(row, col, _('Company Name'), header_format)
-        # col += 1
-        # worksheet.write(row, col, _('Accounting Period End Date'), header_format)
-        # col += 1
-        # worksheet.write(row, col, _('Line No.'), header_format)
         col += 1
         worksheet.write(row, col, _('Download Date and Time'), header_format)
         col += 1
@@ -264,10 +255,6 @@ class GeneralLedgerPostingWizard(models.TransientModel):
             worksheet.write(row, col, line['dimension_4'], STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['company_name'], STYLE_LINE_Data)
-            # col += 1
-            # worksheet.write(row, col, line['accounting_period_end_date'], STYLE_LINE_Data)
-            # col += 1
-            # worksheet.write(row, col, line['line_no'], STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['download_datetime'], STYLE_LINE_Data)
             col += 1

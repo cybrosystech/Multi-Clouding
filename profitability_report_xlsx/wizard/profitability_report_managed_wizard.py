@@ -103,7 +103,7 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
                                                     self.env.company.id)])
 
     def default_analytic_account_group(self):
-        group = self.env['account.analytic.group'].search(
+        group = self.env['account.analytic.plan'].search(
             [('name', 'ilike', 'managed')])
         if not group:
             raise UserError("Please configure analytic group account for Managed")
@@ -195,7 +195,7 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
                                           ('custom', 'Custom')]),
                               string='Periods', required=True,
                               default='this_month')
-    analytic_account_group = fields.Many2one('account.analytic.group',
+    analytic_account_group = fields.Many2one('account.analytic.plan',
                                              default=default_analytic_account_group)
     from_date = fields.Date('From')
     to_date = fields.Date('To')

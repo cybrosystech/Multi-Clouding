@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates>
+    <t t-name="tasc_budget_analysis_report.BudgetAnalysisReportHeader" t-inherit="account_reports.AccountReportHeaderCustomizable">
+        <xpath expr="//thead[@id='table_header']" position="replace"/>
+    </t>
+</templates>

@@ -8,7 +8,7 @@
         "Spreadsheet Data Library Connector" enables seamless data import from CSV, Excel, and Google Spreadsheets, 
         streamlining data integration in Odoo.""",
     "category": "Reporting",
-    "version": "14.0.0.1.0",
+    "version": "17.0.1.0.0",
     "development_status": "Alpha",  # Options: Alpha|Beta|Production/Stable|Mature
     "auto_install": False,
     "installable": True,
@@ -30,12 +30,12 @@
     # always loaded
     'data': [
         # 'security/ir.model.access.csv',
-        'data/example.xml',
-        'views/views.xml',
-        'views/templates.xml',
+        # 'data/example.xml',
+        # 'views/views.xml',
+        # 'views/templates.xml',
     ],
     # only loaded in demonstration mode
     'demo': [
-        'demo/demo.xml',
+        # 'demo/demo.xml',
     ],
 }

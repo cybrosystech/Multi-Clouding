@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="generic_tax_report_custom" model="account.report">
+        <field name="name">Group by: Tax Report Custom</field>
+        <field name="root_report_id" ref="account.generic_tax_report"/>
+        <field name="country_id" ref="base.ae"/>
+        <field name="filter_fiscal_position" eval="True"/>
+        <field name="availability_condition">country</field>
+        <field name="column_ids">
+            <record id="generic_tax_report_custom_base" model="account.report.column">
+                <field name="name">Base</field>
+                <field name="expression_label">base</field>
+            </record>
+            <record id="generic_tax_report_custom_net" model="account.report.column">
+                <field name="name">Tax</field>
+                <field name="expression_label">tax</field>
+            </record>
+        </field>
+        <field name="line_ids">
+            <record id="tax_report_line_all_sales_custom" model="account.report.line">
+                <field name="name">VAT on Sales and all other Ouputs</field>
+                <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'aggregation', 'formula': '1_STANDARD_RATED_SUPPLIES_CUSTOM.base +
+                    TAX_REF_TOUR_SCHEME_CUSTOM.base + REVERSE_CHARGE_PRO_CUSTOM.base +
+                    ZERO_RATE_SUPP_CUSTOM.base + EXAMPT_SUPP_CUSTOM.base + OUT_OF_SCOPE_CUSTOM_0.base +
+                    GOODS_IMPORT_IN_UAE_CUSTOM.base + ADJUST_GOODS_IMPORT_IN_UAE_CUSTOM.base'}),
+                                Command.create({'label': 'tax', 'engine': 'aggregation', 'formula': '1_STANDARD_RATED_SUPPLIES_CUSTOM.tax +
+                    TAX_REF_TOUR_SCHEME_CUSTOM.tax + REVERSE_CHARGE_PRO_CUSTOM.tax +
+                    ZERO_RATE_SUPP_CUSTOM.tax + EXAMPT_SUPP_CUSTOM.base + OUT_OF_SCOPE_CUSTOM_0.tax +
+                    GOODS_IMPORT_IN_UAE_CUSTOM.tax + ADJUST_GOODS_IMPORT_IN_UAE_CUSTOM.tax'})]"/>
+                <field name="hierarchy_level">0</field>
+                <field name="children_ids">
+                    <record id="tax_report_line_standard_rated_supplies_custom" model="account.report.line">
+                        <field name="name">1. Standard Rated supplies</field>
+                        <field name="code">1_STANDARD_RATED_SUPPLIES_CUSTOM</field>
+                        <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'aggregation', 'formula': 'STD_RATE_SUPP_CUSTOM_AB.base +
+                            STD_RATE_SUPP_CUSTOM_DB.base + STD_RATE_SUPP_CUSTOM_SJ.base +
+                            STD_RATE_SUPP_CUSTOM_AJ.base + STD_RATE_SUPP_CUSTOM_UM.base +
+                            STD_RATE_SUPP_CUSTOM_RA.base + STD_RATE_SUPP_CUSTOM_FU.base'}),
+                                Command.create({'label': 'tax', 'engine': 'aggregation', 'formula': 'STD_RATE_SUPP_CUSTOM_AB.tax +
+                            STD_RATE_SUPP_CUSTOM_DB.tax + STD_RATE_SUPP_CUSTOM_SJ.tax +
+                            STD_RATE_SUPP_CUSTOM_AJ.tax + STD_RATE_SUPP_CUSTOM_UM.tax +
+                            STD_RATE_SUPP_CUSTOM_RA.tax + STD_RATE_SUPP_CUSTOM_FU.tax'})]"/>
+                        <field name="children_ids">
+                            <record id="tax_report_line_standard_rated_supplies_custom_abu_dhabi"
+                                    model="account.report.line">
+                                <field name="name">a. Abu Dhabi</field>
+                                <field name="code">STD_RATE_SUPP_CUSTOM_AB</field>
+                                <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'tax_tags', 'formula': 'a. Abu Dhabi (Base)'}),
+                                Command.create({'label': 'tax', 'engine': 'tax_tags', 'formula': 'a. Abu Dhabi (Tax)'})]"/>
+                            </record>
+                            <record id="tax_report_line_standard_rated_supplies_custom_dubai"
+                                    model="account.report.line">
+                                <field name="name">b. Dubai</field>
+                                <field name="code">STD_RATE_SUPP_CUSTOM_DB</field>
+                                <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'tax_tags', 'formula': 'b. Dubai (Base)'}),
+                                Command.create({'label': 'tax', 'engine': 'tax_tags', 'formula': 'b. Dubai (Tax)'})]"/>
+                            </record>
+                            <record id="tax_report_line_standard_rated_supplies_custom_sharjah"
+                                    model="account.report.line">
+                                <field name="name">c. Sharjah</field>
+                                <field name="code">STD_RATE_SUPP_CUSTOM_SJ</field>
+                                <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'tax_tags', 'formula': 'c. Sharjah (Base)'}),
+                                Command.create({'label': 'tax', 'engine': 'tax_tags', 'formula': 'c. Sharjah (Tax)'})]"/>
+                            </record>
+                            <record id="tax_report_line_standard_rated_supplies_custom_ajman"
+                                    model="account.report.line">
+                                <field name="name">d. Ajman</field>
+                                <field name="code">STD_RATE_SUPP_CUSTOM_AJ</field>
+                                <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'tax_tags', 'formula': 'd. Ajman (Base)'}),
+                                Command.create({'label': 'tax', 'engine': 'tax_tags', 'formula': 'd. Ajman (Tax)'})]"/>
+                            </record>
+                            <record id="tax_report_line_standard_rated_supplies_custom_umm_al_quwain"
+                                    model="account.report.line">
+                                <field name="name">e. Umm Al Quwain</field>
+                                <field name="code">STD_RATE_SUPP_CUSTOM_UM</field>
+                                <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'tax_tags', 'formula': 'e. Umm Al Quwain (Base)'}),
+                                Command.create({'label': 'tax', 'engine': 'tax_tags', 'formula': 'e. Umm Al Quwain (Tax)'})]"/>
+                            </record>
+                            <record id="tax_report_line_standard_rated_supplies_custom_ras_al_khaima"
+                                    model="account.report.line">
+                                <field name="name">f. Ras Al-Khaima</field>
+                                <field name="code">STD_RATE_SUPP_CUSTOM_RA</field>
+                                <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'tax_tags', 'formula': 'f. Ras Al-Khaima (Base)'}),
+                                Command.create({'label': 'tax', 'engine': 'tax_tags', 'formula': 'f. Ras Al-Khaima (Tax)'})]"/>
+                            </record>
+                            <record id="tax_report_line_standard_rated_supplies_custom_fujairah"
+                                    model="account.report.line">
+                                <field name="name">g. Fujairah</field>
+                                <field name="code">STD_RATE_SUPP_CUSTOM_FU</field>
+                                <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'tax_tags', 'formula': 'g. Fujairah (Base)'}),
+                                Command.create({'label': 'tax', 'engine': 'tax_tags', 'formula': 'g. Fujairah (Tax)'})]"/>
+                            </record>
+                            <record id="tax_report_line_standard_rated_supplies_custom_subtotal"
+                                    model="account.report.line">
+                                <field name="name">Sub Total</field>
+                                <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'aggregation', 'formula': 'STD_RATE_SUPP_CUSTOM_AB.base + STD_RATE_SUPP_CUSTOM_DB.base + STD_RATE_SUPP_CUSTOM_SJ.base + STD_RATE_SUPP_CUSTOM_AJ.base + STD_RATE_SUPP_CUSTOM_UM.base + STD_RATE_SUPP_CUSTOM_RA.base + STD_RATE_SUPP_CUSTOM_FU.base'}),
+                                Command.create({'label': 'tax', 'engine': 'aggregation', 'formula': 'STD_RATE_SUPP_CUSTOM_AB.tax + STD_RATE_SUPP_CUSTOM_DB.tax + STD_RATE_SUPP_CUSTOM_SJ.tax + STD_RATE_SUPP_CUSTOM_AJ.tax + STD_RATE_SUPP_CUSTOM_UM.tax + STD_RATE_SUPP_CUSTOM_RA.tax + STD_RATE_SUPP_CUSTOM_FU.tax'})]"/>
+                            </record>
+                        </field>
+                    </record>
+                    <record id="tax_report_line_tax_refund_tourist_custom" model="account.report.line">
+                        <field name="name">2. Tax Refunds provided to Tourists under the Tax Refunds for Tourists
+                            Scheme
+                        </field>
+                        <field name="code">TAX_REF_TOUR_SCHEME_CUSTOM</field>
+                        <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'tax_tags', 'formula': '2. Tax Refunds provided to Tourists under the Tax Refunds for Tourists Scheme (Base)'}),
+                                Command.create({'label': 'tax', 'engine': 'tax_tags', 'formula': '2. Tax Refunds provided to Tourists under the Tax Refunds for Tourists Scheme (Tax)'})]"/>
+                    </record>
+                    <record id="tax_report_line_supplies_reverse_charge_custom" model="account.report.line">
+                        <field name="name">3. Supplies subject to reverse charge provisions</field>
+                        <field name="code">REVERSE_CHARGE_PRO_CUSTOM</field>
+                        <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'tax_tags', 'formula': '3. Supplies subject to reverse charge provisions (Base)'}),
+                                Command.create({'label': 'tax', 'engine': 'tax_tags', 'formula': '3. Supplies subject to reverse charge provisions (Tax)'})]"/>
+                    </record>
+                    <record id="tax_report_line_zero_rated_supplies_custom" model="account.report.line">
+                        <field name="name">4. Zero rated supplies</field>
+                        <field name="code">ZERO_RATE_SUPP_CUSTOM</field>
+                        <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'tax_tags', 'formula': '4. Zero rated supplies (Base)'}),
+                                Command.create({'label': 'tax', 'engine': 'tax_tags', 'formula': '4. Zero rated supplies (Tax)'})]"/>
+                    </record>
+                    <record id="tax_report_line_exempt_supplies_custom" model="account.report.line">
+                        <field name="name">5. Exempt supplies</field>
+                        <field name="code">EXAMPT_SUPP_CUSTOM</field>
+                        <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'tax_tags', 'formula': '5. Exempt supplies (Base)'}),
+                                Command.create({'label': 'tax', 'engine': 'tax_tags', 'formula': '5. Exempt supplies (Tax)'})]"/>
+                    </record>
+                    <record id="tax_report_line_supplies_out_of_scope_custom" model="account.report.line">
+                        <field name="name">6. Out of scope</field>
+                        <field name="code">OUT_OF_SCOPE_CUSTOM_0</field>
+                        <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'tax_tags', 'formula': 'sum'}),
+                                Command.create({'label': 'tax', 'engine': 'tax_tags', 'formula': 'sum'})]"/>
+                    </record>
+                    <record id="tax_report_line_import_uae_custom" model="account.report.line">
+                        <field name="name">7. Goods imported into the UAE</field>
+                        <field name="code">GOODS_IMPORT_IN_UAE_CUSTOM</field>
+                        <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'tax_tags', 'formula': '7. Goods imported into the UAE (Base)'}),
+                                Command.create({'label': 'tax', 'engine': 'tax_tags', 'formula': '7. Goods imported into the UAE (Tax)'})]"/>
+                    </record>
+                    <record id="tax_report_line_adjustment_import_uae_custom" model="account.report.line">
+                        <field name="name">8. Adjustments to goods imported into the UAE</field>
+                        <field name="code">ADJUST_GOODS_IMPORT_IN_UAE_CUSTOM</field>
+                        <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'tax_tags', 'formula': 'sum'}),
+                                Command.create({'label': 'tax', 'engine': 'tax_tags', 'formula': 'sum'})]"/>
+                    </record>
+                    <record id="tax_report_line_custom_all_sales_total" model="account.report.line">
+                        <field name="name">9. Total</field>
+                        <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'aggregation', 'formula': 'ADJUST_GOODS_IMPORT_IN_UAE_CUSTOM.base +
+                            GOODS_IMPORT_IN_UAE_CUSTOM.base + OUT_OF_SCOPE_CUSTOM_0.base +
+                            EXAMPT_SUPP_CUSTOM.base + ZERO_RATE_SUPP_CUSTOM.base +
+                            REVERSE_CHARGE_PRO_CUSTOM.base + TAX_REF_TOUR_SCHEME_CUSTOM.base +
+                            (STD_RATE_SUPP_CUSTOM_AB.base + STD_RATE_SUPP_CUSTOM_DB.base +
+                            STD_RATE_SUPP_CUSTOM_SJ.base + STD_RATE_SUPP_CUSTOM_AJ.base +
+                            STD_RATE_SUPP_CUSTOM_UM.base + STD_RATE_SUPP_CUSTOM_RA.base +
+                            STD_RATE_SUPP_CUSTOM_FU.base)'}),
+                                Command.create({'label': 'tax', 'engine': 'aggregation', 'formula': 'ADJUST_GOODS_IMPORT_IN_UAE_CUSTOM.tax +
+                            GOODS_IMPORT_IN_UAE_CUSTOM.tax + OUT_OF_SCOPE_CUSTOM_0.tax +
+                            EXAMPT_SUPP_CUSTOM.tax + ZERO_RATE_SUPP_CUSTOM.tax +
+                            REVERSE_CHARGE_PRO_CUSTOM.tax + TAX_REF_TOUR_SCHEME_CUSTOM.tax +
+                            (STD_RATE_SUPP_CUSTOM_AB.tax + STD_RATE_SUPP_CUSTOM_DB.tax +
+                            STD_RATE_SUPP_CUSTOM_SJ.tax + STD_RATE_SUPP_CUSTOM_AJ.tax +
+                            STD_RATE_SUPP_CUSTOM_UM.tax + STD_RATE_SUPP_CUSTOM_RA.tax +
+                            STD_RATE_SUPP_CUSTOM_FU.tax)'})]"/>
+                    </record>
+                </field>
+            </record>
+            <record id="tax_report_line_custom_all_expense" model="account.report.line">
+                <field name="name">VAT on Expenses and all other Inputs</field>
+                <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'aggregation', 'formula': 'STD_RATE_EXPENSES_CUSTOM.base + SUPP_REV_CHARGE_PRO_CUSTOM.base
+                    + OUT_OF_SCOPE_1_CUSTOM.base'}),
+                                Command.create({'label': 'tax', 'engine': 'aggregation', 'formula': 'STD_RATE_EXPENSES_CUSTOM.tax + SUPP_REV_CHARGE_PRO_CUSTOM.tax
+                    + OUT_OF_SCOPE_1_CUSTOM.tax'})]"/>
+                <field name="hierarchy_level">0</field>
+                <field name="children_ids">
+                    <record id="tax_report_line_standard_rated_expense_custom" model="account.report.line">
+                        <field name="name">10. Standard rated expenses</field>
+                        <field name="code">STD_RATE_EXPENSES_CUSTOM</field>
+                        <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'tax_tags', 'formula': '10. Standard rated expenses (Base)'}),
+                                Command.create({'label': 'tax', 'engine': 'tax_tags', 'formula': '10. Standard rated expenses (Tax)'})]"/>
+                    </record>
+                    <record id="tax_report_line_expense_supplies_reverse_custom" model="account.report.line">
+                        <field name="name">11. Supplies subject to the reverse charge provisions</field>
+                        <field name="code">SUPP_REV_CHARGE_PRO_CUSTOM</field>
+                        <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'tax_tags', 'formula': '11. Supplies subject to the reverse charge provisions (Base)'}),
+                                Command.create({'label': 'tax', 'engine': 'tax_tags', 'formula': '11. Supplies subject to the reverse charge provisions (Tax)'})]"/>
+                    </record>
+                    <record id="tax_report_line_expense_out_of_scope_custom" model="account.report.line">
+                        <field name="name">12. Out of scope</field>
+                        <field name="code">OUT_OF_SCOPE_1_CUSTOM</field>
+                        <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'tax_tags', 'formula': 'sum'}),
+                                Command.create({'label': 'tax', 'engine': 'tax_tags', 'formula': 'sum'})]"/>
+                    </record>
+                    <record id="tax_report_line_custom_all_expense_total" model="account.report.line">
+                        <field name="name">13. Totals</field>
+                        <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'aggregation', 'formula': 'OUT_OF_SCOPE_1_CUSTOM.base +
+                            SUPP_REV_CHARGE_PRO_CUSTOM.base + STD_RATE_EXPENSES_CUSTOM.base'}),
+                                Command.create({'label': 'tax', 'engine': 'aggregation', 'formula': 'OUT_OF_SCOPE_1_CUSTOM.tax +
+                            SUPP_REV_CHARGE_PRO_CUSTOM.tax + STD_RATE_EXPENSES_CUSTOM.tax'})]"/>
+                    </record>
+                </field>
+            </record>
+            <record id="tax_report_line_net_custom_due" model="account.report.line">
+                <field name="name">Net Due</field>
+                <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'aggregation', 'formula': '((STD_RATE_SUPP_CUSTOM_AB.base + STD_RATE_SUPP_CUSTOM_DB.base +
+                    STD_RATE_SUPP_CUSTOM_SJ.base + STD_RATE_SUPP_CUSTOM_AJ.base + STD_RATE_SUPP_CUSTOM_UM.base
+                    + STD_RATE_SUPP_CUSTOM_RA.base + STD_RATE_SUPP_CUSTOM_FU.base) +
+                    OUT_OF_SCOPE_CUSTOM_0.base + ADJUST_GOODS_IMPORT_IN_UAE_CUSTOM.base +
+                    GOODS_IMPORT_IN_UAE_CUSTOM.base + EXAMPT_SUPP_CUSTOM.base + ZERO_RATE_SUPP_CUSTOM.base +
+                    REVERSE_CHARGE_PRO_CUSTOM.base + TAX_REF_TOUR_SCHEME_CUSTOM.base) -
+                    (OUT_OF_SCOPE_1_CUSTOM.base + SUPP_REV_CHARGE_PRO_CUSTOM.base +
+                    STD_RATE_EXPENSES_CUSTOM.base)'}),
+                                Command.create({'label': 'tax', 'engine': 'aggregation', 'formula': '((STD_RATE_SUPP_CUSTOM_AB.tax + STD_RATE_SUPP_CUSTOM_DB.tax +
+                    STD_RATE_SUPP_CUSTOM_SJ.tax + STD_RATE_SUPP_CUSTOM_AJ.tax + STD_RATE_SUPP_CUSTOM_UM.tax
+                    + STD_RATE_SUPP_CUSTOM_RA.tax + STD_RATE_SUPP_CUSTOM_FU.tax) +
+                    OUT_OF_SCOPE_CUSTOM_0.tax + ADJUST_GOODS_IMPORT_IN_UAE_CUSTOM.tax +
+                    GOODS_IMPORT_IN_UAE_CUSTOM.tax + EXAMPT_SUPP_CUSTOM.tax + ZERO_RATE_SUPP_CUSTOM.tax +
+                    REVERSE_CHARGE_PRO_CUSTOM.tax + TAX_REF_TOUR_SCHEME_CUSTOM.tax) -
+                    (OUT_OF_SCOPE_1_CUSTOM.tax + SUPP_REV_CHARGE_PRO_CUSTOM.tax +
+                    STD_RATE_EXPENSES_CUSTOM.tax)'})]"/>
+                <field name="hierarchy_level">0</field>
+                <field name="children_ids">
+                    <record id="tax_report_line_total_value_due_custom_period" model="account.report.line">
+                        <field name="name">14. Total value of due for the period</field>
+                        <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'aggregation', 'formula': '(STD_RATE_SUPP_CUSTOM_AB.base +
+                            STD_RATE_SUPP_CUSTOM_DB.base + STD_RATE_SUPP_CUSTOM_SJ.base +
+                            STD_RATE_SUPP_CUSTOM_AJ.base + STD_RATE_SUPP_CUSTOM_UM.base +
+                            STD_RATE_SUPP_CUSTOM_RA.base + STD_RATE_SUPP_CUSTOM_FU.base) +
+                            OUT_OF_SCOPE_CUSTOM_0.base + ADJUST_GOODS_IMPORT_IN_UAE_CUSTOM.base +
+                            GOODS_IMPORT_IN_UAE_CUSTOM.base + EXAMPT_SUPP_CUSTOM.base +
+                            ZERO_RATE_SUPP_CUSTOM.base + REVERSE_CHARGE_PRO_CUSTOM.base +
+                            TAX_REF_TOUR_SCHEME_CUSTOM.base'}),
+                                Command.create({'label': 'tax', 'engine': 'aggregation', 'formula': '(STD_RATE_SUPP_CUSTOM_AB.tax +
+                            STD_RATE_SUPP_CUSTOM_DB.tax + STD_RATE_SUPP_CUSTOM_SJ.tax +
+                            STD_RATE_SUPP_CUSTOM_AJ.tax + STD_RATE_SUPP_CUSTOM_UM.tax +
+                            STD_RATE_SUPP_CUSTOM_RA.tax + STD_RATE_SUPP_CUSTOM_FU.tax) +
+                            OUT_OF_SCOPE_CUSTOM_0.tax + ADJUST_GOODS_IMPORT_IN_UAE_CUSTOM.tax +
+                            GOODS_IMPORT_IN_UAE_CUSTOM.tax + EXAMPT_SUPP_CUSTOM.tax +
+                            ZERO_RATE_SUPP_CUSTOM.tax + REVERSE_CHARGE_PRO_CUSTOM.tax +
+                            TAX_REF_TOUR_SCHEME_CUSTOM.tax'})]"/>
+                    </record>
+                    <record id="tax_report_line_total_value_recoverable_custom_period" model="account.report.line">
+                        <field name="name">15. Total value of recoverable for the period</field>
+                        <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'aggregation', 'formula': 'OUT_OF_SCOPE_1_CUSTOM.base +
+                            SUPP_REV_CHARGE_PRO_CUSTOM.base + STD_RATE_EXPENSES_CUSTOM.base'}),
+                                Command.create({'label': 'tax', 'engine': 'aggregation', 'formula': 'OUT_OF_SCOPE_1_CUSTOM.tax +
+                            SUPP_REV_CHARGE_PRO_CUSTOM.tax + STD_RATE_EXPENSES_CUSTOM.tax'})]"/>
+                    </record>
+                    <record id="tax_report_line_net_custom_due_period" model="account.report.line">
+                        <field name="name">16. Net due (or reclaimed) for the period</field>
+                        <field name="expression_ids" eval="[Command.clear(),
+                                Command.create({'label': 'base', 'engine': 'aggregation', 'formula': '((STD_RATE_SUPP_CUSTOM_AB.base +
+                            STD_RATE_SUPP_CUSTOM_DB.base + STD_RATE_SUPP_CUSTOM_SJ.base +
+                            STD_RATE_SUPP_CUSTOM_AJ.base + STD_RATE_SUPP_CUSTOM_UM.base +
+                            STD_RATE_SUPP_CUSTOM_RA.base + STD_RATE_SUPP_CUSTOM_FU.base) +
+                            OUT_OF_SCOPE_CUSTOM_0.base + ADJUST_GOODS_IMPORT_IN_UAE_CUSTOM.base +
+                            GOODS_IMPORT_IN_UAE_CUSTOM.base + EXAMPT_SUPP_CUSTOM.base +
+                            ZERO_RATE_SUPP_CUSTOM.base + REVERSE_CHARGE_PRO_CUSTOM.base +
+                            TAX_REF_TOUR_SCHEME_CUSTOM.base) - (OUT_OF_SCOPE_1_CUSTOM.base +
+                            SUPP_REV_CHARGE_PRO_CUSTOM.base + STD_RATE_EXPENSES_CUSTOM.base)'}),
+                                Command.create({'label': 'tax', 'engine': 'aggregation', 'formula': '((STD_RATE_SUPP_CUSTOM_AB.tax +
+                            STD_RATE_SUPP_CUSTOM_DB.tax + STD_RATE_SUPP_CUSTOM_SJ.tax +
+                            STD_RATE_SUPP_CUSTOM_AJ.tax + STD_RATE_SUPP_CUSTOM_UM.tax +
+                            STD_RATE_SUPP_CUSTOM_RA.tax + STD_RATE_SUPP_CUSTOM_FU.tax) +
+                            OUT_OF_SCOPE_CUSTOM_0.tax + ADJUST_GOODS_IMPORT_IN_UAE_CUSTOM.tax +
+                            GOODS_IMPORT_IN_UAE_CUSTOM.tax + EXAMPT_SUPP_CUSTOM.tax +
+                            ZERO_RATE_SUPP_CUSTOM.tax + REVERSE_CHARGE_PRO_CUSTOM.tax +
+                            TAX_REF_TOUR_SCHEME_CUSTOM.tax) - (OUT_OF_SCOPE_1_CUSTOM.tax +
+                            SUPP_REV_CHARGE_PRO_CUSTOM.tax + STD_RATE_EXPENSES_CUSTOM.tax)'})]"/>
+                    </record>
+                </field>
+            </record>
+        </field>
+    </record>
+</odoo>
