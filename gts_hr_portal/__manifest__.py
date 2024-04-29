@@ -20,9 +20,9 @@
     "author": "Geo Technosoft",
     "website": "http://www.geotechnosoft.com",
     "license": "OPL-1",
-
-    'depends': ['base', 'mail', 'website', 'hr_holidays', 'calendar','resource', 'hr_attendance','hr_contract','hr_payroll', 'tasc_hr'],
-
+    'depends': ['base', 'mail', 'website', 'hr_holidays', 'hr', 'calendar',
+                'resource', 'hr_attendance', 'hr_contract', 'hr_payroll',
+                'tasc_hr'],
     'data': [
         'security/security.xml',
         'data/mail_template.xml',
