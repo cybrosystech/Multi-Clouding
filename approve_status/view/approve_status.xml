@@ -37,7 +37,7 @@
         <field name="name">sale.order.request.button</field>
         <field name="model">sale.order</field>
         <field name="inherit_id"
-               ref="analytic_account_types.view_inherit_view_order_form"/>
+               ref="analytic_account_types_clone.view_inherit_view_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//button[@name='request_approval_button']"
                    position="attributes">

@@ -12,6 +12,7 @@
                 'account_asset'],
     'data': [
         'views/account_move.xml',
+        'views/sale_order_line.xml',
     ],
     'qweb': [],
     'installable': True,
