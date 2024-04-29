@@ -2,7 +2,7 @@
     <record id="view_reject_button_budget_check" model="ir.ui.view">
         <field name="name">view_reject_button_budget_check</field>
         <field name="model">account.move</field>
-        <field name="inherit_id" ref="analytic_account_types.view_inherit_view_move_form"/>
+        <field name="inherit_id" ref="analytic_account_types_clone.view_inherit_view_move_form"/>
         <field name="arch" type="xml">
             <xpath expr="//button[@name='button_approve_purchase_cycle']" position="after">
                 <button name="button_reject_purchase_cycle" string="Reject" type="object" class="btn-primary"
