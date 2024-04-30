@@ -1,8 +1,12 @@
-from odoo import models, api
+from odoo import models, api, fields
 
 
 class PurchaseOrderLine(models.Model):
     _inherit = 'purchase.order.line'
+
+    co_location_id = fields.Many2one(comodel_name="account.analytic.account",
+                                     string="Co location", domain=[(
+            'analytic_account_type', '=', 'co_location')], required=False, )
 
     @api.onchange('project_site_id', 'cost_center_id')
     def onchange_project_site(self):

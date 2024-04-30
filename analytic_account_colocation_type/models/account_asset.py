@@ -1,8 +1,14 @@
-from odoo import models, api
+from odoo import models, api, fields
 
 
 class AccountAsset(models.Model):
     _inherit = 'account.asset'
+
+    co_location = fields.Many2one('account.analytic.account',
+                                  string="Co location",
+                                  domain=[('analytic_account_type', '=',
+                                           'co_location')],
+                                  required=False)
 
     @api.onchange('project_site_id', 'analytic_account_id')
     def onchange_project_site(self):
