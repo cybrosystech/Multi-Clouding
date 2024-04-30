@@ -70,7 +70,7 @@
         <field name="inherit_id"
                ref="analytic_account_types.view_inherit_view_order_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//notebook/page/field/tree/field[@name='location_id']"
+            <xpath expr="//notebook/page[@name='order_lines']/field[@name='order_line']/tree/field[@name='project_site_id']"
                    position="after">
                 <field name="co_location_id" invisible="1" column_invisible="1"/>
             </xpath>
@@ -87,7 +87,6 @@
             <field name="analytic_location_id" position="after">
                 <field name="co_location"
                        invisible="analytic_account_type != 'project_site' "/>
-                <!--                <field name="co_location"/>-->
             </field>
         </field>
     </record>
