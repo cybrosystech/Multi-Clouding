@@ -505,6 +505,13 @@ class AccountMoveLine(models.Model):
                                           ('analytic_account_type', '=',
                                            'project_site')],
                                       required=False, store=True)
+    type_id = fields.Many2one(comodel_name="account.analytic.account",
+                              string="Type",
+                              domain=[('analytic_account_type', '=', 'type')],
+                              required=False, )
+    location_id = fields.Many2one(comodel_name="account.analytic.account",
+                                  string="Location", domain=[
+            ('analytic_account_type', '=', 'location')], required=False, )
     budget_id = fields.Many2one(comodel_name="crossovered.budget",
                                 string="Budget", required=False, index=True)
     budget_line_id = fields.Many2one(comodel_name="crossovered.budget.lines",
