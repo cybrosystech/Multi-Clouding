@@ -8,7 +8,13 @@ _logger = logging.getLogger(__name__)
 class AccountAnalyticLine(models.Model):
     _inherit = 'account.analytic.line'
 
-    account_id = fields.Many2one(string='Cost Center')
+    account_id = fields.Many2one(
+        'account.analytic.account',
+        'Cost Center',
+        ondelete='restrict',
+        index=True,
+        check_company=True,
+    )
     project_site_id = fields.Many2one(comodel_name="account.analytic.account",
                                       string="Project/Site",
                                       domain=[('analytic_account_type', '=',

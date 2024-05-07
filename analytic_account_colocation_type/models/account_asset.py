@@ -9,6 +9,8 @@ class AccountAsset(models.Model):
                                   domain=[('analytic_account_type', '=',
                                            'co_location')],
                                   required=False)
+    site_address = fields.Char(string='Site Address',
+                               related='project_site_id.site_address')
 
     @api.onchange('project_site_id', 'analytic_account_id')
     def onchange_project_site(self):

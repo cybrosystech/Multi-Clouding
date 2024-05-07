@@ -1,4 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
+    <data>
     <record id="account_assets_view_inherit" model="ir.ui.view">
         <field name="name">view_inherit_view_account_asset_form_co_location</field>
         <field name="model">account.asset</field>
@@ -7,7 +9,7 @@
             <xpath expr="//field[@name='analytic_distribution']"
                    position="after">
                 <field name="co_location" invisible="1" column_invisible="1"/>
-                <!--                <field name="site_address"/>-->
+                <field name="site_address"/>
             </xpath>
         </field>
     </record>
@@ -90,5 +92,5 @@
             </field>
         </field>
     </record>
-
+</data>
 </odoo>
