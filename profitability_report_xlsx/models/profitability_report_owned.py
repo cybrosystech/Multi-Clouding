@@ -127,8 +127,9 @@ class ProfitabilityReportOwned(models.Model):
         # group = self.env['account.analytic.group'].search(
         #     [('name', 'ilike', 'owned'),
         #      ('company_id', '=', profitability_owned.company_id.id)])
-        group = self.env['account.analytic.plan'].search(
-            [('name', 'ilike', 'owned')])
+        # group = self.env['account.analytic.plan'].search(
+        #     [('name', 'ilike', 'owned')])
+        group_id = 'owned'
 
         data = {
             'ids': self.ids,
@@ -151,7 +152,8 @@ class ProfitabilityReportOwned(models.Model):
             'from': from_date if from_date else profitability_owned.from_date,
             'to': to_date if to_date else profitability_owned.to_date,
             'company_id': profitability_owned.company_id.id,
-            'analatyc_account_group': group.id,
+            # 'analatyc_account_group': group.id,
+            'group_id':group_id,
             'Current_months': Current_months,
             'limit': limit
         }
@@ -212,8 +214,10 @@ class ProfitabilityReportOwned(models.Model):
         # group = self.env['account.analytic.group'].search(
         #     [('name', 'ilike', 'owned'),
         #      ('company_id', '=', profitability_owned.company_id.id)])
-        group = self.env['account.analytic.plan'].search(
-            [('name', 'ilike', 'owned')])
+        # group = self.env['account.analytic.plan'].search(
+        #     [('name', 'ilike', 'owned')])
+        group_id = 'owned'
+
         data = {
             'ids': self.ids,
             'model': self._name,
@@ -235,7 +239,8 @@ class ProfitabilityReportOwned(models.Model):
             'from': from_date if from_date else profitability_owned.from_date,
             'to': to_date if to_date else profitability_owned.to_date,
             'company_id': profitability_owned.company_id.id,
-            'analatyc_account_group': group.id,
+            # 'analatyc_account_group': group.id,
+            'group_id':group_id,
             'Current_months': Current_months,
             'limit': limit
         }
@@ -293,8 +298,10 @@ class ProfitabilityReportOwned(models.Model):
         if profitability_owned.from_date and profitability_owned.to_date:
             if profitability_owned.from_date > profitability_owned.to_date:
                 raise UserError("Start date should be less than end date")
-        group = self.env['account.analytic.plan'].search(
-            [('name', 'ilike', 'owned')])
+        # group = self.env['account.analytic.plan'].search(
+        #     [('name', 'ilike', 'owned')])
+        group_id = 'owned'
+
         data = {
             'ids': self.ids,
             'model': self._name,
@@ -316,7 +323,8 @@ class ProfitabilityReportOwned(models.Model):
             'from': from_date if from_date else profitability_owned.from_date,
             'to': to_date if to_date else profitability_owned.to_date,
             'company_id': profitability_owned.company_id.id,
-            'analatyc_account_group': group.id,
+            # 'analatyc_account_group': group.id,
+            'group_id':group_id,
             'Current_months': Current_months,
             'limit': limit
         }
@@ -374,8 +382,10 @@ class ProfitabilityReportOwned(models.Model):
         if profitability_owned.from_date and profitability_owned.to_date:
             if profitability_owned.from_date > profitability_owned.to_date:
                 raise UserError("Start date should be less than end date")
-        group = self.env['account.analytic.plan'].search(
-            [('name', 'ilike', 'owned')])
+        # group = self.env['account.analytic.plan'].search(
+        #     [('name', 'ilike', 'owned')])
+        group_id = 'owned'
+
         data = {
             'ids': self.ids,
             'model': self._name,
@@ -397,7 +407,8 @@ class ProfitabilityReportOwned(models.Model):
             'from': from_date if from_date else profitability_owned.from_date,
             'to': to_date if to_date else profitability_owned.to_date,
             'company_id': profitability_owned.company_id.id,
-            'analatyc_account_group': group.id,
+            # 'analatyc_account_group': group.id,
+            'group_id': group_id,
             'Current_months': Current_months,
             'limit': limit
         }
@@ -423,8 +434,8 @@ class ProfitabilityReportOwned(models.Model):
                                         WHERE analatyc_account.analytic_account_type = 'project_site'
                                         and analatyc_account.company_id = ''' + str(
                 data['company_id']) + ''' 
-                                        and analatyc_account.plan_id = ''' + str(
-                data['analatyc_account_group'])
+                                        and analatyc_account.group_id = ''' + str(
+                data['group_id'])
 
             cr = self._cr
             cr.execute(query)
@@ -651,8 +662,8 @@ class ProfitabilityReportOwned(models.Model):
                             WHERE analatyc_account.analytic_account_type = 'project_site'
                             and analatyc_account.company_id = ''' + str(
                 data['company_id']) + ''' 
-                            and analatyc_account.plan_id = ''' + str(
-                data['analatyc_account_group'])
+                            and analatyc_account.group_id = ''' + str(
+                data['group_id'])
 
             cr = self._cr
             cr.execute(query)

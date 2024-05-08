@@ -208,6 +208,7 @@ class ProfitabilityReportWizard(models.TransientModel):
                                  default=lambda self: self.env.company)
 
     def generate_xlsx_report(self):
+        print("generate_xlsx_report")
         current_date = fields.Date.today()
         from_date = ''
         to_date = ''

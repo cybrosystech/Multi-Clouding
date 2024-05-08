@@ -195,10 +195,6 @@
                                         <field name="analytic_distribution"
                                                widget="analytic_distribution"/>
 
-                                        <!--                                        <field name="type_id"-->
-                                        <!--                                               readonly="state not in ['draft', 'active']"/>-->
-                                        <!--                                        <field name="location_id"-->
-                                        <!--                                               readonly="state not in ['draft', 'active']"/>-->
                                     </group>
                                     <group>
                                         <field name="terminate_product_id"
