@@ -48,8 +48,8 @@
 <!--                    invisible="state != 'draft'"/>-->
 <!--                    <field name="project_site_id" optional="show" required="1"-->
 <!--                    readonly="state not in ['draft']"/>-->
-<!--                    <field name="type_id" optional="show" readonly="state not in ['draft']"/>-->
-<!--                    <field name="location_id" optional="show" readonly="state not in ['draft']"/>-->
+                    <field name="type_id" column_invisible="1" invisible="1"/>
+                    <field name="location_id" invisible="1" column_invisible="1"/>
                     <field name="budget_id" optional="show" readonly="state not in ['draft']"/>
                     <field name="budget_line_id" optional="show" readonly="state not in ['draft']"/>
                     <field name="remaining_amount" optional="show" readonly="1"/>
