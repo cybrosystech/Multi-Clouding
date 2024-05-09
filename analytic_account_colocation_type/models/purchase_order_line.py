@@ -12,7 +12,6 @@ class PurchaseOrderLine(models.Model):
         self.ensure_one()
         aml_currency = move and move.currency_id or self.currency_id
         date = move and move.date or fields.Date.today()
-        print("_____________",self)
         res = {
             'display_type': self.display_type or 'product',
             'name': '%s: %s' % (self.order_id.name, self.name),
@@ -36,7 +35,6 @@ class PurchaseOrderLine(models.Model):
 
     # @api.onchange('project_site_id', 'cost_center_id')
     # def onchange_project_site(self):
-    #     print("onchange_project_site")
     #     analytic_dist = {}
     #     analytic_distributions = ''
     #     if self.cost_center_id:
@@ -59,7 +57,6 @@ class PurchaseOrderLine(models.Model):
 
     @api.onchange('project_site_id', 'cost_center_id')
     def onchange_project_site(self):
-        print("onchange_project_site")
         analytic_dist = {}
         analytic_distributions = ''
         if self.cost_center_id:

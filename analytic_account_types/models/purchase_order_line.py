@@ -25,13 +25,11 @@ class PurchaseOrder(models.Model):
         ondelete={'to_approve': 'set default', 'draft': 'set default', })
 
     def button_cancel(self):
-        print("button_cancel")
         res = super(PurchaseOrder, self).button_cancel()
         self.purchase_approval_cycle_ids = False
         return res
 
     def button_draft(self):
-        print("button_draft")
         res = super(PurchaseOrder, self).button_draft()
         self.show_request_approve_button = False
         return res
@@ -39,7 +37,6 @@ class PurchaseOrder(models.Model):
     @api.depends('purchase_approval_cycle_ids',
                  'purchase_approval_cycle_ids.is_approved')
     def check_show_approve_button(self):
-        print("check_show_approve_button")
         self.show_approve_button = False
         current_approve = self.purchase_approval_cycle_ids.filtered(
             lambda x: x.is_approved).mapped('approval_seq')
@@ -60,7 +57,6 @@ class PurchaseOrder(models.Model):
 
     @api.depends('budget_collect_ids')
     def check_out_budget(self):
-        print("check_out_budget")
         self.out_budget = False
         out_budget = self.budget_collect_ids.filtered(
             lambda x: x.difference_amount > 0)
@@ -69,7 +65,6 @@ class PurchaseOrder(models.Model):
 
     @api.onchange('order_line')
     def get_budgets_in_out_budget_tab(self):
-        print("get_budgets_in_out_budget_tab")
         self.budget_collect_ids = [(5, 0, 0)]
         budgets = self.order_line.mapped('budget_id')
         budget_lines = []
@@ -82,7 +77,6 @@ class PurchaseOrder(models.Model):
         self.write({'budget_collect_ids': budget_lines})
 
     def send_user_notification(self, user):
-        print("send_user_notification")
         for us in user:
             reseiver = us.partner_id
             if reseiver:
@@ -100,7 +94,6 @@ class PurchaseOrder(models.Model):
                                                                           'res_id': None})
 
     def request_approval_button(self):
-        print("request_approval_button")
         self.get_budgets_in_out_budget_tab()
         if self.out_budget and not self.purchase_approval_cycle_ids:
             out_budget_list = []
@@ -145,7 +138,6 @@ class PurchaseOrder(models.Model):
             self.show_button_confirm = True
 
     def button_approve_purchase_cycle(self):
-        print("button_approve_purchase_cycle")
         max_seq_approval = max(
             self.purchase_approval_cycle_ids.mapped('approval_seq'))
         approval_levels = len(self.purchase_approval_cycle_ids.ids)
@@ -165,7 +157,6 @@ class PurchaseOrder(models.Model):
                 break
 
     def button_confirm(self):
-        print("button_confirm")
         for order in self:
             if order.state not in ['draft', 'sent', 'to_approve']:
                 continue
@@ -222,7 +213,6 @@ class BudgetCollect(models.Model):
 
     @api.depends('budget_id')
     def get_fields_related_to_po_line(self):
-        print("get_fields_related_to_po_line")
         for rec in self:
             rec.remaining_amount = 0.0
             rec.demand_amount = 0.0
@@ -283,13 +273,11 @@ class PurchaseOrderLine(models.Model):
 
     @api.onchange('budget_id')
     def onchange_budget_id(self):
-        print("onchange_budget_id")
         return {'domain': {'budget_line_id': [
             ('crossovered_budget_id', '=', self.budget_id.id)]}}
 
     @api.depends('price_subtotal')
     def compute_local_subtotal(self):
-        print("compute_local_subtotal")
         for rec in self:
             if not rec.order_id.date_order:
                 raise UserError(_('Order date is required'))
@@ -301,7 +289,6 @@ class PurchaseOrderLine(models.Model):
 
     @api.depends('budget_id')
     def get_budget_remaining_amount(self):
-        print("get_budget_remaining_amount")
         for rec in self:
             order_lines_without_inv = sum(
                 self.env['purchase.order.line'].search(
@@ -321,10 +308,8 @@ class PurchaseOrderLine(models.Model):
             rec.remaining_amount = 0.0
             if rec.budget_line_id:
                 rec.remaining_amount = rec.budget_line_id.remaining_amount - order_lines_without_inv - invoices_budget
-        print("end____________")
 
     def _prepare_account_move_line(self, move=False):
-        print("_prepare_account_move_line")
         res = super(PurchaseOrderLine, self)._prepare_account_move_line()
         res.update({'budget_id': self.budget_id.id, })
         return res

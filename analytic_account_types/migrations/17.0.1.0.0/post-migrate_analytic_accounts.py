@@ -17,7 +17,6 @@ def migrate(cr, version):
         new_record = plan.create({
             'name': type[1],
         })
-        print("new_record", new_record.name)
         plan_ids.append(new_record.id)
         cr.execute(
             'UPDATE account_analytic_account SET plan_id=%s,root_plan_id=%s where analytic_account_type=%s',
@@ -38,7 +37,6 @@ def migrate(cr, version):
                'WHERE ab.id = am.id'
                ')'
                'AND analytic_account_id IS NULL')
-    print("gggggggggg")
     cr.execute('''
         UPDATE account_move_line
         SET analytic_distribution =
@@ -107,7 +105,6 @@ def migrate(cr, version):
     #            'WHERE ab.id = am.id'
     #            ')'
     #            'AND analytic_account_id IS NULL')
-    # print("gggggggggg")
     # cr.execute('''
     #      UPDATE account_asset
     #      SET analytic_distribution =
