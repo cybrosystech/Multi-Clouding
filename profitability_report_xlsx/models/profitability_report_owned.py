@@ -426,19 +426,40 @@ class ProfitabilityReportOwned(models.Model):
             account_fa_depreciation_ids = []
             profitability_owned_report_load = json.loads(
                 profitability_owned_report)
+            # name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
+            #     self.pool[
+            #         'account.analytic.account'].name.translate else 'analatyc_account.name'
+            # query = f'''
+            #                             select id,{name} as name from account_analytic_account as analatyc_account
+            #                             WHERE analatyc_account.analytic_account_type = 'project_site'
+            #                             and analatyc_account.company_id = ''' + str(
+            #     data['company_id']) + '''
+            #                             and analatyc_account.group_id = ''' + str(
+            #     data['group_id'])
+            #
+            # cr = self._cr
+            # cr.execute(query)
+
+            cr = self._cr
             name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
                 self.pool[
                     'account.analytic.account'].name.translate else 'analatyc_account.name'
-            query = f'''
-                                        select id,{name} as name from account_analytic_account as analatyc_account 
-                                        WHERE analatyc_account.analytic_account_type = 'project_site'
-                                        and analatyc_account.company_id = ''' + str(
-                data['company_id']) + ''' 
-                                        and analatyc_account.group_id = ''' + str(
-                data['group_id'])
 
-            cr = self._cr
-            cr.execute(query)
+            query = f'''
+                                    SELECT id, {name} AS name 
+                                    FROM account_analytic_account AS analatyc_account 
+                                    WHERE analatyc_account.analytic_account_type = %(type)s
+                                    AND analatyc_account.company_id = %(company_id)s
+                                    AND analatyc_account.group_id = %(group)s
+                                '''
+            params = {
+                'company_id': data["company_id"],
+                'type': 'project_site',
+                'group': data["group_id"],
+            }
+
+            cr.execute(query, params)
+
             project_site = cr.dictfetchall()
             if data['fa_depreciation_code'] and data[
                 'fa_depreciation_lim_code']:
@@ -654,19 +675,39 @@ class ProfitabilityReportOwned(models.Model):
         else:
             account_fa_depreciation_ids = []
             dummy_prof_list = []
+            # name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
+            #     self.pool[
+            #         'account.analytic.account'].name.translate else 'analatyc_account.name'
+            # query = f'''
+            #                 select id,{name} as name from account_analytic_account as analatyc_account
+            #                 WHERE analatyc_account.analytic_account_type = 'project_site'
+            #                 and analatyc_account.company_id = ''' + str(
+            #     data['company_id']) + '''
+            #                 and analatyc_account.group_id = ''' + str(
+            #     data['group_id'])
+            #
+            # cr = self._cr
+            # cr.execute(query)
+            lang = self.env.user.lang or get_lang(self.env).code
+            cr = self._cr
             name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
                 self.pool[
                     'account.analytic.account'].name.translate else 'analatyc_account.name'
-            query = f'''
-                            select id,{name} as name from account_analytic_account as analatyc_account 
-                            WHERE analatyc_account.analytic_account_type = 'project_site'
-                            and analatyc_account.company_id = ''' + str(
-                data['company_id']) + ''' 
-                            and analatyc_account.group_id = ''' + str(
-                data['group_id'])
 
-            cr = self._cr
-            cr.execute(query)
+            query = f'''
+                        SELECT id, {name} AS name 
+                        FROM account_analytic_account AS analatyc_account 
+                        WHERE analatyc_account.analytic_account_type = %(type)s
+                        AND analatyc_account.company_id = %(company_id)s
+                        AND analatyc_account.group_id = %(group)s
+                    '''
+            params = {
+                'company_id': data["company_id"],
+                'type': 'project_site',
+                'group': data["group_id"],
+            }
+
+            cr.execute(query, params)
             project_site = cr.dictfetchall()
             if data['fa_depreciation_code'] and data[
                 'fa_depreciation_lim_code']:

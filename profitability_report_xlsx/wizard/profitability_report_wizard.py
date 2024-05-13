@@ -1,6 +1,6 @@
 import io
 from email.policy import default
-
+from odoo.tools import date_utils, get_lang
 from dateutil.relativedelta import relativedelta
 
 from odoo import fields, models
@@ -128,12 +128,12 @@ class ProfitabilityReportWizard(models.TransientModel):
         if profitability.lease_finance_cost:
             return profitability.lease_finance_cost
 
-    def default_analytic_account_group(self):
-        group = self.env['account.analytic.plan'].search(
-            [('name', 'ilike', 'owned')])
-        if not group:
-            raise UserError("Please configure analytic group account for Owned")
-        return group
+    # def default_analytic_account_group(self):
+    #     group = self.env['account.analytic.plan'].search(
+    #         [('name', 'ilike', 'owned')])
+    #     if not group:
+    #         raise UserError("Please configure analytic group account for Owned")
+    #     return group
 
     service_revenue = fields.Many2many('account.account', 'service_revenue_rel',
                                        string='Service Revenue',
@@ -200,15 +200,17 @@ class ProfitabilityReportWizard(models.TransientModel):
                                           ('custom', 'Custom')]),
                               string='Periods', required=True,
                               default='this_month')
-    analatyc_account_group = fields.Many2one('account.analytic.plan',
-                                             default=default_analytic_account_group)
+    # analatyc_account_group = fields.Many2one('account.analytic.plan',
+    #                                          default=default_analytic_account_group)
+    group = fields.Selection([
+        ('managed', 'Managed'),
+        ('owned', 'Owned')], 'Group', default='owned')
     from_date = fields.Date('From')
     to_date = fields.Date('To')
     company_id = fields.Many2one('res.company', 'Company',
                                  default=lambda self: self.env.company)
 
     def generate_xlsx_report(self):
-        print("generate_xlsx_report")
         current_date = fields.Date.today()
         from_date = ''
         to_date = ''
@@ -331,7 +333,7 @@ class ProfitabilityReportWizard(models.TransientModel):
             'from': from_date if from_date else self.from_date,
             'to': to_date if to_date else self.to_date,
             'company_id': self.company_id.id,
-            'analatyc_account_group': self.analatyc_account_group.id,
+            'group': self.group,
             'Current_months': Current_months
         }
         return {
@@ -351,17 +353,35 @@ class ProfitabilityReportWizard(models.TransientModel):
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
         account_ids = ''
         account_fa_depreciation_ids = ''
-
-        query = '''
-                select id,name from account_analytic_account as analatyc_account 
-                WHERE analatyc_account.analytic_account_type = 'project_site'
-                and analatyc_account.company_id = ''' + str(
-            data['company_id']) + ''' 
-                and analatyc_account.group_id = ''' + str(
-            data['analatyc_account_group'])
-
+        # query = '''
+        #         select id,name from account_analytic_account as analatyc_account
+        #         WHERE analatyc_account.analytic_account_type = 'project_site'
+        #         and analatyc_account.company_id = ''' + str(
+        #     data['company_id']) + '''
+        #         and analatyc_account.group_id = ''' + data['group']
+        #
+        # cr = self._cr
+        # cr.execute(query)
+        lang = self.env.user.lang or get_lang(self.env).code
         cr = self._cr
-        cr.execute(query)
+        name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
+            self.pool[
+                'account.analytic.account'].name.translate else 'analatyc_account.name'
+
+        query = f'''
+                    SELECT id, {name} AS name 
+                    FROM account_analytic_account AS analatyc_account 
+                    WHERE analatyc_account.analytic_account_type = %(type)s
+                    AND analatyc_account.company_id = %(company_id)s
+                    AND analatyc_account.group_id = %(group)s
+                '''
+        params = {
+            'company_id': data["company_id"],
+            'type': 'project_site',
+            'group': data["group"],
+        }
+
+        cr.execute(query, params)
         project_site = cr.dictfetchall()
 
         # if data['site_maintenance_code'] and data['site_maintenance_lim_code']:

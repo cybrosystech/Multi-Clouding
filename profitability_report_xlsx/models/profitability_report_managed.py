@@ -227,7 +227,6 @@ class ProfitabilityReportManaged(models.Model):
             'from': from_date if from_date else profitability_managed.from_date,
             'to': to_date if to_date else profitability_managed.to_date,
             'company_id': profitability_managed.company_id.id,
-            # 'analytic_account_plan': plan.id,
             'group_id': group_id,
             'Current_months': Current_months,
             'limit': limit
@@ -409,19 +408,39 @@ class ProfitabilityReportManaged(models.Model):
             profitability_managed_report_load = json.loads(
                 profitability_managed_report)
 
+            # name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
+            #     self.pool[
+            #         'account.analytic.account'].name.translate else 'analatyc_account.name'
+            # query = f'''
+            #                         select id,{name} as name from account_analytic_account as analatyc_account
+            #                         WHERE analatyc_account.analytic_account_type = 'project_site'
+            #                         and analatyc_account.company_id = ''' + str(
+            #     data['company_id']) + '''
+            #                         and analatyc_account.group_id = ''' + str(
+            #     data['group_id'])
+            #
+            # cr = self._cr
+            # cr.execute(query)
+            # lang = self.env.user.lang or get_lang(self.env).code
+            cr = self._cr
             name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
                 self.pool[
                     'account.analytic.account'].name.translate else 'analatyc_account.name'
-            query = f'''
-                                    select id,{name} as name from account_analytic_account as analatyc_account
-                                    WHERE analatyc_account.analytic_account_type = 'project_site'
-                                    and analatyc_account.company_id = ''' + str(
-                data['company_id']) + '''
-                                    and analatyc_account.group_id = ''' + str(
-                data['group_id'])
 
-            cr = self._cr
-            cr.execute(query)
+            query = f'''
+                        SELECT id, {name} AS name 
+                        FROM account_analytic_account AS analatyc_account 
+                        WHERE analatyc_account.analytic_account_type = %(type)s
+                        AND analatyc_account.company_id = %(company_id)s
+                        AND analatyc_account.group_id = %(group)s
+                    '''
+            params = {
+                'company_id': data["company_id"],
+                'type': 'project_site',
+                'group': data["group"],
+            }
+
+            cr.execute(query, params)
             project_site = cr.dictfetchall()
             end_limit = profitability_managed.limits_pr + int(data['limit'])
             profitability_managed.end_limit = end_limit
@@ -610,19 +629,38 @@ class ProfitabilityReportManaged(models.Model):
             return profitability_managed_report_load
         else:
             dummy_prof_list = []
+            # name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
+            #     self.pool[
+            #         'account.analytic.account'].name.translate else 'analatyc_account.name'
+            # query = f'''
+            #                                 select id,{name} as name from account_analytic_account as analatyc_account
+            #                                 WHERE analatyc_account.analytic_account_type = 'project_site'
+            #                                 and analatyc_account.company_id = ''' + str(
+            #     data['company_id']) + '''
+            #                                 and analatyc_account.group_id = ''' + str(
+            #     data['group_id'])
+            #
+            # cr = self._cr
+            # cr.execute(query)
+            cr = self._cr
             name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
                 self.pool[
                     'account.analytic.account'].name.translate else 'analatyc_account.name'
-            query = f'''
-                                            select id,{name} as name from account_analytic_account as analatyc_account 
-                                            WHERE analatyc_account.analytic_account_type = 'project_site'
-                                            and analatyc_account.company_id = ''' + str(
-                data['company_id']) + ''' 
-                                            and analatyc_account.group_id = ''' + str(
-                data['group_id'])
 
-            cr = self._cr
-            cr.execute(query)
+            query = f'''
+                                    SELECT id, {name} AS name 
+                                    FROM account_analytic_account AS analatyc_account 
+                                    WHERE analatyc_account.analytic_account_type = %(type)s
+                                    AND analatyc_account.company_id = %(company_id)s
+                                    AND analatyc_account.group_id = %(group)s
+                                '''
+            params = {
+                'company_id': data["company_id"],
+                'type': 'project_site',
+                'group': data["group"],
+            }
+
+            cr.execute(query, params)
             project_site = cr.dictfetchall()
             end_limit = profitability_managed.limits_pr + int(data['limit'])
             profitability_managed.end_limit = end_limit

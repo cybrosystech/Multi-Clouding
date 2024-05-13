@@ -56,7 +56,8 @@
                     </group>
                     <group>
                        <field name="lease_finance_cost" widget="many2many_tags"/>
-                       <field name="analatyc_account_group" invisible="1"/>
+<!--                       <field name="analatyc_account_group" invisible="1"/>-->
+                       <field name="group" invisible="1"/>
                     </group>
                 </group>
                 <group>
