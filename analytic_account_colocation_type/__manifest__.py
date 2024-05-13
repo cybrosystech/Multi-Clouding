@@ -9,7 +9,7 @@
     'category': 'Accounting',
     'version': '1.0',
     'depends': ['analytic_account_types', 'analytic_account_types_clone',
-                'base'],
+                'sale'],
 
     'data':
         [
