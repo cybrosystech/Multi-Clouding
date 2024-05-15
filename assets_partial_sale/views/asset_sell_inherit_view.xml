@@ -22,7 +22,7 @@
         <field name="arch" type="xml">
             <field name="date" position="before">
                 <field name="partial_bool"
-                       invisible="from_leasee_contract == True or modify_action!='sell'"
+                       invisible="from_leasee_contract == True"
                 />
                 <field name="partial_amount" invisible="partial_bool == False" string="Partial Amount"
                 />
