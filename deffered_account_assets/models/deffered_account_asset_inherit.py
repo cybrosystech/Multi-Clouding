@@ -21,43 +21,43 @@ class AccountAssetInherit(models.Model):
         Date = self.start_date
         self.acquisition_date = Date
         self.prorata_date = Date
-    def _compute_board_amount(self, residual_amount, period_start_date,
-                              period_end_date, days_already_depreciated,
-                              days_left_to_depreciated, residual_declining):
-        if self.asset_lifetime_days == 0:
-            return 0, 0
-        number_days = self._get_delta_days(period_start_date, period_end_date)
-        total_days = number_days + days_already_depreciated
-
-        if self.method in ('degressive', 'degressive_then_linear'):
-            # Declining by year but divided per month
-            # We compute the amount of the period based on ratio how many days there are in the period
-            # e.g: monthly period = 30 days --> (30/360) * 12000 * 0.4
-            # => For each month in the year we will decline the same amount.
-            amount = (
-                             number_days / DAYS_PER_YEAR) * residual_declining * self.method_progress_factor
-        else:
-            computed_linear_amount = (
-                                             self.total_depreciable_value * total_days / self.asset_lifetime_days) + residual_amount - self.total_depreciable_value
-            if float_compare(residual_amount, 0,
-                             precision_rounding=self.currency_id.rounding) >= 0:
-                linear_amount = min(computed_linear_amount, residual_amount)
-                amount = max(linear_amount, 0)
-            else:
-                linear_amount = max(computed_linear_amount, residual_amount)
-                amount = min(linear_amount, 0)
-
-        if self.method == 'degressive_then_linear' and days_left_to_depreciated != 0:
-            linear_amount = number_days * self.total_depreciable_value / self.asset_lifetime_days
-            amount = max(linear_amount, amount, key=abs)
-
-        if abs(residual_amount) < abs(
-                amount) or total_days >= self.asset_lifetime_days:
-            # If the residual amount is less than the computed amount, we keep the residual amount
-            # If total_days is greater or equals to asset lifetime days, it should mean that
-            # the asset will finish in this period and the value for this period is equals to the residual amount.
-            amount = residual_amount
-        return number_days, self.currency_id.round(amount)
+    # def _compute_board_amount(self, residual_amount, period_start_date,
+    #                           period_end_date, days_already_depreciated,
+    #                           days_left_to_depreciated, residual_declining):
+    #     if self.asset_lifetime_days == 0:
+    #         return 0, 0
+    #     number_days = self._get_delta_days(period_start_date, period_end_date)
+    #     total_days = number_days + days_already_depreciated
+    #
+    #     if self.method in ('degressive', 'degressive_then_linear'):
+    #         # Declining by year but divided per month
+    #         # We compute the amount of the period based on ratio how many days there are in the period
+    #         # e.g: monthly period = 30 days --> (30/360) * 12000 * 0.4
+    #         # => For each month in the year we will decline the same amount.
+    #         amount = (
+    #                          number_days / DAYS_PER_YEAR) * residual_declining * self.method_progress_factor
+    #     else:
+    #         computed_linear_amount = (
+    #                                          self.total_depreciable_value * total_days / self.asset_lifetime_days) + residual_amount - self.total_depreciable_value
+    #         if float_compare(residual_amount, 0,
+    #                          precision_rounding=self.currency_id.rounding) >= 0:
+    #             linear_amount = min(computed_linear_amount, residual_amount)
+    #             amount = max(linear_amount, 0)
+    #         else:
+    #             linear_amount = max(computed_linear_amount, residual_amount)
+    #             amount = min(linear_amount, 0)
+    #
+    #     if self.method == 'degressive_then_linear' and days_left_to_depreciated != 0:
+    #         linear_amount = number_days * self.total_depreciable_value / self.asset_lifetime_days
+    #         amount = max(linear_amount, amount, key=abs)
+    #
+    #     if abs(residual_amount) < abs(
+    #             amount) or total_days >= self.asset_lifetime_days:
+    #         # If the residual amount is less than the computed amount, we keep the residual amount
+    #         # If total_days is greater or equals to asset lifetime days, it should mean that
+    #         # the asset will finish in this period and the value for this period is equals to the residual amount.
+    #         amount = residual_amount
+    #     return number_days, self.currency_id.round(amount)
 
     def _recompute_board(self,start_depreciation_date=False):
         self.ensure_one()
