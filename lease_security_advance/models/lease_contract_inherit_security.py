@@ -104,7 +104,7 @@ class LeaseeContractInheritAdvance(models.Model):
             security_moves = self.env['account.move'].search(
                 [(
                  'lease_security_advance_id', '=', self.security_advance_id.id),
-                 ('date', '>', disposal_date),('state','!=','draft')])
+                 ('date', '>', disposal_date)])
             security_moves.filtered(lambda x: x.state != 'draft').button_draft()
             # security_moves.button_draft()
             security_moves.button_cancel()
