@@ -437,7 +437,7 @@ class ProfitabilityReportManaged(models.Model):
             params = {
                 'company_id': data["company_id"],
                 'type': 'project_site',
-                'group': data["group"],
+                'group': data["group_id"],
             }
 
             cr.execute(query, params)
@@ -657,7 +657,7 @@ class ProfitabilityReportManaged(models.Model):
             params = {
                 'company_id': data["company_id"],
                 'type': 'project_site',
-                'group': data["group"],
+                'group': data["group_id"],
             }
 
             cr.execute(query, params)
