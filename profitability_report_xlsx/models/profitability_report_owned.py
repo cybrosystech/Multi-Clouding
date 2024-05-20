@@ -640,7 +640,7 @@ class ProfitabilityReportOwned(models.Model):
             profitability_owned.limits_pr = end_limit
             if end_limit <= len(project_site):
                 date = fields.Datetime.now()
-                xml_id = profitability_owned.cron_id.get_xml_id()
+                xml_id = profitability_owned.cron_id.get_external_id()
                 if xml_id.get(
                         profitability_owned.cron_id.id) == 'profitability_report_xlsx.action_profitability_owned_cron':
                     schedule = self.env.ref(
@@ -891,7 +891,7 @@ class ProfitabilityReportOwned(models.Model):
             profitability_owned.limits_pr = end_limit
             if end_limit <= len(project_site):
                 date = fields.Datetime.now()
-                xml_id = profitability_owned.cron_id.get_xml_id()
+                xml_id = profitability_owned.cron_id.get_external_id()
                 if xml_id.get(
                         profitability_owned.cron_id.id) == 'profitability_report_xlsx.action_profitability_owned_cron':
                     schedule = self.env.ref(

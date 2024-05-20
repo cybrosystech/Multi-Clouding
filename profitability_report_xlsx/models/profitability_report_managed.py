@@ -595,7 +595,7 @@ class ProfitabilityReportManaged(models.Model):
             profitability_managed.limits_pr = end_limit
             if end_limit <= len(project_site):
                 date = fields.Datetime.now()
-                xml_id = profitability_managed.cron_id.get_xml_id()
+                xml_id = profitability_managed.cron_id.get_external_id()
                 if xml_id.get(
                         profitability_managed.cron_id.id) == 'profitability_report_xlsx.action_profitability_managed_cron':
                     schedule = self.env.ref(
@@ -812,10 +812,9 @@ class ProfitabilityReportManaged(models.Model):
                 })
                 dummy_prof_list.append(prof_rep)
             profitability_managed.limits_pr = end_limit
-
             if end_limit <= len(project_site):
                 date = fields.Datetime.now()
-                xml_id = profitability_managed.cron_id.get_xml_id()
+                xml_id = profitability_managed.cron_id.get_external_id()
                 if xml_id.get(
                         profitability_managed.cron_id.id) == 'profitability_report_xlsx.action_profitability_managed_cron':
                     schedule = self.env.ref(
