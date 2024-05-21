@@ -43,6 +43,57 @@ class AccountMove(models.Model):
         selection_add=[('to_approve', 'To Approve'), ('posted',), ],
         ondelete={'to_approve': 'set default', 'draft': 'set default', })
 
+    @api.depends('line_ids.balance')
+    def _compute_depreciation_value(self):
+        for move in self:
+            asset = move.asset_id or move.reversed_entry_id.asset_id  # reversed moves are created before being assigned to the asset
+            if asset:
+                account_internal_group = 'expense'
+                if asset.currency_id.id != asset.company_id.currency_id.id:
+                    asset_depreciation = sum(
+                        move.line_ids.filtered(lambda
+                                                   l: l.account_id.internal_group == account_internal_group or l.account_id == asset.account_depreciation_expense_id).mapped(
+                            'amount_currency')
+                    )
+                    # Special case of closing entry - only disposed assets of type 'purchase' should match this condition
+                    if any(
+                            line.account_id == asset.account_asset_id
+                            for line in move.line_ids
+                    ):
+                        asset_depreciation = (
+                                asset.original_value
+                                - asset.salvage_value
+                                - (
+                                    move.line_ids[
+                                        1].amount_currency
+                                ) * (-1 if asset.original_value < 0 else 1)
+                        )
+                else:
+                    asset_depreciation = sum(
+                        move.line_ids.filtered(lambda
+                                                   l: l.account_id.internal_group == account_internal_group or l.account_id == asset.account_depreciation_expense_id).mapped(
+                            'balance')
+                    )
+                    # Special case of closing entry - only disposed assets of type 'purchase' should match this condition
+                    if any(
+                            line.account_id == asset.account_asset_id
+                            and float_compare(-line.balance, asset.original_value,
+                                              precision_rounding=asset.currency_id.rounding) == 0
+                            for line in move.line_ids
+                    ):
+                        asset_depreciation = (
+                                asset.original_value
+                                - asset.salvage_value
+                                - (
+                                    move.line_ids[
+                                        1].debit if asset.original_value > 0 else
+                                    move.line_ids[1].credit
+                                ) * (-1 if asset.original_value < 0 else 1)
+                        )
+            else:
+                asset_depreciation = 0
+            move.depreciation_value = asset_depreciation
+
     def button_cancel(self):
         res = super(AccountMove, self).button_cancel()
         self.purchase_approval_cycle_ids = False

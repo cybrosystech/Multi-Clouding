@@ -2,6 +2,7 @@ from odoo import fields, _
 from math import copysign
 from odoo.tools import float_compare
 from odoo.exceptions import UserError
+from odoo.tools import float_compare, float_round
 from odoo.addons.analytic_account_types.models.account_asset import \
     AccountAsset
 import logging
@@ -241,19 +242,40 @@ _logger = logging.getLogger(__name__)
 def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial,
                       partial_amount):
     def get_line(asset, amount, account):
-        return (0, 0, {
-            'name': asset.name,
-            'account_id': account.id,
-            'debit': 0.0 if float_compare(amount, 0.0,
-                                          precision_digits=prec) > 0 else -amount,
-            'credit': amount if float_compare(amount, 0.0,
-                                              precision_digits=prec) > 0 else 0.0,
-            'analytic_account_id': account_analytic_id.id if asset.leasee_contract_ids else False,
-            'currency_id': current_currency.id,
-            'amount_currency': -asset.value_residual,
-            'project_site_id': asset.project_site_id.id,
-            'location_id': asset.location_id.id,
-        })
+        prec = asset.company_id.currency_id.decimal_places
+
+        if asset.currency_id.id != asset.company_id.currency_id.id:
+            amount_test = float_round(asset.currency_id._convert(
+                            amount,  self.env.company.currency_id,
+                            asset.company_id, disposal_date),precision_digits=prec)
+            return (0, 0, {
+                'name': asset.name,
+                'account_id': account.id,
+                'balance': -amount_test,
+                'debit': 0.0 if float_compare(amount_test, 0.0,
+                                              precision_digits=prec) > 0 else -amount_test,
+                'credit': amount_test if float_compare(amount_test, 0.0,
+                                                       precision_digits=prec) > 0 else 0.0,
+                'analytic_account_id': account_analytic_id.id if asset.leasee_contract_ids else False,
+                'currency_id': asset.currency_id.id,
+                'amount_currency': -float_round(amount,precision_digits=prec),
+                'project_site_id': asset.project_site_id.id,
+            })
+        else:
+
+            return (0, 0, {
+                'name': asset.name,
+                'account_id': account.id,
+                'balance': -amount,
+                'analytic_distribution': analytic_distribution,
+                'currency_id': asset.currency_id.id,
+                'amount_currency': -asset.company_id.currency_id._convert(
+                    from_amount=amount,
+                    to_currency=asset.currency_id,
+                    company=asset.company_id,
+                    date=disposal_date,
+                )
+            })
 
     if len(self.leasee_contract_ids) == 1:
         move_ids = []
@@ -397,7 +419,73 @@ def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial,
         self.leasee_contract_ids.process_termination()
         return move_ids
     else:
-        return super(AccountAsset, self)._get_disposal_moves(
-            invoice_line_ids, disposal_date)
+        # def get_line(asset, amount, account):
+        #     return (0, 0, {
+        #         'name': asset.name,
+        #         'account_id': account.id,
+        #         'balance': -amount,
+        #         'analytic_distribution': analytic_distribution,
+        #         'currency_id': asset.currency_id.id,
+        #         'amount_currency': -asset.company_id.currency_id._convert(
+        #             from_amount=amount,
+        #             to_currency=asset.currency_id,
+        #             company=asset.company_id,
+        #             date=disposal_date,
+        #         )
+        #     })
+
+        move_ids = []
+        assert len(self) == len(invoice_line_ids)
+        for asset, invoice_line_ids in zip(self, invoice_line_ids):
+            asset._create_move_before_date(disposal_date)
+
+            analytic_distribution = asset.analytic_distribution
+
+            dict_invoice = {}
+            invoice_amount = 0
+
+            initial_amount = asset.original_value
+            initial_account = asset.original_move_line_ids.account_id if len(
+                asset.original_move_line_ids.account_id) == 1 else asset.account_asset_id
+
+            all_lines_before_disposal = asset.depreciation_move_ids.filtered(
+                lambda x: x.date <= disposal_date)
+            depreciated_amount = asset.currency_id.round(copysign(
+                sum(all_lines_before_disposal.mapped(
+                    'depreciation_value')) + asset.already_depreciated_amount_import,
+                -initial_amount,
+            ))
+            depreciation_account = asset.account_depreciation_id
+            for invoice_line in invoice_line_ids:
+                dict_invoice[invoice_line.account_id] = copysign(
+                    invoice_line.balance, -initial_amount) + dict_invoice.get(
+                    invoice_line.account_id, 0)
+                invoice_amount += copysign(invoice_line.balance,
+                                           -initial_amount)
+            list_accounts = [(amount, account) for account, amount in
+                             dict_invoice.items()]
+            difference = -initial_amount - depreciated_amount - invoice_amount
+            difference_account = asset.company_id.gain_account_id if difference > 0 else asset.company_id.loss_account_id
+            line_datas = [(initial_amount, initial_account), (
+            depreciated_amount, depreciation_account)] + list_accounts + [
+                             (difference, difference_account)]
+            vals = {
+                'asset_id': asset.id,
+                'ref': asset.name + ': ' + (
+                    _('Disposal') if not invoice_line_ids else _('Sale')),
+                'asset_depreciation_beginning_date': disposal_date,
+                'date': disposal_date,
+                'journal_id': asset.journal_id.id,
+                'move_type': 'entry',
+                'line_ids': [get_line(asset, amount, account) for
+                             amount, account in line_datas if account],
+            }
+            asset.write({'depreciation_move_ids': [(0, 0, vals)]})
+            move_ids += self.env['account.move'].search(
+                [('asset_id', '=', asset.id), ('state', '=', 'draft')]).ids
+
+        return move_ids
+        # return super(AccountAsset, self)._get_disposal_moves(
+        #     invoice_line_ids, disposal_date)
 
 AccountAsset._get_disposal_moves = _get_disposal_moves

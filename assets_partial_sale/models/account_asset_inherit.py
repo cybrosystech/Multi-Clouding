@@ -3,7 +3,7 @@ from odoo import models, fields, _, api
 from math import copysign
 from odoo.tools import float_compare
 from odoo.exceptions import UserError
-from odoo.tools import float_compare, float_is_zero, formatLang, end_of
+from odoo.tools import float_compare, float_is_zero, formatLang, end_of,float_round
 from odoo.addons.lease_management.models.account_asset import AccountAsset
 
 
@@ -23,7 +23,7 @@ class AccountAssetPartialInherit(models.Model):
     disposal_amount = fields.Float(default=0, readonly=True)
     asset_net = fields.Float(default=0, readonly=True)
     serial_no = fields.Char(string="Serial Number", help="Serial Number")
-    currency_id = fields.Many2one('res.currency', default=_get_default_currency)
+    currency_id = fields.Many2one(related='', store=True, readonly=False,default=_get_default_currency)
 
     def set_to_close(self, invoice_line_ids, partial, partial_amount, date=None
                      ):
@@ -66,24 +66,37 @@ class AccountAssetPartialInherit(models.Model):
             These lines are used to generate the disposal move
         :param disposal_date: the date of the disposal
         """
+
         def get_line(asset, amount, account):
-            return (0, 0, {
-                'name': asset.name,
-                'account_id': account.id,
-                'balance': -amount,
-                'analytic_distribution': analytic_distribution,
-                'currency_id': asset.currency_id.id,
-                'amount_currency': -asset.company_id.currency_id._convert(
-                    from_amount=amount,
-                    to_currency=asset.currency_id,
-                    company=asset.company_id,
-                    date=disposal_date,
+            if asset.currency_id.id != asset.company_id.currency_id.id:
+                return (0, 0, {
+                    'name': asset.name,
+                    'account_id': account.id,
+                    'balance':-asset.currency_id._convert(
+                        from_amount=amount,
+                        to_currency=asset.company_id.currency_id,
+                        company=asset.company_id,
+                        date=disposal_date,
+                    ),
+                    'analytic_distribution': analytic_distribution,
+                    'currency_id': asset.currency_id.id,
+                    'amount_currency': -amount,
+                })
+            else:
 
-                ),
-                'project_site_id': asset.project_site_id.id,
-                'analytic_account_id': asset.analytic_account_id.id,
-
-            })
+                return (0, 0, {
+                    'name': asset.name,
+                    'account_id': account.id,
+                    'balance': -amount,
+                    'analytic_distribution': analytic_distribution,
+                    'currency_id': asset.currency_id.id,
+                    'amount_currency': -asset.company_id.currency_id._convert(
+                        from_amount=amount,
+                        to_currency=asset.currency_id,
+                        company=asset.company_id,
+                        date=disposal_date,
+                    )
+                })
 
         if len(self.leasee_contract_ids) == 1:
             move_ids = []
@@ -108,8 +121,7 @@ class AccountAssetPartialInherit(models.Model):
                 analytic_distribution = asset.analytic_distribution
                 company_currency = asset.company_id.currency_id
                 current_currency = asset.currency_id
-
-
+                account_analytic_id = asset.analytic_account_id
                 dict_invoice = {}
                 invoice_amount = 0
 
@@ -187,12 +199,7 @@ class AccountAssetPartialInherit(models.Model):
                     line_datas = [(initial_amount, initial_account), (
                         depreciated_amount, depreciation_account)] + list_accounts + [
                                      (difference, difference_account)]
-
                 vals = {
-                    'amount_total': current_currency._convert(value_residual,
-                                                              company_currency,
-                                                              asset.company_id,
-                                                              disposal_date),
                     'asset_id': asset.id,
                     'ref': asset.name + ': ' + (
                         _('Disposal') if not invoice_line_ids else _('Sale')),
@@ -202,8 +209,7 @@ class AccountAssetPartialInherit(models.Model):
                     'move_type': 'entry',
                     'line_ids': [get_line(asset, amount, account) for
                                  amount, account in line_datas if account],
-                    'asset_remaining_value': 0,
-
+                    # 'asset_remaining_value':0,
                 }
                 asset.write({'depreciation_move_ids': [(0, 0, vals)]})
                 move_ids += self.env['account.move'].search(

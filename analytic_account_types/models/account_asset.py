@@ -77,7 +77,6 @@ class AccountAsset(models.Model):
             These lines are used to generate the disposal move
         :param disposal_date: the date of the disposal
         """
-
         def get_line(asset, amount, account):
             return (0, 0, {
                 'name': asset.name,
