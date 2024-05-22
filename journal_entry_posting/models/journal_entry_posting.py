@@ -34,13 +34,14 @@ class JournalEntryPostingConfig(models.Model):
             [('cron_id', '=', cron_id)], limit=1)
         journals = self.env['account.move.line'].search(
             [('move_id.state', '=', 'draft'),
+             ('move_id.asset_id', '=', False),
              ('move_id.date', '>=', journal.from_date),
              ('move_id.date', '<=', journal.to_date),
              ('move_id.company_id', 'in', journal.company_ids.ids),
              ('move_id.journal_id', 'in', journal.journals.ids),
              ], limit=journal.limit).mapped('move_id')
         for rec in journals:
-            rec.auto_post = False
+            rec.auto_post = 'no'
             rec.sudo().action_post()
             msg = _('This move posted by: %(user)s',
                     user=journal.scheduled_user.name)
@@ -68,13 +69,14 @@ class JournalEntryPostingConfig(models.Model):
             [('cron_id', '=', cron_id)], limit=1)
         journals = self.env['account.move.line'].search(
             [('move_id.state', '=', 'draft'),
+             ('move_id.asset_id', '=', False),
              ('move_id.date', '>=', journal.from_date),
              ('move_id.date', '<=', journal.to_date),
              ('move_id.company_id', 'in', journal.company_ids.ids),
              ('move_id.journal_id', 'in', journal.journals.ids),
              ], limit=journal.limit).mapped('move_id')
         for rec in journals:
-            rec.auto_post = False
+            rec.auto_post = 'no'
             rec.sudo().action_post()
             msg = _('This move posted by: %(user)s',
                     user=journal.scheduled_user.name)
@@ -102,13 +104,14 @@ class JournalEntryPostingConfig(models.Model):
             [('cron_id', '=', cron_id)], limit=1)
         journals = self.env['account.move.line'].search(
             [('move_id.state', '=', 'draft'),
+             ('move_id.asset_id', '=', False),
              ('move_id.date', '>=', journal.from_date),
              ('move_id.date', '<=', journal.to_date),
              ('move_id.company_id', 'in', journal.company_ids.ids),
              ('move_id.journal_id', 'in', journal.journals.ids),
              ], limit=journal.limit).mapped('move_id')
         for rec in journals:
-            rec.auto_post = False
+            rec.auto_post = 'no'
             rec.sudo().action_post()
             msg = _('This move posted by: %(user)s',
                     user=journal.scheduled_user.name)
@@ -135,13 +138,14 @@ class JournalEntryPostingConfig(models.Model):
             [('cron_id', '=', cron_id)], limit=1)
         journals = self.env['account.move.line'].search(
             [('move_id.state', '=', 'draft'),
+             ('move_id.asset_id', '=', False),
              ('move_id.date', '>=', journal.from_date),
              ('move_id.date', '<=', journal.to_date),
              ('move_id.company_id', 'in', journal.company_ids.ids),
              ('move_id.journal_id', 'in', journal.journals.ids),
              ], limit=journal.limit).mapped('move_id')
         for rec in journals:
-            rec.auto_post = False
+            rec.auto_post = 'no'
             rec.sudo().action_post()
             msg = _('This move posted by: %(user)s',
                     user=journal.scheduled_user.name)
