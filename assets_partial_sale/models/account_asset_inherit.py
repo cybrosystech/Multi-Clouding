@@ -79,6 +79,8 @@ class AccountAssetPartialInherit(models.Model):
                         date=disposal_date,
                     ),
                     'analytic_distribution': analytic_distribution,
+                    'analytic_account_id':asset.analytic_account_id.id,
+                    'project_site_id': asset.project_site_id.id,
                     'currency_id': asset.currency_id.id,
                     'amount_currency': -amount,
                 })
@@ -89,6 +91,8 @@ class AccountAssetPartialInherit(models.Model):
                     'account_id': account.id,
                     'balance': -amount,
                     'analytic_distribution': analytic_distribution,
+                    'analytic_account_id': asset.analytic_account_id.id,
+                    'project_site_id': asset.project_site_id.id,
                     'currency_id': asset.currency_id.id,
                     'amount_currency': -asset.company_id.currency_id._convert(
                         from_amount=amount,

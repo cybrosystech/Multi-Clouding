@@ -256,10 +256,11 @@ def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial,
                                               precision_digits=prec) > 0 else -amount_test,
                 'credit': amount_test if float_compare(amount_test, 0.0,
                                                        precision_digits=prec) > 0 else 0.0,
-                'analytic_account_id': account_analytic_id.id if asset.leasee_contract_ids else False,
+                'analytic_account_id': asset.analytic_account_id.id,
                 'currency_id': asset.currency_id.id,
                 'amount_currency': -float_round(amount,precision_digits=prec),
                 'project_site_id': asset.project_site_id.id,
+                'analytic_distribution': analytic_distribution,
             })
         else:
 
@@ -268,6 +269,8 @@ def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial,
                 'account_id': account.id,
                 'balance': -amount,
                 'analytic_distribution': analytic_distribution,
+                'analytic_account_id': asset.analytic_account_id.id,
+                'project_site_id': asset.project_site_id.id,
                 'currency_id': asset.currency_id.id,
                 'amount_currency': -asset.company_id.currency_id._convert(
                     from_amount=amount,

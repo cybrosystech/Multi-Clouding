@@ -725,7 +725,7 @@ class LeaseeContract(models.Model):
                     'state': 'draft',
                     'prorata_date': self.commencement_date,
                     'method_period': '1',
-                    'accounting_date':self.inception_date,
+                    'accounting_date': self.inception_date,
                 }
             else:
                 vals = {
@@ -842,18 +842,23 @@ class LeaseeContract(models.Model):
                     'project_site_id': self.project_site_id.id,
                     'analytic_distribution': self.analytic_distribution,
                 }))
+
             invoice = self.env['account.move'].create({
                 'partner_id': partner.id,
                 'move_type': 'in_invoice',
                 'currency_id': self.leasee_currency_id.id,
                 'ref': self.name,
                 'invoice_date': self.commencement_date,
+                'invoice_date_due': self.commencement_date,
+                'invoice_payment_term_id': self.env.ref(
+                    'account.account_payment_term_immediate').id,
                 'invoice_line_ids': invoice_lines,
                 'journal_id': self.installment_journal_id.id,
                 'leasee_contract_id': self.id,
             })
             if invoice.date >= self.commencement_date and invoice.date <= self.inception_date:
                 invoice.date = self.inception_date
+                invoice.invoice_date_due = self.inception_date
                 invoice.auto_post = 'at_date'
             line = invoice.line_ids.filtered(
                 lambda l: l.account_id == partner.property_account_payable_id)
@@ -888,12 +893,16 @@ class LeaseeContract(models.Model):
                 'currency_id': self.leasee_currency_id.id,
                 'ref': self.name,
                 'invoice_date': self.commencement_date,
+                'invoice_date_due': self.commencement_date,
+                'invoice_payment_term_id': self.env.ref(
+                    'account.account_payment_term_immediate').id,
                 'invoice_line_ids': invoice_lines,
                 'journal_id': self.installment_journal_id.id,
                 'leasee_contract_id': self.id,
             })
             if invoice.date >= self.commencement_date and invoice.date <= self.inception_date:
                 invoice.date = self.inception_date
+                invoice.invoice_date_due = self.inception_date
                 invoice.auto_post = 'at_date'
             line = invoice.line_ids.filtered(
                 lambda l: l.account_id == partner.property_account_payable_id)
@@ -1030,18 +1039,22 @@ class LeaseeContract(models.Model):
                     'currency_id': self.leasee_currency_id.id
                 }))
 
-        move_id=self.env['account.move'].create({
+        move_id = self.env['account.move'].create({
             'partner_id': self.vendor_id.id,
             'move_type': 'entry',
             'currency_id': self.leasee_currency_id.id,
             'ref': self.name,
             'date': self.commencement_date,
+            'invoice_date_due': self.commencement_date,
+            'invoice_payment_term_id': self.env.ref(
+                'account.account_payment_term_immediate').id,
             'journal_id': self.initial_journal_id.id,
             'leasee_contract_id': self.id,
             'line_ids': lines,
         })
         if self.inception_date > self.commencement_date and move_id.date >= self.commencement_date and move_id.date <= self.inception_date:
             move_id.date = self.inception_date
+            move_id.invoice_date_due = self.inception_date
             move_id.auto_post = 'at_date'
 
     def get_annual_period(self, i):
@@ -1546,7 +1559,6 @@ class LeaseeContract(models.Model):
                         self.create_installment_bill(contract, install, partner,
                                                      amount)
 
-
     def create_installment_bill(self, contract, install, partner, amount):
         invoice = self.env['account.move'].create({
             'partner_id': partner.id,
@@ -1554,11 +1566,15 @@ class LeaseeContract(models.Model):
             'currency_id': contract.leasee_currency_id.id,
             'ref': contract.name + ' - ' + install.date.strftime('%d/%m/%Y'),
             'invoice_date': install.date,
+            'invoice_date_due': install.date,
+            'invoice_payment_term_id': self.env.ref(
+                'account.account_payment_term_immediate').id,
             'journal_id': contract.installment_journal_id.id,
             'leasee_contract_id': contract.id,
         })
         if invoice.date >= contract.commencement_date and invoice.date <= contract.inception_date:
             invoice.date = contract.inception_date
+            invoice.invoice_date_due = contract.inception_date
             invoice.auto_post = 'at_date'
 
         invoice.invoice_line_ids = [(0, 0, {
@@ -1793,12 +1809,16 @@ class LeaseeContract(models.Model):
                 'currency_id': self.leasee_currency_id.id,
                 'ref': self.name,
                 'date': move_date,
+                'invoice_date_due': move_date,
+                'invoice_payment_term_id': self.env.ref(
+                    'account.account_payment_term_immediate').id,
                 'journal_id': self.asset_model_id.journal_id.id,
                 'leasee_contract_id': self.id,
                 'leasee_installment_id': installment.id,
             })
             if move.date >= self.commencement_date and move.date <= self.inception_date:
                 move.date = self.inception_date
+                move.invoice_date_due = self.inception_date
                 move.auto_post = 'at_date'
 
             move.line_ids = [(0, 0, {
@@ -1915,6 +1935,9 @@ class LeaseeContract(models.Model):
                 'currency_id': self.leasee_currency_id.id,
                 'ref': installment.name + ' Installment Entry',
                 'date': installment.date,
+                'invoice_date_due': installment.date,
+                'invoice_payment_term_id': self.env.ref(
+                    'account.account_payment_term_immediate').id,
                 'journal_id': self.initial_journal_id.id,
                 'leasee_contract_id': self.id,
                 'leasee_installment_id': installment.id,
@@ -1923,6 +1946,7 @@ class LeaseeContract(models.Model):
             })
             if move.date >= self.commencement_date and move.date <= self.inception_date:
                 move.date = self.inception_date
+                move.invoice_date_due = self.inception_date
                 move.auto_post = 'at_date'
 
     def create_contract_installment_entries(self, start_date):
@@ -2020,7 +2044,7 @@ class LeaseeContract(models.Model):
             })
             if move.date >= contract.commencement_date and move.date <= contract.inception_date:
                 move.date = contract.inception_date
-                move.auto_post =  'at_date'
+                move.auto_post = 'at_date'
 
             move.line_ids = [(0, 0, {
                 'name': 'Reassessment contract number %s' % contract.name,
@@ -2299,7 +2323,7 @@ class LeaseeContract(models.Model):
                                  'move_id': move.id,
                                  'analytic_account_id': self.analytic_account_id.id,
                                  'project_site_id': self.project_site_id.id,
-                                 'analytic_distribution':  self.analytic_distribution,
+                                 'analytic_distribution': self.analytic_distribution,
                                  'currency_id': self.leasee_currency_id.id
                              })]
             if self.leasee_currency_id != self.company_id.currency_id:
