@@ -69,6 +69,9 @@ class LeaseeContractInheritAdvance(models.Model):
             'ref': self.name + '- SD - ' + instalment.date.strftime(
                 '%d/%m/%Y'),
             'invoice_date': instalment.date,
+            'invoice_date_due': instalment.date,
+            'invoice_payment_term_id': self.env.ref(
+                'account.account_payment_term_immediate').id,
             'invoice_line_ids': invoice_lines,
             'journal_id': self.installment_journal_id.id,
             'lease_security_advance_id': advance_security_id.id,
@@ -76,6 +79,7 @@ class LeaseeContractInheritAdvance(models.Model):
         })
         if invoice.date >= self.commencement_date and invoice.date <= self.inception_date:
             invoice.date = self.inception_date
+            invoice.invoice_date_due = self.inception_date
             invoice.auto_post = 'at_date'
 
     def action_security_bills(self):
@@ -103,8 +107,9 @@ class LeaseeContractInheritAdvance(models.Model):
         if self.security_advance_id:
             security_moves = self.env['account.move'].search(
                 [(
-                 'lease_security_advance_id', '=', self.security_advance_id.id),
-                 ('date', '>', disposal_date)])
+                    'lease_security_advance_id', '=',
+                    self.security_advance_id.id),
+                    ('date', '>', disposal_date)])
             security_moves.filtered(lambda x: x.state != 'draft').button_draft()
             # security_moves.button_draft()
             security_moves.button_cancel()
