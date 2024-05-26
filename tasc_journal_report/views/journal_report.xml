@@ -49,9 +49,7 @@
                                     <td/>
                                     <td/>
                                     <td/>
-                                    <td/>
-
-                                    <td colspan="4">
+                                    <td colspan="5">
                                                                 <div class="clearfix" style="position:relative;padding: 50px;align:right;">
                         <div id="total" class="row">
                             <div t-attf-class="#{'col-6' if report_type != 'html' else 'col-sm-7 col-md-6'} ml-auto">
