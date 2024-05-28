@@ -12,5 +12,8 @@
                 'cash_flow_statement_report'],
 
     'data':
-        []
+        [
+            'report/tasc_deferred_expense_report.xml',
+        ],
+
 }
