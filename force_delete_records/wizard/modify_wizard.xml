@@ -12,6 +12,7 @@
                                invisible="state_entry != 'assets'"/>
                         <field name="journal_state"
                                invisible="state_entry != 'journal'"/>
+                        <field name="journal_ids" widget="many2many_tags"/>
                     </group>
                     <group>
                         <field name="records"/>

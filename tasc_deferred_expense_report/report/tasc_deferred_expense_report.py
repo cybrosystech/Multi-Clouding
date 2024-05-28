@@ -410,7 +410,8 @@ class TascDeferredExpenseReport(models.AbstractModel):
                     ) AS deferred_move_amounts ON amd.deferred_move_id = deferred_move_amounts.deferred_move_id
                 where aml.debit !=0 and aml.tax_line_id is NULL and
                 move.company_id in %(company_ids)s and
-                move.date <= %(date_to)s and move.date >= %(date_from)s
+                ((move.date <= %(date_to)s and move.date >= %(date_from)s) or (amd.original_move_id in (select amdr.original_move_id from account_move amv join account_move_deferred_rel amdr 
+							on amdr.deferred_move_id = amv.id where amv.date <=  %(date_to)s and amv.date >=  %(date_from)s)))
                {prefix_query}
                 GROUP BY  account.id,move.id,aml.id,project_sites.id,cc.id,currency.id,credit_account.id
                 ORDER BY account.code

@@ -35,6 +35,19 @@ class AccountAssetBulkSaleDisposal(models.Model):
             'res_id': dd.id,
         }
 
+    def asset_bulk_pause_depreciation(self):
+        dd = self.env['asset.bulk.pause.wizard'].create({
+            'asset_ids': self.ids,
+        })
+        return {
+            'name': 'Asset Bulk Pause Depreciation',
+            'view_mode': 'form',
+            'res_model': 'asset.bulk.pause.wizard',
+            'type': 'ir.actions.act_window',
+            'target': 'new',
+            'res_id': dd.id,
+        }
+
     def set_to_close_bulk(self, invoice_line_ids, partial, partial_amount, date=None):
         self.ensure_one()
         disposal_date = date or fields.Date.today()
