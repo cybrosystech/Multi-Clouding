@@ -1,815 +1,774 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import api, fields, models, _
-from odoo.tools import format_date
+# -*- coding: utf-8 -*-
+# Part of Odoo. See LICENSE file for full copyright and licensing details.
+
+from odoo import fields, models, _
+from odoo.tools import format_date, get_lang
 from itertools import groupby
 from collections import defaultdict
-from odoo.addons.analytic_account_types.models.account_reports import \
-    AccountReport
-from odoo.addons.web.controllers.main import clean_action
-
-import re
 
 MAX_NAME_LENGTH = 50
 
 
-class AssetReport(models.Model):
-    _name = 'account.assets.custom.report'
-    _inherit = ['account.report']
-    _description = 'Account Assets Report Custom'
+class AssetsReportCustomHandler(models.AbstractModel):
+    _name = 'account.asset.report.depreciation.schedule.handler'
+    _inherit = 'account.report.custom.handler'
+    _description = 'Depreciation Schedule Report Custom Handler'
 
-    filter_date = {'mode': 'range', 'filter': 'this_year'}
-    # filter_all_entries = False
-    # filter_hierarchy = True
-    # filter_unfold_all = True
+    def _get_custom_display_config(self):
+        return {
+            'client_css_custom_class': 'depreciation_schedule',
+            'templates': {
+                'AccountReportFilters': 'account_asset.DepreciationScheduleFilters',
+            }
+        }
 
-    section_report_ids = fields.Many2many(string="Sections", comodel_name='account.report', relation="account_asset_custom_report_section_rel", column1="main_asset_report_id", column2="asset_sub_report_id")
+    def _dynamic_lines_generator(self, report, options,
+                                 all_column_groups_expression_totals,
+                                 warnings=None):
+        report = self._with_context_company2code2account(report)
 
-    def _get_report_name(self):
-        return _('Depreciation Table Report')
+        lines, totals_by_column_group = self._generate_report_lines_without_grouping(
+            report, options)
+        # add the groups by account
+        if options['assets_groupby_account']:
+            lines = self._group_by_account(report, lines, options)
+        else:
+            lines = report._regroup_lines_by_name_prefix(options, lines,
+                                                         '_report_expand_unfoldable_line_assets_report_prefix_group',
+                                                         0)
 
-    def _get_templates(self):
-        templates = super(AssetReport, self)._get_templates()
-        templates['main_template'] = 'account_asset.main_template_asset_report'
-        return templates
+        # add the total line
+        total_columns = []
+        for column_data in options['columns']:
+            col_value = totals_by_column_group[
+                column_data['column_group_key']].get(
+                column_data['expression_label'])
+            col_value = col_value if column_data.get(
+                'figure_type') == 'monetary' else ''
 
-    def get_header(self, options):
-        start_date = format_date(self.env, options['date']['date_from'])
-        end_date = format_date(self.env, options['date']['date_to'])
-        return [
-            [
-                {'name': ''},
-                {'name': _('Characteristics'), 'colspan': 9},
-                {'name': _('Assets'), 'colspan': 4},
-                {'name': _('Depreciation'), 'colspan': 4},
-                {'name': _('Book Value')},
-            ],
-            [
-                {'name': ''},  # Description
-                {'name': _('Acquisition Date'), 'class': 'text-center'},
-                # Characteristics
-                {'name': _('First Depreciation'), 'class': 'text-center'},
-                {'name': _('Method'), 'class': 'text-center'},
-                {'name': _('Remaining Life'), 'class': 'text-center'},
-                {'name': _('Co Location'), 'class': 'text-center'},
-                {'name': _('Project/Site'), 'class': 'text-center'},
-                {'name': _('Capex Type'), 'class': 'text-center'},
-                {'name': _('Asset Sequence Number'), 'class': 'text-center'},
-                {'name': _('Rate'), 'class': 'number', 'title': _(
-                    'In percent.<br>For a linear method, the depreciation rate is computed per year.<br>For a declining method, it is the declining factor'),
-                 'data-toggle': 'tooltip'},
-                {'name': start_date, 'class': 'number'},  # Assets
-                {'name': _('+'), 'class': 'number'},
-                {'name': _('-'), 'class': 'number'},
-                {'name': end_date, 'class': 'number'},
-                {'name': start_date, 'class': 'number'},  # Depreciation
-                {'name': _('+'), 'class': 'number'},
-                {'name': _('-'), 'class': 'number'},
-                {'name': end_date, 'class': 'number'},
-                {'name': '', 'class': 'number'},  # Gross
-            ],
+            total_columns.append(
+                report._build_column_dict(col_value, column_data,
+                                          options=options))
+
+        if lines:
+            lines.append({
+                'id': report._get_generic_line_id(None, None, markup='total'),
+                'level': 1,
+                'name': _('Total'),
+                'columns': total_columns,
+                'unfoldable': False,
+                'unfolded': False,
+            })
+
+        return [(0, line) for line in lines]
+
+    def _generate_report_lines_without_grouping(self, report, options,
+                                                prefix_to_match=None,
+                                                parent_id=None,
+                                                forced_account_id=None):
+        # construct a dictionary:
+        #   {(account_id, asset_id): {col_group_key: {expression_label_1: value, expression_label_2: value, ...}}}
+        all_asset_ids = set()
+        all_lines_data = {}
+        for column_group_key, column_group_options in report._split_options_per_column_group(
+                options).items():
+            # the lines returned are already sorted by account_id!
+            lines_query_results = self._query_lines(column_group_options,
+                                                    prefix_to_match=prefix_to_match,
+                                                    forced_account_id=forced_account_id)
+            for account_id, asset_id, cols_by_expr_label in lines_query_results:
+                line_id = (account_id, asset_id)
+                all_asset_ids.add(asset_id)
+                if line_id not in all_lines_data:
+                    all_lines_data[line_id] = {column_group_key: []}
+                all_lines_data[line_id][column_group_key] = cols_by_expr_label
+
+        column_names = [
+            'assets_date_from', 'assets_plus', 'assets_minus', 'assets_date_to',
+            'depre_date_from',
+            'depre_plus', 'depre_minus', 'depre_date_to', 'balance'
+        ]
+        totals_by_column_group = defaultdict(
+            lambda: dict.fromkeys(column_names, 0.0))
+
+        # Browse all the necessary assets in one go, to minimize the number of queries
+        assets_cache = {asset.id: asset for asset in
+                        self.env['account.asset'].browse(all_asset_ids)}
+
+        # construct the lines, 1 at a time
+        lines = []
+        company_currency = self.env.company.currency_id
+        for (account_id, asset_id), col_group_totals in all_lines_data.items():
+            all_columns = []
+            for column_data in options['columns']:
+                col_group_key = column_data['column_group_key']
+                expr_label = column_data['expression_label']
+                if col_group_key not in col_group_totals or expr_label not in \
+                        col_group_totals[col_group_key]:
+                    all_columns.append(report._build_column_dict(None, None))
+                    continue
+
+                col_value = col_group_totals[col_group_key][expr_label]
+                col_data = None if col_value is None else column_data
+
+                all_columns.append(
+                    report._build_column_dict(col_value, col_data,
+                                              options=options))
+
+                # add to the total line
+                if column_data['figure_type'] == 'monetary':
+                    totals_by_column_group[column_data['column_group_key']][
+                        column_data['expression_label']] += col_value
+
+            name = assets_cache[asset_id].name
+            line = {
+                'id': report._get_generic_line_id('account.asset', asset_id,
+                                                  parent_line_id=parent_id),
+                'level': 2,
+                'name': name,
+                'columns': all_columns,
+                'unfoldable': False,
+                'unfolded': False,
+                'caret_options': 'account_asset_line',
+                'assets_account_id': account_id,
+            }
+            if parent_id:
+                line['parent_id'] = parent_id
+            if len(name) >= MAX_NAME_LENGTH:
+                line['title_hover'] = name
+            lines.append(line)
+
+        return lines, totals_by_column_group
+
+    def _caret_options_initializer(self):
+        # Use 'caret_option_open_record_form' defined in account_reports rather than a custom function
+        return {
+            'account_asset_line': [
+                {'name': _("Open Asset"),
+                 'action': 'caret_option_open_record_form'},
+            ]
+        }
+
+    def _custom_options_initializer(self, report, options,
+                                    previous_options=None):
+        super()._custom_options_initializer(report, options,
+                                            previous_options=previous_options)
+        column_group_options_map = report._split_options_per_column_group(
+            options)
+
+        for col in options['columns']:
+            column_group_options = column_group_options_map[
+                col['column_group_key']]
+            # Dynamic naming of columns containing dates
+            if col['expression_label'] == 'balance':
+                col[
+                    'name'] = ''  # The column label will be displayed in the subheader
+            if col['expression_label'] in ['assets_date_from',
+                                           'depre_date_from']:
+                col['name'] = format_date(self.env,
+                                          column_group_options['date'][
+                                              'date_from'])
+            elif col['expression_label'] in ['assets_date_to', 'depre_date_to']:
+                col['name'] = format_date(self.env,
+                                          column_group_options['date'][
+                                              'date_to'])
+
+        options['custom_columns_subheaders'] = [
+            {"name": _("Characteristics"), "colspan": 9},
+            {"name": _("Assets"), "colspan": 4},
+            {"name": _("Depreciation"), "colspan": 4},
+            {"name": _("Book Value"), "colspan": 1}
         ]
 
-    @api.model
-    def _init_filter_hierarchy(self, options, previous_options=None):
-        # overwrite because we don't depend on account.group
-        if self.filter_hierarchy is not None:
-            if previous_options and 'hierarchy' in previous_options:
-                options['hierarchy'] = previous_options['hierarchy']
-            else:
-                options['hierarchy'] = self.filter_hierarchy
+        # Group by account by default
+        groupby_activated = (previous_options or {}).get(
+            'assets_groupby_account', True)
+        options['assets_groupby_account'] = groupby_activated
+        # If group by account is activated, activate the hierarchy (which will group by account group as well) if
+        # the company has at least one account group, otherwise only group by account
+        has_account_group = self.env['account.group'].search_count(
+            [('company_id', '=', self.env.company.id)], limit=1)
+        hierarchy_activated = (previous_options or {}).get('hierarchy', True)
+        options[
+            'hierarchy'] = has_account_group and hierarchy_activated or False
 
-    def get_account_codes(self, account):
-        return [(name, name) for name in
-                self._get_account_group_with_company(account.code,
-                                                     account.company_id.id)[1:]]
-
-    def _get_account_group(self, account_code, parent_group=None,
-                           group_dict=None):
-        """ Get the list of parent groups for this account
-        return: list containing the main group key, then the name of every group
-                for this account, beginning by the more general, until the
-                name of the account itself.
-            This method is deprecated. Call instead _get_account_group_with_company
-        """
-        return self._get_account_group_with_company(account_code,
-                                                    self.env.company.id,
-                                                    parent_group, group_dict)
-
-    def _with_context_company2code2account(self):
+    def _with_context_company2code2account(self, report):
         if self.env.context.get('company2code2account') is not None:
-            return self
+            return report
 
         company2code2account = defaultdict(dict)
         for account in self.env['account.account'].search([]):
             company2code2account[account.company_id.id][account.code] = account
 
-        return self.with_context(company2code2account=company2code2account)
+        return report.with_context(company2code2account=company2code2account)
 
-    def _get_account_group_with_company(self, account_code, company_id,
-                                        parent_group=None, group_dict=None):
-        """ Get the list of parent groups for this account
-        return: list containing the main group key, then the name of every group
-                for this account, beginning by the more general, until the
-                name of the account itself.
+    def _query_lines(self, options, prefix_to_match=None,
+                     forced_account_id=None):
         """
-
-        if not account_code:
-            # This is used if there is no account_asset_id
-            account_code = '##'
-        group_dict = group_dict or self.env[
-            'account.report']._get_account_groups_for_asset_report()
-        self = self._with_context_company2code2account()
-        account_id = self.env.context['company2code2account'].get(company_id,
-                                                                  {}).get(
-            account_code)
-        account_suffix = [] if parent_group else [
-            account_id.display_name if account_id else _("No asset account")]
-        for k, v in group_dict.items():
-            key_split = k.split('-')
-            account_code_short = account_code[:len(str(key_split[0]))]
-            if not v.get('children') and account_code_short == k:
-                return (parent_group or [k]) + [v['name']] + account_suffix
-            elif v.get('children') and key_split[0] <= account_code_short <= \
-                    key_split[1]:
-                return self._get_account_group_with_company(
-                    account_code_short,
-                    company_id,
-                    (parent_group or [k]) + [v['name']],
-                    v['children']
-                ) + account_suffix
-        return (parent_group or [account_code[:2]]) + account_suffix
-
-    def _get_rate_cached(self, from_currency, to_currency, company, date,
-                         cache):
-        if from_currency == to_currency:
-            return 1
-        key = (from_currency, to_currency, company, date)
-        if key not in cache:
-            cache[key] = self.env['res.currency']._get_conversion_rate(*key)
-        return cache[key]
-
-    def get_capex_type(self, capex):
-        capex_type = {
-            'replacement_capex': 'Replacement CAPEX',
-            'tenant_capex': 'Tenant upgrade CAPEX',
-            'expansion_capex': 'Expansion CAPEX',
-            '5g_capex': '5G CAPEX',
-            'other_capex': 'Other CAPEX'
-        }
-        if capex:
-            return capex_type['' + capex]
-        else:
-            return ''
-
-    def _get_lines(self, options, line_id=None):
-        self = self._with_context_company2code2account()
-        options['self'] = self
+        Returns a list of tuples: [(asset_id, account_id, [{expression_label: value}])]
+        """
         lines = []
-        total = [0] * 9
-        asset_lines = self._get_assets_lines(options)
-        curr_cache = {}
+        asset_lines = self._query_values(options,
+                                         prefix_to_match=prefix_to_match,
+                                         forced_account_id=forced_account_id)
 
-        for company_id, company_asset_lines in groupby(asset_lines,
-                                                       key=lambda x: x[
-                                                           'company_id']):
-            parent_lines = []
-            children_lines = defaultdict(list)
-            company = self.env['res.company'].browse(company_id)
-            company_currency = company.currency_id
-            for al in company_asset_lines:
-                if al['parent_id']:
-                    children_lines[al['parent_id']] += [al]
-                else:
-                    parent_lines += [al]
-            for al in parent_lines:
-                if al['asset_method'] == 'linear' and al[
-                    'asset_method_number']:  # some assets might have 0 depreciations because they dont lose value
-                    asset_depreciation_rate = ('{:.2f} %').format(
-                        (100.0 / al['asset_method_number']) * (
-                                    12 / int(al['asset_method_period'])))
-                elif al['asset_method'] == 'linear':
-                    asset_depreciation_rate = ('{:.2f} %').format(0.0)
-                else:
-                    asset_depreciation_rate = ('{:.2f} %').format(
-                        float(al['asset_method_progress_factor']) * 100)
+        # Assign the gross increases sub assets to their main asset (parent)
+        parent_lines = []
+        children_lines = defaultdict(list)
+        for al in asset_lines:
+            if al['parent_id']:
+                children_lines[al['parent_id']] += [al]
+            else:
+                parent_lines += [al]
 
-                al_currency = self.env['res.currency'].browse(
-                    al['asset_currency_id'])
-                al_rate = self._get_rate_cached(al_currency, company_currency,
-                                                company,
-                                                al['asset_acquisition_date'],
-                                                curr_cache)
+        for al in parent_lines:
+            # Compute the depreciation rate string
+            if al['asset_method'] == 'linear' and al[
+                'asset_method_number']:  # some assets might have 0 depreciations because they dont lose value
+                total_months = int(al['asset_method_number']) * int(
+                    al['asset_method_period'])
+                months = total_months % 12
+                years = total_months // 12
+                asset_depreciation_rate = " ".join(part for part in [
+                    years and _("%s y", years),
+                    months and _("%s m", months),
+                ] if part)
+            elif al['asset_method'] == 'linear':
+                asset_depreciation_rate = '0.00 %'
+            else:
+                asset_depreciation_rate = ('{:.2f} %').format(
+                    float(al['asset_method_progress_factor']) * 100)
 
-                depreciation_opening = company_currency.round(
-                    al['depreciated_start'] * al_rate) - company_currency.round(
-                    al['depreciation'] * al_rate)
-                depreciation_closing = company_currency.round(
-                    al['depreciated_end'] * al_rate)
-                depreciation_minus = 0.0
+            # Manage the opening of the asset
+            opening = (al['asset_acquisition_date'] or al[
+                'asset_date']) < fields.Date.to_date(
+                options['date']['date_from'])
 
-                opening = (al['asset_acquisition_date'] or al[
+            # Get the main values of the board for the asset
+            depreciation_opening = al['depreciated_before']
+            depreciation_add = al['depreciated_during']
+            depreciation_minus = 0.0
+
+            asset_disposal_value = al['asset_disposal_value'] if al[
+                                                                     'asset_disposal_date'] and \
+                                                                 al[
+                                                                     'asset_disposal_date'] <= fields.Date.to_date(
+                options['date']['date_to']) else 0.0
+
+            asset_opening = al['asset_original_value'] if opening else 0.0
+            asset_add = 0.0 if opening else al['asset_original_value']
+            asset_minus = 0.0
+            asset_salvage_value = al.get('asset_salvage_value', 0.0)
+
+            # Add the main values of the board for all the sub assets (gross increases)
+            for child in children_lines[al['asset_id']]:
+                depreciation_opening += child['depreciated_before']
+                depreciation_add += child['depreciated_during']
+
+                opening = (child['asset_acquisition_date'] or child[
                     'asset_date']) < fields.Date.to_date(
                     options['date']['date_from'])
-                asset_opening = company_currency.round(
-                    al['asset_original_value'] * al_rate) if opening else 0.0
-                asset_add = 0.0 if opening else company_currency.round(
-                    al['asset_original_value'] * al_rate)
-                asset_minus = 0.0
+                asset_opening += child[
+                    'asset_original_value'] if opening else 0.0
+                asset_add += 0.0 if opening else child['asset_original_value']
 
-                if al['import_depreciated']:
-                    asset_opening += asset_add
-                    asset_add = 0
-                    depreciation_opening += al['import_depreciated']
-                    depreciation_closing += al['import_depreciated']
+            # Compute the closing values
+            asset_closing = asset_opening + asset_add - asset_minus
+            depreciation_closing = depreciation_opening + depreciation_add - depreciation_minus
+            al_currency = self.env['res.currency'].browse(
+                al['asset_currency_id'])
 
-                for child in children_lines[al['asset_id']]:
-                    child_currency = self.env['res.currency'].browse(
-                        child['asset_currency_id'])
-                    child_rate = self._get_rate_cached(child_currency,
-                                                       company_currency,
-                                                       company, child[
-                                                           'asset_acquisition_date'],
-                                                       curr_cache)
+            # Manage the closing of the asset
+            if (
+                    al['asset_state'] == 'close'
+                    and al['asset_disposal_date']
+                    and al['asset_disposal_date'] <= fields.Date.to_date(
+                options['date']['date_to'])
+                    and al_currency.compare_amounts(depreciation_closing,
+                                                    asset_closing - asset_salvage_value) == 0
+            ):
+                depreciation_add -= asset_disposal_value
+                depreciation_minus += depreciation_closing - asset_disposal_value
+                depreciation_closing = 0.0
+                asset_minus += asset_closing
+                asset_closing = 0.0
 
-                    depreciation_opening += company_currency.round(child[
-                                                                       'depreciated_start'] * child_rate) - company_currency.round(
-                        child['depreciation'] * child_rate)
-                    depreciation_closing += company_currency.round(
-                        child['depreciated_end'] * child_rate)
+            # Manage negative assets (credit notes)
+            if al['asset_original_value'] < 0:
+                asset_add, asset_minus = -asset_minus, -asset_add
+                depreciation_add, depreciation_minus = -depreciation_minus, -depreciation_add
 
-                    opening = (child['asset_acquisition_date'] or child[
-                        'asset_date']) < fields.Date.to_date(
-                        options['date']['date_from'])
-                    asset_opening += company_currency.round(child[
-                                                                'asset_original_value'] * child_rate) if opening else 0.0
-                    asset_add += 0.0 if opening else company_currency.round(
-                        child['asset_original_value'] * child_rate)
+            if al["capex_type"] == 'replacement_capex':
+                apex_type = 'Replacement CAPEX'
+            elif al["capex_type"] == 'tenant_capex':
+                apex_type = 'Tenant upgrade CAPEX'
+            elif al["capex_type"] == 'expansion_capex':
+                apex_type = 'Expansion CAPEX'
+            elif al["capex_type"] == '5g_capex':
+                apex_type = '5G CAPEX'
+            elif al["capex_type"] == 'other_capex':
+                apex_type = 'Other CAPEX'
+            else:
+                apex_type = ''
 
-                depreciation_add = depreciation_closing - depreciation_opening
-                asset_closing = asset_opening + asset_add
+            # Format the data
+            columns_by_expr_label = {
+                "acquisition_date": al[
+                                        "asset_acquisition_date"] and format_date(
+                    self.env, al["asset_acquisition_date"]) or "",
+                # Characteristics
+                "first_depreciation": al["asset_date"] and format_date(self.env,
+                                                                       al[
+                                                                           "asset_date"]) or "",
+                "method": (al["asset_method"] == "linear" and _("Linear")) or (
+                            al["asset_method"] == "degressive" and _(
+                        "Declining")) or _("Dec. then Straight"),
+                "duration_rate": asset_depreciation_rate,
+                "assets_date_from": asset_opening,
+                "assets_plus": asset_add,
+                "assets_minus": asset_minus,
+                "assets_date_to": asset_closing,
+                "depre_date_from": depreciation_opening,
+                "depre_plus": depreciation_add,
+                "depre_minus": depreciation_minus,
+                "depre_date_to": depreciation_closing,
+                "balance": asset_closing - depreciation_closing,
+                "project_site": al["project_site"],
+                "capex_type": apex_type,
+                "asset_sequence_number": al["sequence_number"],
+                "co_location": al["co_location"],
+                "asset_model": al["asset_model_name"]
+            }
 
-                if al['asset_state'] == 'close' and al[
-                    'asset_disposal_date'] and al[
-                    'asset_disposal_date'] <= fields.Date.to_date(
-                        options['date']['date_to']):
-                    depreciation_minus = depreciation_closing
-                    # depreciation_opening and depreciation_add are computed from first_move (assuming it is a depreciation move),
-                    # but when previous condition is True and first_move and last_move are the same record, then first_move is not a
-                    # depreciation move.
-                    # In that case, depreciation_opening and depreciation_add must be corrected.
-                    if al['first_move_id'] == al['last_move_id']:
-                        depreciation_opening = depreciation_closing
-                        depreciation_add = 0
-                    depreciation_closing = 0.0
-                    asset_minus = asset_closing
-                    asset_closing = 0.0
-
-                asset = self.env['account.asset'].browse(al['asset_id'])
-                is_negative_asset = asset.original_move_line_ids.move_id.move_type == 'in_refund'
-
-                if is_negative_asset:
-                    asset_add, asset_minus = asset_minus, asset_add
-                    depreciation_add, depreciation_minus = depreciation_minus, depreciation_add
-                    asset_closing, depreciation_closing = -asset_closing, -depreciation_closing
-                if asset.partial_disposal:
-                    state = ['posted']
-                    if options['all_entries']:
-                        state = ['draft', 'posted']
-                    if asset.depreciation_move_ids.filtered(
-                            lambda x: x.date >= fields.Date.to_date(
-                                    options['date'][
-                                        'date_from']) and x.date <= fields.Date.to_date(
-                                    options['date'][
-                                        'date_to']) and 'Disposal' in x.ref):
-                        partial_moves = asset.depreciation_move_ids.filtered(
-                            lambda x: 'Disposal' in x.ref)
-                        max_date = max(partial_moves.mapped('date'))
-                        if options['date']['period_type'] == 'fiscalyear':
-                            depreciated_partial_moves = asset.depreciation_move_ids.filtered(
-                                lambda
-                                    x: x.date.year == max_date.year and x.date <= max_date and 'Disposal' not in x.ref and x.state in state)
-                        else:
-                            depreciated_partial_moves = asset.depreciation_move_ids.filtered(
-                                lambda x: x.date >= fields.Date.to_date(
-                                    options['date'][
-                                        'date_from']) and x.date <= fields.Date.to_date(
-                                    options['date'][
-                                        'date_to']) and 'Disposal' not in x.ref and x.state in state)
-                        asset_minus = sum(
-                            partial_moves.mapped('amount_total_signed'))
-                        asset_closing -= asset_minus
-                        depreciation_add = sum(depreciated_partial_moves.mapped(
-                            'amount_total_signed'))
-                        depreciation_minus = (
-                                                         sum(asset.depreciation_move_ids.filtered(
-                                                             lambda
-                                                                 x: x.date <= max_date and 'Disposal' not in x.ref).mapped(
-                                                             'amount_total')) * asset_minus) / asset.original_value
-                        depreciation_closing = depreciation_opening + depreciation_add - depreciation_minus
-                    elif asset.depreciation_move_ids.filtered(
-                            lambda x: x.date <= fields.Date.to_date(
-                                    options['date'][
-                                        'date_from']) and 'Disposal' in x.ref):
-                        depreciation_opening = sum(
-                            asset.depreciation_move_ids.filtered(
-                                lambda x: x.date < fields.Date.to_date(
-                                    options['date'][
-                                        'date_from']) and 'Disposal' not in x.ref).mapped(
-                                'amount_total_signed'))
-                        partial_moves = asset.depreciation_move_ids.filtered(
-                            lambda x: 'Disposal' in x.ref)
-                        depreciated_partial_moves = asset.depreciation_move_ids.filtered(
-                            lambda x: x.date >= fields.Date.to_date(
-                                options['date'][
-                                    'date_from']) and x.date <= fields.Date.to_date(
-                                options['date'][
-                                    'date_to']) and 'Disposal' not in x.ref and x.state in state)
-                        depreciation_add = sum(depreciated_partial_moves.mapped(
-                            'amount_total_signed'))
-                        max_date = max(partial_moves.mapped('date'))
-                        asset_opening = asset_opening - sum(
-                            partial_moves.mapped('amount_total_signed'))
-                        asset_minus_demo = (
-                                                       sum(asset.depreciation_move_ids.filtered(
-                                                           lambda
-                                                               x: x.date <= max_date and 'Disposal' not in x.ref and x.state in state).mapped(
-                                                           'amount_total')) * sum(
-                                                   partial_moves.mapped(
-                                                       'amount_total_signed'))) / asset.original_value
-                        asset_closing = asset_opening
-                        depreciation_opening = depreciation_opening - asset_minus_demo
-                        depreciation_closing = depreciation_opening + depreciation_add - depreciation_minus
-                asset_gross = asset_closing - depreciation_closing
-
-                total = [x + y for x, y in zip(total, [asset_opening, asset_add,
-                                                       asset_minus,
-                                                       asset_closing,
-                                                       depreciation_opening,
-                                                       depreciation_add,
-                                                       depreciation_minus,
-                                                       depreciation_closing,
-                                                       asset_gross])]
-
-                id = "_".join([self._get_account_group_with_company(
-                    al['account_code'], al['company_id'])[0],
-                               str(al['asset_id'])])
-                name = str(al['asset_name'])
-                line = {
-                    'id': id,
-                    'level': 1,
-                    'name': name if self._context.get('print_mode') or len(
-                        name) < MAX_NAME_LENGTH else name[
-                                                     :MAX_NAME_LENGTH - 2] + '...',
-                    'account_code': al['account_code'],
-                    'columns': [
-                        {'name': al['asset_acquisition_date'] and format_date(
-                            self.env, al['asset_acquisition_date']) or '',
-                         'no_format_name': ''},  # Caracteristics
-                        {'name': al['asset_date'] and format_date(self.env, al[
-                            'asset_date']) or '', 'no_format_name': ''},
-                        {'name': (al['asset_method'] == 'linear' and _(
-                            'Linear')) or (al[
-                                               'asset_method'] == 'degressive' and _(
-                            'Declining')) or _('Dec. then Straight'),
-                         'no_format_name': ''},
-                        {'name': al['total_move_count'], 'no_format_name': ''},
-                        {'name': al['analytic_colocation'],
-                         'no_format_name': ''},
-                        {'name': al['analytic_project'], 'no_format_name': ''},
-                        {'name': self.get_capex_type(al['capex_type']),
-                         'no_format_name': ''},
-                        {'name': al['sequence_number'],
-                         'no_format_name': ''},
-                        {'name': asset_depreciation_rate, 'no_format_name': ''},
-                        {'name': self.format_value(asset_opening),
-                         'no_format_name': asset_opening},  # Assets
-                        {'name': self.format_value(asset_add),
-                         'no_format_name': asset_add},
-                        {'name': self.format_value(asset_minus),
-                         'no_format_name': asset_minus},
-                        {'name': self.format_value(asset_closing),
-                         'no_format_name': asset_closing},
-                        {'name': self.format_value(depreciation_opening),
-                         'no_format_name': depreciation_opening},
-                        # Depreciation
-                        {'name': self.format_value(depreciation_add),
-                         'no_format_name': depreciation_add},
-                        {'name': self.format_value(depreciation_minus),
-                         'no_format_name': depreciation_minus},
-                        {'name': self.format_value(depreciation_closing),
-                         'no_format_name': depreciation_closing},
-                        {'name': self.format_value(asset_gross),
-                         'no_format_name': asset_gross},  # Gross
-                    ],
-                    'unfoldable': False,
-                    'unfolded': False,
-                    'caret_options': 'account.asset.line',
-                    'account_id': al['account_id']
-                }
-                if len(name) >= MAX_NAME_LENGTH:
-                    line.update({'title_hover': name})
-                lines.append(line)
-        lines.append({
-            'id': 'total',
-            'level': 0,
-            'name': _('Total'),
-            'columns': [
-                {'name': ''},  # Characteristics
-                {'name': ''},
-                {'name': ''},
-                {'name': ''},
-                {'name': self.format_value(total[0])},  # Assets
-                {'name': self.format_value(total[1])},
-                {'name': self.format_value(total[2])},
-                {'name': self.format_value(total[3])},
-                {'name': self.format_value(total[4])},  # Depreciation
-                {'name': self.format_value(total[5])},
-                {'name': self.format_value(total[6])},
-                {'name': self.format_value(total[7])},
-                {'name': self.format_value(total[8])},  # Gross
-            ],
-            'unfoldable': False,
-            'unfolded': False,
-        })
+            lines.append(
+                (al['account_id'], al['asset_id'], columns_by_expr_label))
         return lines
 
-    def _get_assets_lines(self, options):
+    def _group_by_account(self, report, lines, options):
+        """
+        This function adds the grouping lines on top of each group of account.asset
+        It iterates over the lines, change the line_id of each line to include the account.account.id and the
+        account.asset.id.
+        """
+        if not lines:
+            return lines
+
+        line_vals_per_account_id = {}
+        for line in lines:
+            parent_account_id = line.get('assets_account_id')
+
+            model, res_id = report._get_model_info_from_id(line['id'])
+            assert model == 'account.asset'
+
+            # replace the line['id'] to add the account.account.id
+            line['id'] = report._build_line_id([
+                (None, 'account.account', parent_account_id),
+                (None, 'account.asset', res_id)
+            ])
+
+            line_vals_per_account_id.setdefault(parent_account_id, {
+                # We don't assign a name to the line yet, so that we can batch the browsing of account.account objects
+                'id': report._build_line_id(
+                    [(None, 'account.account', parent_account_id)]),
+                'columns': [],  # Filled later
+                'unfoldable': True,
+                'unfolded': options.get('unfold_all', False),
+                'level': 1,
+
+                # This value is stored here for convenience; it will be removed from the result
+                'group_lines': [],
+            })['group_lines'].append(line)
+
+        # Generate the result
+        idx_monetary_columns = [idx_col for idx_col, col in
+                                enumerate(options['columns']) if
+                                col['figure_type'] == 'monetary']
+        accounts = self.env['account.account'].browse(
+            line_vals_per_account_id.keys())
+        rslt_lines = []
+        for account in accounts:
+            account_line_vals = line_vals_per_account_id[account.id]
+            account_line_vals['name'] = f"{account.code} {account.name}"
+
+            rslt_lines.append(account_line_vals)
+
+            group_totals = {column_index: 0 for column_index in
+                            idx_monetary_columns}
+            group_lines = report._regroup_lines_by_name_prefix(
+                options,
+                account_line_vals.pop('group_lines'),
+                '_report_expand_unfoldable_line_assets_report_prefix_group',
+                account_line_vals['level'],
+                parent_line_dict_id=account_line_vals['id'],
+            )
+
+            for account_subline in group_lines:
+                # Add this line to the group totals
+                for column_index in idx_monetary_columns:
+                    group_totals[column_index] += account_subline['columns'][
+                        column_index].get('no_format', 0)
+
+                # Setup the parent and add the line to the result
+                account_subline['parent_id'] = account_line_vals['id']
+                rslt_lines.append(account_subline)
+
+            # Add totals (columns) to the account line
+            for column_index in range(len(options['columns'])):
+                account_line_vals['columns'].append(report._build_column_dict(
+                    group_totals.get(column_index, ''),
+                    options['columns'][column_index],
+                    options=options,
+                ))
+
+        return rslt_lines
+
+    def _query_values(self, options, prefix_to_match=None,
+                      forced_account_id=None):
         "Get the data from the database"
 
         self.env['account.move.line'].check_access_rights('read')
         self.env['account.asset'].check_access_rights('read')
 
-        where_account_move = " AND state != 'cancel'"
-        if not options.get('all_entries'):
-            where_account_move = " AND state = 'posted'"
+        move_filter = f"""move.state {"!= 'cancel'" if options.get('all_entries') else "= 'posted'"}"""
 
-        if 'assets_limit' in list(self.env.context.keys()):
-            options['print_dep'] = 0
-            sql = """
-                            -- remove all the moves that have been reversed from the search
-                            CREATE TEMPORARY TABLE IF NOT EXISTS temp_account_move () INHERITS (account_move) ON COMMIT DROP;
-                            INSERT INTO temp_account_move SELECT move.*
-                            FROM ONLY account_move move
-                            LEFT JOIN ONLY account_move reversal ON reversal.reversed_entry_id = move.id
-                            WHERE reversal.id IS NULL AND move.asset_id IS NOT NULL AND move.company_id in %(company_ids)s;
+        query_params = {
+            'date_to': options['date']['date_to'],
+            'date_from': options['date']['date_from'],
+            'company_ids': tuple(
+                self.env['account.report'].get_report_company_ids(options)),
+            'include_draft': options.get('all_entries', False),
+        }
 
-                            SELECT asset.id as asset_id,
-                                   asset.parent_id as parent_id,
-                                   asset.name as asset_name,
-                                   asset.original_value as asset_original_value,
-                                   asset.currency_id as asset_currency_id,
-                                   COALESCE(asset.first_depreciation_date_import, asset.first_depreciation_date) as asset_date,
-                                   asset.already_depreciated_amount_import as import_depreciated,
-                                   asset.disposal_date as asset_disposal_date,
-                                   asset.acquisition_date as asset_acquisition_date,
-                                   asset.method as asset_method,
-                                   (
-                                       COALESCE(account_move_count.count, 0)
-                                       + COALESCE(asset.depreciation_number_import, 0)
-                                       - CASE WHEN asset.prorata THEN 1 ELSE 0 END
-                                   ) as asset_method_number,
-                                   asset.method_period as asset_method_period,
-                                   asset.method_progress_factor as asset_method_progress_factor,
-                                   asset.state as asset_state,
-                                   asset.capex_type as capex_type,
-                                   asset.sequence_number as sequence_number,
-                                   account.code as account_code,
-                                   account.name as account_name,
-                                   account.id as account_id,
-                                   account.company_id as company_id,
-                                   analytic.name as analytic_colocation,
-                                   project_site.name as analytic_project,
-                                   COALESCE(first_move.asset_depreciated_value, move_before.asset_depreciated_value, 0.0) as depreciated_start,
-                                   COALESCE(first_move.asset_remaining_value, move_before.asset_remaining_value, 0.0) as remaining_start,
-                                   COALESCE(last_move.asset_depreciated_value, move_before.asset_depreciated_value, 0.0) as depreciated_end,
-                                   COALESCE(last_move.asset_remaining_value, move_before.asset_remaining_value, 0.0) as remaining_end,
-                                   COALESCE(first_move.amount_total, 0.0) as depreciation,
-                                   COALESCE(first_move.id, move_before.id) as first_move_id,
-                                   COALESCE(last_move.id, move_before.id) as last_move_id,
-                                   COALESCE(total_move.a_count) as total_move_count
-                            FROM account_asset as asset
-                            LEFT JOIN account_account as account ON asset.account_asset_id = account.id
-                            LEFT JOIN account_analytic_account as analytic on asset.co_location = analytic.id
-                            LEFT JOIN account_analytic_account as project_site on asset.project_site_id = project_site.id
-                            LEFT JOIN (
-                                SELECT
-                                    COUNT(*) as count,
-                                    asset_id
-                                FROM temp_account_move
-                                WHERE asset_value_change != 't'
-                                GROUP BY asset_id
-                            ) account_move_count ON asset.id = account_move_count.asset_id
+        prefix_query = ''
+        if prefix_to_match:
+            prefix_query = "AND asset.name ILIKE %(prefix_to_match)s"
+            query_params['prefix_to_match'] = f"{prefix_to_match}%"
 
-                            LEFT OUTER JOIN (
-                                SELECT DISTINCT ON (asset_id)
-                                    id,
-                                    asset_depreciated_value,
-                                    asset_remaining_value,
-                                    amount_total,
-                                    asset_id
-                                FROM temp_account_move m
-                                WHERE date >= %(date_from)s AND date <= %(date_to)s {where_account_move}
-                                ORDER BY asset_id, date, id DESC
-                            ) first_move ON first_move.asset_id = asset.id
+        account_query = ''
+        if forced_account_id:
+            account_query = "AND account.id = %(forced_account_id)s"
+            query_params['forced_account_id'] = forced_account_id
 
-                            LEFT OUTER JOIN (
-                                SELECT DISTINCT ON (asset_id)
-                                    id,
-                                    asset_depreciated_value,
-                                    asset_remaining_value,
-                                    amount_total,
-                                    asset_id
-                                FROM temp_account_move m
-                                WHERE date >= %(date_from)s AND date <= %(date_to)s {where_account_move}
-                                ORDER BY asset_id, date DESC, id DESC
-                            ) last_move ON last_move.asset_id = asset.id
-                            LEFT OUTER JOIN (
-            			SELECT COUNT(*) as a_count,
-            			asset_id
-            			from temp_account_move z
-            			where date > %(date_to)s
-            			GROUP BY asset_id
-            		) total_move on total_move.asset_id = asset.id
+        analytical_query = ''
+        analytic_account_ids = []
+        if options.get('analytic_accounts') and not any(
+                x in options.get('analytic_accounts_list', []) for x in
+                options['analytic_accounts']):
+            analytic_account_ids += [[str(account_id) for account_id in
+                                      options['analytic_accounts']]]
+        if options.get('analytic_accounts_list'):
+            analytic_account_ids += [[str(account_id) for account_id in
+                                      options.get('analytic_accounts_list')]]
+        if analytic_account_ids:
+            analytical_query = 'AND asset.analytic_distribution ?| array[%(analytic_account_ids)s]'
+            query_params['analytic_account_ids'] = analytic_account_ids
+        lang = self.env.user.lang or get_lang(self.env).code
+        project_site_name = f"COALESCE(project_sites.name->>'{lang}', project_sites.name->>'en_US')" if \
+            self.pool[
+                'account.analytic.account'].name.translate else 'project_sites.name'
+        co_loc_name = f"COALESCE(co_locations.name->>'{lang}', co_locations.name->>'en_US')" if \
+            self.pool[
+                'account.analytic.account'].name.translate else 'co_locations.name'
 
-                            LEFT OUTER JOIN (
-                                SELECT DISTINCT ON (asset_id)
-                                    id,
-                                    asset_depreciated_value,
-                                    asset_remaining_value,
-                                    amount_total,
-                                    asset_id
-                                FROM temp_account_move m
-                                WHERE date <= %(date_from)s {where_account_move}
-                                ORDER BY asset_id, date DESC, id DESC
-                            ) move_before ON move_before.asset_id = asset.id
+        sql = f"""
+            SELECT asset.id AS asset_id,
+                   asset.parent_id AS parent_id,
+                   asset.name AS asset_name,
+                   asset.original_value AS asset_original_value,
+                   asset.currency_id AS asset_currency_id,
+                   COALESCE(asset.salvage_value, 0) as asset_salvage_value,
+                   MIN(move.date) AS asset_date,
+                   asset.disposal_date AS asset_disposal_date,
+                   asset.acquisition_date AS asset_acquisition_date,
+                   asset.method AS asset_method,
+                   {project_site_name} as project_site,
+                   {co_loc_name} as co_location,
+                   asset.capex_type as capex_type,
+                   asset.sequence_number as sequence_number,
+                   asset.method_number AS asset_method_number,
+                   asset.method_period AS asset_method_period,
+                   asset.method_progress_factor AS asset_method_progress_factor,
+                   asset.state AS asset_state,
+                   asset.company_id AS company_id,
+                   account.code AS account_code,
+                   account.name AS account_name,
+                   account.id AS account_id,
+                   asset_model.name as asset_model_name,
+                   COALESCE(SUM(move.depreciation_value) FILTER (WHERE move.date < %(date_from)s AND {move_filter}), 0) + COALESCE(asset.already_depreciated_amount_import, 0) AS depreciated_before,
+                   COALESCE(SUM(move.depreciation_value) FILTER (WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter}), 0) AS depreciated_during,
+                   COALESCE(SUM(move.depreciation_value) FILTER (WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.asset_number_days IS NULL), 0) AS asset_disposal_value
+              FROM account_asset AS asset
+         LEFT JOIN account_account AS account ON asset.account_asset_id = account.id
+         LEFT JOIN account_move move ON move.asset_id = asset.id
+         LEFT JOIN account_move reversal ON reversal.reversed_entry_id = move.id
+         LEFT JOIN account_analytic_account as project_sites on asset.project_site_id = project_sites.id  
+        LEFT JOIN account_analytic_account as co_locations on asset.co_location = co_locations.id  
+                LEFT JOIN account_asset as asset_model on asset.model_id = asset_model.id  
 
-                            WHERE asset.company_id in %(company_ids)s
-                            AND asset.acquisition_date <= %(date_to)s
-                            AND (asset.disposal_date >= %(date_from)s OR asset.disposal_date IS NULL)
-                            AND asset.state not in ('model', 'draft')
-                            AND asset.asset_type = 'purchase'
-                            AND asset.active = 't'
+             WHERE asset.company_id in %(company_ids)s
+               AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
+               AND (asset.disposal_date >= %(date_from)s OR asset.disposal_date IS NULL)
+               AND (asset.state not in ('model', 'draft', 'cancelled') OR (asset.state = 'draft' AND %(include_draft)s))
+               AND asset.active = 't'
+               AND reversal.id IS NULL
+               {prefix_query}
+               {account_query}
+               {analytical_query}
+          GROUP BY asset.id, account.id,project_sites.id,co_locations.id,asset_model.id
+          ORDER BY account.code, asset.acquisition_date  LIMIT 1 OFFSET 1;
+        """
 
-                            ORDER BY asset.name LIMIT %(limit)s OFFSET %(offset)s;
-                        """.format(where_account_move=where_account_move)
-            date_to = options['date']['date_to']
-            date_from = options['date']['date_from']
-            if options.get('multi_company', False):
-                company_ids = tuple(self.env.companies.ids)
-            else:
-                company_ids = tuple(self.env.company.ids)
+        self._cr.execute(sql, query_params)
+        results = self._cr.dictfetchall()
+        return results
 
-            self.flush()
-            self.env.cr.execute(sql,
-                                {'date_to': date_to, 'date_from': date_from,
-                                 'company_ids': company_ids,
-                                 'limit': self.env.context['assets_limit'],
-                                 'offset': self.env.context['assets_offset']})
-            results = self.env.cr.dictfetchall()
-            self.env.cr.execute(
-                "DROP TABLE temp_account_move")  # Because tests are run in the same transaction, we need to clean here the SQL INHERITS
-            return results
-        else:
-            options['print_dep'] = 1
-            sql = """
-                            -- remove all the moves that have been reversed from the search
-                            CREATE TEMPORARY TABLE IF NOT EXISTS temp_account_move () INHERITS (account_move) ON COMMIT DROP;
-                            INSERT INTO temp_account_move SELECT move.*
-                            FROM ONLY account_move move
-                            LEFT JOIN ONLY account_move reversal ON reversal.reversed_entry_id = move.id
-                            WHERE reversal.id IS NULL AND move.asset_id IS NOT NULL AND move.company_id in %(company_ids)s;
+    def _report_expand_unfoldable_line_assets_report_prefix_group(self,
+                                                                  line_dict_id,
+                                                                  groupby,
+                                                                  options,
+                                                                  progress,
+                                                                  offset,
+                                                                  unfold_all_batch_data=None):
+        matched_prefix = self.env[
+            'account.report']._get_prefix_groups_matched_prefix_from_line_id(
+            line_dict_id)
+        report = self.env['account.report'].browse(options['report_id'])
 
-                            SELECT asset.id as asset_id,
-                                   asset.parent_id as parent_id,
-                                   asset.name as asset_name,
-                                   asset.original_value as asset_original_value,
-                                   asset.currency_id as asset_currency_id,
-                                   COALESCE(asset.first_depreciation_date_import, asset.first_depreciation_date) as asset_date,
-                                   asset.already_depreciated_amount_import as import_depreciated,
-                                   asset.disposal_date as asset_disposal_date,
-                                   asset.acquisition_date as asset_acquisition_date,
-                                   asset.method as asset_method,
-                                   (
-                                       COALESCE(account_move_count.count, 0)
-                                       + COALESCE(asset.depreciation_number_import, 0)
-                                       - CASE WHEN asset.prorata THEN 1 ELSE 0 END
-                                   ) as asset_method_number,
-                                   asset.method_period as asset_method_period,
-                                   asset.method_progress_factor as asset_method_progress_factor,
-                                   asset.state as asset_state,
-                                   asset.capex_type as capex_type,
-                                   asset.sequence_number as sequence_number,
-                                   account.code as account_code,
-                                   account.name as account_name,
-                                   account.id as account_id,
-                                   account.company_id as company_id,
-                                   analytic.name as analytic_colocation,
-                                   project_site.name as analytic_project,
-                                   COALESCE(first_move.asset_depreciated_value, move_before.asset_depreciated_value, 0.0) as depreciated_start,
-                                   COALESCE(first_move.asset_remaining_value, move_before.asset_remaining_value, 0.0) as remaining_start,
-                                   COALESCE(last_move.asset_depreciated_value, move_before.asset_depreciated_value, 0.0) as depreciated_end,
-                                   COALESCE(last_move.asset_remaining_value, move_before.asset_remaining_value, 0.0) as remaining_end,
-                                   COALESCE(first_move.amount_total, 0.0) as depreciation,
-                                   COALESCE(first_move.id, move_before.id) as first_move_id,
-                                   COALESCE(last_move.id, move_before.id) as last_move_id,
-                                   COALESCE(total_move.a_count) as total_move_count
-                            FROM account_asset as asset
-                            LEFT JOIN account_account as account ON asset.account_asset_id = account.id
-                            LEFT JOIN account_analytic_account as analytic on asset.co_location = analytic.id
-                            LEFT JOIN account_analytic_account as project_site on asset.project_site_id = project_site.id
-                            LEFT JOIN (
-                                SELECT
-                                    COUNT(*) as count,
-                                    asset_id
-                                FROM temp_account_move
-                                WHERE asset_value_change != 't'
-                                GROUP BY asset_id
-                            ) account_move_count ON asset.id = account_move_count.asset_id
+        lines, _totals_by_column_group = self._generate_report_lines_without_grouping(
+            report,
+            options,
+            prefix_to_match=matched_prefix,
+            parent_id=line_dict_id,
+            forced_account_id=self.env[
+                'account.report']._get_res_id_from_line_id(line_dict_id,
+                                                           'account.account'),
+        )
 
-                            LEFT OUTER JOIN (
-                                SELECT DISTINCT ON (asset_id)
-                                    id,
-                                    asset_depreciated_value,
-                                    asset_remaining_value,
-                                    amount_total,
-                                    asset_id
-                                FROM temp_account_move m
-                                WHERE date >= %(date_from)s AND date <= %(date_to)s {where_account_move}
-                                ORDER BY asset_id, date, id DESC
-                            ) first_move ON first_move.asset_id = asset.id
+        lines = report._regroup_lines_by_name_prefix(
+            options,
+            lines,
+            '_report_expand_unfoldable_line_assets_report_prefix_group',
+            len(matched_prefix),
+            matched_prefix=matched_prefix,
+            parent_line_dict_id=line_dict_id,
+        )
 
-                            LEFT OUTER JOIN (
-                                SELECT DISTINCT ON (asset_id)
-                                    id,
-                                    asset_depreciated_value,
-                                    asset_remaining_value,
-                                    amount_total,
-                                    asset_id
-                                FROM temp_account_move m
-                                WHERE date >= %(date_from)s AND date <= %(date_to)s {where_account_move}
-                                ORDER BY asset_id, date DESC, id DESC
-                            ) last_move ON last_move.asset_id = asset.id
-                            LEFT OUTER JOIN (
-            			SELECT COUNT(*) as a_count,
-            			asset_id
-            			from temp_account_move z
-            			where date > %(date_to)s
-            			GROUP BY asset_id
-            		) total_move on total_move.asset_id = asset.id
-
-                            LEFT OUTER JOIN (
-                                SELECT DISTINCT ON (asset_id)
-                                    id,
-                                    asset_depreciated_value,
-                                    asset_remaining_value,
-                                    amount_total,
-                                    asset_id
-                                FROM temp_account_move m
-                                WHERE date <= %(date_from)s {where_account_move}
-                                ORDER BY asset_id, date DESC, id DESC
-                            ) move_before ON move_before.asset_id = asset.id
-
-                            WHERE asset.company_id in %(company_ids)s
-                            AND asset.acquisition_date <= %(date_to)s
-                            AND (asset.disposal_date >= %(date_from)s OR asset.disposal_date IS NULL)
-                            AND asset.state not in ('model', 'draft')
-                            AND asset.asset_type = 'purchase'
-                            AND asset.active = 't'
-
-                            ORDER BY account.code, asset.acquisition_date;
-                        """.format(where_account_move=where_account_move)
-            date_to = options['date']['date_to']
-            date_from = options['date']['date_from']
-            if options.get('multi_company', False):
-                company_ids = tuple(self.env.companies.ids)
-            else:
-                company_ids = tuple(self.env.company.ids)
-
-            self.flush()
-            self.env.cr.execute(sql,
-                                {'date_to': date_to, 'date_from': date_from,
-                                 'company_ids': company_ids})
-            results = self.env.cr.dictfetchall()
-            self.env.cr.execute(
-                "DROP TABLE temp_account_move")  # Because tests are run in the same transaction, we need to clean here the SQL INHERITS
-            return results
-
-    def open_asset(self, options, params=None):
-        active_id = int(params.get('id').split('_')[-1])
-        asset = self.env['account.asset'].browse(active_id)
-        return asset.open_asset(['form'])
-
-    def action_next_assets(self, options, params=None):
         return {
-            'name': "Depreciation Schedule Custom",
-            'type': 'ir.actions.client',
-            'tag': 'account_report',
-            'context': "{'model':'account.assets.custom.report','assets_limit': %s,'assets_offset': %s}" % (
-            self.env.context['assets_limit'],
-            int(self.env.context['assets_offset']) + 200)
+            'lines': lines,
+            'offset_increment': len(lines),
+            'has_more': False,
         }
 
 
-def get_report_informations(self, options):
-    '''
-    return a dictionary of informations that will be needed by the js widget, manager_id, footnotes, html of report and searchview, ...
-    '''
-    options = self._get_options(options)
-    if self._name == 'account.assets.custom.report':
-        options['depreciation_custom'] = 1
-    else:
-        options['depreciation_custom'] = 0
+class AccountReport(models.Model):
+    _inherit = 'account.report'
 
-    searchview_dict = {'options': options, 'context': self.env.context}
-    # Check if report needs analytic
+    def _inject_report_into_xlsx_sheet(self, options, workbook, sheet):
+        print("optionsssssssssss", options)
+        if options["available_variants"][0]["name"] == 'Tasc Depreciation Schedule':
+            print("pass")
 
-    if options.get('analytic_accounts') is not None:
-        options['selected_analytic_account_names'] = [
-            self.env['account.analytic.account'].browse(int(account)).name
-            for account in options['analytic_accounts']]
-    if options.get('analytic_tags') is not None:
-        options['selected_analytic_tag_names'] = [
-            self.env['account.analytic.tag'].browse(int(tag)).name for tag in
-            options['analytic_tags']]
-    if options.get('partner'):
-        options['selected_partner_ids'] = [
-            self.env['res.partner'].browse(int(partner)).name for partner in
-            options['partner_ids']]
-        options['selected_partner_categories'] = [
-            self.env['res.partner.category'].browse(int(category)).name for
-            category in options['partner_categories']]
+            def write_with_colspan(sheet, x, y, value, colspan, style):
+                if colspan == 1:
+                    sheet.write(y, x, value, style)
+                else:
+                    sheet.merge_range(y, x, y, x + colspan - 1, value, style)
 
-    if options.get('project_site_ids') is not None:
-        options['selected_project_sites'] = [
-            self.env['account.analytic.account'].browse(int(project)).name for
-            project in
-            options['project_site_ids']]
-    if options.get('type_ids') is not None:
-        options['selected_types'] = [
-            self.env['account.analytic.account'].browse(int(project)).name for
-            project in
-            options['type_ids']]
-    if options.get('location_ids') is not None:
-        options['selected_locations'] = [
-            self.env['account.analytic.account'].browse(int(project)).name for
-            project in
-            options['location_ids']]
+            date_default_col1_style = workbook.add_format(
+                {'font_name': 'Arial', 'font_size': 12, 'font_color': '#666666',
+                 'indent': 2, 'num_format': 'yyyy-mm-dd'})
+            date_default_style = workbook.add_format(
+                {'font_name': 'Arial', 'font_size': 12, 'font_color': '#666666',
+                 'num_format': 'yyyy-mm-dd'})
+            default_col1_style = workbook.add_format(
+                {'font_name': 'Arial', 'font_size': 12, 'font_color': '#666666',
+                 'indent': 2})
+            default_style = workbook.add_format(
+                {'font_name': 'Arial', 'font_size': 12,
+                 'font_color': '#666666'})
+            title_style = workbook.add_format(
+                {'font_name': 'Arial', 'bold': True, 'bottom': 2})
+            level_0_style = workbook.add_format(
+                {'font_name': 'Arial', 'bold': True, 'font_size': 13,
+                 'bottom': 6,
+                 'font_color': '#666666'})
+            level_1_style = workbook.add_format(
+                {'font_name': 'Arial', 'bold': True, 'font_size': 13,
+                 'bottom': 1,
+                 'font_color': '#666666'})
+            level_2_col1_style = workbook.add_format(
+                {'font_name': 'Arial', 'bold': True, 'font_size': 12,
+                 'font_color': '#666666', 'indent': 1})
+            level_2_col1_total_style = workbook.add_format(
+                {'font_name': 'Arial', 'bold': True, 'font_size': 12,
+                 'font_color': '#666666'})
+            level_2_style = workbook.add_format(
+                {'font_name': 'Arial', 'bold': True, 'font_size': 12,
+                 'font_color': '#666666'})
+            level_3_col1_style = workbook.add_format(
+                {'font_name': 'Arial', 'font_size': 12, 'font_color': '#666666',
+                 'indent': 2})
+            level_3_col1_total_style = workbook.add_format(
+                {'font_name': 'Arial', 'bold': True, 'font_size': 12,
+                 'font_color': '#666666', 'indent': 1})
+            level_3_style = workbook.add_format(
+                {'font_name': 'Arial', 'font_size': 12,
+                 'font_color': '#666666'})
 
-    # Check whether there are unposted entries for the selected period or not (if the report allows it)
-    if options.get('date') and options.get('all_entries') is not None:
-        date_to = options['date'].get('date_to') or options['date'].get(
-            'date') or fields.Date.today()
-        period_domain = ['|', ('state', '=', 'draft'),
-                         ('state', '=', 'to_approve'), ('date', '<=', date_to)]
-        options['unposted_in_period'] = bool(
-            self.env['account.move'].search_count(period_domain))
+            print_mode_self = self.with_context(no_format=True)
+            lines = self._filter_out_depreciation_schedule_folded_children(
+                print_mode_self._get_lines(options))
+            print("lines", lines)
 
-    if options.get('journals'):
-        journals_selected = set(
-            journal['id'] for journal in options['journals'] if
-            journal.get('selected'))
-        for journal_group in self.env['account.journal.group'].search(
-                [('company_id', '=', self.env.company.id)]):
-            if journals_selected and journals_selected == set(
-                    self._get_filter_journals().ids) - set(
-                journal_group.excluded_journal_ids.ids):
-                options['name_journal_group'] = journal_group.name
-                break
+            # For reports with lines generated for accounts, the account name and codes are shown in a single column.
+            # To help user post-process the report if they need, we should in such a case split the account name and code in two columns.
+            account_lines_split_names = {}
+            for line in lines:
+                line_model = self._get_model_info_from_id(line['id'])[0]
+                if line_model == 'account.account':
+                    # Reuse the _split_code_name to split the name and code in two values.
+                    account_lines_split_names[line['id']] = self.env[
+                        'account.account']._split_code_name(line['name'])
 
-    report_manager = self._get_report_manager(options)
-    info = {'options': options,
-            'context': self.env.context,
-            'report_manager_id': report_manager.id,
-            'footnotes': [{'id': f.id, 'line': f.line, 'text': f.text} for f in
-                          report_manager.footnotes_ids],
-            'buttons': self._get_reports_buttons_in_sequence(),
-            'main_html': self.get_html(options),
-            'searchview_html': self.env['ir.ui.view']._render_template(
-                self._get_templates().get('search_template',
-                                          'account_report.search_template'),
-                values=searchview_dict),
-            }
-    return info
+            # Set the first column width to 50.
+            # If we have account lines and split the name and code in two columns, we will also set the second column.
+            if len(account_lines_split_names) > 0:
+                sheet.set_column(0, 0, 11)
+                sheet.set_column(1, 1, 50)
+            else:
+                sheet.set_column(0, 0, 50)
 
+            original_x_offset = 1 if len(account_lines_split_names) > 0 else 0
 
-def open_unposted_moves(self, options, params=None):
-    ''' Open the list of draft journal entries that might impact the reporting'''
-    action = self.env["ir.actions.actions"]._for_xml_id(
-        "account.action_move_journal_line")
-    action = clean_action(action, env=self.env)
-    domain = ['|', ('state', '=', 'draft'), ('state', '=', 'to_approve')]
-    if options.get('date'):
-        # there's no condition on the date from, as a draft entry might change the initial balance of a line
-        date_to = options['date'].get('date_to') or options['date'].get(
-            'date') or fields.Date.today()
-        domain += [('date', '<=', date_to)]
-    action['domain'] = domain
-    # overwrite the context to avoid default filtering on 'misc' journals
-    action['context'] = {}
-    return action
+            y_offset = 0
+            # 1 and not 0 to leave space for the line name. original_x_offset allows making place for the code column if needed.
+            x_offset = original_x_offset + 1
 
+            # Add headers.
+            # For this, iterate in the same way as done in main_table_header template
+            column_headers_render_data = self._get_column_headers_render_data(
+                options)
+            for header_level_index, header_level in enumerate(
+                    options['column_headers']):
+                for header_to_render in header_level * \
+                                        column_headers_render_data[
+                                            'level_repetitions'][
+                                            header_level_index]:
+                    colspan = header_to_render.get('colspan',
+                                                   column_headers_render_data[
+                                                       'level_colspan'][
+                                                       header_level_index])
+                    write_with_colspan(sheet, x_offset, y_offset,
+                                       header_to_render.get('name', ''),
+                                       colspan,
+                                       title_style)
+                    x_offset += colspan
+                if options['show_growth_comparison']:
+                    write_with_colspan(sheet, x_offset, y_offset, '%', 1,
+                                       title_style)
+                y_offset += 1
+                x_offset = original_x_offset + 1
 
-AccountReport.get_report_informations = get_report_informations
-AccountReport.open_unposted_moves = open_unposted_moves
+            for subheader in column_headers_render_data['custom_subheaders']:
+                colspan = subheader.get('colspan', 1)
+                write_with_colspan(sheet, x_offset, y_offset,
+                                   subheader.get('name', ''), colspan,
+                                   title_style)
+                x_offset += colspan
+            y_offset += 1
+            x_offset = original_x_offset + 1
+
+            for column in options['columns']:
+                colspan = column.get('colspan', 1)
+                write_with_colspan(sheet, x_offset, y_offset,
+                                   column.get('name', ''), colspan, title_style)
+                x_offset += colspan
+            y_offset += 1
+
+            if options.get('order_column'):
+                lines = self.sort_lines(lines, options)
+
+            # Add lines.
+            for y in range(0, len(lines)):
+                level = lines[y].get('level')
+                if lines[y].get('caret_options'):
+                    style = level_3_style
+                    col1_style = level_3_col1_style
+                elif level == 0:
+                    y_offset += 1
+                    style = level_0_style
+                    col1_style = style
+                elif level == 1:
+                    style = level_1_style
+                    col1_style = style
+                elif level == 2:
+                    style = level_2_style
+                    col1_style = 'total' in lines[y].get('class', '').split(
+                        ' ') and level_2_col1_total_style or level_2_col1_style
+                elif level == 3:
+                    style = level_3_style
+                    col1_style = 'total' in lines[y].get('class', '').split(
+                        ' ') and level_3_col1_total_style or level_3_col1_style
+                else:
+                    style = default_style
+                    col1_style = default_col1_style
+
+                # write the first column, with a specific style to manage the indentation
+                x_offset = original_x_offset + 1
+                if lines[y]['id'] in account_lines_split_names:
+                    code, name = account_lines_split_names[lines[y]['id']]
+                    sheet.write(y + y_offset, x_offset - 2, code, col1_style)
+                    sheet.write(y + y_offset, x_offset - 1, name, col1_style)
+                else:
+                    if lines[y].get('parent_id') and lines[y][
+                        'parent_id'] in account_lines_split_names:
+                        sheet.write(y + y_offset, x_offset - 2,
+                                    account_lines_split_names[
+                                        lines[y]['parent_id']][0], col1_style)
+                    cell_type, cell_value = self._get_cell_type_value(lines[y])
+                    if cell_type == 'date':
+                        sheet.write_datetime(y + y_offset, x_offset - 1,
+                                             cell_value,
+                                             date_default_col1_style)
+                    else:
+                        sheet.write(y + y_offset, x_offset - 1, cell_value,
+                                    col1_style)
+
+                # write all the remaining cells
+                columns = lines[y]['columns']
+                if options[
+                    'show_growth_comparison'] and 'growth_comparison_data' in \
+                        lines[y]:
+                    columns += [lines[y].get('growth_comparison_data')]
+                for x, column in enumerate(columns, start=x_offset):
+                    cell_type, cell_value = self._get_cell_type_value(column)
+                    if cell_type == 'date':
+                        sheet.write_datetime(y + y_offset,
+                                             x + lines[y].get('colspan', 1) - 1,
+                                             cell_value, date_default_style)
+                    else:
+                        sheet.write(y + y_offset,
+                                    x + lines[y].get('colspan', 1) - 1,
+                                    cell_value,
+                                    style)
+
+        else:
+            super()._inject_report_into_xlsx_sheet(options, workbook, sheet)
+
+    def _filter_out_depreciation_schedule_folded_children(self, lines):
+        """ Returns a list containing all the lines of the provided list that need to be displayed when printing,
+        hence removing the children whose parent is folded (especially useful to remove total lines).
+        """
+        rslt = []
+        folded_lines = set()
+        for line in lines:
+            print("ooooooooooooo", line)
+            if line.get('unfoldable') and not line.get('unfolded'):
+                folded_lines.add(line['id'])
+
+            # if 'parent_id' not in line or line['parent_id'] not in folded_lines:
+            rslt.append(line)
+        return rslt
