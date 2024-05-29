@@ -567,10 +567,7 @@ class AccountReport(models.Model):
     _inherit = 'account.report'
 
     def _inject_report_into_xlsx_sheet(self, options, workbook, sheet):
-        print("optionsssssssssss", options)
         if options["available_variants"][0]["name"] == 'Tasc Depreciation Schedule':
-            print("pass")
-
             def write_with_colspan(sheet, x, y, value, colspan, style):
                 if colspan == 1:
                     sheet.write(y, x, value, style)
@@ -621,8 +618,6 @@ class AccountReport(models.Model):
             print_mode_self = self.with_context(no_format=True)
             lines = self._filter_out_depreciation_schedule_folded_children(
                 print_mode_self._get_lines(options))
-            print("lines", lines)
-
             # For reports with lines generated for accounts, the account name and codes are shown in a single column.
             # To help user post-process the report if they need, we should in such a case split the account name and code in two columns.
             account_lines_split_names = {}
@@ -765,7 +760,6 @@ class AccountReport(models.Model):
         rslt = []
         folded_lines = set()
         for line in lines:
-            print("ooooooooooooo", line)
             if line.get('unfoldable') and not line.get('unfolded'):
                 folded_lines.add(line['id'])
 
