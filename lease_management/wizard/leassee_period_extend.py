@@ -21,6 +21,9 @@ class LeaseePeriodExtend(models.TransientModel):
     installment_amount = fields.Float(string="", default=0.0, required=False, )
     increasement_rate = fields.Float(default=1, required=False, )
     increasement_frequency = fields.Integer(default=1, required=False, )
+    inception_date = fields.Date(default=lambda self: fields.Datetime.now(),
+                                 required=False, )
+    security_amount = fields.Float(string="Security Amount", help="Security Amount")
 
     @api.model
     def default_get(self, fields):
@@ -36,22 +39,46 @@ class LeaseePeriodExtend(models.TransientModel):
             ('leasee_contract_id', '=', self.leasee_contract_id.id),
             ('amount', '>', 0.0),
         ], order='date desc', limit=1)
-        new_contract = contract.copy({
-            'name': contract.name,
-            'inception_date': contract.estimated_ending_date + relativedelta(days=1),
-            'commencement_date': contract.estimated_ending_date + relativedelta(days=1),
-            'installment_amount': self.installment_amount,
-            'lease_contract_period': self.new_contract_period,
-            'parent_id': contract.id,
-            'asset_id': contract.asset_id.id,
-            'estimated_cost_dismantling': self.estimated_cost_dismantling,
-            'incentives_received': self.incentives_received,
-            'incentives_received_type': self.incentives_received_type,
-            'initial_direct_cost': self.initial_direct_cost,
-            'increasement_rate': self.increasement_rate,
-            'increasement_frequency': self.increasement_frequency,
-            'company_id': self.env.company.id,
-        })
+        if self.inception_date:
+            new_contract = contract.copy({
+                'name': contract.name,
+                'inception_date': self.inception_date,
+                'commencement_date': contract.estimated_ending_date + relativedelta(days=1),
+                'installment_amount': self.installment_amount,
+                'lease_contract_period': self.new_contract_period,
+                'parent_id': contract.id,
+                'asset_id': contract.asset_id.id,
+                'estimated_cost_dismantling': self.estimated_cost_dismantling,
+                'incentives_received': self.incentives_received,
+                'incentives_received_type': self.incentives_received_type,
+                'initial_direct_cost': self.initial_direct_cost,
+                'increasement_rate': self.increasement_rate,
+                'increasement_frequency': self.increasement_frequency,
+                'company_id': self.env.company.id,
+                'security_amount': self.security_amount,
+                'security_prepaid_account': contract.security_prepaid_account.id,
+            })
+        else:
+            new_contract = contract.copy({
+                'name': contract.name,
+                'inception_date': contract.estimated_ending_date + relativedelta(
+                    days=1),
+                'commencement_date': contract.estimated_ending_date + relativedelta(
+                    days=1),
+                'installment_amount': self.installment_amount,
+                'lease_contract_period': self.new_contract_period,
+                'parent_id': contract.id,
+                'asset_id': contract.asset_id.id,
+                'estimated_cost_dismantling': self.estimated_cost_dismantling,
+                'incentives_received': self.incentives_received,
+                'incentives_received_type': self.incentives_received_type,
+                'initial_direct_cost': self.initial_direct_cost,
+                'increasement_rate': self.increasement_rate,
+                'increasement_frequency': self.increasement_frequency,
+                'company_id': self.env.company.id,
+                'security_amount': self.security_amount,
+                'security_prepaid_account': contract.security_prepaid_account.id,
+            })
         contract.state = 'extended'
         new_contract.action_activate()
         self.update_asset_value(new_contract.rou_value)
@@ -113,26 +140,3 @@ class LeaseePeriodExtend(models.TransientModel):
             'old_period': self.leasee_contract_id.lease_contract_period,
             'new_period': self.new_contract_period,
         })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

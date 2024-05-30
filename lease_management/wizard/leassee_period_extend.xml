@@ -17,6 +17,8 @@
                             <field name="installment_amount"/>
                             <field name="increasement_rate"/>
                             <field name="increasement_frequency"/>
+                            <field name="inception_date"/>
+                            <field name="security_amount"/>
                         </group>
                     </sheet>
                     <footer>
