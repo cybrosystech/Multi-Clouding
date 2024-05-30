@@ -211,7 +211,8 @@ class AccountAsset(models.Model):
 
     def create_last_termination_move(self, disposal_date):
         end_move = self.depreciation_move_ids.filtered(lambda
-                                                           m: m.date.month == disposal_date.month and m.date.year == disposal_date.year)
+                                                           m: m.date.month == disposal_date.month and m.date.year == disposal_date.year and m.state not in [
+            'posted', 'cancel'])
         start_month = disposal_date.replace(day=1)
         end_month = start_month + relativedelta(months=1, days=-1)
         ratio = ((disposal_date - start_month).days + 1) / (
@@ -230,13 +231,15 @@ class AccountAsset(models.Model):
         end_move.action_post()
 
     def set_to_close(self, invoice_line_ids, date=None, message=None):
+
         if self.env.context.get('disposal_date'):
             date = self.env.context.get('disposal_date')
         return super(AccountAsset, self).set_to_close(invoice_line_ids, date,
                                                       message)
 
-    def _recompute_board(self,start_depreciation_date=False):
-        move_vals = super(AccountAsset, self)._recompute_board(start_depreciation_date)
+    def _recompute_board(self, start_depreciation_date=False):
+        move_vals = super(AccountAsset, self)._recompute_board(
+            start_depreciation_date)
         if self._context.get('decrease'):
             if move_vals:
                 first_date = self.prorata_date
@@ -253,10 +256,14 @@ class AccountAsset(models.Model):
                     prorata_factor = days / total_days
 
                 for key in ['debit', 'credit', 'amount_currency']:
-                    move_vals[1]['line_ids'][0][2][key] = move_vals[-2]['line_ids'][0][2][key]
-                    move_vals[1]['line_ids'][1][2][key] = move_vals[-2]['line_ids'][1][2][key]
-                    move_vals[0]['line_ids'][0][2][key] = move_vals[-2]['line_ids'][0][2][key] * prorata_factor
-                    move_vals[0]['line_ids'][1][2][key] = move_vals[-2]['line_ids'][1][2][key] * prorata_factor
+                    move_vals[1]['line_ids'][0][2][key] = \
+                        move_vals[-2]['line_ids'][0][2][key]
+                    move_vals[1]['line_ids'][1][2][key] = \
+                        move_vals[-2]['line_ids'][1][2][key]
+                    move_vals[0]['line_ids'][0][2][key] = \
+                        move_vals[-2]['line_ids'][0][2][key] * prorata_factor
+                    move_vals[0]['line_ids'][1][2][key] = \
+                        move_vals[-2]['line_ids'][1][2][key] * prorata_factor
 
                 asset_depreciated_value = 0
                 for vals in move_vals[:-1]:
