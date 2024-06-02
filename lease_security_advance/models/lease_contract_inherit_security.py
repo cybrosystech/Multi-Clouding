@@ -60,10 +60,15 @@ class LeaseeContractInheritAdvance(models.Model):
         else:
             count = 0
         if instalment.leasee_contract_id.payment_frequency_type == 'months':
-            deferred_end_date = instalment.date+dateutil.relativedelta.relativedelta(months=(instalment.leasee_contract_id.payment_frequency))-dateutil.relativedelta.relativedelta(days=1)
+            deferred_end_date = instalment.date + dateutil.relativedelta.relativedelta(
+                months=(
+                    instalment.leasee_contract_id.payment_frequency)) - dateutil.relativedelta.relativedelta(
+                days=1)
         else:
-            deferred_end_date = instalment.date+dateutil.relativedelta.relativedelta(years=(instalment.leasee_contract_id.payment_frequency))-dateutil.relativedelta.relativedelta(days=1)
-
+            deferred_end_date = instalment.date + dateutil.relativedelta.relativedelta(
+                years=(
+                    instalment.leasee_contract_id.payment_frequency)) - dateutil.relativedelta.relativedelta(
+                days=1)
 
         invoice_lines = [(0, 0, {
             'name': self.name + ' - ' + instalment.date.strftime(
@@ -158,6 +163,50 @@ class LeaseeContractInheritAdvance(models.Model):
         date = fields.Datetime.now()
         schedule = self.env.ref(
             'lease_security_advance.action_advance_security_activation')
+        schedule.update({
+            'nextcall': date + timedelta(seconds=30)
+        })
+
+    @api.model
+    def security_advance_set_deferred_start_and_end_date(self, limits):
+        security_move_line = self.env['account.move.line'].search(
+            [('move_id.lease_security_advance_id', '!=', False),
+             ('move_id.move_type', 'in', ['in_invoice']),
+             ('deferred_start_date', '=', False),
+             ('deferred_end_date', '=', False),
+             ('move_id.state', 'in', ['draft', 'to_approve'])], limit=limits)
+        for line in security_move_line:
+
+            if line.move_id.lease_security_advance_id.leasee_contract_id.payment_frequency_type == 'months':
+                line.deferred_end_date = line.move_id.invoice_date + dateutil.relativedelta.relativedelta(
+                    months=(
+                        line.move_id.lease_security_advance_id.leasee_contract_id.payment_frequency)) - dateutil.relativedelta.relativedelta(
+                    days=1)
+            else:
+                line.deferred_end_date = line.move_id.invoice_date + dateutil.relativedelta.relativedelta(
+                    years=(
+                        line.move_id.lease_security_advance_id.leasee_contract_id.payment_frequency)) - dateutil.relativedelta.relativedelta(
+                    days=1)
+            line.deferred_start_date = line.move_id.invoice_date
+        security_move_lines = self.env['account.move.line'].search(
+            [('move_id.lease_security_advance_id', '!=', False),
+             ('move_id.move_type', 'in', ['in_invoice']),
+             ('deferred_start_date', '=', False),
+             ('deferred_end_date', '=', False),
+             ('move_id.state', 'in', ['draft', 'to_approve'])], limit=limits)
+        schedule = self.env.ref(
+            'lease_security_advance.action_set_deferred_start_and_end_date_cron_update')
+        if len(security_move_lines) > 0 and schedule.active:
+            date = fields.Datetime.now()
+            schedule.update({
+                'nextcall': date + timedelta(seconds=20)
+            })
+
+    @api.model
+    def security_advance_set_deferred_start_and_end_date_cron_update(self):
+        date = fields.Datetime.now()
+        schedule = self.env.ref(
+            'lease_security_advance.action_set_deferred_start_and_end_date')
         schedule.update({
             'nextcall': date + timedelta(seconds=30)
         })

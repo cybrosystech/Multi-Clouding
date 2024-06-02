@@ -23,4 +23,27 @@
         <field name="doall" eval="False"/>
     </record>
 
+
+    <record model="ir.cron" id="action_set_deferred_start_and_end_date">
+        <field name="name">Advance security bill - set deferred start and end date </field>
+        <field name="model_id" ref="model_leasee_contract"/>
+        <field name="state">code</field>
+        <field name="code">model.security_advance_set_deferred_start_and_end_date(50)</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+    </record>
+
+    <record model="ir.cron" id="action_set_deferred_start_and_end_date_cron_update">
+        <field name="name">Advance security bill - set deferred start and end date - Cron Update</field>
+        <field name="model_id" ref="model_leasee_contract"/>
+        <field name="state">code</field>
+        <field name="code">model.security_advance_set_deferred_start_and_end_date_cron_update()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+    </record>
+
 </odoo>
