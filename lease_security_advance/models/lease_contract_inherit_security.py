@@ -1,7 +1,8 @@
+import math
 from datetime import timedelta
-
 from odoo import models, fields, _, api
 from odoo.exceptions import ValidationError
+from odoo.tools.safe_eval import dateutil
 
 
 class LeaseeContractInheritAdvance(models.Model):
@@ -50,6 +51,20 @@ class LeaseeContractInheritAdvance(models.Model):
 
     def create_security_moves(self, instalment, advance_security_id, amount,
                               partner):
+        if instalment.leasee_contract_id.lease_contract_period and instalment.leasee_contract_id.payment_frequency:
+            total_contract_months = instalment.leasee_contract_id.lease_contract_period * (
+                1 if instalment.leasee_contract_id.lease_contract_period_type == 'months' else 12)
+            payment_freq_months = instalment.leasee_contract_id.payment_frequency * (
+                1 if instalment.leasee_contract_id.payment_frequency_type == 'months' else 12)
+            count = math.floor(total_contract_months / payment_freq_months)
+        else:
+            count = 0
+        if instalment.leasee_contract_id.payment_frequency_type == 'months':
+            deferred_end_date = instalment.date+dateutil.relativedelta.relativedelta(months=(instalment.leasee_contract_id.payment_frequency))-dateutil.relativedelta.relativedelta(days=1)
+        else:
+            deferred_end_date = instalment.date+dateutil.relativedelta.relativedelta(years=(instalment.leasee_contract_id.payment_frequency))-dateutil.relativedelta.relativedelta(days=1)
+
+
         invoice_lines = [(0, 0, {
             'name': self.name + ' - ' + instalment.date.strftime(
                 '%d/%m/%Y'),
@@ -58,9 +73,9 @@ class LeaseeContractInheritAdvance(models.Model):
             'quantity': 1,
             'analytic_account_id': self.analytic_account_id.id,
             'project_site_id': self.project_site_id.id,
-            # 'type_id': self.type_id.id,
-            # 'location_id': self.location_id.id,
             'analytic_distribution': self.analytic_distribution,
+            'deferred_start_date': instalment.date,
+            'deferred_end_date': deferred_end_date,
         })]
         invoice = self.env['account.move'].create({
             'partner_id': partner.id,
