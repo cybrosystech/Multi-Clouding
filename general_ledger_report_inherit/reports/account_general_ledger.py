@@ -98,7 +98,6 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
         aml_results_number = 0
         has_more = False
         for aml_result in self._cr.dictfetchall():
-            print("aml_result",aml_result)
             aml_results_number += 1
             if aml_results_number == limit:
                 has_more = True

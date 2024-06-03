@@ -12,14 +12,12 @@ class ReportInvoiceTaxReport(models.AbstractModel):
         docs = self.env['account.move'].browse(docids)
         to_currency = self.env['res.currency'].search(
             [('name', '=', 'AED')])
-        # print(docs.company_id.company_stamp, 'docs.company_id')
         if not to_currency:
             raise ValidationError('For conversion enable Multi Currency and '
                                   'Currency. AED')
         rate = docs.company_currency_id._get_conversion_rate(
             docs.currency_id, to_currency, docs.company_id,
             docs.date)
-        print('rate', rate)
         return {
             'doc_ids': docids,
             'doc_model': 'account.move',

@@ -6,7 +6,6 @@ class ReportVendor(models.AbstractModel):
 
     @api.model
     def _get_report_values(self, docids, data=None):
-        print(docids)
         docs = self.env['account.move'].browse(docids)
         return {
             'doc_ids': docids,
