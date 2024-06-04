@@ -5,7 +5,6 @@
 import base64
 import re
 
-
 from odoo import models, tools
 from odoo.loglevels import ustr
 
@@ -21,15 +20,17 @@ import html2text
 
 from odoo.tools import ustr, pycompat
 
-
 _logger = logging.getLogger(__name__)
 _test_logger = logging.getLogger('odoo.tests')
+
 
 class IrMailServer(models.Model):
     _inherit = "ir.mail_server"
 
-    def build_email(self, email_from, email_to, subject, body, email_cc=None, email_bcc=None, reply_to=False,
-                    attachments=None, message_id=None, references=None, object_id=False, subtype='plain', headers=None,
+    def build_email(self, email_from, email_to, subject, body, email_cc=None,
+                    email_bcc=None, reply_to=False,
+                    attachments=None, message_id=None, references=None,
+                    object_id=False, subtype='plain', headers=None,
                     body_alternative=None, subtype_alternative='plain'):
 
         ftemplate = "__image-%s__"
@@ -46,7 +47,7 @@ class IrMailServer(models.Model):
                 break
             s = match.start()
             e = match.end()
-            data = body[s + len('"data:image/png;base64,') : e - 1]
+            data = body[s + len('"data:image/png;base64,'): e - 1]
             new_body += body[pos:s]
             fname = ftemplate % fcounter
             fcounter += 1
@@ -59,12 +60,12 @@ class IrMailServer(models.Model):
         body = new_body
 
         email_from = email_from or self._get_default_from_address()
-        assert email_from, "You must either provide a sender address explicitly or configure "\
-                           "using the combination of `mail.catchall.domain` and `mail.default.from` "\
-                           "ICPs, in the server configuration file or with the "\
+        assert email_from, "You must either provide a sender address explicitly or configure " \
+                           "using the combination of `mail.catchall.domain` and `mail.default.from` " \
+                           "ICPs, in the server configuration file or with the " \
                            "--email-from startup parameter."
 
-        headers = headers or {}         # need valid dict later
+        headers = headers or {}  # need valid dict later
         email_cc = email_cc or []
         email_bcc = email_bcc or []
         body = body or u''
@@ -100,16 +101,21 @@ class IrMailServer(models.Model):
 
         email_body = ustr(body)
         if subtype == 'html' and not body_alternative:
-            msg.add_alternative(html2text.html2text(email_body), subtype='plain', charset='utf-8')
+            msg.add_alternative(html2text.html2text(email_body),
+                                subtype='plain', charset='utf-8')
             msg.add_alternative(email_body, subtype=subtype, charset='utf-8')
         elif body_alternative:
-            msg.add_alternative(ustr(body_alternative), subtype=subtype_alternative, charset='utf-8')
+            msg.add_alternative(ustr(body_alternative),
+                                subtype=subtype_alternative, charset='utf-8')
             msg.add_alternative(email_body, subtype=subtype, charset='utf-8')
         else:
             msg.set_content(email_body, subtype=subtype, charset='utf-8')
 
         if attachments:
             for (fname, fcontent, mime) in attachments:
-                maintype, subtype = mime.split('/') if mime and '/' in mime else ('application', 'octet-stream')
-                msg.add_attachment(fcontent, maintype, subtype, filename=fname, cid="<%s>" % fname)
+                maintype, subtype = mime.split(
+                    '/') if mime and '/' in mime else (
+                    'application', 'octet-stream')
+                msg.add_attachment(fcontent, maintype, subtype, filename=fname,
+                                   cid="<%s>" % fname)
         return msg
