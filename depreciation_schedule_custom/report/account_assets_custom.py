@@ -38,7 +38,7 @@ class assets_report(models.AbstractModel):
         return [
             [
                 {'name': ''},
-                {'name': _('Characteristics'), 'colspan': 10},
+                {'name': _('Characteristics'), 'colspan': 11},
                 {'name': _('Assets'), 'colspan': 4},
                 {'name': _('Depreciation'), 'colspan': 4},
                 {'name': _('Book Value')},
@@ -56,6 +56,8 @@ class assets_report(models.AbstractModel):
                 {'name': _('Project/Site'), 'class': 'text-center'},
                 {'name': _('Capex Type'), 'class': 'text-center'},
                 {'name': _('Asset Sequence Number'), 'class': 'text-center'},
+                {'name': _('Serial Number'), 'class': 'text-center'},
+
                 {'name': _('Rate'), 'class': 'number', 'title': _(
                     'In percent.<br>For a linear method, the depreciation rate is computed per year.<br>For a declining method, it is the declining factor'),
                  'data-toggle': 'tooltip'},
@@ -383,6 +385,8 @@ class assets_report(models.AbstractModel):
                          'no_format_name': ''},
                         {'name': al['sequence_number'],
                          'no_format_name': ''},
+                        {'name': al['serial_no'], 'no_format_name': ''},
+
                         {'name': asset_depreciation_rate, 'no_format_name': ''},
                         {'name': self.format_value(asset_opening),
                          'no_format_name': asset_opening},  # Assets
@@ -459,6 +463,7 @@ class assets_report(models.AbstractModel):
                             SELECT asset.id as asset_id,
                                    asset.parent_id as parent_id,
                                    asset.name as asset_name,
+                                   asset.serial_no as serial_no,
                                    asset.original_value as asset_original_value,
                                    asset.currency_id as asset_currency_id,
                                    COALESCE(asset.first_depreciation_date_import, asset.first_depreciation_date) as asset_date,
@@ -587,6 +592,7 @@ class assets_report(models.AbstractModel):
                             SELECT asset.id as asset_id,
                                    asset.parent_id as parent_id,
                                    asset.name as asset_name,
+                                   asset.serial_no as serial_no,
                                    asset.original_value as asset_original_value,
                                    asset.currency_id as asset_currency_id,
                                    COALESCE(asset.first_depreciation_date_import, asset.first_depreciation_date) as asset_date,
