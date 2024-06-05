@@ -336,7 +336,8 @@ class CustomerPortal(CustomerPortal):
             'quantity': float(post['quantity']),
             'employee_id': employee_id,
             'currency_id': int(post['currency_id']),
-            'total_amount_currency': post['unit_price'] if post['unit_price'] else amount,
+            'total_amount_currency': post['unit_price'] if post[
+                'unit_price'] else amount,
             'analytic_distribution': analytic_dist,
             'state': 'waiting_approval',
         })
@@ -637,7 +638,8 @@ class CustomerPortal(CustomerPortal):
         product_id = request.env['product.product'].sudo().browse(
             int(post['product_id']))
         employee_id = request.env['hr.employee'].sudo().search(
-            [('user_id', '=', request.env.user.id)]).id
+            [('user_id', '=', request.env.user.id),
+             ('company_id', '=', request.env.company.id)]).id
         amount = product_id.standard_price
         analytic_account_id = post['cost_center']
         project_site_id = post['project_site']
@@ -658,7 +660,8 @@ class CustomerPortal(CustomerPortal):
             'quantity': post['quantity'],
             'employee_id': employee_id,
             'currency_id': int(post['currency_id']),
-            'total_amount_currency': post['unit_price'] if post['unit_price'] else amount,
+            'total_amount_currency': post['unit_price'] if post[
+                'unit_price'] else amount,
             'analytic_distribution': analytic_dist,
             'state': 'waiting_approval',
         })
@@ -672,8 +675,8 @@ class CustomerPortal(CustomerPortal):
             }
             attachment_id = request.env['ir.attachment'].sudo().create(
                 attachment)
-            url = expense_id.get_portal_url()
-            return werkzeug.utils.redirect(url)
+            url = '/my/overtime/' + str(expense_id.id)
+            return request.redirect(url)
 
     @http.route(['/approve/overtime/<int:expense_id>'], type='http',
                 auth="user", website=True)
@@ -830,7 +833,7 @@ class CustomerPortal(CustomerPortal):
             'token': access_token,
             'bootstrap_formatting': True,
             'report_type': 'html',
-            'page_name': 'overtime_form',
+            'page_name': 'perdiem_form',
             'p_name': hr_expense_sudo.name,
             'analytic_distribution': analytic_dist,
 
@@ -1070,7 +1073,8 @@ class CustomerPortal(CustomerPortal):
             'quantity': post['quantity'],
             'employee_id': employee_id,
             'currency_id': int(post['currency_id']),
-            'total_amount_currency': post['unit_price'] if post['unit_price'] else amount,
+            'total_amount_currency': post['unit_price'] if post[
+                'unit_price'] else amount,
             'analytic_distribution': analytic_dist,
             'state': 'waiting_approval',
         })
@@ -1084,8 +1088,9 @@ class CustomerPortal(CustomerPortal):
             }
             attachment_id = request.env['ir.attachment'].sudo().create(
                 attachment)
-            url = expense_id.get_portal_url()
-            return werkzeug.utils.redirect(url)
+            # url = expense_id.get_portal_url()
+            url = '/my/per_diem/' + str(expense_id.id)
+            return request.redirect(url)
 
     @http.route(['/approve/per_diem/<int:expense_id>'], type='http',
                 auth="user", website=True)

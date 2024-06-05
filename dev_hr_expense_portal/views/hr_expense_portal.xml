@@ -150,11 +150,18 @@
                     Expenses
                 </t>
                 <a t-if="page_name == 'overtime_form' or overtime_form"
-                   t-attf-href="/my/hr_expense?{{ keep_query() }}">Expenses
+                   t-attf-href="/my/overtime?{{ keep_query() }}">Overtime
                 </a>
                 <t t-if="page_name == 'overtime_tree' or overtime_tree"
                    t-else="">
                     Overtime
+                </t>
+                <a t-if="page_name == 'perdiem_form' or perdiem_form"
+                   t-attf-href="/my/per_diem?{{ keep_query() }}">Per Diem
+                </a>
+                <t t-if="page_name == 'per_diem_tree' or per_diem_tree"
+                   t-else="">
+                    Per Diem
                 </t>
             </li>
             <li t-if="p_name" class="breadcrumb-item active">
@@ -716,7 +723,7 @@
         </xpath>
     </template>
 
-    <template id="overtime_portal_content" name="Expense Form">
+    <template id="overtime_portal_content" name="Overtime Form">
         <div t-attf-class="#{'card-body' if report_type == 'html' else ''}">
 
             <div id="informations">
@@ -1362,13 +1369,22 @@
                                     <span t-field="hr_expense.sudo().account_id"/>
                                 </td>
                             </tr>
+<!--                            <tr>-->
+<!--                                <td width="35%" style="padding:3px">-->
+<!--                                    <b>Cost Center</b>-->
+<!--                                </td>-->
+<!--                                <td width="5%" style="padding:3px">:</td>-->
+<!--                                <td width="50%" style="padding:3px">-->
+<!--                                    <span t-field="hr_expense.sudo().analytic_account_id"/>-->
+<!--                                </td>-->
+<!--                            </tr>-->
                             <tr>
                                 <td width="35%" style="padding:3px">
-                                    <b>Cost Center</b>
+                                    <b>Analytic Distribution</b>
                                 </td>
                                 <td width="5%" style="padding:3px">:</td>
                                 <td width="50%" style="padding:3px">
-                                    <span t-field="hr_expense.sudo().analytic_account_id"/>
+                                    <span t-esc="analytic_distribution"/>
                                 </td>
                             </tr>
                             <!--                            <tr>-->

@@ -40,7 +40,6 @@ class ModelRecordUnlink(models.Model):
         items = environment.search(domain)
         self.records = len(items)
 
-
     def delete_records(self):
         if self.state_entry == 'assets':
             domain = []
@@ -57,7 +56,6 @@ class ModelRecordUnlink(models.Model):
             domain += [('company_id', '=', self.company_id.id)]
         if self.journal_ids:
             domain += [('journal_id', 'in', self.journal_ids.ids)]
-
         items = environment.search(domain, limit=self.limit)
         if self.state_entry == 'assets':
             for rec in items:

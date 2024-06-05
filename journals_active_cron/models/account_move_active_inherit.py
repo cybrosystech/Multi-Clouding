@@ -34,7 +34,7 @@ class AccountMoveInheritActive(models.Model):
             schedule = self.env.ref(
                 'journals_active_cron.account_move_activate_cron_update')
             schedule.update({
-                'nextcall': date + timedelta(seconds=30)
+                'nextcall': date + timedelta(seconds=15)
             })
             LOGGER.info('Account move active Cron Update')
 
@@ -43,7 +43,7 @@ class AccountMoveInheritActive(models.Model):
         schedule = self.env.ref(
             'journals_active_cron.account_move_activate_action')
         schedule.update({
-            'nextcall': date + timedelta(seconds=30)
+            'nextcall': date + timedelta(seconds=15)
         })
         LOGGER.info('Account Move Active updated')
 
@@ -68,7 +68,7 @@ class AccountMoveInheritActive(models.Model):
             schedule = self.env.ref(
                 'journals_active_cron.account_move_deactivate_cron_update')
             schedule.update({
-                'nextcall': date + timedelta(seconds=30)
+                'nextcall': date + timedelta(seconds=15)
             })
             LOGGER.info('Account move active Cron Update')
 
@@ -77,6 +77,6 @@ class AccountMoveInheritActive(models.Model):
         schedule = self.env.ref(
             'journals_active_cron.account_move_deactivate_action')
         schedule.update({
-            'nextcall': date + timedelta(seconds=30)
+            'nextcall': date + timedelta(seconds=15)
         })
         LOGGER.info('Account Move Active False updated')

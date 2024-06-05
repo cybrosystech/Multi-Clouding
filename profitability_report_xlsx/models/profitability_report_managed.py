@@ -601,28 +601,28 @@ class ProfitabilityReportManaged(models.Model):
                     schedule = self.env.ref(
                         'profitability_report_xlsx.action_profitability_managed_cron_update')
                     schedule.update({
-                        'nextcall': date + timedelta(seconds=10),
+                        'nextcall': date + timedelta(seconds=15),
                     })
                 elif xml_id.get(
                         profitability_managed.cron_id.id) == 'profitability_report_xlsx.action_profitability_managed_cron_baghdad':
                     schedule = self.env.ref(
                         'profitability_report_xlsx.action_profitability_managed_cron_update_baghdad')
                     schedule.update({
-                        'nextcall': date + timedelta(seconds=10),
+                        'nextcall': date + timedelta(seconds=15),
                     })
                 elif xml_id.get(
                         profitability_managed.cron_id.id) == 'profitability_report_xlsx.action_profitability_managed_cron_erbill':
                     schedule = self.env.ref(
                         'profitability_report_xlsx.action_profitability_managed_cron_update_erbill')
                     schedule.update({
-                        'nextcall': date + timedelta(seconds=10),
+                        'nextcall': date + timedelta(seconds=15),
                     })
                 elif xml_id.get(
                         profitability_managed.cron_id.id) == 'profitability_report_xlsx.action_profitability_managed_cron_general':
                     schedule = self.env.ref(
                         'profitability_report_xlsx.action_profitability_managed_cron_update_general')
                     schedule.update({
-                        'nextcall': date + timedelta(seconds=10),
+                        'nextcall': date + timedelta(seconds=15),
                     })
                 else:
                     pass
@@ -820,28 +820,28 @@ class ProfitabilityReportManaged(models.Model):
                     schedule = self.env.ref(
                         'profitability_report_xlsx.action_profitability_managed_cron_update')
                     schedule.update({
-                        'nextcall': date + timedelta(seconds=10),
+                        'nextcall': date + timedelta(seconds=15),
                     })
                 elif xml_id.get(
                         profitability_managed.cron_id.id) == 'profitability_report_xlsx.action_profitability_managed_cron_baghdad':
                     schedule = self.env.ref(
                         'profitability_report_xlsx.action_profitability_managed_cron_update_baghdad')
                     schedule.update({
-                        'nextcall': date + timedelta(seconds=10),
+                        'nextcall': date + timedelta(seconds=15),
                     })
                 elif xml_id.get(
                         profitability_managed.cron_id.id) == 'profitability_report_xlsx.action_profitability_managed_cron_erbill':
                     schedule = self.env.ref(
                         'profitability_report_xlsx.action_profitability_managed_cron_update_erbill')
                     schedule.update({
-                        'nextcall': date + timedelta(seconds=10),
+                        'nextcall': date + timedelta(seconds=15),
                     })
                 elif xml_id.get(
                         profitability_managed.cron_id.id) == 'profitability_report_xlsx.action_profitability_managed_cron_general':
                     schedule = self.env.ref(
                         'profitability_report_xlsx.action_profitability_managed_cron_update_general')
                     schedule.update({
-                        'nextcall': date + timedelta(seconds=10),
+                        'nextcall': date + timedelta(seconds=15),
                     })
                 else:
                     pass
@@ -852,7 +852,7 @@ class ProfitabilityReportManaged(models.Model):
         schedule = self.env.ref(
             'profitability_report_xlsx.action_profitability_managed_cron_general')
         schedule.update({
-            'nextcall': date + timedelta(seconds=10)
+            'nextcall': date + timedelta(seconds=15)
         })
 
     def profitability_managed_cron_update(self):
@@ -860,7 +860,7 @@ class ProfitabilityReportManaged(models.Model):
         schedule = self.env.ref(
             'profitability_report_xlsx.action_profitability_managed_cron')
         schedule.update({
-            'nextcall': date + timedelta(seconds=10)
+            'nextcall': date + timedelta(seconds=15)
         })
 
     def profitability_managed_cron_update_baghdad(self):
@@ -868,7 +868,7 @@ class ProfitabilityReportManaged(models.Model):
         schedule = self.env.ref(
             'profitability_report_xlsx.action_profitability_managed_cron_baghdad')
         schedule.update({
-            'nextcall': date + timedelta(seconds=10)
+            'nextcall': date + timedelta(seconds=15)
         })
 
     def profitability_managed_cron_update_erbill(self):
@@ -876,7 +876,7 @@ class ProfitabilityReportManaged(models.Model):
         schedule = self.env.ref(
             'profitability_report_xlsx.action_profitability_managed_cron_erbill')
         schedule.update({
-            'nextcall': date + timedelta(seconds=10)
+            'nextcall': date + timedelta(seconds=15)
         })
 
     def action_get_report(self):
@@ -992,7 +992,7 @@ class ProfitabilityReportManaged(models.Model):
         date = fields.Datetime.now()
         schedule_action = self.cron_id
         schedule_action.update({
-            'nextcall': date + timedelta(seconds=10)
+            'nextcall': date + timedelta(seconds=15)
         })
         self.update({
             'limits_pr': 0,

@@ -74,7 +74,7 @@ class LeaseManagementReport(models.Model):
         schedule_action = self.env.ref(
             'tasc_lease_management_report.action_ll_rou_report_cron')
         schedule_action.update({
-            'nextcall': date + datetime.timedelta(seconds=1)
+            'nextcall': date + datetime.timedelta(seconds=15)
         })
         self.update({
             'll_rou_limit': 0,
@@ -86,7 +86,7 @@ class LeaseManagementReport(models.Model):
         schedule_action = self.env.ref(
             'tasc_lease_management_report.action_ll_aging_report_cron')
         schedule_action.update({
-            'nextcall': date + datetime.timedelta(seconds=1)
+            'nextcall': date + datetime.timedelta(seconds=15)
         })
         self.update({
             'll_aging_limit': 0,
@@ -98,7 +98,7 @@ class LeaseManagementReport(models.Model):
         schedule_action = self.env.ref(
             'tasc_lease_management_report.action_payment_aging_report_cron')
         schedule_action.update({
-            'nextcall': date + datetime.timedelta(seconds=1)
+            'nextcall': date + datetime.timedelta(seconds=15)
         })
         self.update({
             'payment_aging_limit': 0,
@@ -109,7 +109,7 @@ class LeaseManagementReport(models.Model):
         date = fields.Datetime.now()
         schedule_action = self.env.ref('lease_management_report.action_lease_reports')
         schedule_action.update({
-            'nextcall': date + datetime.timedelta(seconds=1)
+            'nextcall': date + datetime.timedelta(seconds=15)
         })
         self.update({
             'interest_amort_limit': 0,
@@ -533,7 +533,7 @@ class LeaseManagementReport(models.Model):
             schedule = self.env.ref(
                 'tasc_lease_management_report.action_lease_reports_update_cron')
             schedule.update({
-                'nextcall': date + datetime.timedelta(seconds=10),
+                'nextcall': date + datetime.timedelta(seconds=15),
             })
         else:
             lease_management_report.interest_amort_limit = lease_management_report.end_limit
@@ -544,7 +544,7 @@ class LeaseManagementReport(models.Model):
         schedule = self.env.ref(
             'tasc_lease_management_report.action_lease_reports')
         schedule.update({
-            'nextcall': date + datetime.timedelta(seconds=10),
+            'nextcall': date + datetime.timedelta(seconds=15),
         })
 
     @api.model
@@ -553,7 +553,7 @@ class LeaseManagementReport(models.Model):
         schedule = self.env.ref(
             'tasc_lease_management_report.action_payment_aging_report_cron')
         schedule.update({
-            'nextcall': date + datetime.timedelta(seconds=10),
+            'nextcall': date + datetime.timedelta(seconds=15),
         })
 
     @api.model
@@ -562,7 +562,7 @@ class LeaseManagementReport(models.Model):
         schedule = self.env.ref(
             'tasc_lease_management_report.action_ll_aging_report_cron')
         schedule.update({
-            'nextcall': date + datetime.timedelta(seconds=10),
+            'nextcall': date + datetime.timedelta(seconds=15),
         })
 
     @api.model
@@ -571,7 +571,7 @@ class LeaseManagementReport(models.Model):
         schedule = self.env.ref(
             'tasc_lease_management_report.action_ll_rou_report_cron')
         schedule.update({
-            'nextcall': date + datetime.timedelta(seconds=10),
+            'nextcall': date + datetime.timedelta(seconds=15),
         })
 
     def action_ll_rou_reports_cron(self, end_limit):
@@ -603,7 +603,7 @@ class LeaseManagementReport(models.Model):
             schedule = self.env.ref(
                 'tasc_lease_management_report.action_ll_rou_report_cron_update')
             schedule.update({
-                'nextcall': date + datetime.timedelta(seconds=10),
+                'nextcall': date + datetime.timedelta(seconds=15),
             })
         else:
             lease_management_report.ll_rou_limit = lease_management_report.end_limit
@@ -642,7 +642,7 @@ class LeaseManagementReport(models.Model):
             schedule = self.env.ref(
                 'tasc_lease_management_report.action_payment_aging_report_cron_update')
             schedule.update({
-                'nextcall': date + datetime.timedelta(seconds=10),
+                'nextcall': date + datetime.timedelta(seconds=15),
             })
         else:
             lease_management_report.payment_aging_limit = lease_management_report.end_limit
@@ -679,7 +679,7 @@ class LeaseManagementReport(models.Model):
             schedule = self.env.ref(
                 'tasc_lease_management_report.action_ll_aging_report_cron_update')
             schedule.update({
-                'nextcall': date + datetime.timedelta(seconds=10),
+                'nextcall': date + datetime.timedelta(seconds=15),
             })
         else:
             lease_management_report.ll_aging_limit = lease_management_report.end_limit

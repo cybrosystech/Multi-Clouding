@@ -307,7 +307,7 @@ class AccountAsset(models.Model):
             schedule = self.env.ref(
                 'lease_management.action_update_asset_cron')
             schedule.update({
-                'nextcall': date + timedelta(seconds=30)
+                'nextcall': date + timedelta(seconds=15)
             })
             LOGGER.info('Asset Cron Update')
             message = '10 records has been updated'
@@ -319,7 +319,7 @@ class AccountAsset(models.Model):
         schedule = self.env.ref(
             'lease_management.action_draft_leasee_asset_posting')
         schedule.update({
-            'nextcall': date + timedelta(seconds=30)
+            'nextcall': date + timedelta(seconds=15)
         })
         LOGGER.info('Leasee Contract Entry Posting updated')
 
@@ -341,7 +341,7 @@ class AccountAsset(models.Model):
             schedule = self.env.ref(
                 'lease_management.action_update_non_leasee_asset_cron')
             schedule.update({
-                'nextcall': date + timedelta(seconds=30)
+                'nextcall': date + timedelta(seconds=15)
             })
             LOGGER.info('Non leasee Asset Cron Update')
             message = '10 records has been updated'
@@ -353,6 +353,6 @@ class AccountAsset(models.Model):
         schedule = self.env.ref(
             'lease_management.action_draft_non_leasee_asset_posting')
         schedule.update({
-            'nextcall': date + timedelta(seconds=30)
+            'nextcall': date + timedelta(seconds=15)
         })
         LOGGER.info('Non Leasee Contract Entry Posting updated')

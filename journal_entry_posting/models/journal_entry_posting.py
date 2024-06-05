@@ -57,7 +57,7 @@ class JournalEntryPostingConfig(models.Model):
         if journals_lim and schedule.active:
             date = fields.Datetime.now()
             schedule.update({
-                'nextcall': date + timedelta(seconds=20)
+                'nextcall': date + timedelta(seconds=15)
             })
         else:
             journal.state = 'draft'
@@ -92,7 +92,7 @@ class JournalEntryPostingConfig(models.Model):
         if journals_lim and schedule.active:
             date = fields.Datetime.now()
             schedule.update({
-                'nextcall': date + timedelta(seconds=20)
+                'nextcall': date + timedelta(seconds=15)
             })
         else:
             journal.state = 'draft'
@@ -126,7 +126,7 @@ class JournalEntryPostingConfig(models.Model):
         if journals_lim and schedule.active:
             date = fields.Datetime.now()
             schedule.update({
-                'nextcall': date + timedelta(seconds=20)
+                'nextcall': date + timedelta(seconds=15)
             })
         else:
             journal.state = 'draft'
@@ -161,7 +161,7 @@ class JournalEntryPostingConfig(models.Model):
         if journals_lim and schedule.active:
             date = fields.Datetime.now()
             schedule.update({
-                'nextcall': date + timedelta(seconds=20)
+                'nextcall': date + timedelta(seconds=15)
             })
         else:
             journal.state = 'draft'
@@ -173,7 +173,7 @@ class JournalEntryPostingConfig(models.Model):
             date = fields.Datetime.now()
 
             schedule.update({
-                'nextcall': date + timedelta(seconds=20)
+                'nextcall': date + timedelta(seconds=15)
             })
 
     def journal_entry_posting_cron_update(self):
@@ -184,7 +184,7 @@ class JournalEntryPostingConfig(models.Model):
             date = fields.Datetime.now()
 
             schedule.update({
-                'nextcall': date + timedelta(seconds=20)
+                'nextcall': date + timedelta(seconds=15)
             })
 
     def journal_entry_posting_cron_update_baghdad(self):
@@ -194,7 +194,7 @@ class JournalEntryPostingConfig(models.Model):
             date = fields.Datetime.now()
 
             schedule.update({
-                'nextcall': date + timedelta(seconds=20)
+                'nextcall': date + timedelta(seconds=15)
             })
 
     def journal_entry_posting_cron_update_erbill(self):
@@ -204,7 +204,7 @@ class JournalEntryPostingConfig(models.Model):
             date = fields.Datetime.now()
 
             schedule.update({
-                'nextcall': date + timedelta(seconds=20)
+                'nextcall': date + timedelta(seconds=15)
             })
 
     def schedule_journal_action(self):
@@ -212,7 +212,7 @@ class JournalEntryPostingConfig(models.Model):
         if schedule.active:
             date = fields.Datetime.now()
             schedule.update({
-                'nextcall': date + timedelta(seconds=20)
+                'nextcall': date + timedelta(seconds=15)
             })
             self.state = 'scheduled'
         else:

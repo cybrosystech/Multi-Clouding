@@ -1483,7 +1483,7 @@ class LeaseeContract(models.Model):
             date = fields.Datetime.now()
 
             schedule.update({
-                'nextcall': date + timedelta(seconds=20)
+                'nextcall': date + timedelta(seconds=15)
             })
             LOGGER.info('Leasee Cron Update')
             message = '10 records has been updated'
@@ -1496,7 +1496,7 @@ class LeaseeContract(models.Model):
         schedule = self.env.ref(
             'lease_management.action_draft_entry_postings')
         schedule.update({
-            'nextcall': date + timedelta(seconds=30)
+            'nextcall': date + timedelta(seconds=15)
         })
         LOGGER.info('Leasee Contract Entry Posting updated')
 

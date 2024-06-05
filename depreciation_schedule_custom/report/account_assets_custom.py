@@ -177,7 +177,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                                               'date_to'])
 
         options['custom_columns_subheaders'] = [
-            {"name": _("Characteristics"), "colspan": 9},
+            {"name": _("Characteristics"), "colspan": 10},
             {"name": _("Assets"), "colspan": 4},
             {"name": _("Depreciation"), "colspan": 4},
             {"name": _("Book Value"), "colspan": 1}
@@ -340,7 +340,8 @@ class AssetsReportCustomHandler(models.AbstractModel):
                 "capex_type": apex_type,
                 "asset_sequence_number": al["sequence_number"],
                 "co_location": al["co_location"],
-                "asset_model": al["asset_model_name"]
+                "asset_model": al["asset_model_name"],
+                "serial_no": al["serial_no"],
             }
 
             lines.append(
@@ -477,6 +478,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
             SELECT asset.id AS asset_id,
                    asset.parent_id AS parent_id,
                    asset.name AS asset_name,
+                   asset.serial_no as serial_no,
                    asset.original_value AS asset_original_value,
                    asset.currency_id AS asset_currency_id,
                    COALESCE(asset.salvage_value, 0) as asset_salvage_value,

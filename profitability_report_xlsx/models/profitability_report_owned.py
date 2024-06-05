@@ -407,7 +407,6 @@ class ProfitabilityReportOwned(models.Model):
             'from': from_date if from_date else profitability_owned.from_date,
             'to': to_date if to_date else profitability_owned.to_date,
             'company_id': profitability_owned.company_id.id,
-            # 'analatyc_account_group': group.id,
             'group_id': group_id,
             'Current_months': Current_months,
             'limit': limit
@@ -646,28 +645,28 @@ class ProfitabilityReportOwned(models.Model):
                     schedule = self.env.ref(
                         'profitability_report_xlsx.action_profitability_owned_cron_update')
                     schedule.update({
-                        'nextcall': date + timedelta(seconds=10),
+                        'nextcall': date + timedelta(seconds=15),
                     })
                 elif xml_id.get(
                         profitability_owned.cron_id.id) == 'profitability_report_xlsx.action_profitability_owned_cron_baghdad':
                     schedule = self.env.ref(
                         'profitability_report_xlsx.action_profitability_owned_cron_update_baghdad')
                     schedule.update({
-                        'nextcall': date + timedelta(seconds=10),
+                        'nextcall': date + timedelta(seconds=15),
                     })
                 elif xml_id.get(
                         profitability_owned.cron_id.id) == 'profitability_report_xlsx.action_profitability_owned_cron_erbill':
                     schedule = self.env.ref(
                         'profitability_report_xlsx.action_profitability_owned_cron_update_erbill')
                     schedule.update({
-                        'nextcall': date + timedelta(seconds=10),
+                        'nextcall': date + timedelta(seconds=15),
                     })
                 elif xml_id.get(
                         profitability_owned.cron_id.id) == 'profitability_report_xlsx.action_profitability_owned_cron_general':
                     schedule = self.env.ref(
                         'profitability_report_xlsx.action_profitability_owned_cron_update_general')
                     schedule.update({
-                        'nextcall': date + timedelta(seconds=10),
+                        'nextcall': date + timedelta(seconds=15),
                     })
                 else:
                     pass
@@ -897,28 +896,28 @@ class ProfitabilityReportOwned(models.Model):
                     schedule = self.env.ref(
                         'profitability_report_xlsx.action_profitability_owned_cron_update')
                     schedule.update({
-                        'nextcall': date + timedelta(seconds=10),
+                        'nextcall': date + timedelta(seconds=15),
                     })
                 elif xml_id.get(
                         profitability_owned.cron_id.id) == 'profitability_report_xlsx.action_profitability_owned_cron_baghdad':
                     schedule = self.env.ref(
                         'profitability_report_xlsx.action_profitability_owned_cron_update_baghdad')
                     schedule.update({
-                        'nextcall': date + timedelta(seconds=10),
+                        'nextcall': date + timedelta(seconds=15),
                     })
                 elif xml_id.get(
                         profitability_owned.cron_id.id) == 'profitability_report_xlsx.action_profitability_owned_cron_erbill':
                     schedule = self.env.ref(
                         'profitability_report_xlsx.action_profitability_owned_cron_update_erbill')
                     schedule.update({
-                        'nextcall': date + timedelta(seconds=10),
+                        'nextcall': date + timedelta(seconds=15),
                     })
                 elif xml_id.get(
                         profitability_owned.cron_id.id) == 'profitability_report_xlsx.action_profitability_owned_cron_general':
                     schedule = self.env.ref(
                         'profitability_report_xlsx.action_profitability_owned_cron_update_general')
                     schedule.update({
-                        'nextcall': date + timedelta(seconds=10),
+                        'nextcall': date + timedelta(seconds=15),
                     })
                 else:
                     pass
@@ -1037,7 +1036,7 @@ class ProfitabilityReportOwned(models.Model):
         schedule = self.env.ref(
             'profitability_report_xlsx.action_profitability_owned_cron_general')
         schedule.update({
-            'nextcall': date + timedelta(seconds=10)
+            'nextcall': date + timedelta(seconds=15)
         })
 
     def profitability_owned_cron_update(self):
@@ -1045,7 +1044,7 @@ class ProfitabilityReportOwned(models.Model):
         schedule = self.env.ref(
             'profitability_report_xlsx.action_profitability_owned_cron')
         schedule.update({
-            'nextcall': date + timedelta(seconds=10)
+            'nextcall': date + timedelta(seconds=15)
         })
 
     def profitability_owned_cron_update_baghdad(self):
@@ -1053,7 +1052,7 @@ class ProfitabilityReportOwned(models.Model):
         schedule = self.env.ref(
             'profitability_report_xlsx.action_profitability_owned_cron_baghdad')
         schedule.update({
-            'nextcall': date + timedelta(seconds=10)
+            'nextcall': date + timedelta(seconds=15)
         })
 
     def profitability_owned_cron_update_erbill(self):
@@ -1061,14 +1060,14 @@ class ProfitabilityReportOwned(models.Model):
         schedule = self.env.ref(
             'profitability_report_xlsx.action_profitability_owned_cron_erbill')
         schedule.update({
-            'nextcall': date + timedelta(seconds=10)
+            'nextcall': date + timedelta(seconds=15)
         })
 
     def schedule_owned_cron(self):
         date = fields.Datetime.now()
         schedule_action = self.cron_id
         schedule_action.update({
-            'nextcall': date + timedelta(seconds=1)
+            'nextcall': date + timedelta(seconds=15)
         })
         self.update({
             'limits_pr': 0,

@@ -155,7 +155,7 @@ class LeaseeContractInheritAdvance(models.Model):
         if len(lease_contracts) > 0 and schedule.active:
             date = fields.Datetime.now()
             schedule.update({
-                'nextcall': date + timedelta(seconds=20)
+                'nextcall': date + timedelta(seconds=15)
             })
 
     @api.model
@@ -164,7 +164,7 @@ class LeaseeContractInheritAdvance(models.Model):
         schedule = self.env.ref(
             'lease_security_advance.action_advance_security_activation')
         schedule.update({
-            'nextcall': date + timedelta(seconds=30)
+            'nextcall': date + timedelta(seconds=15)
         })
 
     @api.model
@@ -199,7 +199,7 @@ class LeaseeContractInheritAdvance(models.Model):
         if len(security_move_lines) > 0 and schedule.active:
             date = fields.Datetime.now()
             schedule.update({
-                'nextcall': date + timedelta(seconds=20)
+                'nextcall': date + timedelta(seconds=15)
             })
 
     @api.model
@@ -208,5 +208,5 @@ class LeaseeContractInheritAdvance(models.Model):
         schedule = self.env.ref(
             'lease_security_advance.action_set_deferred_start_and_end_date')
         schedule.update({
-            'nextcall': date + timedelta(seconds=30)
+            'nextcall': date + timedelta(seconds=15)
         })
