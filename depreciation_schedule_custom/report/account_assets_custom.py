@@ -177,7 +177,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                                               'date_to'])
 
         options['custom_columns_subheaders'] = [
-            {"name": _("Characteristics"), "colspan": 10},
+            {"name": _("Characteristics"), "colspan": 4},
             {"name": _("Assets"), "colspan": 4},
             {"name": _("Depreciation"), "colspan": 4},
             {"name": _("Book Value"), "colspan": 1}
@@ -324,8 +324,8 @@ class AssetsReportCustomHandler(models.AbstractModel):
                                                                        al[
                                                                            "asset_date"]) or "",
                 "method": (al["asset_method"] == "linear" and _("Linear")) or (
-                            al["asset_method"] == "degressive" and _(
-                        "Declining")) or _("Dec. then Straight"),
+                        al["asset_method"] == "degressive" and _(
+                    "Declining")) or _("Dec. then Straight"),
                 "duration_rate": asset_depreciation_rate,
                 "assets_date_from": asset_opening,
                 "assets_plus": asset_add,
@@ -466,6 +466,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
         if analytic_account_ids:
             analytical_query = 'AND asset.analytic_distribution ?| array[%(analytic_account_ids)s]'
             query_params['analytic_account_ids'] = analytic_account_ids
+
         lang = self.env.user.lang or get_lang(self.env).code
         project_site_name = f"COALESCE(project_sites.name->>'{lang}', project_sites.name->>'en_US')" if \
             self.pool[
@@ -498,7 +499,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                    account.code AS account_code,
                    account.name AS account_name,
                    account.id AS account_id,
-                   asset_model.name as asset_model_name,
+                   (select name from account_asset where id=asset.model_id) as asset_model_name,
                    COALESCE(SUM(move.depreciation_value) FILTER (WHERE move.date < %(date_from)s AND {move_filter}), 0) + COALESCE(asset.already_depreciated_amount_import, 0) AS depreciated_before,
                    COALESCE(SUM(move.depreciation_value) FILTER (WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter}), 0) AS depreciated_during,
                    COALESCE(SUM(move.depreciation_value) FILTER (WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.asset_number_days IS NULL), 0) AS asset_disposal_value
@@ -506,10 +507,8 @@ class AssetsReportCustomHandler(models.AbstractModel):
          LEFT JOIN account_account AS account ON asset.account_asset_id = account.id
          LEFT JOIN account_move move ON move.asset_id = asset.id
          LEFT JOIN account_move reversal ON reversal.reversed_entry_id = move.id
-         LEFT JOIN account_analytic_account as project_sites on asset.project_site_id = project_sites.id  
-        LEFT JOIN account_analytic_account as co_locations on asset.co_location = co_locations.id  
-                LEFT JOIN account_asset as asset_model on asset.model_id = asset_model.id  
-
+         LEFT JOIN account_analytic_account as project_sites on asset.project_site_id = project_sites.id
+         LEFT JOIN account_analytic_account as co_locations on asset.co_location = co_locations.id
              WHERE asset.company_id in %(company_ids)s
                AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
                AND (asset.disposal_date >= %(date_from)s OR asset.disposal_date IS NULL)
@@ -519,10 +518,9 @@ class AssetsReportCustomHandler(models.AbstractModel):
                {prefix_query}
                {account_query}
                {analytical_query}
-          GROUP BY asset.id, account.id,project_sites.id,co_locations.id,asset_model.id
-          ORDER BY account.code, asset.acquisition_date  LIMIT 1 OFFSET 1;
+          GROUP BY asset.id, account.id,project_sites.id,co_locations.id
+          ORDER BY account.code, asset.acquisition_date;
         """
-
         self._cr.execute(sql, query_params)
         results = self._cr.dictfetchall()
         return results
@@ -569,7 +567,8 @@ class AccountReport(models.Model):
     _inherit = 'account.report'
 
     def _inject_report_into_xlsx_sheet(self, options, workbook, sheet):
-        if options["available_variants"][0]["name"] == 'Tasc Depreciation Schedule':
+        if options["available_variants"][0][
+            "name"] == 'Tasc Depreciation Schedule':
             def write_with_colspan(sheet, x, y, value, colspan, style):
                 if colspan == 1:
                     sheet.write(y, x, value, style)

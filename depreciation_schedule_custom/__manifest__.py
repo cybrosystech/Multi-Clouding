@@ -15,6 +15,11 @@
             'report/account_assets_custom_report_view.xml',
             'report/account_asset.xml',
         ],
+    # 'assets': {
+    #     'web.assets_backend': [
+    #         'depreciation_schedule_custom/static/src/components/**/*',
+    #     ],
+    # },
     'installable': True,
     'auto_install': False,
     'application': False,

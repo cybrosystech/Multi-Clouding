@@ -2,7 +2,6 @@
 <odoo>
     <data>
 
-
         <record id="assets_report_depreciation_schedule" model="account.report">
             <field name="name">Tasc Depreciation Schedule</field>
             <field name="filter_hierarchy">optional</field>
