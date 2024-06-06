@@ -196,7 +196,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                                               'date_to'])
 
         options['custom_columns_subheaders'] = [
-            {"name": _("Characteristics"), "colspan": 4},
+            {"name": _("Characteristics"), "colspan": 11},
             {"name": _("Assets"), "colspan": 4},
             {"name": _("Depreciation"), "colspan": 4},
             {"name": _("Book Value"), "colspan": 1}
@@ -361,6 +361,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                 "co_location": al["co_location"],
                 "asset_model": al["asset_model_name"],
                 "serial_no": al["serial_no"],
+                "additional_info": al["additional_info"],
             }
 
             lines.append(
@@ -512,6 +513,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                        {co_loc_name} as co_location,
                        asset.capex_type as capex_type,
                        asset.sequence_number as sequence_number,
+                       asset.additional_info as additional_info,
                        asset.method_number AS asset_method_number,
                        asset.method_period AS asset_method_period,
                        asset.method_progress_factor AS asset_method_progress_factor,
@@ -562,6 +564,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                                {co_loc_name} as co_location,
                                asset.capex_type as capex_type,
                                asset.sequence_number as sequence_number,
+                               asset.additional_info as additional_info,
                                asset.method_number AS asset_method_number,
                                asset.method_period AS asset_method_period,
                                asset.method_progress_factor AS asset_method_progress_factor,

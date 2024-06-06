@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <record id="account_asset_view" model="ir.ui.view">
+            <field name="name">account.assets.form.inherit.depreciation.schedule.custom</field>
+            <field name="model">account.asset</field>
+            <field name="inherit_id"
+                   ref="assets_sub_models_config.account_asset_sub_model_inherit_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='value_residual_original']"
+                       position="after">
+                    <field name="additional_info"
+                    />
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
