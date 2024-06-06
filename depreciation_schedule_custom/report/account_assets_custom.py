@@ -32,13 +32,32 @@ class AssetsReportCustomHandler(models.AbstractModel):
 
         lines, totals_by_column_group = self._generate_report_lines_without_grouping(
             report, options)
-        # add the groups by account
-        if options['assets_groupby_account']:
-            lines = self._group_by_account(report, lines, options)
+        if options["available_variants"][0][
+            "name"] == 'Tasc Depreciation Schedule':
+
+            if self.env.context.get('is_xlsx'):
+                # add the groups by account
+
+                options['assets_groupby_account'] = True
+                if options['assets_groupby_account']:
+                    lines = self._group_by_account(report, lines, options)
+                else:
+                    lines = report._regroup_lines_by_name_prefix(options, lines,
+                                                                 '_report_expand_unfoldable_line_assets_report_prefix_group',
+                                                                 0)
         else:
-            lines = report._regroup_lines_by_name_prefix(options, lines,
-                                                         '_report_expand_unfoldable_line_assets_report_prefix_group',
-                                                         0)
+            # add the groups by account
+
+            options['assets_groupby_account'] = True
+            if options['assets_groupby_account']:
+                lines = self._group_by_account(report, lines, options)
+            else:
+                lines = report._regroup_lines_by_name_prefix(options, lines,
+                                                             '_report_expand_unfoldable_line_assets_report_prefix_group',
+                                                             0)
+
+
+        # add the groups by account
 
         # add the total line
         total_columns = []
@@ -185,7 +204,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
 
         # Group by account by default
         groupby_activated = (previous_options or {}).get(
-            'assets_groupby_account', True)
+            'assets_groupby_account', False)
         options['assets_groupby_account'] = groupby_activated
         # If group by account is activated, activate the hierarchy (which will group by account group as well) if
         # the company has at least one account group, otherwise only group by account
