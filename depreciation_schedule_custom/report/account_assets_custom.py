@@ -461,6 +461,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                 self.env['account.report'].get_report_company_ids(options)),
             'include_draft': options.get('all_entries', False),
             'limit': 50,
+            'offset': 0,
         }
 
         prefix_query = ''
@@ -593,7 +594,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                            {account_query}
                            {analytical_query}
                       GROUP BY asset.id, account.id,project_sites.id,co_locations.id
-                      ORDER BY account.code, asset.name LIMIT %(limit)s;
+                      ORDER BY asset.name LIMIT %(limit)s OFFSET %(offset)s;
                     """
             self._cr.execute(sql, query_params)
             results = self._cr.dictfetchall()
