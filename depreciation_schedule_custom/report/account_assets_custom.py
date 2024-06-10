@@ -596,7 +596,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                                 AND asset.state NOT IN ('model', 'draft', 'cancelled') 
                                 AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
                                 AND asset.active = 't'
-                                
+                                {account_query}
                               GROUP BY 
                                 asset.id, 
                                 account.id, 
@@ -710,6 +710,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                       AND asset.state NOT IN ('model', 'draft', 'cancelled') 
                       AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
                       AND asset.active = 't'
+                      {account_query}
                     GROUP BY 
                       asset.id, 
                       account.id, 
