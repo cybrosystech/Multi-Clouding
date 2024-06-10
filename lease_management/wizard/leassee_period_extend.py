@@ -19,11 +19,13 @@ class LeaseePeriodExtend(models.TransientModel):
     incentives_received_type = fields.Selection(default="receivable", selection=[('receivable', 'Receivable'), ('rent_free', 'Rent Free'), ], required=True, )
     initial_direct_cost = fields.Float(string="", default=0.0, required=False, )
     installment_amount = fields.Float(string="", default=0.0, required=False, )
-    increasement_rate = fields.Float(default=1, required=False, )
+    increasement_rate = fields.Float(default=0, required=False, )
     increasement_frequency = fields.Integer(default=1, required=False, )
     inception_date = fields.Date(default=lambda self: fields.Datetime.now(),
                                  required=False, )
     security_amount = fields.Float(string="Security Amount", help="Security Amount")
+    interest_rate = fields.Float(string="Interest Rate %", default=0.0,
+                                 required=False, digits=(16, 5), tracking=True)
 
     @api.model
     def default_get(self, fields):
@@ -57,6 +59,7 @@ class LeaseePeriodExtend(models.TransientModel):
                 'company_id': self.env.company.id,
                 'security_amount': self.security_amount,
                 'security_prepaid_account': contract.security_prepaid_account.id,
+                'interest_rate': self.interest_rate,
             })
         else:
             new_contract = contract.copy({
@@ -78,6 +81,7 @@ class LeaseePeriodExtend(models.TransientModel):
                 'company_id': self.env.company.id,
                 'security_amount': self.security_amount,
                 'security_prepaid_account': contract.security_prepaid_account.id,
+                'interest_rate': self.interest_rate,
             })
         contract.state = 'extended'
         new_contract.action_activate()
