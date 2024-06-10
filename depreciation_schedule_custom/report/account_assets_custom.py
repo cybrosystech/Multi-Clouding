@@ -592,10 +592,11 @@ class AssetsReportCustomHandler(models.AbstractModel):
                               WHERE 
                                 asset.active 
                                 AND (asset.disposal_date >=  %(date_from)s OR asset.disposal_date IS NULL)
-                                AND asset.company_id = 1 
+                                AND asset.company_id in %(company_ids)s
                                 AND asset.state NOT IN ('model', 'draft', 'cancelled') 
                                 AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
                                 AND asset.active = 't'
+                                
                               GROUP BY 
                                 asset.id, 
                                 account.id, 
@@ -705,7 +706,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                     WHERE 
                       asset.active 
                       AND (asset.disposal_date >=  %(date_from)s OR asset.disposal_date IS NULL)
-                      AND asset.company_id = 1 
+                      AND asset.company_id in %(company_ids)s
                       AND asset.state NOT IN ('model', 'draft', 'cancelled') 
                       AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
                       AND asset.active = 't'
