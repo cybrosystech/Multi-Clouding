@@ -38,7 +38,7 @@ class assets_report(models.AbstractModel):
         return [
             [
                 {'name': ''},
-                {'name': _('Characteristics'), 'colspan': 11},
+                {'name': _('Characteristics'), 'colspan': 12},
                 {'name': _('Assets'), 'colspan': 4},
                 {'name': _('Depreciation'), 'colspan': 4},
                 {'name': _('Book Value')},
@@ -57,6 +57,7 @@ class assets_report(models.AbstractModel):
                 {'name': _('Capex Type'), 'class': 'text-center'},
                 {'name': _('Asset Sequence Number'), 'class': 'text-center'},
                 {'name': _('Serial Number'), 'class': 'text-center'},
+                {'name': _('Additional Info'), 'class': 'text-center'},
 
                 {'name': _('Rate'), 'class': 'number', 'title': _(
                     'In percent.<br>For a linear method, the depreciation rate is computed per year.<br>For a declining method, it is the declining factor'),
@@ -386,7 +387,8 @@ class assets_report(models.AbstractModel):
                         {'name': al['sequence_number'],
                          'no_format_name': ''},
                         {'name': al['serial_no'], 'no_format_name': ''},
-
+                        {'name': al['additional_info'],
+                         'no_format_name': ''},
                         {'name': asset_depreciation_rate, 'no_format_name': ''},
                         {'name': self.format_value(asset_opening),
                          'no_format_name': asset_opening},  # Assets
@@ -422,6 +424,7 @@ class assets_report(models.AbstractModel):
             'name': _('Total'),
             'columns': [
                 {'name': ''},  # Characteristics
+                {'name': ''},
                 {'name': ''},
                 {'name': ''},
                 {'name': ''},
@@ -481,6 +484,7 @@ class assets_report(models.AbstractModel):
                                    asset.state as asset_state,
                                    asset.capex_type as capex_type,
                                    asset.sequence_number as sequence_number,
+                                   asset.additional_info as additional_info,
                                    asset.model_id as asset_model,
                                    account.code as account_code,
                                    account.name as account_name,
@@ -609,6 +613,7 @@ class assets_report(models.AbstractModel):
                                    asset.method_progress_factor as asset_method_progress_factor,
                                    asset.state as asset_state,
                                    asset.capex_type as capex_type,
+                                   asset.additional_info as additional_info,
                                    asset.sequence_number as sequence_number,
                                    account.code as account_code,
                                    account.name as account_name,

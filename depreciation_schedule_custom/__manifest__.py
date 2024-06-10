@@ -12,6 +12,7 @@
 
     'data':
         [
+            'views/account_asset_views.xml',
             'report/account_assets_custom_report_view.xml',
         ],
     'qweb': [
