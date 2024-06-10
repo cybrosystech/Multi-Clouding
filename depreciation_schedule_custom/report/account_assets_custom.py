@@ -493,54 +493,6 @@ class AssetsReportCustomHandler(models.AbstractModel):
                 'account.analytic.account'].name.translate else 'co_locations.name'
 
         if self.env.context.get('is_xlsx'):
-
-            # sql = f"""
-            #     SELECT asset.id AS asset_id,
-            #            asset.parent_id AS parent_id,
-            #            asset.name AS asset_name,
-            #            asset.serial_no as serial_no,
-            #            asset.original_value AS asset_original_value,
-            #            asset.currency_id AS asset_currency_id,
-            #            COALESCE(asset.salvage_value, 0) as asset_salvage_value,
-            #            MIN(move.date) AS asset_date,
-            #            asset.disposal_date AS asset_disposal_date,
-            #            asset.acquisition_date AS asset_acquisition_date,
-            #            asset.method AS asset_method,
-            #            {project_site_name} as project_site,
-            #            {co_loc_name} as co_location,
-            #            asset.capex_type as capex_type,
-            #            asset.sequence_number as sequence_number,
-            #            asset.additional_info as additional_info,
-            #            asset.method_number AS asset_method_number,
-            #            asset.method_period AS asset_method_period,
-            #            asset.method_progress_factor AS asset_method_progress_factor,
-            #            asset.state AS asset_state,
-            #            asset.company_id AS company_id,
-            #            account.code AS account_code,
-            #            account.name AS account_name,
-            #            account.id AS account_id,
-            #            (select name from account_asset where id=asset.model_id) as asset_model_name,
-            #            COALESCE(SUM(move.depreciation_value) FILTER (WHERE move.date < %(date_from)s AND {move_filter}), 0) + COALESCE(asset.already_depreciated_amount_import, 0) AS depreciated_before,
-            #            COALESCE(SUM(move.depreciation_value) FILTER (WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter}), 0) AS depreciated_during,
-            #            COALESCE(SUM(move.depreciation_value) FILTER (WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.asset_number_days IS NULL), 0) AS asset_disposal_value
-            #       FROM account_asset AS asset
-            #  LEFT JOIN account_account AS account ON asset.account_asset_id = account.id
-            #  LEFT JOIN account_move move ON move.asset_id = asset.id
-            #  LEFT JOIN account_move reversal ON reversal.reversed_entry_id = move.id
-            #  LEFT JOIN account_analytic_account as project_sites on asset.project_site_id = project_sites.id
-            #  LEFT JOIN account_analytic_account as co_locations on asset.co_location = co_locations.id
-            #      WHERE asset.company_id in %(company_ids)s
-            #        AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
-            #        AND (asset.disposal_date >= %(date_from)s OR asset.disposal_date IS NULL)
-            #        AND (asset.state not in ('model', 'draft', 'cancelled') OR (asset.state = 'draft' AND %(include_draft)s))
-            #        AND asset.active = 't'
-            #        AND reversal.id IS NULL
-            #        {prefix_query}
-            #        {account_query}
-            #        {analytical_query}
-            #   GROUP BY asset.id, account.id,project_sites.id,co_locations.id
-            #   ORDER BY account.code;
-            # """
             sql = f"""SELECT 
                                 asset.id AS asset_id, 
                                 asset.parent_id AS parent_id, 
@@ -596,7 +548,6 @@ class AssetsReportCustomHandler(models.AbstractModel):
                                 AND asset.state NOT IN ('model', 'draft', 'cancelled') 
                                 AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
                                 AND asset.active = 't'
-                                {account_query}
                               GROUP BY 
                                 asset.id, 
                                 account.id, 
@@ -608,53 +559,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
             results = self._cr.dictfetchall()
             return results
         else:
-            # sql = f"""
-            #             SELECT asset.id AS asset_id,
-            #                    asset.parent_id AS parent_id,
-            #                    asset.name AS asset_name,
-            #                    asset.serial_no as serial_no,
-            #                    asset.original_value AS asset_original_value,
-            #                    asset.currency_id AS asset_currency_id,
-            #                    COALESCE(asset.salvage_value, 0) as asset_salvage_value,
-            #                    MIN(move.date) AS asset_date,
-            #                    asset.disposal_date AS asset_disposal_date,
-            #                    asset.acquisition_date AS asset_acquisition_date,
-            #                    asset.method AS asset_method,
-            #                    {project_site_name} as project_site,
-            #                    {co_loc_name} as co_location,
-            #                    asset.capex_type as capex_type,
-            #                    asset.sequence_number as sequence_number,
-            #                    asset.additional_info as additional_info,
-            #                    asset.method_number AS asset_method_number,
-            #                    asset.method_period AS asset_method_period,
-            #                    asset.method_progress_factor AS asset_method_progress_factor,
-            #                    asset.state AS asset_state,
-            #                    asset.company_id AS company_id,
-            #                    account.code AS account_code,
-            #                    account.name AS account_name,
-            #                    account.id AS account_id,
-            #                    (select name from account_asset where id=asset.model_id) as asset_model_name,
-            #                    COALESCE(SUM(move.depreciation_value) FILTER (WHERE move.date < %(date_from)s AND {move_filter}), 0) + COALESCE(asset.already_depreciated_amount_import, 0) AS depreciated_before,
-            #                    COALESCE(SUM(move.depreciation_value) FILTER (WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter}), 0) AS depreciated_during,
-            #                    COALESCE(SUM(move.depreciation_value) FILTER (WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.asset_number_days IS NULL), 0) AS asset_disposal_value
-            #               FROM account_asset AS asset
-            #          LEFT JOIN account_account AS account ON asset.account_asset_id = account.id
-            #          LEFT JOIN account_move move ON move.asset_id = asset.id
-            #          LEFT JOIN account_move reversal ON reversal.reversed_entry_id = move.id
-            #          LEFT JOIN account_analytic_account as project_sites on asset.project_site_id = project_sites.id
-            #          LEFT JOIN account_analytic_account as co_locations on asset.co_location = co_locations.id
-            #              WHERE asset.company_id in %(company_ids)s
-            #                AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
-            #                AND (asset.disposal_date >= %(date_from)s OR asset.disposal_date IS NULL)
-            #                AND (asset.state not in ('model', 'draft', 'cancelled') OR (asset.state = 'draft' AND %(include_draft)s))
-            #                AND asset.active = 't'
-            #                AND reversal.id IS NULL
-            #                {prefix_query}
-            #                {account_query}
-            #                {analytical_query}
-            #           GROUP BY asset.id, account.id,project_sites.id,co_locations.id
-            #           LIMIT %(limit)s;
-            #         """
+
             sql = f"""SELECT 
                       asset.id AS asset_id, 
                       asset.parent_id AS parent_id, 
@@ -710,7 +615,6 @@ class AssetsReportCustomHandler(models.AbstractModel):
                       AND asset.state NOT IN ('model', 'draft', 'cancelled') 
                       AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
                       AND asset.active = 't'
-                      {account_query}
                     GROUP BY 
                       asset.id, 
                       account.id, 
