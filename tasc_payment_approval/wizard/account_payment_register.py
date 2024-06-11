@@ -12,7 +12,7 @@ def _create_payment_vals_from_batch(self, batch_result):
     else:
         # partner_bank_id = batch_result['payment_values']['partner_bank_id']
         if batch_result['payment_values']['partner_bank_id']:
-            partner_bank_id = batch_result['key_values']['partner_bank_id']
+            partner_bank_id = batch_result['payment_values']['partner_bank_id']
         elif batch_result['payment_values']['partner_id']:
             partner_id = self.env['res.partner'].browse(
                 batch_result['payment_values']['partner_id'])
