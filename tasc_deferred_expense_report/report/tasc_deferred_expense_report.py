@@ -217,7 +217,6 @@ class TascDeferredExpenseReport(models.AbstractModel):
         line_vals_per_account_id = {}
         for line in lines:
             parent_account_id = line.get('move_account_id')
-
             model, res_id = report._get_model_info_from_id(line['id'])
             assert model == 'account.move'
 
@@ -306,9 +305,8 @@ class TascDeferredExpenseReport(models.AbstractModel):
 
         account_query = ''
         if forced_account_id:
-            account_query = "AND account.id = %(forced_account_id)s"
+            account_query = "AND deferred_account.id = %(forced_account_id)s"
             query_params['forced_account_id'] = forced_account_id
-
         analytical_query = ''
         analytic_account_ids = []
         if options.get('analytic_accounts') and not any(
@@ -355,13 +353,12 @@ class TascDeferredExpenseReport(models.AbstractModel):
                     count(unposted_deferred_moves.deferred_move_id) as unposted_deferred_moves,
                     sum(unposted_deferred_move_amounts.amount_total) as unposted_deferred_move_amount_total,
 	                sum(deferred_move_amounts.amount_total) as deferred_move_amount_total,
-	                                     {credit_account_name} as credit_account_name,
-
+	                {credit_account_name} as credit_account_name,
                     credit_account.id as credit_account_id
                     FROM account_move_deferred_rel AS amd
                     LEFT JOIN account_move move on move.id=amd.original_move_id
                     LEFT JOIN account_move_line aml ON aml.move_id = move.id
-                    LEFT JOIN account_account AS account ON aml.account_id = account.id
+                    LEFT JOIN account_account AS account ON aml.deferred_account_id = account.id
                     LEFT JOIN account_analytic_account as project_sites on aml.project_site_id = project_sites.id  
                     LEFT JOIN account_analytic_account as cc on aml.analytic_account_id = cc.id  
                     LEFT JOIN res_currency as currency on move.currency_id = currency.id  

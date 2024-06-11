@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_inherit_view_move_form" model="ir.ui.view">
+        <field name="name">account.move.inherit.atasc.account.assets</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook/page[@name='invoice_tab']/field[@name='invoice_line_ids']/tree/field[@name='analytic_distribution']"
+                   position="before">
+                <field name="deferred_account_id"  required="deferred_start_date != False or deferred_end_date != False"
+                      />
+
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

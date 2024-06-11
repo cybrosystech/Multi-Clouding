@@ -13,6 +13,7 @@
 
     'data':
         [
+            'views/account_move_views.xml',
             'report/tasc_deferred_expense_report.xml',
         ],
 
