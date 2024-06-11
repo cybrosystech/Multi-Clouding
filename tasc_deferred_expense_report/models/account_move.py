@@ -17,7 +17,6 @@ class AccountMove(models.Model):
         """
         Generates the deferred entries for the invoice.
         """
-        print("_generate_deferred_entries")
         self.ensure_one()
         if self.is_entry():
             raise UserError(_("You cannot generate deferred entries for a miscellaneous journal entry."))
@@ -71,15 +70,27 @@ class AccountMove(models.Model):
             # Create the deferred entries for the periods [deferred_start_date, deferred_end_date]
             remaining_balance = line.balance
             for period_index, period in enumerate(periods):
-                deferral_move = self.create({
-                    'move_type': 'entry',
-                    'deferred_original_move_ids': [Command.set(line.move_id.ids)],
-                    'journal_id': deferred_journal.id,
-                    'partner_id': line.partner_id.id,
-                    'date': period[1],
-                    'auto_post': 'at_date',
-                    'ref': ref,
-                })
+                if period[1] >= self.invoice_date and period[1]<= self.date:
+                    deferral_move = self.create({
+                        'move_type': 'entry',
+                        'deferred_original_move_ids': [Command.set(line.move_id.ids)],
+                        'journal_id': deferred_journal.id,
+                        'partner_id': line.partner_id.id,
+                        'date': self.date,
+                        'auto_post': 'at_date',
+                        'ref': ref,
+                    })
+                else:
+                    deferral_move = self.create({
+                        'move_type': 'entry',
+                        'deferred_original_move_ids': [
+                            Command.set(line.move_id.ids)],
+                        'journal_id': deferred_journal.id,
+                        'partner_id': line.partner_id.id,
+                        'date': period[1],
+                        'auto_post': 'at_date',
+                        'ref': ref,
+                    })
                 # For the last deferral move the balance is forced to remaining balance to avoid rounding errors
                 force_balance = remaining_balance if period_index == len(periods) - 1 else None
                 # Same as before, to avoid adding taxes for deferred moves.
