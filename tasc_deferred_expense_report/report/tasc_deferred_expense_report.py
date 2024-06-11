@@ -198,7 +198,7 @@ class TascDeferredExpenseReport(models.AbstractModel):
                 "original_amount": tot_amt,
                 "deferred_amount": posted_amt,
                 "remaining_amount": unposted_amt,
-                "expense_account_id": al["credit_account_name"],
+                "expense_account_id": al["exp_account_name"],
             }
 
             lines.append(
@@ -331,9 +331,9 @@ class TascDeferredExpenseReport(models.AbstractModel):
         account_name = f"COALESCE(account.name->>'{lang}', account.name->>'en_US')" if \
             self.pool[
                 'account.account'].name.translate else 'account.name'
-        credit_account_name = f"COALESCE(credit_account.name->>'{lang}', credit_account.name->>'en_US')" if \
+        exp_account_name = f"COALESCE(exp_account.name->>'{lang}', exp_account.name->>'en_US')" if \
             self.pool[
-                'account.account'].name.translate else 'credit_account.name'
+                'account.account'].name.translate else 'exp_account.name'
 
         sql = f"""            
                   SELECT  
@@ -353,8 +353,8 @@ class TascDeferredExpenseReport(models.AbstractModel):
                     count(unposted_deferred_moves.deferred_move_id) as unposted_deferred_moves,
                     sum(unposted_deferred_move_amounts.amount_total) as unposted_deferred_move_amount_total,
 	                sum(deferred_move_amounts.amount_total) as deferred_move_amount_total,
-	                {credit_account_name} as credit_account_name,
-                    credit_account.id as credit_account_id
+	                {exp_account_name} as exp_account_name,
+                    exp_account.id as exp_account
                     FROM account_move_deferred_rel AS amd
                     LEFT JOIN account_move move on move.id=amd.original_move_id
                     LEFT JOIN account_move_line aml ON aml.move_id = move.id
@@ -362,8 +362,7 @@ class TascDeferredExpenseReport(models.AbstractModel):
                     LEFT JOIN account_analytic_account as project_sites on aml.project_site_id = project_sites.id  
                     LEFT JOIN account_analytic_account as cc on aml.analytic_account_id = cc.id  
                     LEFT JOIN res_currency as currency on move.currency_id = currency.id  
-                    LEFT JOIN account_move_line credit_aml ON credit_aml.move_id = move.id AND credit_aml.credit != 0
-                    LEFT JOIN account_account AS credit_account ON credit_aml.account_id = credit_account.id
+                    LEFT JOIN account_account AS exp_account ON aml.account_id = exp_account.id
                     
                                         LEFT JOIN (
                                         SELECT
@@ -410,7 +409,7 @@ class TascDeferredExpenseReport(models.AbstractModel):
                 ((move.date <= %(date_to)s and move.date >= %(date_from)s) or (amd.original_move_id in (select amdr.original_move_id from account_move amv join account_move_deferred_rel amdr 
 							on amdr.deferred_move_id = amv.id where amv.date <=  %(date_to)s and amv.date >=  %(date_from)s)))
                {prefix_query}
-                GROUP BY  account.id,move.id,aml.id,project_sites.id,cc.id,currency.id,credit_account.id
+                GROUP BY  account.id,move.id,aml.id,project_sites.id,cc.id,currency.id,exp_account.id
                 ORDER BY account.code
                 """
         self._cr.execute(sql, query_params)
