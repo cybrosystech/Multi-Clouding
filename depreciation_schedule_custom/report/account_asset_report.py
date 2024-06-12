@@ -191,6 +191,8 @@ class AssetsReportCustomHandler(models.AbstractModel):
                 apex_type = '5G CAPEX'
             elif al["capex_type"] == 'other_capex':
                 apex_type = 'Other CAPEX'
+            elif al["capex_type"] == 'transferred_capex':
+                apex_type = 'Transferred CAPEX'
             else:
                 apex_type = ''
 

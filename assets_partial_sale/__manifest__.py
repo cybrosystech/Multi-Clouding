@@ -15,7 +15,7 @@
             'views/asset_sell_inherit_view.xml',
             'views/account_aaset_form_capex_inherit.xml',
         ],
-  "license": 'AGPL-3',
+    "license": 'AGPL-3',
     'installable': True,
     'auto_install': False,
     'application': False,

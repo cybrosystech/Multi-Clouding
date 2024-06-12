@@ -3,7 +3,8 @@ from odoo import models, fields, _, api
 from math import copysign
 from odoo.tools import float_compare
 from odoo.exceptions import UserError
-from odoo.tools import float_compare, float_is_zero, formatLang, end_of,float_round
+from odoo.tools import float_compare, float_is_zero, formatLang, end_of, \
+    float_round
 from odoo.addons.lease_management.models.account_asset import AccountAsset
 
 
@@ -18,12 +19,14 @@ class AccountAssetPartialInherit(models.Model):
         ('tenant_capex', 'Tenant upgrade CAPEX'),
         ('expansion_capex', 'Expansion CAPEX'),
         ('5g_capex', '5G CAPEX'),
-        ('other_capex', 'Other CAPEX'), ])
+        ('other_capex', 'Other CAPEX'),
+        ('transferred_capex', 'Transferred CAPEX')])
     partial_disposal = fields.Boolean(copy=False)
     disposal_amount = fields.Float(default=0, readonly=True)
     asset_net = fields.Float(default=0, readonly=True)
     serial_no = fields.Char(string="Serial Number", help="Serial Number")
-    currency_id = fields.Many2one(related='', store=True, readonly=False,default=_get_default_currency)
+    currency_id = fields.Many2one(related='', store=True, readonly=False,
+                                  default=_get_default_currency)
 
     def set_to_close(self, invoice_line_ids, partial, partial_amount, date=None
                      ):
@@ -55,8 +58,6 @@ class AccountAssetPartialInherit(models.Model):
                 'domain': [('id', 'in', move_ids)]
             }
 
-
-
     def _get_disposal_moves(self, invoice_lines_list, disposal_date, partial,
                             partial_amount):
         """Create the move for the disposal of an asset.
@@ -72,14 +73,14 @@ class AccountAssetPartialInherit(models.Model):
                 return (0, 0, {
                     'name': asset.name,
                     'account_id': account.id,
-                    'balance':-asset.currency_id._convert(
+                    'balance': -asset.currency_id._convert(
                         from_amount=amount,
                         to_currency=asset.company_id.currency_id,
                         company=asset.company_id,
                         date=disposal_date,
                     ),
                     'analytic_distribution': analytic_distribution,
-                    'analytic_account_id':asset.analytic_account_id.id,
+                    'analytic_account_id': asset.analytic_account_id.id,
                     'project_site_id': asset.project_site_id.id,
                     'currency_id': asset.currency_id.id,
                     'amount_currency': -amount,
@@ -143,7 +144,8 @@ class AccountAssetPartialInherit(models.Model):
                 depreciation_account = asset.account_depreciation_id
                 for invoice_line in invoice_line_ids:
                     dict_invoice[invoice_line.account_id] = copysign(
-                        invoice_line.balance, -initial_amount) + dict_invoice.get(
+                        invoice_line.balance,
+                        -initial_amount) + dict_invoice.get(
                         invoice_line.account_id, 0)
                     invoice_amount += copysign(invoice_line.balance,
                                                -initial_amount)
@@ -187,21 +189,22 @@ class AccountAssetPartialInherit(models.Model):
                     remaining_long_lease_liability = -1 * self.leasee_contract_ids.remaining_long_lease_liability
                     line_datas = [(initial_amount, initial_account),
                                   (
-                        depreciated_amount,
-                        depreciation_account)] + list_accounts + [
-                        (
-                            leasee_difference,
-                            leasee_difference_account),
-                        (
-                            short_remaining_leasee_amount,
-                            short_leasee_account),
-                        (remaining_long_lease_liability,
-                         long_leasee_account),
-                    ]
+                                      depreciated_amount,
+                                      depreciation_account)] + list_accounts + [
+                                     (
+                                         leasee_difference,
+                                         leasee_difference_account),
+                                     (
+                                         short_remaining_leasee_amount,
+                                         short_leasee_account),
+                                     (remaining_long_lease_liability,
+                                      long_leasee_account),
+                                 ]
                 else:
 
                     line_datas = [(initial_amount, initial_account), (
-                        depreciated_amount, depreciation_account)] + list_accounts + [
+                        depreciated_amount,
+                        depreciation_account)] + list_accounts + [
                                      (difference, difference_account)]
                 vals = {
                     'asset_id': asset.id,

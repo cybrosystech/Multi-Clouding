@@ -329,6 +329,8 @@ class AssetsReportCustomHandler(models.AbstractModel):
                 apex_type = '5G CAPEX'
             elif al["capex_type"] == 'other_capex':
                 apex_type = 'Other CAPEX'
+            elif al["capex_type"] == 'transferred_capex':
+                apex_type = 'Transferred CAPEX'
             else:
                 apex_type = ''
 
@@ -636,7 +638,6 @@ class AssetsReportCustomHandler(models.AbstractModel):
         matched_prefix = self.env[
             'account.report']._get_prefix_groups_matched_prefix_from_line_id(
             line_dict_id)
-        print("matched_prefix",matched_prefix)
         report = self.env['account.report'].browse(options['report_id'])
 
         lines, _totals_by_column_group = self._generate_report_lines_without_grouping(
