@@ -14,7 +14,6 @@ class AssetSellPartial(models.TransientModel):
         invoice_line = self.env[
             'account.move.line'] if self.action == 'dispose' else self.invoice_line_id or self.invoice_id.invoice_line_ids
         if self._context['active_model'] == 'leasee.contract':
-            print("do_action")
             leasee_contract = self.env['leasee.contract'].browse(
                 int(self._context['active_id']))
             leasee_contract.termination_date = self.contract_end_date

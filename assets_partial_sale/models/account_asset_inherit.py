@@ -21,7 +21,6 @@ class AccountAssetPartialInherit(models.Model):
     serial_no = fields.Char(string="Serial Number", help="Serial Number")
 
     def set_to_close(self, invoice_line_id, partial, partial_amount, date=None):
-        print("set_to_close")
         self.ensure_one()
         disposal_date = date or fields.Date.today()
         if invoice_line_id and self.children_ids.filtered(
