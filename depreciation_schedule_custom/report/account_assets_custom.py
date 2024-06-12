@@ -159,7 +159,8 @@ class assets_report(models.AbstractModel):
             'tenant_capex': 'Tenant upgrade CAPEX',
             'expansion_capex': 'Expansion CAPEX',
             '5g_capex': '5G CAPEX',
-            'other_capex': 'Other CAPEX'
+            'other_capex': 'Other CAPEX',
+            'transferred_capex' : 'Transferred CAPEX',
         }
         if capex:
             return capex_type['' + capex]

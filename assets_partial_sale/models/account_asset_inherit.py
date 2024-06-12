@@ -13,19 +13,25 @@ class AccountAssetPartialInherit(models.Model):
         ('tenant_capex', 'Tenant upgrade CAPEX'),
         ('expansion_capex', 'Expansion CAPEX'),
         ('5g_capex', '5G CAPEX'),
-        ('other_capex', 'Other CAPEX'), ])
+        ('other_capex', 'Other CAPEX'),
+        ('transferred_capex', 'Transferred CAPEX')])
     partial_disposal = fields.Boolean(copy=False)
     disposal_amount = fields.Float(default=0, readonly=True)
     asset_net = fields.Float(default=0, readonly=True)
-    serial_no = fields.Char(string="Serial Number",help="Serial Number")
+    serial_no = fields.Char(string="Serial Number", help="Serial Number")
 
     def set_to_close(self, invoice_line_id, partial, partial_amount, date=None):
+        print("set_to_close")
         self.ensure_one()
         disposal_date = date or fields.Date.today()
-        if invoice_line_id and self.children_ids.filtered(lambda a: a.state in ('draft', 'open') or a.value_residual > 0):
-            raise UserError(_("You cannot automate the journal entry for an asset that has a running gross increase. Please use 'Dispose' on the increase(s)."))
+        if invoice_line_id and self.children_ids.filtered(
+                lambda a: a.state in ('draft', 'open') or a.value_residual > 0):
+            raise UserError(
+                _("You cannot automate the journal entry for an asset that has a running gross increase. Please use 'Dispose' on the increase(s)."))
         full_asset = self + self.children_ids
-        move_ids = full_asset._get_disposal_moves([invoice_line_id] * len(full_asset), disposal_date, partial, partial_amount)
+        move_ids = full_asset._get_disposal_moves(
+            [invoice_line_id] * len(full_asset), disposal_date, partial,
+            partial_amount)
         if not partial:
             full_asset.write({'state': 'close'})
         if move_ids:
@@ -281,8 +287,8 @@ class AccountAssetPartialInherit(models.Model):
     @api.depends('acquisition_date', 'original_move_line_ids', 'method_period',
                  'company_id')
     def _compute_first_depreciation_date(self):
-        res =  super(AccountAssetPartialInherit,
-                     self)._compute_first_depreciation_date()
+        res = super(AccountAssetPartialInherit,
+                    self)._compute_first_depreciation_date()
         for rec in self:
             if rec.prorata:
                 rec.prorata_date = rec.acquisition_date
