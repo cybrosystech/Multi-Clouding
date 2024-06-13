@@ -7,7 +7,7 @@
         <field name="state">code</field>
         <field name="code">action = records.asset_bulk_sale_dispose()</field>
     </record>
-        <record id="action_asset_sale_disposal" model="ir.actions.server">
+        <record id="action_asset_bulk_pause_depreciation" model="ir.actions.server">
         <field name="name">Bulk Pause Depreciation</field>
         <field name="model_id" ref="account_asset.model_account_asset"/>
         <field name="binding_model_id" ref="account_asset.model_account_asset"/>
