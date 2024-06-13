@@ -14,6 +14,7 @@
         [
             'security/ir.model.access.csv',
             'data/advance_data.xml',
+            'views/lease_contract_template_views.xml',
             'views/lease_contract_inherit_security.xml',
             'views/lease_security_advance_view.xml',
         ],

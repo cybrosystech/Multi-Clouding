@@ -5,6 +5,8 @@ from dateutil.relativedelta import relativedelta
 
 import logging
 
+from odoo.exceptions import ValidationError
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -37,6 +39,16 @@ class LeaseePeriodExtend(models.TransientModel):
         res['interest_rate'] = lease.interest_rate
         res["security_amount"] = lease.security_amount
         return res
+
+    @api.constrains('installment_amount')
+    def on_save_installment_amount(self):
+        if self.installment_amount == 0.0:
+            raise ValidationError(_('Please enter installment amount'))
+
+    @api.constrains('interest_rate')
+    def on_save_interest_rate(self):
+        if self.interest_rate == 0.0:
+            raise ValidationError(_('Please enter interest rate'))
 
     def action_apply(self):
         contract = self.leasee_contract_id

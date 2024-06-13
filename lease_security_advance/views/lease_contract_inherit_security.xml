@@ -27,6 +27,7 @@
             </field>
             <field name="asset_model_id" position="after">
                 <field name="security_prepaid_account"/>
+                <field name="security_deferred_account"/>
             </field>
         </field>
     </record>

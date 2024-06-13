@@ -9,10 +9,51 @@ class LeaseeContractInheritAdvance(models.Model):
     _inherit = 'leasee.contract'
 
     security_amount = fields.Monetary(currency_field='leasee_currency_id')
-    security_prepaid_account = fields.Many2one('account.account')
+    security_prepaid_account = fields.Many2one('account.account',
+                                               string="Security Expenses")
     security_advance_bool = fields.Boolean(default=False, copy=False)
     security_button_bool = fields.Boolean(default=False, copy=False)
     security_advance_id = fields.Many2one('leasee.security.advance', copy=False)
+    security_deferred_account = fields.Many2one('account.account',
+                                                string="Security Deferred Account")
+
+    @api.onchange('leasee_template_id')
+    def onchange_leasee_template_id(self):
+        self.update({
+            'lease_contract_period': self.leasee_template_id.lease_contract_period,
+            'lease_contract_period_type': self.leasee_template_id.lease_contract_period_type,
+            'terminate_month_number': self.leasee_template_id.terminate_month_number,
+            'terminate_fine': self.leasee_template_id.terminate_fine,
+            'type_terminate': self.leasee_template_id.type_terminate,
+            'extendable': self.leasee_template_id.extendable,
+            'interest_rate': self.leasee_template_id.interest_rate,
+            'payment_frequency_type': self.leasee_template_id.payment_frequency_type,
+            'payment_frequency': self.leasee_template_id.payment_frequency,
+            'increasement_rate': self.leasee_template_id.increasement_rate,
+            'increasement_frequency_type': self.leasee_template_id.increasement_frequency_type,
+            'increasement_frequency': self.leasee_template_id.increasement_frequency,
+            'prorata_computation_type': self.leasee_template_id.prorata_computation_type,
+            'asset_model_id': self.leasee_template_id.asset_model_id.id,
+            'lease_liability_account_id': self.leasee_template_id.lease_liability_account_id.id,
+            'long_lease_liability_account_id': self.leasee_template_id.long_lease_liability_account_id.id,
+            'provision_dismantling_account_id': self.leasee_template_id.provision_dismantling_account_id.id,
+            'terminate_account_id': self.leasee_template_id.terminate_account_id.id,
+            'interest_expense_account_id': self.leasee_template_id.interest_expense_account_id.id,
+            'terminate_product_id': self.leasee_template_id.terminate_product_id.id,
+            'installment_product_id': self.leasee_template_id.installment_product_id.id,
+            'extension_product_id': self.leasee_template_id.extension_product_id.id,
+            'installment_journal_id': self.leasee_template_id.installment_journal_id.id,
+            'initial_journal_id': self.leasee_template_id.initial_journal_id.id,
+            'analytic_account_id': self.leasee_template_id.analytic_account_id.id,
+            'project_site_id': self.leasee_template_id.project_site_id.id,
+
+            'analytic_distribution': self.analytic_distribution,
+            'incentives_account_id': self.leasee_template_id.incentives_account_id.id,
+            'incentives_product_id': self.leasee_template_id.incentives_product_id.id,
+            'initial_product_id': self.leasee_template_id.initial_product_id.id,
+            'security_prepaid_account': self.leasee_template_id.security_prepaid_account,
+            'security_deferred_account': self.leasee_template_id.security_deferred_account,
+        })
 
     def action_security_advance(self):
         for rec in self:
@@ -74,6 +115,7 @@ class LeaseeContractInheritAdvance(models.Model):
             'name': self.name + ' - ' + instalment.date.strftime(
                 '%d/%m/%Y'),
             'account_id': self.security_prepaid_account.id,
+            'deferred_account_id': self.security_deferred_account.id,
             'price_unit': amount,
             'quantity': 1,
             'analytic_account_id': self.analytic_account_id.id,
