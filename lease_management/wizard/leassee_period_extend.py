@@ -32,6 +32,10 @@ class LeaseePeriodExtend(models.TransientModel):
         res = super(LeaseePeriodExtend, self).default_get(fields)
         leasee_contract_id = self.env.context.get('active_id')
         res['leasee_contract_id'] = leasee_contract_id
+        lease = self.env['leasee.contract'].browse(leasee_contract_id)
+        res['installment_amount'] = lease.installment_amount
+        res['interest_rate'] = lease.interest_rate
+        res["security_amount"] = lease.security_amount
         return res
 
     def action_apply(self):
