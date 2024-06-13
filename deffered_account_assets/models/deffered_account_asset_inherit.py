@@ -167,6 +167,12 @@ class AccountAssetInherit(models.Model):
 
                 start_depreciation_date = period_end_depreciation_date + relativedelta(
                     days=1)
+        if self.accounting_date:
+            for i in depreciation_move_values:
+                if i['date'] < self.accounting_date:
+                    i.update({
+                        'date': self.accounting_date
+                    })
         return depreciation_move_values
 
     @api.depends('method_number', 'method_period', 'prorata_computation_type')
