@@ -23,6 +23,14 @@ class ProfitabilityReportWizard(models.TransientModel):
                                                     '=',
                                                     self.env.company.id)])
 
+    def default_site_rent(self):
+        profitability_managed = self.env['profitability.report.managed'].search(
+            [])
+        if profitability_managed:
+            return profitability_managed.site_rent.ids
+        else:
+            return []
+
     def default_investment_revenue(self):
         profitability = self.env['profitability.report.owned'].search([])
         if profitability.investment_revenue:
@@ -62,11 +70,6 @@ class ProfitabilityReportWizard(models.TransientModel):
         profitability = self.env['profitability.report.owned'].search([])
         if profitability.site_maintenance:
             return profitability.site_maintenance
-
-    # def default_site_maintenance_lim(self):
-    #     profitability = self.env['profitability.report.owned'].search([])
-    #     if profitability.site_maintenance_lim:
-    #         return profitability.site_maintenance_lim
 
     def default_insurance(self):
         profitability = self.env['profitability.report.owned'].search([])
@@ -128,20 +131,18 @@ class ProfitabilityReportWizard(models.TransientModel):
         if profitability.lease_finance_cost:
             return profitability.lease_finance_cost
 
-    # def default_analytic_account_group(self):
-    #     group = self.env['account.analytic.plan'].search(
-    #         [('name', 'ilike', 'owned')])
-    #     if not group:
-    #         raise UserError("Please configure analytic group account for Owned")
-    #     return group
-
     service_revenue = fields.Many2many('account.account', 'service_revenue_rel',
                                        string='Service Revenue',
                                        default=default_service_revenue)
+    site_rent_ids = fields.Many2many('account.account',
+                                     'site_rent_ids_relation',
+                                     string='Site Rent',
+                                     default=default_site_rent)
     investment_revenue = fields.Many2many('account.account',
                                           'investment_revenue_rel',
                                           string='Investment Revenue',
                                           default=default_investment_revenue)
+
     colocation = fields.Many2many('account.account', 'colocation_rel',
                                   string='Colocation',
                                   default=default_colocation)
@@ -158,9 +159,7 @@ class ProfitabilityReportWizard(models.TransientModel):
                                 default=default_discount)
     site_maintenance = fields.Many2many('account.account', 'site_maintenance',
                                         default=default_site_maintenance)
-    # site_maintenance_lim = fields.Many2many('account.account',
-    #                                         'site_maintenance_lim',
-    #                                         default=default_site_maintenance_lim)
+
     insurance = fields.Many2many('account.account', 'insurance',
                                  string="Insurance", default=default_insurance)
     energy_cost = fields.Many2many('account.account', 'energy_cost',
@@ -200,8 +199,7 @@ class ProfitabilityReportWizard(models.TransientModel):
                                           ('custom', 'Custom')]),
                               string='Periods', required=True,
                               default='this_month')
-    # analatyc_account_group = fields.Many2one('account.analytic.plan',
-    #                                          default=default_analytic_account_group)
+
     group = fields.Selection([
         ('managed', 'Managed'),
         ('owned', 'Owned')], 'Group', default='owned')
@@ -265,18 +263,17 @@ class ProfitabilityReportWizard(models.TransientModel):
         if self.from_date and self.to_date:
             if self.from_date > self.to_date:
                 raise UserError("Start date should be less than end date")
-        # if self.site_maintenance and self.site_maintenance_lim:
-        #     if not self.site_maintenance.code < self.site_maintenance_lim.code:
-        #         raise UserError("Please set the limit of site maintenance "
-        #                         "correctly")
+
         if self.fa_depreciation and self.fa_depreciation_lim:
             if not self.fa_depreciation.code < self.fa_depreciation_lim.code:
                 raise UserError("Please set the limit of Fa depreciation "
                                 "correctly")
         profitability = self.env['profitability.report.owned'].search([])
+
         if not profitability:
             self.env['profitability.report.owned'].create({
                 'service_revenue': self.service_revenue,
+                'site_rent_ids': self.site_rent_ids,
                 'investment_revenue': self.investment_revenue,
                 'colocation': self.colocation,
                 'pass_through_energy': self.pass_through_energy,
@@ -293,8 +290,10 @@ class ProfitabilityReportWizard(models.TransientModel):
                 'fa_depreciation': self.fa_depreciation,
                 'lease_finance_cost': self.lease_finance_cost
             })
+
         profitability.update({
             'service_revenue': self.service_revenue,
+            'site_rent_ids': self.site_rent_ids,
             'investment_revenue': self.investment_revenue,
             'colocation': self.colocation,
             'pass_through_energy': self.pass_through_energy,
@@ -309,12 +308,13 @@ class ProfitabilityReportWizard(models.TransientModel):
             'rou_depreciation': self.rou_depreciation,
             'fa_depreciation': self.fa_depreciation,
             'fa_depreciation_lim': self.fa_depreciation_lim,
-            'lease_finance_cost': self.lease_finance_cost
+            'lease_finance_cost': self.lease_finance_cost,
         })
         data = {
             'ids': self.ids,
             'model': self._name,
             'service_revenue_ids': self.service_revenue.ids,
+            'site_rent_ids': self.site_rent_ids.ids,
             'investment_revenue_ids': self.investment_revenue.ids,
             'colocation_ids': self.colocation.ids,
             'pass_through_energy_ids': self.pass_through_energy.ids,
@@ -353,15 +353,6 @@ class ProfitabilityReportWizard(models.TransientModel):
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
         account_ids = ''
         account_fa_depreciation_ids = ''
-        # query = '''
-        #         select id,name from account_analytic_account as analatyc_account
-        #         WHERE analatyc_account.analytic_account_type = 'project_site'
-        #         and analatyc_account.company_id = ''' + str(
-        #     data['company_id']) + '''
-        #         and analatyc_account.group_id = ''' + data['group']
-        #
-        # cr = self._cr
-        # cr.execute(query)
         lang = self.env.user.lang or get_lang(self.env).code
         cr = self._cr
         name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
@@ -384,16 +375,6 @@ class ProfitabilityReportWizard(models.TransientModel):
         cr.execute(query, params)
         project_site = cr.dictfetchall()
 
-        # if data['site_maintenance_code'] and data['site_maintenance_lim_code']:
-        #     query2 = '''
-        #             select id from account_account as account
-        #             where account.code BETWEEN \'''' + data['site_maintenance_code'] + '\' and \'' + data['site_maintenance_lim_code'] + "\'"
-        #
-        #     cr = self._cr
-        #     cr.execute(query2)
-        #     account_ids1 = cr.dictfetchall()
-        #     account_ids = [dic['id'] for dic in account_ids1]
-
         if data['fa_depreciation_code'] and data['fa_depreciation_lim_code']:
             query3 = '''
                             select id from account_account as account
@@ -404,7 +385,8 @@ class ProfitabilityReportWizard(models.TransientModel):
             cr = self._cr
             cr.execute(query3)
             account_ids_depreciation = cr.dictfetchall()
-            account_fa_depreciation_ids = [dic['id'] for dic in account_ids_depreciation]
+            account_fa_depreciation_ids = [dic['id'] for dic in
+                                           account_ids_depreciation]
 
         profitability_report = []
         for i in project_site:
@@ -412,59 +394,298 @@ class ProfitabilityReportWizard(models.TransientModel):
             prof_rep.update({
                 'project': i['name'],
             })
-            projects = self.env['account.move.line'].search(
-                [('project_site_id', '=', i['id']),
-                 ('move_id.date', '<=', data['to']),
-                 ('move_id.date', '>=', data['from']),
-                 ('parent_state', '=', 'posted'),
-                 ('company_id', '=', data['company_id'])])
 
-            service_revenue = projects.filtered(
-                lambda x: x.account_id.id in data['service_revenue_ids'])
-            total = sum(service_revenue.mapped('debit')) - sum(
-                service_revenue.mapped('credit'))
+            service_revenue_qry = """WITH filtered_projects AS (
+                                        SELECT
+                                            aml.debit,
+                                            aml.credit
+                                        FROM
+                                            account_move_line aml
+                                        JOIN
+                                            account_move am ON aml.move_id = am.id
+                                        WHERE
+                                            aml.project_site_id = %(project_site_id)s
+                                            AND am.date >= %(date_from)s
+                                            AND am.date <= %(date_to)s
+                                            AND am.state = 'posted'
+                                            AND aml.company_id = %(company_id)s
+                                            AND aml.account_id IN %(service_revenue_ids)s
+                                    )
+                                    SELECT
+                                        COALESCE(SUM(fp.debit), 0) - COALESCE(SUM(fp.credit), 0) AS total_service_revenue
+                                    FROM
+                                        filtered_projects fp;
+                                    """
+
+            cr.execute(service_revenue_qry, {
+                'company_id': data["company_id"],
+                'service_revenue_ids': tuple(data['service_revenue_ids']),
+                'date_from': data["from"],
+                'date_to': data["to"],
+                'project_site_id': i['id'],
+            })
+            service_revenue_res = cr.dictfetchall()
             prof_rep.update({
-                'service_revenue': total,
+                'service_revenue': service_revenue_res[0][
+                    'total_service_revenue'],
             })
 
-            colocation = projects.filtered(
-                lambda x: x.account_id.id in data['colocation_ids'])
-            total = sum(colocation.mapped('debit')) - sum(
-                colocation.mapped('credit'))
+            site_rents_qry = """WITH filtered_projects AS (
+                                                    SELECT
+                                                        aml.debit,
+                                                        aml.credit
+                                                    FROM
+                                                        account_move_line aml
+                                                    JOIN
+                                                        account_move am ON aml.move_id = am.id
+                                                    WHERE
+                                                        aml.project_site_id = %(project_site_id)s
+                                                        AND am.date >= %(date_from)s
+                                                        AND am.date <= %(date_to)s
+                                                        AND am.state = 'posted'
+                                                        AND aml.company_id = %(company_id)s
+                                                        AND aml.account_id IN %(site_rent_ids)s
+                                                )
+                                                SELECT
+                                                    COALESCE(SUM(fp.debit), 0) - COALESCE(SUM(fp.credit), 0) AS total_site_rents
+                                                FROM
+                                                    filtered_projects fp;
+                                                """
+
+            cr.execute(site_rents_qry, {
+                'company_id': data["company_id"],
+                'site_rent_ids': tuple(data['site_rent_ids']),
+                'date_from': data["from"],
+                'date_to': data["to"],
+                'project_site_id': i['id'],
+            })
+            site_rents_res = cr.dictfetchall()
             prof_rep.update({
-                'colocation': total,
+                'site_rent': site_rents_res[0][
+                    'total_site_rents'],
             })
 
-            investment_revenue = projects.filtered(
-                lambda x: x.account_id.id in data['investment_revenue_ids'])
-            total = sum(investment_revenue.mapped('debit')) - sum(
-                investment_revenue.mapped('credit'))
+            colocation_qry = """WITH filtered_projects AS (
+                                    SELECT
+                                        aml.debit,
+                                        aml.credit,
+                                        aml.account_id
+                                    FROM
+                                        account_move_line aml
+                                    JOIN
+                                        account_move am ON aml.move_id = am.id
+                                    WHERE
+                                        aml.project_site_id = %(project_site_id)s
+                                        AND am.date <= %(date_to)s
+                                        AND am.date >= %(date_from)s
+                                        AND am.state = 'posted'
+                                        AND aml.company_id = %(company_id)s
+                                ),
+                                colocation AS (
+                                    SELECT
+                                        fp.debit,
+                                        fp.credit
+                                    FROM
+                                        filtered_projects fp
+                                    WHERE
+                                        fp.account_id IN %(colocation_ids)s
+                                )
+                                SELECT
+                                    COALESCE(SUM(c.debit), 0) - COALESCE(SUM(c.credit), 0) AS total_colocation
+                                FROM
+                                    colocation c;
+                                """
+
+            cr.execute(colocation_qry, {
+                'company_id': data["company_id"],
+                'colocation_ids': tuple(data['colocation_ids']),
+                'date_from': data["from"],
+                'date_to': data["to"],
+                'project_site_id': i['id'],
+            })
+            colocation_res = cr.dictfetchall()
+
             prof_rep.update({
-                'investment_revenue': total,
+                'colocation': colocation_res[0]['total_colocation'],
             })
 
-            pass_through_energy = projects.filtered(
-                lambda x: x.account_id.id in data['pass_through_energy_ids'])
-            total = sum(pass_through_energy.mapped('debit')) - sum(
-                pass_through_energy.mapped('credit'))
+            investment_revenue_qry = """
+                                       WITH filtered_projects AS (
+                                        SELECT
+                                            aml.debit,
+                                            aml.credit,
+                                            aml.account_id
+                                        FROM
+                                            account_move_line aml
+                                        JOIN
+                                            account_move am ON aml.move_id = am.id
+                                        WHERE
+                                            aml.project_site_id = %(project_site_id)s
+                                            AND am.date <= %(date_to)s
+                                            AND am.date >= %(date_from)s
+                                            AND am.state = 'posted'
+                                            AND aml.company_id = %(company_id)s
+                                    ),
+                                    investment_revenue AS (
+                                        SELECT
+                                            fp.debit,
+                                            fp.credit
+                                        FROM
+                                            filtered_projects fp
+                                        WHERE
+                                            fp.account_id IN %(investment_revenue_ids)s
+                                    )
+                                    SELECT
+                                        COALESCE(SUM(c.debit), 0) - COALESCE(SUM(c.credit), 0) AS total_investment_revenue
+                                    FROM
+                                    investment_revenue c;
+                                    """
+            cr.execute(investment_revenue_qry, {
+                'company_id': data["company_id"],
+                'investment_revenue_ids': tuple(data['investment_revenue_ids']),
+                'date_from': data["from"],
+                'date_to': data["to"],
+                'project_site_id': i['id'],
+            })
+            investment_revenue_res = cr.dictfetchall()
+
             prof_rep.update({
-                'pass_through_energy': total,
+                'investment_revenue': investment_revenue_res[0][
+                    "total_investment_revenue"],
             })
 
-            discount = projects.filtered(
-                lambda x: x.account_id.id in data['discount_ids'])
-            total = sum(discount.mapped('debit')) - sum(
-                discount.mapped('credit'))
+            pass_through_energy_qry = """
+                                       WITH filtered_projects AS (
+                                        SELECT
+                                            aml.debit,
+                                            aml.credit,
+                                            aml.account_id
+                                        FROM
+                                            account_move_line aml
+                                        JOIN
+                                            account_move am ON aml.move_id = am.id
+                                        WHERE
+                                            aml.project_site_id = %(project_site_id)s
+                                            AND am.date <= %(date_to)s
+                                            AND am.date >= %(date_from)s
+                                            AND am.state = 'posted'
+                                            AND aml.company_id = %(company_id)s
+                                    ),
+                                    pass_through_energy AS (
+                                        SELECT
+                                            fp.debit,
+                                            fp.credit
+                                        FROM
+                                            filtered_projects fp
+                                        WHERE
+                                            fp.account_id IN %(pass_through_energy_ids)s
+                                    )
+                                    SELECT
+                                        COALESCE(SUM(c.debit), 0) - COALESCE(SUM(c.credit), 0) AS total_pass_through_energy
+                                    FROM
+                                    pass_through_energy c;
+                                    """
+            cr.execute(pass_through_energy_qry, {
+                'company_id': data["company_id"],
+                'pass_through_energy_ids': tuple(
+                    data['pass_through_energy_ids']),
+                'date_from': data["from"],
+                'date_to': data["to"],
+                'project_site_id': i['id'],
+            })
+            pass_through_energy_res = cr.dictfetchall()
             prof_rep.update({
-                'discount': total,
+                'pass_through_energy': pass_through_energy_res[0][
+                    "total_pass_through_energy"],
             })
 
-            active_sharing_fees = projects.filtered(
-                lambda x: x.account_id.id in data['active_sharing_fees_ids'])
-            total = sum(active_sharing_fees.mapped('debit')) - sum(
-                active_sharing_fees.mapped('credit'))
+            discount_qry = """
+                                       WITH filtered_projects AS (
+                                        SELECT
+                                            aml.debit,
+                                            aml.credit,
+                                            aml.account_id
+                                        FROM
+                                            account_move_line aml
+                                        JOIN
+                                            account_move am ON aml.move_id = am.id
+                                        WHERE
+                                            aml.project_site_id = %(project_site_id)s
+                                            AND am.date <= %(date_to)s
+                                            AND am.date >= %(date_from)s
+                                            AND am.state = 'posted'
+                                            AND aml.company_id = %(company_id)s
+                                    ),
+                                    discount AS (
+                                        SELECT
+                                            fp.debit,
+                                            fp.credit
+                                        FROM
+                                            filtered_projects fp
+                                        WHERE
+                                            fp.account_id IN %(discount_ids)s
+                                    )
+                                    SELECT
+                                        COALESCE(SUM(c.debit), 0) - COALESCE(SUM(c.credit), 0) AS total_discount
+                                    FROM
+                                    discount c;
+                                    """
+            cr.execute(discount_qry, {
+                'company_id': data["company_id"],
+                'discount_ids': tuple(data['discount_ids']),
+                'date_from': data["from"],
+                'date_to': data["to"],
+                'project_site_id': i['id'],
+            })
+            discount_res = cr.dictfetchall()
+
             prof_rep.update({
-                'active_sharing_fees': total,
+                'discount': discount_res[0]['total_discount'],
+            })
+
+            active_sharing_fees_qry = """
+                                       WITH filtered_projects AS (
+                                        SELECT
+                                            aml.debit,
+                                            aml.credit,
+                                            aml.account_id
+                                        FROM
+                                            account_move_line aml
+                                        JOIN
+                                            account_move am ON aml.move_id = am.id
+                                        WHERE
+                                            aml.project_site_id = %(project_site_id)s
+                                            AND am.date <= %(date_to)s
+                                            AND am.date >= %(date_from)s
+                                            AND am.state = 'posted'
+                                            AND aml.company_id = %(company_id)s
+                                    ),
+                                    active_sharing_fees AS (
+                                        SELECT
+                                            fp.debit,
+                                            fp.credit
+                                        FROM
+                                            filtered_projects fp
+                                        WHERE
+                                            fp.account_id IN %(active_sharing_fees_ids)s
+                                    )
+                                    SELECT
+                                        COALESCE(SUM(c.debit), 0) - COALESCE(SUM(c.credit), 0) AS total_active_sharing_fees
+                                    FROM
+                                    active_sharing_fees c;
+                                    """
+            cr.execute(active_sharing_fees_qry, {
+                'company_id': data["company_id"],
+                'active_sharing_fees_ids': tuple(
+                    data['active_sharing_fees_ids']),
+                'date_from': data["from"],
+                'date_to': data["to"],
+                'project_site_id': i['id'],
+            })
+            active_sharing_fees_res = cr.dictfetchall()
+            prof_rep.update({
+                'active_sharing_fees': active_sharing_fees_res[0][
+                    "total_active_sharing_fees"],
             })
 
             total_revenue = prof_rep['service_revenue'] + prof_rep[
@@ -475,47 +696,233 @@ class ProfitabilityReportWizard(models.TransientModel):
                 'total_revenue': total_revenue,
             })
 
-            site_maintenance = projects.filtered(
-                lambda x: x.account_id.id in data['site_maintenance_ids'])
-            total = sum(site_maintenance.mapped('debit')) - sum(
-                site_maintenance.mapped('credit'))
+            site_maintenance_qry = """
+                                                   WITH filtered_projects AS (
+                                                    SELECT
+                                                        aml.debit,
+                                                        aml.credit,
+                                                        aml.account_id
+                                                    FROM
+                                                        account_move_line aml
+                                                    JOIN
+                                                        account_move am ON aml.move_id = am.id
+                                                    WHERE
+                                                        aml.project_site_id = %(project_site_id)s
+                                                        AND am.date <= %(date_to)s
+                                                        AND am.date >= %(date_from)s
+                                                        AND am.state = 'posted'
+                                                        AND aml.company_id = %(company_id)s
+                                                ),
+                                                site_maintenance AS (
+                                                    SELECT
+                                                        fp.debit,
+                                                        fp.credit
+                                                    FROM
+                                                        filtered_projects fp
+                                                    WHERE
+                                                        fp.account_id IN %(site_maintenance_ids)s
+                                                )
+                                                SELECT
+                                                    COALESCE(SUM(c.debit), 0) - COALESCE(SUM(c.credit), 0) AS total_site_maintenance
+                                                FROM
+                                                site_maintenance c;
+                                                """
+            cr.execute(site_maintenance_qry, {
+                'company_id': data["company_id"],
+                'site_maintenance_ids': tuple(
+                    data['site_maintenance_ids']),
+                'date_from': data["from"],
+                'date_to': data["to"],
+                'project_site_id': i['id'],
+            })
+            site_maintenance_res = cr.dictfetchall()
             prof_rep.update({
-                'site_maintenance': total,
+                'site_maintenance': site_maintenance_res[0][
+                    "total_site_maintenance"],
             })
 
-            insurance = projects.filtered(
-                lambda x: x.account_id.id in data['insurance_ids'])
-            total = sum(insurance.mapped('debit')) - sum(
-                insurance.mapped('credit'))
+            insurance_qry = """
+                                                   WITH filtered_projects AS (
+                                                    SELECT
+                                                        aml.debit,
+                                                        aml.credit,
+                                                        aml.account_id
+                                                    FROM
+                                                        account_move_line aml
+                                                    JOIN
+                                                        account_move am ON aml.move_id = am.id
+                                                    WHERE
+                                                        aml.project_site_id = %(project_site_id)s
+                                                        AND am.date <= %(date_to)s
+                                                        AND am.date >= %(date_from)s
+                                                        AND am.state = 'posted'
+                                                        AND aml.company_id = %(company_id)s
+                                                ),
+                                                insurance AS (
+                                                    SELECT
+                                                        fp.debit,
+                                                        fp.credit
+                                                    FROM
+                                                        filtered_projects fp
+                                                    WHERE
+                                                        fp.account_id IN %(insurance_ids)s
+                                                )
+                                                SELECT
+                                                    COALESCE(SUM(c.debit), 0) - COALESCE(SUM(c.credit), 0) AS total_insurance
+                                                FROM
+                                                insurance c;
+                                                """
+            cr.execute(insurance_qry, {
+                'company_id': data["company_id"],
+                'insurance_ids': tuple(
+                    data['insurance_ids']),
+                'date_from': data["from"],
+                'date_to': data["to"],
+                'project_site_id': i['id'],
+            })
+            insurance_res = cr.dictfetchall()
             prof_rep.update({
-                'insurance': total,
+                'insurance': insurance_res[0]["total_insurance"],
             })
 
-            energy_cost = projects.filtered(
-                lambda x: x.account_id.id in data['energy_cost_ids'])
-            total = sum(energy_cost.mapped('debit')) - sum(
-                energy_cost.mapped('credit'))
+            energy_cost_qry = """
+                                                   WITH filtered_projects AS (
+                                                    SELECT
+                                                        aml.debit,
+                                                        aml.credit,
+                                                        aml.account_id
+                                                    FROM
+                                                        account_move_line aml
+                                                    JOIN
+                                                        account_move am ON aml.move_id = am.id
+                                                    WHERE
+                                                        aml.project_site_id = %(project_site_id)s
+                                                        AND am.date <= %(date_to)s
+                                                        AND am.date >= %(date_from)s
+                                                        AND am.state = 'posted'
+                                                        AND aml.company_id = %(company_id)s
+                                                ),
+                                                energy_cost AS (
+                                                    SELECT
+                                                        fp.debit,
+                                                        fp.credit
+                                                    FROM
+                                                        filtered_projects fp
+                                                    WHERE
+                                                        fp.account_id IN %(energy_cost_ids)s
+                                                )
+                                                SELECT
+                                                    COALESCE(SUM(c.debit), 0) - COALESCE(SUM(c.credit), 0) AS total_energy_cost
+                                                FROM
+                                                energy_cost c;
+                                                """
+            cr.execute(energy_cost_qry, {
+                'company_id': data["company_id"],
+                'energy_cost_ids': tuple(
+                    data['energy_cost_ids']),
+                'date_from': data["from"],
+                'date_to': data["to"],
+                'project_site_id': i['id'],
+            })
+            energy_cost_res = cr.dictfetchall()
+
             prof_rep.update({
-                'energy_cost': total,
+                'energy_cost': energy_cost_res[0]["total_energy_cost"],
             })
 
-            service_level_credit = projects.filtered(
-                lambda x: x.account_id.id in data['service_level_credit_ids'])
-            total = sum(service_level_credit.mapped('debit')) - sum(
-                service_level_credit.mapped('credit'))
+            service_level_credit_qry = """
+                                                   WITH filtered_projects AS (
+                                                    SELECT
+                                                        aml.debit,
+                                                        aml.credit,
+                                                        aml.account_id
+                                                    FROM
+                                                        account_move_line aml
+                                                    JOIN
+                                                        account_move am ON aml.move_id = am.id
+                                                    WHERE
+                                                        aml.project_site_id = %(project_site_id)s
+                                                        AND am.date <= %(date_to)s
+                                                        AND am.date >= %(date_from)s
+                                                        AND am.state = 'posted'
+                                                        AND aml.company_id = %(company_id)s
+                                                ),
+                                                service_level_credit AS (
+                                                    SELECT
+                                                        fp.debit,
+                                                        fp.credit
+                                                    FROM
+                                                        filtered_projects fp
+                                                    WHERE
+                                                        fp.account_id IN %(service_level_credit_ids)s
+                                                )
+                                                SELECT
+                                                    COALESCE(SUM(c.debit), 0) - COALESCE(SUM(c.credit), 0) AS total_service_level_credit
+                                                FROM
+                                                service_level_credit c;
+                                                """
+            cr.execute(service_level_credit_qry, {
+                'company_id': data["company_id"],
+                'service_level_credit_ids': tuple(
+                    data['service_level_credit_ids']),
+                'date_from': data["from"],
+                'date_to': data["to"],
+                'project_site_id': i['id'],
+            })
+            service_level_credit_res = cr.dictfetchall()
+
             prof_rep.update({
-                'service_level_credit': total,
+                'service_level_credit': service_level_credit_res[0][
+                    "total_service_level_credit"],
             })
 
-            security = projects.filtered(
-                lambda x: x.account_id.id in data['security_ids'])
-            total = sum(security.mapped('debit')) - sum(
-                security.mapped('credit'))
+            security_qry = """
+                                                   WITH filtered_projects AS (
+                                                    SELECT
+                                                        aml.debit,
+                                                        aml.credit,
+                                                        aml.account_id
+                                                    FROM
+                                                        account_move_line aml
+                                                    JOIN
+                                                        account_move am ON aml.move_id = am.id
+                                                    WHERE
+                                                        aml.project_site_id = %(project_site_id)s
+                                                        AND am.date <= %(date_to)s
+                                                        AND am.date >= %(date_from)s
+                                                        AND am.state = 'posted'
+                                                        AND aml.company_id = %(company_id)s
+                                                ),
+                                                security AS (
+                                                    SELECT
+                                                        fp.debit,
+                                                        fp.credit
+                                                    FROM
+                                                        filtered_projects fp
+                                                    WHERE
+                                                        fp.account_id IN %(security_ids)s
+                                                )
+                                                SELECT
+                                                    COALESCE(SUM(c.debit), 0) - COALESCE(SUM(c.credit), 0) AS total_security
+                                                FROM
+                                                security c;
+                                                """
+            cr.execute(security_qry, {
+                'company_id': data["company_id"],
+                'security_ids': tuple(
+                    data['security_ids']),
+                'date_from': data["from"],
+                'date_to': data["to"],
+                'project_site_id': i['id'],
+            })
+            security_res = cr.dictfetchall()
+
             prof_rep.update({
-                'security': total,
+                'security': security_res[0]["total_security"],
             })
 
-            total_cost = prof_rep['site_maintenance'] + prof_rep['insurance'] + \
+            total_cost = prof_rep['site_rent'] + prof_rep['site_maintenance'] + \
+                         prof_rep['insurance'] + \
                          prof_rep['energy_cost'] + prof_rep['security'] + \
                          prof_rep['service_level_credit']
             jdo = total_revenue - total_cost
@@ -528,29 +935,103 @@ class ProfitabilityReportWizard(models.TransientModel):
                 '%': total_percent if total_percent else 0
             })
 
-            rou_depreciation = projects.filtered(
-                lambda x: x.account_id.id in data['rou_depreciation_ids'])
-            total = sum(rou_depreciation.mapped('debit')) - sum(
-                rou_depreciation.mapped('credit'))
+            # rou_depreciation = projects.filtered(
+            #     lambda x: x.account_id.id in data['rou_depreciation_ids'])
+            # total = sum(rou_depreciation.mapped('debit')) - sum(
+            #     rou_depreciation.mapped('credit'))
+
+            rou_depreciation_qry = """
+                                                   WITH filtered_projects AS (
+                                                    SELECT
+                                                        aml.debit,
+                                                        aml.credit,
+                                                        aml.account_id
+                                                    FROM
+                                                        account_move_line aml
+                                                    JOIN
+                                                        account_move am ON aml.move_id = am.id
+                                                    WHERE
+                                                        aml.project_site_id = %(project_site_id)s
+                                                        AND am.date <= %(date_to)s
+                                                        AND am.date >= %(date_from)s
+                                                        AND am.state = 'posted'
+                                                        AND aml.company_id = %(company_id)s
+                                                ),
+                                                rou_depreciation AS (
+                                                    SELECT
+                                                        fp.debit,
+                                                        fp.credit
+                                                    FROM
+                                                        filtered_projects fp
+                                                    WHERE
+                                                        fp.account_id IN %(rou_depreciation_ids)s
+                                                )
+                                                SELECT
+                                                    COALESCE(SUM(c.debit), 0) - COALESCE(SUM(c.credit), 0) AS total_rou_depreciation
+                                                FROM
+                                                rou_depreciation c;
+                                                """
+            cr.execute(rou_depreciation_qry, {
+                'company_id': data["company_id"],
+                'rou_depreciation_ids': tuple(
+                    data['rou_depreciation_ids']),
+                'date_from': data["from"],
+                'date_to': data["to"],
+                'project_site_id': i['id'],
+            })
+            rou_depreciation_res = cr.dictfetchall()
             prof_rep.update({
-                'rou_depreciation': total,
+                'rou_depreciation': rou_depreciation_res[0][
+                    "total_rou_depreciation"],
             })
 
-            fa_depreciation = projects.filtered(
-                lambda x: x.account_id.id in account_fa_depreciation_ids if
-                account_fa_depreciation_ids else None)
-            total = sum(fa_depreciation.mapped('debit')) - sum(
-                fa_depreciation.mapped('credit'))
             prof_rep.update({
-                'fa_depreciation': total,
+                'fa_depreciation': '',
             })
 
-            lease_finance_cost = projects.filtered(
-                lambda x: x.account_id.id in data['lease_finance_cost_ids'])
-            total = sum(lease_finance_cost.mapped('debit')) - sum(
-                lease_finance_cost.mapped('credit'))
+            lease_finance_cost_qry = """
+                                                   WITH filtered_projects AS (
+                                                    SELECT
+                                                        aml.debit,
+                                                        aml.credit,
+                                                        aml.account_id
+                                                    FROM
+                                                        account_move_line aml
+                                                    JOIN
+                                                        account_move am ON aml.move_id = am.id
+                                                    WHERE
+                                                        aml.project_site_id = %(project_site_id)s
+                                                        AND am.date <= %(date_to)s
+                                                        AND am.date >= %(date_from)s
+                                                        AND am.state = 'posted'
+                                                        AND aml.company_id = %(company_id)s
+                                                ),
+                                                lease_finance_cost AS (
+                                                    SELECT
+                                                        fp.debit,
+                                                        fp.credit
+                                                    FROM
+                                                        filtered_projects fp
+                                                    WHERE
+                                                        fp.account_id IN %(lease_finance_cost_ids)s
+                                                )
+                                                SELECT
+                                                    COALESCE(SUM(c.debit), 0) - COALESCE(SUM(c.credit), 0) AS total_lease_finance_cost
+                                                FROM
+                                                lease_finance_cost c;
+                                                """
+            cr.execute(lease_finance_cost_qry, {
+                'company_id': data["company_id"],
+                'lease_finance_cost_ids': tuple(
+                    data['lease_finance_cost_ids']),
+                'date_from': data["from"],
+                'date_to': data["to"],
+                'project_site_id': i['id'],
+            })
+            lease_finance_cost_res = cr.dictfetchall()
             prof_rep.update({
-                'lease_finance_cost': total,
+                'lease_finance_cost': lease_finance_cost_res[0][
+                    "total_lease_finance_cost"],
             })
             profitability_report.append(prof_rep)
         logged_users = self.env['res.company']._company_default_get(
@@ -626,6 +1107,7 @@ class ProfitabilityReportWizard(models.TransientModel):
             sheet.write(row_num + 1, col_num + 7, i.get('discount'))
             sheet.write(row_num + 1, col_num + 8, i.get('total_revenue'))
             sheet.write(row_num + 1, col_num + 9, i.get('site_maintenance'))
+            sheet.write(row_num + 1, col_num + 10, i.get('site_rent'))
             sheet.write(row_num + 1, col_num + 11, i.get('insurance'))
             sheet.write(row_num + 1, col_num + 12, i.get('energy_cost'))
             sheet.write(row_num + 1, col_num + 13, i.get('security'))

@@ -15,6 +15,9 @@ class ProfitabilityReportOwned(models.Model):
     service_revenue = fields.Many2many('account.account',
                                        'service_revenue_owned_rel',
                                        string='Service Revenue')
+    site_rent_ids = fields.Many2many('account.account',
+                                       'site_rent_owned_rel',
+                                       string='Site Rent')
     investment_revenue = fields.Many2many('account.account',
                                           'investment_revenue_owned_rel',
                                           string='Investment Revenue')
@@ -135,6 +138,7 @@ class ProfitabilityReportOwned(models.Model):
             'ids': self.ids,
             'model': self._name,
             'service_revenue_ids': profitability_owned.service_revenue.ids,
+            'site_rent_ids': profitability_owned.site_rent_ids.ids,
             'investment_revenue_ids': profitability_owned.investment_revenue.ids,
             'colocation_ids': profitability_owned.colocation.ids,
             'pass_through_energy_ids': profitability_owned.pass_through_energy.ids,
@@ -222,6 +226,7 @@ class ProfitabilityReportOwned(models.Model):
             'ids': self.ids,
             'model': self._name,
             'service_revenue_ids': profitability_owned.service_revenue.ids,
+            'site_rent_ids': profitability_owned.site_rent_ids.ids,
             'investment_revenue_ids': profitability_owned.investment_revenue.ids,
             'colocation_ids': profitability_owned.colocation.ids,
             'pass_through_energy_ids': profitability_owned.pass_through_energy.ids,
@@ -306,6 +311,7 @@ class ProfitabilityReportOwned(models.Model):
             'ids': self.ids,
             'model': self._name,
             'service_revenue_ids': profitability_owned.service_revenue.ids,
+            'site_rent_ids': profitability_owned.site_rent_ids.ids,
             'investment_revenue_ids': profitability_owned.investment_revenue.ids,
             'colocation_ids': profitability_owned.colocation.ids,
             'pass_through_energy_ids': profitability_owned.pass_through_energy.ids,
@@ -390,6 +396,7 @@ class ProfitabilityReportOwned(models.Model):
             'ids': self.ids,
             'model': self._name,
             'service_revenue_ids': profitability_owned.service_revenue.ids,
+            'site_rent_ids': profitability_owned.site_rent_ids.ids,
             'investment_revenue_ids': profitability_owned.investment_revenue.ids,
             'colocation_ids': profitability_owned.colocation.ids,
             'pass_through_energy_ids': profitability_owned.pass_through_energy.ids,
@@ -425,19 +432,6 @@ class ProfitabilityReportOwned(models.Model):
             account_fa_depreciation_ids = []
             profitability_owned_report_load = json.loads(
                 profitability_owned_report)
-            # name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
-            #     self.pool[
-            #         'account.analytic.account'].name.translate else 'analatyc_account.name'
-            # query = f'''
-            #                             select id,{name} as name from account_analytic_account as analatyc_account
-            #                             WHERE analatyc_account.analytic_account_type = 'project_site'
-            #                             and analatyc_account.company_id = ''' + str(
-            #     data['company_id']) + '''
-            #                             and analatyc_account.group_id = ''' + str(
-            #     data['group_id'])
-            #
-            # cr = self._cr
-            # cr.execute(query)
 
             cr = self._cr
             name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
@@ -496,6 +490,15 @@ class ProfitabilityReportOwned(models.Model):
                     service_revenue.mapped('credit'))
                 prof_rep.update({
                     'service_revenue': total,
+                })
+
+                site_rent_ids = projects.filtered(
+                    lambda x: x.account_id.id in data[
+                        'site_rent_ids'])
+                total = sum(site_rent_ids.mapped('debit')) - sum(
+                    site_rent_ids.mapped('credit'))
+                prof_rep.update({
+                    'site_rent_ids': total,
                 })
 
                 colocation = projects.filtered(
@@ -593,7 +596,7 @@ class ProfitabilityReportOwned(models.Model):
                     'security': total,
                 })
 
-                total_cost = prof_rep['site_maintenance'] + prof_rep[
+                total_cost = prof_rep['site_rent_ids'] +prof_rep['site_maintenance'] + prof_rep[
                     'insurance'] + \
                              prof_rep['energy_cost'] + prof_rep[
                                  'security'] + \
@@ -674,19 +677,6 @@ class ProfitabilityReportOwned(models.Model):
         else:
             account_fa_depreciation_ids = []
             dummy_prof_list = []
-            # name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
-            #     self.pool[
-            #         'account.analytic.account'].name.translate else 'analatyc_account.name'
-            # query = f'''
-            #                 select id,{name} as name from account_analytic_account as analatyc_account
-            #                 WHERE analatyc_account.analytic_account_type = 'project_site'
-            #                 and analatyc_account.company_id = ''' + str(
-            #     data['company_id']) + '''
-            #                 and analatyc_account.group_id = ''' + str(
-            #     data['group_id'])
-            #
-            # cr = self._cr
-            # cr.execute(query)
             lang = self.env.user.lang or get_lang(self.env).code
             cr = self._cr
             name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
@@ -747,6 +737,15 @@ class ProfitabilityReportOwned(models.Model):
                     service_revenue.mapped('credit'))
                 prof_rep.update({
                     'service_revenue': total,
+                })
+
+                site_rent_ids = projects.filtered(
+                    lambda x: x.account_id.id in data[
+                        'site_rent_ids'])
+                total = sum(site_rent_ids.mapped('debit')) - sum(
+                    site_rent_ids.mapped('credit'))
+                prof_rep.update({
+                    'site_rent_ids': total,
                 })
 
                 colocation = projects.filtered(
@@ -844,7 +843,7 @@ class ProfitabilityReportOwned(models.Model):
                     'security': total,
                 })
 
-                total_cost = prof_rep['site_maintenance'] + prof_rep[
+                total_cost = prof_rep['site_rent_ids'] +prof_rep['site_maintenance'] + prof_rep[
                     'insurance'] + \
                              prof_rep['energy_cost'] + prof_rep[
                                  'security'] + \
@@ -1011,6 +1010,7 @@ class ProfitabilityReportOwned(models.Model):
             sheet.write(row_num + 1, col_num + 7, i.get('discount'))
             sheet.write(row_num + 1, col_num + 8, i.get('total_revenue'))
             sheet.write(row_num + 1, col_num + 9, i.get('site_maintenance'))
+            sheet.write(row_num + 1, col_num + 10, i.get('site_rent_ids'))
             sheet.write(row_num + 1, col_num + 11, i.get('insurance'))
             sheet.write(row_num + 1, col_num + 12, i.get('energy_cost'))
             sheet.write(row_num + 1, col_num + 13, i.get('security'))

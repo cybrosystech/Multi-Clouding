@@ -26,6 +26,9 @@
                         <field name="active_sharing_fees" widget="many2many_tags"/>
                         <field name="discount" widget="many2many_tags"/>
                     </group>
+                     <group>
+                        <field name="site_rent_ids" widget="many2many_tags"/>
+                    </group>
                 </group>
                 <group>
                     <field name="site_maintenance" class="oe_inline" widget="many2many_tags"/>
