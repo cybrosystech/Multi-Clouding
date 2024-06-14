@@ -8,9 +8,10 @@
             <field name="arch" type="xml">
                 <form>
                     <header>
-                        <button name="action_activate" string="Activate" class="oe_highlight" states="draft"
+                        <button name="action_activate" string="Activate" class="oe_highlight" invisible="state != 'draft'"
                                 type="object"/>
                         <field name="state" widget="statusbar" statusbar_visible=""/>
+
                     </header>
                     <sheet>
                         <div class="oe_button_box" name="button_box">
@@ -33,8 +34,8 @@
                                 <field name="estimated_ending_date" />
                                 <field name="account_analytic_id" />
                                 <field name="project_site_id" />
-                                <field name="type_id" />
-                                <field name="location_id" />
+<!--                                <field name="type_id" />-->
+<!--                                <field name="location_id" />-->
                                 <field name="prorate" />
                             </group>
                             <group>

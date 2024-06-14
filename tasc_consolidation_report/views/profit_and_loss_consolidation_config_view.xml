@@ -17,11 +17,12 @@
                             <tree editable="bottom">
                                 <field name="sequence" widget="handle"/>
                                 <field name="line_type"/>
-                                <field name="config_name" attrs="{'invisible': [('line_type', '!=', 'total_config')]}"/>
-                                <field name="consolidation_parent" widget="many2many_tags" attrs="{'invisible': [('line_type', '!=', 'total_config')]}"/>
-                                <field name="consolidation_parent_group_id" attrs="{'invisible': [('line_type', '==', 'total_config')]}"/>
+                                <field name="config_name"
+                                invisible="line_type != 'total_config'"/>
+                                <field name="consolidation_parent" widget="many2many_tags" invisible="line_type != 'total_config'"/>
+                                <field name="consolidation_parent_group_id" invisible="line_type == 'total_config'"/>
                                 <field name="consolidation_child_group_ids"
-                                       widget="many2many_tags" attrs="{'invisible': [('line_type', '==', 'total_config')]}"/>
+                                       widget="many2many_tags" invisible="line_type == 'total_config'"/>
                                 <field name="profit_loss_config_id"
                                        invisible="1"/>
 <!--                                <field name="is_abs" string="Show absolute"/>-->

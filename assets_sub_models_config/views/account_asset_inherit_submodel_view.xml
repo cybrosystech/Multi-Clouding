@@ -6,11 +6,15 @@
         <field name="inherit_id" ref="account_asset.view_account_asset_form"/>
         <field name="arch" type="xml">
             <field name="acquisition_date" position="after">
-                    <field name="asset_sub_model_id" attrs="{'invisible': [('state', '=', 'model')]}"/>
+                <field name="asset_sub_models_ids" widget="many2many_tags" invisible="1"/>
+                <field name="asset_sub_model_id"
+                       invisible="state == 'model'"/>
             </field>
-            <field name="book_value" position="after">
-                <field name="value_residual_original" string="Depreciable value original"/>
-            </field>
+            <xpath expr="//sheet/notebook[1]/page[@name='main_page']/group[1]/group[2]/span"
+                   position="after">
+                <field name="value_residual_original"
+                       string="Depreciable value original"/>
+            </xpath>
         </field>
     </record>
 

@@ -1,16 +1,31 @@
 <odoo>
 
-    <record id="asset_sell_partial_view" model="ir.ui.view">
-        <field name="name">wizard.view.partial.sell.assets.form</field>
-        <field name="model">account.asset.sell</field>
-        <field name="inherit_id" ref="account_asset.asset_sell_form"/>
+    <!--    <record id="asset_sell_partial_view" model="ir.ui.view">-->
+    <!--        <field name="name">wizard.view.partial.sell.assets.form</field>-->
+    <!--        <field name="model">account.asset.sell</field>-->
+    <!--        <field name="inherit_id" ref="account_asset.asset_sell_form"/>-->
+    <!--        <field name="arch" type="xml">-->
+    <!--            <field name="invoice_line_id" position="replace">-->
+    <!--                <field name="invoice_line_id" options="{'no_create': True}" attrs="{'invisible': [('select_invoice_line_id', '=', False)]}"/>-->
+    <!--            </field>-->
+    <!--            <field name="action" position="after">-->
+    <!--                <field name="partial_bool" attrs="{'invisible': [('from_leasee_contract', '=', True)]}"/>-->
+    <!--                <field name="partial_amount" attrs="{'invisible': [('partial_bool', '=', False)]}"/>-->
+    <!--            </field>-->
+    <!--        </field>-->
+    <!--    </record>-->
+
+    <record id="asset_modify_form_view" model="ir.ui.view">
+        <field name="name">asset.modify.view.form</field>
+        <field name="model">asset.modify</field>
+        <field name="inherit_id" ref="account_asset.asset_modify_form"/>
         <field name="arch" type="xml">
-            <field name="invoice_line_id" position="replace">
-                <field name="invoice_line_id" options="{'no_create': True}" attrs="{'invisible': [('select_invoice_line_id', '=', False)]}"/>
-            </field>
-            <field name="action" position="after">
-                <field name="partial_bool" attrs="{'invisible': [('from_leasee_contract', '=', True)]}"/>
-                <field name="partial_amount" attrs="{'invisible': [('partial_bool', '=', False)]}"/>
+            <field name="date" position="before">
+                <field name="partial_bool"
+                       invisible="from_leasee_contract == True"
+                />
+                <field name="partial_amount" invisible="partial_bool == False" string="Partial Amount"
+                />
             </field>
         </field>
     </record>

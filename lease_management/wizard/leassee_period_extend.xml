@@ -14,9 +14,12 @@
                             <field name="incentives_received"/>
                             <field name="incentives_received_type"/>
                             <field name="initial_direct_cost"/>
-                            <field name="installment_amount"/>
+                            <field name="installment_amount" required="1"/>
+                            <field name="interest_rate" required="1"/>
                             <field name="increasement_rate"/>
                             <field name="increasement_frequency"/>
+                            <field name="inception_date"/>
+                            <field name="security_amount" required="1"/>
                         </group>
                     </sheet>
                     <footer>

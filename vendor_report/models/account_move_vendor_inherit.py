@@ -1,10 +1,8 @@
-from collections import defaultdict
-
-from odoo import models, api
-from odoo.exceptions import ValidationError
+# -*- coding: utf-8 -*-
+from odoo import models
 
 
-class AccountMoveVendor(models.Model):
+class AccountMove(models.Model):
     _inherit = 'account.move'
 
     def vendor_report(self):

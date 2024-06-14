@@ -1,7 +1,9 @@
+# -*- coding: utf-8 -*-
 from odoo import models, fields
 
 
-class ResCompanyStamp(models.Model):
+class ResCompany(models.Model):
+    """Adding new fields to Company model"""
     _inherit = 'res.company'
 
     company_stamp = fields.Binary(string='Stamp')

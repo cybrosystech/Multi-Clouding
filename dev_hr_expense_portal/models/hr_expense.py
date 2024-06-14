@@ -7,14 +7,12 @@
 #    For Module Support : devintelle@gmail.com  or Skype : devintelle
 #
 ##############################################################################
-from ast import literal_eval
 
-from odoo import models, fields, api, _
-from odoo.exceptions import ValidationError, UserError
-from datetime import datetime, date
-from dateutil.relativedelta import relativedelta
-
-from odoo.tools import float_is_zero
+from odoo import models, fields, api, _, Command
+from odoo.exceptions import UserError
+from odoo.tools import float_round
+from odoo.tools.misc import format_date
+from odoo.tools.misc import clean_context
 
 
 class hr_expense(models.Model):
@@ -25,100 +23,52 @@ class hr_expense(models.Model):
     def _default_product_uom_id(self):
         return self.env['uom.uom'].search([], limit=1, order='id')
 
-    name = fields.Char('Description',
-                       compute='_compute_from_product_id_company_id',
-                       store=True, required=True, copy=True,
-                       states={'waiting_approval': [('readonly', False)],
-                               'draft': [('readonly', False)],
-                               'reported': [('readonly', False)],
-                               'refused': [('readonly', False)]})
-    product_id = fields.Many2one('product.product', string='Product',
-                                 readonly=True, tracking=True,
-                                 states={
-                                     'waiting_approval': [('readonly', False)],
-                                     'draft': [('readonly', False)],
-                                     'reported': [('readonly', False)],
-                                     'refused': [('readonly', False)]},
-                                 domain="[('can_be_expensed', '=', True),('product_expense_type', 'not in', ['overtime','per_diem']), '|', ('company_id', '=', False), ('company_id', '=', company_id)]",
-                                 ondelete='restrict')
-    unit_amount = fields.Float("Unit Price",
-                               compute='_compute_from_product_id_company_id',
-                               store=True, required=True, copy=True,
-                               readonly=False,
-                               states={
-                                   'waiting_approval': [('readonly', False)],
-                                   'draft': [('readonly', False)],
-                                   'reported': [('readonly', False)],
-                                   'refused': [('readonly', False)]},
-                               digits='Product Price')
-    quantity = fields.Float(required=True, readonly=True,
-                            states={'waiting_approval': [('readonly', False)],
-                                    'draft': [('readonly', False)],
-                                    'reported': [('readonly', False)],
-                                    'refused': [('readonly', False)]},
-                            digits='Product Unit of Measure', default=1)
+    price_unit = fields.Monetary(
+        string="Unit Price",
+        currency_field='company_currency_id',
+        compute='_compute_price_unit', precompute=True, store=True, required=True, readonly=False,
+        copy=True,
+    )
+    product_id = fields.Many2one(
+        comodel_name='product.product',
+        string="Category",
+        tracking=True,
+        check_company=True,
+        domain="[('can_be_expensed', '=', True),('product_expense_type', 'not in', ['overtime','per_diem']), '|', ('company_id', '=', False), ('company_id', '=', company_id)]",
+        ondelete='restrict',
+    )
 
-    project_site_id = fields.Many2one('account.analytic.account', domain=[
-        ('analytic_account_type', '=', 'project_site')])
-    analytic_account_id = fields.Many2one('account.analytic.account',
-                                          domain=[('analytic_account_type', '=',
-                                                   'cost_center')],
-                                          string='Analytic Account',
-                                          check_company=True)
     is_manager_approved = fields.Boolean(string="Is Manager Approved",
                                          copy=False)
-    state = fields.Selection(compute='_compute_state', string='Status',
-                             selection_add=[('waiting_approval',
-                                             'Awaiting Manager Approval')],
-                             copy=False, index=True, readonly=True, store=True,
-                             default='waiting_approval',
-                             help="Status of the expense.")
 
-    description = fields.Text('Notes...', readonly=True,
-                              states={'waiting_approval': [('readonly', False)],
-                                      'draft': [('readonly', False)],
-                                      'reported': [('readonly', False)],
-                                      'refused': [('readonly', False)]})
-    date = fields.Date(readonly=True,
-                       states={'waiting_approval': [('readonly', False)],
-                               'draft': [('readonly', False)],
-                               'reported': [('readonly', False)],
-                               'refused': [('readonly', False)]},
-                       default=fields.Date.context_today, string="Expense Date")
-    product_uom_id = fields.Many2one('uom.uom', string='Unit of Measure',
-                                     compute='_compute_from_product_id_company_id',
-                                     store=True, copy=True,
-                                     states={'waiting_approval': [
-                                         ('readonly', False)],
-                                         'draft': [('readonly', False)],
-                                         'refused': [('readonly', False)]},
-                                     default=_default_product_uom_id,
-                                     domain="[('category_id', '=', product_uom_category_id)]")
+    state = fields.Selection(
+        selection_add=[
+            ('waiting_approval',
+             'Awaiting Manager Approval')
+        ],
+        string="Status",
+        compute='_compute_state', store=True, readonly=True,
+        index=True,
+        copy=False,
+        default='waiting_approval',
+    )
 
-    company_id = fields.Many2one('res.company', string='Company', required=True,
-                                 readonly=True,
-                                 states={
-                                     'waiting_approval': [
-                                         ('readonly', False)],
-                                     'draft': [('readonly', False)],
-                                     'refused': [('readonly', False)]},
-                                 default=lambda self: self.env.company)
 
-    @api.depends('sheet_id', 'sheet_id.account_move_id', 'sheet_id.state')
+    @api.depends('sheet_id', 'sheet_id.account_move_ids', 'sheet_id.state')
     def _compute_state(self):
         for expense in self:
             if not expense.sheet_id:
                 expense.state = 'waiting_approval'
             elif expense.sheet_id.state == 'draft':
-                expense.state = "draft"
-            elif expense.sheet_id.state == "cancel":
-                expense.state = "refused"
-            elif expense.sheet_id.state == "approve" or expense.sheet_id.state == "post":
-                expense.state = "approved"
-            elif not expense.sheet_id.account_move_id:
-                expense.state = "reported"
+                expense.state = 'reported'
+            elif expense.sheet_id.state == 'cancel':
+                expense.state = 'refused'
+            elif expense.sheet_id.state in {'approve', 'post'}:
+                expense.state = 'approved'
+            elif not expense.sheet_id.account_move_ids:
+                expense.state = 'submitted'
             else:
-                expense.state = "done"
+                expense.state = 'done'
 
     def _compute_access_url(self):
         super(hr_expense, self)._compute_access_url()
@@ -128,32 +78,142 @@ class hr_expense(models.Model):
     def action_approve(self):
         for rec in self:
             if rec.state == 'waiting_approval':
-                rec.state = 'draft'
+                rec.write({'state':'draft'})
+
+    def _get_default_expense_sheet_values(self):
+        # If there is an expense with total_amount == 0, it means that expense has not been processed by OCR yet
+        expenses_with_amount = self.filtered(lambda expense: not (
+                expense.currency_id.is_zero(expense.total_amount_currency)
+                or expense.company_currency_id.is_zero(expense.total_amount)
+                or not float_round(expense.quantity,
+                                   precision_rounding=expense.product_uom_id.rounding)
+        ))
+
+        if any(expense.state not in ['draft',
+                                     'waiting_approval'] or expense.sheet_id for
+               expense in expenses_with_amount):
+            raise UserError(_("You cannot report twice the same line!"))
+        if not expenses_with_amount:
+            raise UserError(_("You cannot report the expenses without amount!"))
+        if len(expenses_with_amount.mapped('employee_id')) != 1:
+            raise UserError(
+                _("You cannot report expenses for different employees in the same report."))
+        if any(not expense.product_id for expense in expenses_with_amount):
+            raise UserError(_("You can not create report without category."))
+        if len(self.company_id) != 1:
+            raise UserError(
+                _("You cannot report expenses for different companies in the same report."))
+
+        # Check if two reports should be created
+        own_expenses = expenses_with_amount.filtered(
+            lambda x: x.payment_mode == 'own_account')
+        company_expenses = expenses_with_amount - own_expenses
+        create_two_reports = own_expenses and company_expenses
+
+        sheets = (own_expenses, company_expenses) if create_two_reports else (
+            expenses_with_amount,)
+        values = []
+        for todo in sheets:
+            if len(todo) == 1:
+                expense_name = todo.name
+            else:
+                dates = todo.mapped('date')
+                min_date = format_date(self.env, min(dates))
+                max_date = format_date(self.env, max(dates))
+                expense_name = min_date if max_date == min_date else f'{min_date} - {max_date}'
+
+            values.append({
+                'company_id': self.company_id.id,
+                'employee_id': self[0].employee_id.id,
+                'name': expense_name,
+                'expense_line_ids': [Command.set(todo.ids)],
+                'state': 'draft',
+            })
+        return values
 
     def action_submit_expenses_all_employees(self):
-        employees_ids = self.mapped('employee_id')
+        if self:
+            employees_ids = self.mapped('employee_id')
+        else:
+            expenses = self.env['hr.expense'].search([
+                ('state', '=', 'draft'),
+                ('sheet_id', '=', False),
+                ('employee_id', '=', self.env.user.employee_id.id),
+                ('is_editable', '=', True),
+            ])
+            employees_ids = expenses.mapped('employee_id')
+
         for emp in employees_ids:
-            expense_ids = self.env['hr.expense'].search(
-                [('employee_id', '=', emp.id), ('id', 'in', self.ids),
-                 '|', ('state', '=', 'draft'), ('state', '=', 'approved'),
-                 ('sheet_id', '=', False)])
-            total_amount = sum(expense_ids.mapped('total_amount'))
+            if self:
+                expenses = self.filtered(lambda
+                                             expense: expense.state in ['draft',
+                                                                        'approved'] and not expense.sheet_id and expense.is_editable and expense.employee_id.id == emp.id)
+            else:
+                expenses = self.env['hr.expense'].search([
+                    '|', ('state', '=', 'draft'), ('state', '=', 'approved'),
+                    ('sheet_id', '=', False),
+                    ('employee_id', '=', self.env.user.employee_id.id),
+                    ('is_editable', '=', True), ('employee_id', '=', emp.id),
+                ])
+
+            if expenses.filtered(lambda expense: not expense.is_editable):
+                raise UserError(
+                    _('You are not authorized to edit this expense.'))
+
+            total_amount = sum(expenses.mapped('total_amount'))
             full_month_name = fields.Datetime.now().strftime("%B")
             expense_report_summary = emp.name + " - " + full_month_name + "(" + str(
                 total_amount) + ") "
-            if expense_ids:
-                expense_journal = self.env['expense.journal'].search([('company_id','=',self.env.company.id)],limit=1)
-                if expense_journal:
-                    expense_ids._create_sheet_all_employees_from_expenses(
-                        expense_report_summary, expense_journal.journal_id.id)
-                else:
-                    raise UserError(
-                        _("Please set an expense journal for the company on the settings."))
+
+            expenses_with_amount = expenses.filtered(lambda expense: not (
+                    expense.currency_id.is_zero(expense.total_amount_currency)
+                    or expense.company_currency_id.is_zero(expense.total_amount)
+                    or not float_round(expense.quantity,
+                                       precision_rounding=expense.product_uom_id.rounding)
+            ))
+
+            if any(expense.state not in ['draft',
+                                         'waiting_approval'] or expense.sheet_id
+                   for expense in
+                   expenses_with_amount):
+                raise UserError(_("You cannot report twice the same line!"))
+            if not expenses_with_amount:
+                raise UserError(
+                    _("You cannot report the expenses without amount!"))
+            if len(expenses_with_amount.mapped('employee_id')) != 1:
+                raise UserError(
+                    _("You cannot report expenses for different employees in the same report."))
+            if any(not expense.product_id for expense in expenses_with_amount):
+                raise UserError(
+                    _("You can not create report without category."))
+            if len(expenses.company_id) != 1:
+                raise UserError(
+                    _("You cannot report expenses for different companies in the same report."))
+
+            # Check if two reports should be created
+            own_expenses = expenses_with_amount.filtered(
+                lambda x: x.payment_mode == 'own_account')
+            company_expenses = expenses_with_amount - own_expenses
+            create_two_reports = own_expenses and company_expenses
+
+            sheets = (
+                own_expenses, company_expenses) if create_two_reports else (
+                expenses_with_amount,)
+            values = []
+            for todo in sheets:
+                values.append({
+                    'company_id': expenses.company_id.id,
+                    'employee_id': expenses[0].employee_id.id,
+                    'name': expense_report_summary,
+                    'expense_line_ids': [Command.set(todo.ids)],
+                    'state': 'draft',
+                })
+
+            sheets = self.env['hr.expense.sheet'].create(values)
 
     def _create_sheet_all_employees_from_expenses(self, expense_report_summary,
                                                   journal):
-        if any(expense.state not in ['approved', 'draft'] or expense.sheet_id
-               for expense in
+        if any(expense.state != 'approved' or expense.sheet_id for expense in
                self):
             raise UserError(_("You cannot report twice the same line!"))
         if len(self.mapped('employee_id')) != 1:
@@ -174,7 +234,6 @@ class hr_expense(models.Model):
         })
         for exp in self:
             exp.sheet_id = sheet.id
-            exp.state = 'approved'
         return sheet
 
 
@@ -186,20 +245,6 @@ class HrExpense(models.Model):
                                   default=lambda
                                       self: self.env.company.currency_id)
 
-    @api.depends('employee_id')
-    def _compute_is_editable(self):
-        is_account_manager = self.env.user.has_group(
-            'account.group_account_user') or self.env.user.has_group(
-            'account.group_account_manager')
-        for expense in self:
-            if expense.state in ['draft','waiting_approval'] or expense.sheet_id.state in ['draft',
-                                                                      'submit']:
-                expense.is_editable = True
-            elif expense.sheet_id.state == 'approve':
-                expense.is_editable = is_account_manager
-            else:
-                expense.is_editable = False
-
 
 class HrExpenseSheet(models.Model):
     _inherit = 'hr.expense.sheet'
@@ -208,70 +253,68 @@ class HrExpenseSheet(models.Model):
                                   readonly=False,
                                   default=lambda
                                       self: self.env.company.currency_id)
+    # move_id = fields.Many2one(
+    #     string="Journal Entry",
+    #     comodel_name='account.move', readonly=True,
+    # )
 
     def action_create_journal_entry(self):
-        samples = self.mapped('expense_line_ids.sample')
-        if samples.count(True):
-            if samples.count(False):
-                raise UserError(
-                    _("You can't mix sample expenses and regular ones"))
-            self.write({'state': 'post'})
-            return
+        employee_ids = self.mapped('employee_id')
+        for emp in employee_ids:
+            sheets = self.filtered(lambda x: x.employee_id.id == emp.id)
+            sheets._check_can_create_move()
+            for expense in sheets.expense_line_ids.filtered(
+                    lambda expense: expense.sale_order_id and not expense.analytic_distribution):
+                if not expense.sale_order_id.analytic_account_id:
+                    expense.sale_order_id._create_analytic_account()
+                expense.write({
+                    'analytic_distribution': {
+                        expense.sale_order_id.analytic_account_id.id: 100}
+                })
+            sheets = sheets.with_context(
+                clean_context(self.env.context))  # remove default_*
+            skip_context = {
+                'skip_invoice_sync': True,
+                'skip_invoice_line_sync': True,
+                'skip_account_move_synchronization': True,
+                'check_move_validity': False,
+            }
+            own_account_sheets = sheets.filtered(
+                lambda sheet: sheet.payment_mode == 'own_account')
+            company_account_sheets = sheets - own_account_sheets
 
-        if any(sheet.state != 'approve' for sheet in self):
-            raise UserError(
-                _("You can only generate accounting entry for approved expense(s)."))
-
-        if any(not sheet.journal_id for sheet in self):
-            raise UserError(
-                _("Expenses must have an expense journal specified to generate accounting entries."))
-
-        sheets_approved = self.env['hr.expense.sheet'].search(
-            [('id', 'in', self.ids), ('state', '=', 'approve')])
-        employees = sheets_approved.mapped('employee_id')
-
-        for emp in employees:
-            expense_line_ids = sheets_approved.mapped('expense_line_ids') \
-                .filtered(lambda r: not float_is_zero(r.total_amount,
-                                                      precision_rounding=(
-                                                              r.currency_id or self.env.company.currency_id).rounding) and r.employee_id.id == emp.id)
-            journal = self.env['account.journal'].search(
-                [('code', '=', 'MISC'), ('type', '=', 'general')])
+            # for sheet in own_account_sheets:
+            journal = own_account_sheets.mapped('journal_id')
+            currency = own_account_sheets.mapped('currency_id')
             move_values = {
-                'journal_id': journal.id,
+                'journal_id': journal[0].id if journal else False,
                 'date': fields.Datetime.now().date(),
                 'ref': 'Expense Report for Month - ' + str(
                     fields.Datetime.now().month) + ' - ' + str(
                     fields.Datetime.now().year),
                 'name': '/',
+                'move_type': 'in_invoice',
+                'partner_id': emp.sudo().work_contact_id.id,
+                'currency_id': currency.id,
+                'line_ids': [Command.create(expense._prepare_move_lines_vals())
+                             for expense in own_account_sheets.expense_line_ids],
+                'attachment_ids': [
+                    Command.create(attachment.copy_data(
+                        {'res_model': 'account.move', 'res_id': False,
+                         'raw': attachment.raw})[0])
+                    for attachment in
+                    own_account_sheets.expense_line_ids.message_main_attachment_id
+                ],
             }
-            move = self.env['account.move'].with_context(
-                default_journal_id=move_values['journal_id']).create(
-                move_values)
-            for exp in expense_line_ids:
-                move_line_values_by_expense = exp._get_account_move_line_values()
-                move_line_values = move_line_values_by_expense.get(exp.id)
-                # link move lines to move, and move to expense sheet
-                move.write(
-                    {'line_ids': [(0, 0, line) for line in move_line_values]})
-                exp.sheet_id.write({'account_move_id': move.id})
-                exp.sheet_id.write({'state': 'done'})
-            emp = emp.name + '-' + str(fields.Datetime.now().date())
-            move.ref = emp
-            move._post()
+            move = self.env['account.move'].create(move_values)
+            for sheet in sheets:
+                sheet.account_move_ids =[move.id]
 
-            for sheet in self.filtered(lambda s: not s.accounting_date):
-                sheet.accounting_date = sheet.account_move_id.date
-            to_post = self.filtered(lambda
-                                        sheet: sheet.payment_mode == 'own_account' and sheet.expense_line_ids)
-            to_post.write({'state': 'post'})
-            (self - to_post).write({'state': 'done'})
-            self.activity_update()
 
     def action_report_in_next_payslip(self):
         records = self.filtered(lambda l: l.refund_in_payslip == False)
-        self.write({'refund_in_payslip': True})
         if records:
+            records.write({'refund_in_payslip': True})
             for record in records:
                 record.message_post(
                     body=_(

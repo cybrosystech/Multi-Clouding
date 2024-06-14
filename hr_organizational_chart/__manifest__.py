@@ -23,7 +23,7 @@
 
 {
     'name': 'HR Organizational Chart',
-    'version': '14.0.1.0.0',
+    'version': '17.0.1.0.0',
     'summary': 'HR Employees organizational chart',
     'description': 'HR Employees organizational chart',
     'author': 'Cybrosys Techno solutions,Open HRMS',
@@ -32,11 +32,7 @@
     'category': 'Generic Modules/Human Resources',
     'website': "https://www.openhrms.com",
     'depends': ['hr'],
-    'data': [
-        'views/show_employee_chart.xml',
-        'views/assets.xml',
-    ],
-    'qweb': ['static/src/xml/chart_view.xml'],
+    'data': [],
     'images': ['static/description/banner.png'],
     'installable': True,
     'auto_install': False,

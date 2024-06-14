@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """ init object """
 from odoo import fields, models
+
 import logging
 
 LOGGER = logging.getLogger(__name__)

@@ -16,22 +16,26 @@
                                        groups="base.group_multi_company"/>
                             </group>
                         </group>
-                        <group>
-                            <div>
+
+                        <notebook>
+                            <page string="Fields" name="fields">
                                 <field name="payment_approval_line_ids">
                                     <tree editable="bottom">
                                         <field name="payment_approval_check_id"
-                                               invisible="1"/>
+                                               invisible="1"
+                                               column_invisible="1"/>
                                         <field name="name"/>
                                         <field name="from_amount"/>
-                                        <field name="to_amount" invisible="1"/>
+                                        <field name="to_amount" invisible="1"
+                                               column_invisible="1"/>
                                         <field name="approval_seq"/>
                                         <field name="user_ids"
                                                widget="many2many_tags"/>
                                     </tree>
                                 </field>
-                            </div>
-                        </group>
+                            </page>
+                        </notebook>
+
                     </sheet>
                 </form>
             </field>

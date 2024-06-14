@@ -7,12 +7,14 @@
     'author': "",
     'website': "",
     'category': 'Accounting',
-    'version': '14.0.1.0.0',
+    'version': '17.0.1.0.0',
     'depends': ['account_asset', 'account_reports',
-                'cash_flow_statement_report'],
+                'cash_flow_statement_report', 'tasc_budget_analysis_report'],
 
     'data':
         [
-            'report/account_deferred_expense_report_views.xml',
-        ]
+            'views/account_move_views.xml',
+            'report/tasc_deferred_expense_report.xml',
+        ],
+
 }

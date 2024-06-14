@@ -104,12 +104,12 @@ class AccountMoveReferenceInherit(models.Model):
         if not moves:
             return
 
-        self.env["account.move"].flush([
-            "ref", "move_type", "invoice_date", "journal_id",
-            "company_id", "partner_id", "commercial_partner_id",
-        ])
-        self.env["account.journal"].flush(["company_id"])
-        self.env["res.partner"].flush(["commercial_partner_id"])
+        # self.env["account.move"].flush([
+        #     "ref", "move_type", "invoice_date", "journal_id",
+        #     "company_id", "partner_id", "commercial_partner_id",
+        # ])
+        # self.env["account.journal"].flush(["company_id"])
+        # self.env["res.partner"].flush(["commercial_partner_id"])
 
         # /!\ Computed stored fields are not yet inside the database.
         self._cr.execute('''

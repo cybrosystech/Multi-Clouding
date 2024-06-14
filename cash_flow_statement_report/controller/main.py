@@ -2,7 +2,7 @@ from odoo import http
 from odoo.http import request, content_disposition
 from odoo.tools import html_escape
 from odoo.tools.safe_eval import json
-from odoo.addons.web.controllers.main import _serialize_exception
+# from odoo.addons.web.controllers.main import _serialize_exception
 
 
 class XLSXReportController(http.Controller):
@@ -28,7 +28,7 @@ class XLSXReportController(http.Controller):
             response.set_cookie('fileToken', token)
             return response
         except Exception as e:
-            se = _serialize_exception(e)
+            se = http.serialize_exception(e)
             error = {
                 'code': 200,
                 'message': 'Odoo Server Error',

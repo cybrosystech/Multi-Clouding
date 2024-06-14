@@ -1,10 +1,9 @@
-from odoo import models, api, fields
-from odoo.exceptions import ValidationError
-from PIL import Image
+# -*- coding: utf-8 -*-
+from odoo import models, api
 
 
 class ReportInvoiceTaxReport(models.AbstractModel):
-    _name = 'report.invoice_tax_report.uk_inv_tax_report'
+    _name = 'report.tasc_invoice_tax_report.uk_inv_tax_report'
     _description = 'Invoice UK Tax report'
 
     @api.model

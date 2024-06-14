@@ -111,7 +111,7 @@ class LeaseInterestAndAmortizationReportWizard(models.TransientModel):
             'name': 'Lease Interest and Amortization Report',
             'url': '/web/content/%s/%s/excel_sheet/%s?download=true' % (
                 self._name, self.id, self.excel_sheet_name),
-            'target': 'self'
+            'target': 'new'
         }
 
     def get_report_data(self):
@@ -161,7 +161,7 @@ class LeaseInterestAndAmortizationReportWizard(models.TransientModel):
                 )
                 interest_move_line_ids = self._cr.dictfetchall()
                 interest_lease_names = list(
-                    map(itemgetter('lease_name'), interest_move_line_ids))
+                    map(itemgetter('lease_id'), interest_move_line_ids))
                 for contract in lease_contract_ids:
                     amortization_amount = 0
                     dep_move_ids = contract.asset_id.depreciation_move_ids.ids
@@ -191,6 +191,7 @@ class LeaseInterestAndAmortizationReportWizard(models.TransientModel):
 
                 amortization_lease_names = list(
                     map(itemgetter('lease_id'), amortization_datas))
+
                 lease_names = interest_lease_names + amortization_lease_names
                 lease_names = list(set(lease_names))
             else:
@@ -334,8 +335,12 @@ class LeaseInterestAndAmortizationReportWizard(models.TransientModel):
             worksheet.write(row, col, line['external_reference_number'],
                             STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['project_site'], STYLE_LINE_Data)
-            col += 1
+            if not line['project_site']:
+                worksheet.write(row, col, '', STYLE_LINE_Data)
+                col += 1
+            else:
+                worksheet.write(row, col, line['project_site'], STYLE_LINE_Data)
+                col += 1
             worksheet.write(row, col, line['interest'],
                             STYLE_LINE_Data)
             col += 1

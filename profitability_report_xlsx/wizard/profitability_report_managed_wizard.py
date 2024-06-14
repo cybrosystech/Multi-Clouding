@@ -1,8 +1,7 @@
 import io
 from email.policy import default
-
+from odoo.tools import date_utils, get_lang
 from dateutil.relativedelta import relativedelta
-
 from odoo import fields, models
 from odoo.exceptions import UserError
 from odoo.tools import date_utils
@@ -102,12 +101,12 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
                                                     '=',
                                                     self.env.company.id)])
 
-    def default_analytic_account_group(self):
-        group = self.env['account.analytic.group'].search(
-            [('name', 'ilike', 'managed')])
-        if not group:
-            raise UserError("Please configure analytic group account for Managed")
-        return group
+    # def default_analytic_account_group(self):
+    #     group = self.env['account.analytic.plan'].search(
+    #         [('name', 'ilike', 'managed')])
+    #     if not group:
+    #         raise UserError("Please configure analytic group account for Managed")
+    #     return group
 
     def default_service_level_credits(self):
         profitability_managed = self.env['profitability.report.managed'].search(
@@ -195,8 +194,11 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
                                           ('custom', 'Custom')]),
                               string='Periods', required=True,
                               default='this_month')
-    analytic_account_group = fields.Many2one('account.analytic.group',
-                                             default=default_analytic_account_group)
+    # analytic_account_group = fields.Many2one('account.analytic.plan',
+    #                                          default=default_analytic_account_group)
+    group = fields.Selection([
+        ('managed', 'Managed'),
+        ('owned', 'Owned')], 'Group', default='managed')
     from_date = fields.Date('From')
     to_date = fields.Date('To')
     company_id = fields.Many2one('res.company', 'Company',
@@ -313,7 +315,7 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
             'from': from_date if from_date else self.from_date,
             'to': to_date if to_date else self.to_date,
             'company_id': self.company_id.id,
-            'analytic_account_group': self.analytic_account_group.id,
+            'group': self.group,
             'Current_months': Current_months
         }
         return {
@@ -331,29 +333,27 @@ class ProfitabilityReportManagedWizard(models.TransientModel):
         total_site = 0
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
-
-        query = '''
-                        select id,name from account_analytic_account as analatyc_account 
-                        WHERE analatyc_account.analytic_account_type = 'project_site'
-                        and analatyc_account.company_id = ''' + str(
-            data['company_id']) + ''' 
-                        and analatyc_account.group_id = ''' + str(
-            data['analytic_account_group'])
-
+        lang = self.env.user.lang or get_lang(self.env).code
         cr = self._cr
-        cr.execute(query)
+        name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
+            self.pool[
+                'account.analytic.account'].name.translate else 'analatyc_account.name'
+
+        query = f'''
+            SELECT id, {name} AS name 
+            FROM account_analytic_account AS analatyc_account 
+            WHERE analatyc_account.analytic_account_type = %(type)s
+            AND analatyc_account.company_id = %(company_id)s
+            AND analatyc_account.group_id = %(group)s
+        '''
+        params = {
+                'company_id': data["company_id"],
+                'type': 'project_site',
+                'group': data["group"],
+            }
+
+        cr.execute(query, params)
         project_site = cr.dictfetchall()
-        # if data['site_maintenance_code'] and data['site_maintenance_lim_code']:
-        #     query2 = '''
-        #             select id from account_account as account
-        #             where account.code BETWEEN \'''' + data[
-        #         'site_maintenance_code'] + '\' and \'' + data[
-        #                  'site_maintenance_lim_code'] + "\'"
-        #
-        #     cr = self._cr
-        #     cr.execute(query2)
-        #     account_ids1 = cr.dictfetchall()
-        #     account_ids = [dic['id'] for dic in account_ids1]
         profitability_managed_report = []
         for i in project_site:
             prof_rep = {}

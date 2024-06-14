@@ -2,20 +2,20 @@
 <odoo>
     <data>
         
-        <record id="view_account_asset_sell_form_inherit" model="ir.ui.view">
-            <field name="name">account.asset.sell.form.inherit</field>
-            <field name="model">account.asset.sell</field>
-            <field name="inherit_id" ref="account_asset.asset_sell_form"/>
+        <record id="asset_modify_form" model="ir.ui.view">
+            <field name="name">asset.modify.sell.form.inherit</field>
+            <field name="model">asset.modify</field>
+            <field name="inherit_id" ref="account_asset.asset_modify_form"/>
             <field name="arch" type="xml">
                 
-                <xpath expr="//field[@name='action']" position="before">
+                <xpath expr="//field[@name='modify_action']" position="before">
                     <field name="from_leasee_contract" invisible="1"/>
                 </xpath>
-                <xpath expr="//field[@name='action']" position="after">
-                    <field name="contract_end_date" attrs="{'required':[('from_leasee_contract', '=', True)]}"/>
-                </xpath>
-                <xpath expr="//field[@name='action']" position="attributes">
-                    <attribute name="attrs">{'readonly':[('from_leasee_contract','=',True)]}</attribute>
+<!--                <xpath expr="//field[@name='action']" position="after">-->
+<!--                    <field name="contract_end_date" attrs="{'required':[('from_leasee_contract', '=', True)]}"/>-->
+<!--                </xpath>-->
+                <xpath expr="//field[@name='modify_action']" position="attributes">
+                    <attribute name="readonly">from_leasee_contract == True</attribute>
                 </xpath>
                 
             </field>

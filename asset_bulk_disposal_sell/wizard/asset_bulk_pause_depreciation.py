@@ -1,5 +1,6 @@
 from odoo import fields, models
 
+
 class AssetBulkWizard(models.TransientModel):
     _name = 'asset.bulk.pause.wizard'
 
@@ -9,4 +10,4 @@ class AssetBulkWizard(models.TransientModel):
     def do_action(self):
         for record in self:
             for asset in record.asset_ids:
-                asset.pause(pause_date=record.date)
+                asset.pause(pause_date=record.date, message=asset.name)

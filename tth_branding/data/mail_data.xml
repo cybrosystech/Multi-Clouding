@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo>
     <data>
-        <template id="message_notification_email_custom" inherit_id="mail.message_notification_email">
+        <template id="message_notification_email_custom" inherit_id="mail.mail_notification_layout">
             <xpath expr="//div" position="replace">
                 <t t-call="tth_branding.tth_branding_mail_notification_layout">
                     <meta itemprop="name" content="Notification Email"/>

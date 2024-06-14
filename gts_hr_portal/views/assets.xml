@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <template id="assets_frontend" inherit_id="web.assets_frontend" name="Hr Attendence Custom">
-        <xpath expr="." position="inside">
-            <script type="text/javascript" src="/gts_hr_portal/static/src/js/attendance.js"></script>
-        </xpath>
-    </template>
+<!--    <template id="assets_frontend" inherit_id="web.assets_frontend" name="Hr Attendence Custom">-->
+<!--        <xpath expr="." position="inside">-->
+<!--            <script type="text/javascript" src="/gts_hr_portal/static/src/js/attendance.js"></script>-->
+<!--        </xpath>-->
+<!--    </template>-->
 
-    <template id="assets_backend" name="Backend Theme"
-              inherit_id="web.assets_backend">
-        <xpath expr="." position="inside">
-            <link rel="stylesheet" type="text/css" href="/gts_hr_portal/static/src/css/style.css"/>
-        </xpath>
-    </template>
+<!--    <template id="assets_backend" name="Backend Theme"-->
+<!--              inherit_id="web.assets_backend">-->
+<!--        <xpath expr="." position="inside">-->
+<!--            <link rel="stylesheet" type="text/css" href="/gts_hr_portal/static/src/css/style.css"/>-->
+<!--        </xpath>-->
+<!--    </template>-->
 
 
 </odoo>

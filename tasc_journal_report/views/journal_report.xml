@@ -7,19 +7,38 @@
                     <div class="page">
                         <div class="row">
                             <div class="col-6">
-                                <h6><strong>Journal No :</strong> <t t-esc="o.name"/></h6>
-                                <h6><strong>Reference :</strong> <t t-esc="o.ref"/></h6>
-                                <h6><strong>Accounting Date :</strong> <t t-esc="o.date"/></h6>
+                                <h6>
+                                    <strong>Journal No :</strong>
+                                    <t t-esc="o.name"/>
+                                </h6>
+                                <h6>
+                                    <strong>Reference :</strong>
+                                    <t t-esc="o.ref"/>
+                                </h6>
+                                <h6>
+                                    <strong>Accounting Date :</strong>
+                                    <t t-esc="o.date"/>
+                                </h6>
                             </div>
                             <div class="col-6">
-                                <h6><strong>Journal :</strong> <t t-esc="o.journal_id.name"/></h6>
-                                <h6><strong>Currency :</strong> <t t-esc="o.currency_id.name"/></h6>
+                                <h6>
+                                    <strong>Journal :</strong>
+                                    <t t-esc="o.journal_id.name"/>
+                                </h6>
+                                <h6>
+                                    <strong>Currency :</strong>
+                                    <t t-esc="o.currency_id.name"/>
+                                </h6>
                                 <t t-if="o.partner_id">
-                                    <h6><strong>Vendor :</strong> <t t-esc="o.partner_id.name"/></h6>
+                                    <h6>
+                                        <strong>Vendor :</strong>
+                                        <t t-esc="o.partner_id.name"/>
+                                    </h6>
                                 </t>
                             </div>
                         </div>
-                        <table class="table table-sm o_main_table" style="margin-top: 20px;">
+                        <table class="table table-sm o_main_table"
+                               style="margin-top: 20px;">
                             <thead>
                                 <tr>
                                     <th>Account</th>
@@ -35,94 +54,92 @@
                             <tbody class="invoice_tbody">
                                 <t t-foreach="o.line_ids" t-as="line">
                                     <tr>
-                                        <td t-esc="str(line.account_id.code)+ ' ' + str(line.account_id.name)"/>
-                                        <td><t t-esc="line.name" /></td>
-                                        <td><t t-esc="line.analytic_account_id.name"/></td>
-                                        <td><t t-esc="line.project_site_id.name"/></td>
-                                        <td ><t t-if="line.amount_currency" t-esc="line.amount_currency"/></td>
-                                        <td ><t t-esc="'{:20,.2f}'.format(line.debit)"/></td>
-                                        <td><t  t-esc="'{:20,.2f}'.format(line.credit)"/></td>
-                                        <td ><t t-esc="', '.join(map(lambda x: (x.name), line.mapped('tax_ids')))"/></td>
+                                        <td><t t-esc="str(line.account_id.code)+ ' ' + str(line.account_id.name)"/></td>
+                                        <td><t  t-esc="line.name"/></td>
+                                        <td><t  t-esc="line.analytic_account_id.name"/></td>
+                                        <td><t  t-esc="line.project_site_id.name"/></td>
+                                        <td>
+                                            <t t-if="line.amount_currency"
+                                               t-esc="line.amount_currency"/>
+                                        </td>
+                                        <td><t  t-esc="'{:20,.2f}'.format(line.debit)"/></td>
+                                        <td><t t-esc="'{:20,.2f}'.format(line.credit)"/></td>
+                                        <td><t  t-esc="', '.join(map(lambda x: (x.name), line.mapped('tax_ids')))"/></td>
                                     </tr>
                                 </t>
-                                <tr>
-                                    <td/>
-                                    <td/>
-                                    <td/>
-                                    <td colspan="5">
-                                                                <div class="clearfix" style="position:relative;padding: 50px;align:right;">
-                        <div id="total" class="row">
-                            <div t-attf-class="#{'col-6' if report_type != 'html' else 'col-sm-7 col-md-6'} ml-auto">
-                                <table class="table table-sm" style="page-break-inside: avoid;">
-                                    <tr class="border-black o_subtotal" style="">
-                                        <td><strong>Subtotal</strong></td>
-                                        <td class="text-right">
-                                            <span t-field="o.amount_untaxed"/>
-                                        </td>
-                                    </tr>
-                                    <t t-foreach="o.amount_by_group" t-as="amount_by_group">
-                                        <tr style="">
-                                            <t t-if="len(o.line_ids.filtered(lambda line: line.tax_line_id)) in [0, 1] and float_compare(o.amount_untaxed, amount_by_group[2], precision_rounding=o.currency_id.rounding) == 0">
-                                                <td><span class="text-nowrap" t-esc="amount_by_group[0]"/></td>
-                                                <td class="text-right o_price_total">
-                                                    <span class="text-nowrap" t-esc="amount_by_group[3]" />
-                                                </td>
-                                            </t>
-                                            <t t-else="">
-                                                <td>
-                                                    <span t-esc="amount_by_group[0]"/>
-                                                    <span class="text-nowrap"> on
-                                                        <t t-esc="amount_by_group[4]"/>
-                                                    </span>
-                                                </td>
-                                                <td class="text-right o_price_total">
-                                                    <span class="text-nowrap" t-esc="amount_by_group[3]"/>
-                                                </td>
-                                            </t>
-                                        </tr>
-                                    </t>
-                                    <tr class="border-black o_total">
-                                        <td><strong>Total</strong></td>
-                                        <td class="text-right">
-                                            <span class="text-nowrap" t-field="o.amount_total"/>
-                                        </td>
-                                    </tr>
-                                                        <t t-set="print_with_payments" t-value="True"/>
-
-                                    <t t-if="print_with_payments">
-                                        <t t-if="o.payment_state != 'invoicing_legacy'">
-                                            <t t-set="payments_vals" t-value="o.sudo()._get_reconciled_info_JSON_values()"/>
-                                            <t t-foreach="payments_vals" t-as="payment_vals">
-                                                <tr>
-                                                    <td>
-                                                        <i class="oe_form_field text-right oe_payment_label">Paid on <t t-esc="payment_vals['date']" t-options='{"widget": "date"}'/></i>
-                                                    </td>
-                                                    <td class="text-right">
-                                                        <span t-esc="payment_vals['amount']" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
-                                                    </td>
-                                                </tr>
-                                            </t>
-                                            <t t-if="len(payments_vals) > 0">
-                                                <tr class="border-black">
-                                                    <td><strong>Amount Due</strong></td>
-                                                    <td class="text-right">
-                                                        <span t-field="o.amount_residual"/>
-                                                    </td>
-                                                </tr>
-                                            </t>
-                                        </t>
-                                    </t>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-
-                                    </td>
-
-                                    <td/>
-                                </tr>
+<!--                                <tr>-->
+<!--                                    <td/>-->
+<!--                                    <td/>-->
+<!--                                    <td/>-->
+<!--                                    <td/>-->
+<!--                                    <td>Total</td>-->
+<!--                                    <td>-->
+<!--                                        <t t-esc="'{:20,.2f}'.format(sum(o.line_ids.mapped(lambda x: x.debit)))"/>-->
+<!--                                    </td>-->
+<!--                                    <td>-->
+<!--                                        <t t-esc="'{:20,.2f}'.format(sum(o.line_ids.mapped(lambda x: x.credit)))"/>-->
+<!--                                    </td>-->
+<!--                                    <td/>-->
+<!--                                </tr>-->
                             </tbody>
                         </table>
+                        <div>
+                            <div id="right-elements"
+                                 t-attf-class="#{'col-5' if report_type != 'html' else 'col-12 col-md-5'} ms-5 d-inline-block float-end">
+                                <t t-set="print_with_payments" t-value="True"/>
+
+                                <div id="total" class="clearfix row">
+                                    <div class="ms-auto">
+                                        <table class="table table-sm table-borderless avoid-page-break-inside">
+
+                                            <!--Tax totals-->
+                                            <t t-set="tax_totals"
+                                               t-value="o.tax_totals"/>
+                                            <t t-call="account.document_tax_totals"/>
+
+                                            <!--Payments-->
+                                            <t t-if="print_with_payments">
+                                                <t t-if="o.payment_state != 'invoicing_legacy'">
+                                                    <t t-set="payments_vals"
+                                                       t-value="o.sudo().invoice_payments_widget and o.sudo().invoice_payments_widget['content'] or []"/>
+                                                    <t t-foreach="payments_vals"
+                                                       t-as="payment_vals">
+                                                        <tr t-if="payment_vals['is_exchange'] == 0">
+                                                            <td>
+                                                                <i class="oe_form_field text-end oe_payment_label">
+                                                                    Paid on
+                                                                    <t t-out="payment_vals['date']"
+                                                                       t-options='{"widget": "date"}'>
+                                                                        2021-09-19
+                                                                    </t>
+                                                                </i>
+                                                            </td>
+                                                            <td class="text-end">
+                                                                <span t-out="payment_vals['amount']"
+                                                                      t-options='{"widget": "monetary", "display_currency": o.currency_id}'>
+                                                                    20.00
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    </t>
+                                                    <t t-if="len(payments_vals) > 0">
+                                                        <tr class="border-black fw-bold">
+                                                            <td>Amount Due</td>
+                                                            <td class="text-end">
+                                                                <span t-field="o.amount_residual">
+                                                                    11.05
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    </t>
+                                                </t>
+                                            </t>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </t>
             </t>

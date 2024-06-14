@@ -5,7 +5,7 @@
         <field name="inherit_id" ref="account_asset.asset_modify_form"/>
         <field name="arch" type="xml">
             <field name="date" position="replace">
-                <field name="date" attrs="{'required': [('need_date', '=', True)]}"/>
+                <field name="date" />
             </field>
         </field>
     </record>

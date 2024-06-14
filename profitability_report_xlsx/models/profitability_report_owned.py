@@ -1,6 +1,7 @@
 from odoo import models, fields
 from odoo.exceptions import UserError
 from odoo.tools.safe_eval import datetime, json
+from odoo.tools import date_utils, get_lang
 import calendar
 from datetime import timedelta
 from odoo.tools import date_utils
@@ -14,6 +15,9 @@ class ProfitabilityReportOwned(models.Model):
     service_revenue = fields.Many2many('account.account',
                                        'service_revenue_owned_rel',
                                        string='Service Revenue')
+    site_rent_ids = fields.Many2many('account.account',
+                                       'site_rent_owned_rel',
+                                       string='Site Rent')
     investment_revenue = fields.Many2many('account.account',
                                           'investment_revenue_owned_rel',
                                           string='Investment Revenue')
@@ -123,13 +127,18 @@ class ProfitabilityReportOwned(models.Model):
         if profitability_owned.from_date and profitability_owned.to_date:
             if profitability_owned.from_date > profitability_owned.to_date:
                 raise UserError("Start date should be less than end date")
-        group = self.env['account.analytic.group'].search(
-            [('name', 'ilike', 'owned'),
-             ('company_id', '=', profitability_owned.company_id.id)])
+        # group = self.env['account.analytic.group'].search(
+        #     [('name', 'ilike', 'owned'),
+        #      ('company_id', '=', profitability_owned.company_id.id)])
+        # group = self.env['account.analytic.plan'].search(
+        #     [('name', 'ilike', 'owned')])
+        group_id = 'owned'
+
         data = {
             'ids': self.ids,
             'model': self._name,
             'service_revenue_ids': profitability_owned.service_revenue.ids,
+            'site_rent_ids': profitability_owned.site_rent_ids.ids,
             'investment_revenue_ids': profitability_owned.investment_revenue.ids,
             'colocation_ids': profitability_owned.colocation.ids,
             'pass_through_energy_ids': profitability_owned.pass_through_energy.ids,
@@ -147,7 +156,8 @@ class ProfitabilityReportOwned(models.Model):
             'from': from_date if from_date else profitability_owned.from_date,
             'to': to_date if to_date else profitability_owned.to_date,
             'company_id': profitability_owned.company_id.id,
-            'analatyc_account_group': group.id,
+            # 'analatyc_account_group': group.id,
+            'group_id':group_id,
             'Current_months': Current_months,
             'limit': limit
         }
@@ -205,13 +215,18 @@ class ProfitabilityReportOwned(models.Model):
         if profitability_owned.from_date and profitability_owned.to_date:
             if profitability_owned.from_date > profitability_owned.to_date:
                 raise UserError("Start date should be less than end date")
-        group = self.env['account.analytic.group'].search(
-            [('name', 'ilike', 'owned'),
-             ('company_id', '=', profitability_owned.company_id.id)])
+        # group = self.env['account.analytic.group'].search(
+        #     [('name', 'ilike', 'owned'),
+        #      ('company_id', '=', profitability_owned.company_id.id)])
+        # group = self.env['account.analytic.plan'].search(
+        #     [('name', 'ilike', 'owned')])
+        group_id = 'owned'
+
         data = {
             'ids': self.ids,
             'model': self._name,
             'service_revenue_ids': profitability_owned.service_revenue.ids,
+            'site_rent_ids': profitability_owned.site_rent_ids.ids,
             'investment_revenue_ids': profitability_owned.investment_revenue.ids,
             'colocation_ids': profitability_owned.colocation.ids,
             'pass_through_energy_ids': profitability_owned.pass_through_energy.ids,
@@ -229,7 +244,8 @@ class ProfitabilityReportOwned(models.Model):
             'from': from_date if from_date else profitability_owned.from_date,
             'to': to_date if to_date else profitability_owned.to_date,
             'company_id': profitability_owned.company_id.id,
-            'analatyc_account_group': group.id,
+            # 'analatyc_account_group': group.id,
+            'group_id':group_id,
             'Current_months': Current_months,
             'limit': limit
         }
@@ -287,13 +303,15 @@ class ProfitabilityReportOwned(models.Model):
         if profitability_owned.from_date and profitability_owned.to_date:
             if profitability_owned.from_date > profitability_owned.to_date:
                 raise UserError("Start date should be less than end date")
-        group = self.env['account.analytic.group'].search(
-            [('name', 'ilike', 'owned'),
-             ('company_id', '=', profitability_owned.company_id.id)])
+        # group = self.env['account.analytic.plan'].search(
+        #     [('name', 'ilike', 'owned')])
+        group_id = 'owned'
+
         data = {
             'ids': self.ids,
             'model': self._name,
             'service_revenue_ids': profitability_owned.service_revenue.ids,
+            'site_rent_ids': profitability_owned.site_rent_ids.ids,
             'investment_revenue_ids': profitability_owned.investment_revenue.ids,
             'colocation_ids': profitability_owned.colocation.ids,
             'pass_through_energy_ids': profitability_owned.pass_through_energy.ids,
@@ -311,7 +329,8 @@ class ProfitabilityReportOwned(models.Model):
             'from': from_date if from_date else profitability_owned.from_date,
             'to': to_date if to_date else profitability_owned.to_date,
             'company_id': profitability_owned.company_id.id,
-            'analatyc_account_group': group.id,
+            # 'analatyc_account_group': group.id,
+            'group_id':group_id,
             'Current_months': Current_months,
             'limit': limit
         }
@@ -369,13 +388,15 @@ class ProfitabilityReportOwned(models.Model):
         if profitability_owned.from_date and profitability_owned.to_date:
             if profitability_owned.from_date > profitability_owned.to_date:
                 raise UserError("Start date should be less than end date")
-        group = self.env['account.analytic.group'].search(
-            [('name', 'ilike', 'owned'),
-             ('company_id', '=', profitability_owned.company_id.id)])
+        # group = self.env['account.analytic.plan'].search(
+        #     [('name', 'ilike', 'owned')])
+        group_id = 'owned'
+
         data = {
             'ids': self.ids,
             'model': self._name,
             'service_revenue_ids': profitability_owned.service_revenue.ids,
+            'site_rent_ids': profitability_owned.site_rent_ids.ids,
             'investment_revenue_ids': profitability_owned.investment_revenue.ids,
             'colocation_ids': profitability_owned.colocation.ids,
             'pass_through_energy_ids': profitability_owned.pass_through_energy.ids,
@@ -393,7 +414,7 @@ class ProfitabilityReportOwned(models.Model):
             'from': from_date if from_date else profitability_owned.from_date,
             'to': to_date if to_date else profitability_owned.to_date,
             'company_id': profitability_owned.company_id.id,
-            'analatyc_account_group': group.id,
+            'group_id': group_id,
             'Current_months': Current_months,
             'limit': limit
         }
@@ -405,20 +426,33 @@ class ProfitabilityReportOwned(models.Model):
 
     def get_profitability_owned(self, data, profitability_owned_report,
                                 profitability_owned):
+        lang = self.env.user.lang or get_lang(self.env).code
+
         if profitability_owned_report:
             account_fa_depreciation_ids = []
             profitability_owned_report_load = json.loads(
                 profitability_owned_report)
-            query = '''
-                                        select id,name from account_analytic_account as analatyc_account 
-                                        WHERE analatyc_account.analytic_account_type = 'project_site'
-                                        and analatyc_account.company_id = ''' + str(
-                data['company_id']) + ''' 
-                                        and analatyc_account.group_id = ''' + str(
-                data['analatyc_account_group'])
 
             cr = self._cr
-            cr.execute(query)
+            name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
+                self.pool[
+                    'account.analytic.account'].name.translate else 'analatyc_account.name'
+
+            query = f'''
+                                    SELECT id, {name} AS name 
+                                    FROM account_analytic_account AS analatyc_account 
+                                    WHERE analatyc_account.analytic_account_type = %(type)s
+                                    AND analatyc_account.company_id = %(company_id)s
+                                    AND analatyc_account.group_id = %(group)s
+                                '''
+            params = {
+                'company_id': data["company_id"],
+                'type': 'project_site',
+                'group': data["group_id"],
+            }
+
+            cr.execute(query, params)
+
             project_site = cr.dictfetchall()
             if data['fa_depreciation_code'] and data[
                 'fa_depreciation_lim_code']:
@@ -456,6 +490,15 @@ class ProfitabilityReportOwned(models.Model):
                     service_revenue.mapped('credit'))
                 prof_rep.update({
                     'service_revenue': total,
+                })
+
+                site_rent_ids = projects.filtered(
+                    lambda x: x.account_id.id in data[
+                        'site_rent_ids'])
+                total = sum(site_rent_ids.mapped('debit')) - sum(
+                    site_rent_ids.mapped('credit'))
+                prof_rep.update({
+                    'site_rent_ids': total,
                 })
 
                 colocation = projects.filtered(
@@ -553,7 +596,7 @@ class ProfitabilityReportOwned(models.Model):
                     'security': total,
                 })
 
-                total_cost = prof_rep['site_maintenance'] + prof_rep[
+                total_cost = prof_rep['site_rent_ids'] +prof_rep['site_maintenance'] + prof_rep[
                     'insurance'] + \
                              prof_rep['energy_cost'] + prof_rep[
                                  'security'] + \
@@ -599,34 +642,34 @@ class ProfitabilityReportOwned(models.Model):
             profitability_owned.limits_pr = end_limit
             if end_limit <= len(project_site):
                 date = fields.Datetime.now()
-                xml_id = profitability_owned.cron_id.get_xml_id()
+                xml_id = profitability_owned.cron_id.get_external_id()
                 if xml_id.get(
                         profitability_owned.cron_id.id) == 'profitability_report_xlsx.action_profitability_owned_cron':
                     schedule = self.env.ref(
                         'profitability_report_xlsx.action_profitability_owned_cron_update')
                     schedule.update({
-                        'nextcall': date + timedelta(seconds=10),
+                        'nextcall': date + timedelta(seconds=15),
                     })
                 elif xml_id.get(
                         profitability_owned.cron_id.id) == 'profitability_report_xlsx.action_profitability_owned_cron_baghdad':
                     schedule = self.env.ref(
                         'profitability_report_xlsx.action_profitability_owned_cron_update_baghdad')
                     schedule.update({
-                        'nextcall': date + timedelta(seconds=10),
+                        'nextcall': date + timedelta(seconds=15),
                     })
                 elif xml_id.get(
                         profitability_owned.cron_id.id) == 'profitability_report_xlsx.action_profitability_owned_cron_erbill':
                     schedule = self.env.ref(
                         'profitability_report_xlsx.action_profitability_owned_cron_update_erbill')
                     schedule.update({
-                        'nextcall': date + timedelta(seconds=10),
+                        'nextcall': date + timedelta(seconds=15),
                     })
                 elif xml_id.get(
                         profitability_owned.cron_id.id) == 'profitability_report_xlsx.action_profitability_owned_cron_general':
                     schedule = self.env.ref(
                         'profitability_report_xlsx.action_profitability_owned_cron_update_general')
                     schedule.update({
-                        'nextcall': date + timedelta(seconds=10),
+                        'nextcall': date + timedelta(seconds=15),
                     })
                 else:
                     pass
@@ -634,16 +677,26 @@ class ProfitabilityReportOwned(models.Model):
         else:
             account_fa_depreciation_ids = []
             dummy_prof_list = []
-            query = '''
-                            select id,name from account_analytic_account as analatyc_account 
-                            WHERE analatyc_account.analytic_account_type = 'project_site'
-                            and analatyc_account.company_id = ''' + str(
-                data['company_id']) + ''' 
-                            and analatyc_account.group_id = ''' + str(
-                data['analatyc_account_group'])
-
+            lang = self.env.user.lang or get_lang(self.env).code
             cr = self._cr
-            cr.execute(query)
+            name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
+                self.pool[
+                    'account.analytic.account'].name.translate else 'analatyc_account.name'
+
+            query = f'''
+                        SELECT id, {name} AS name 
+                        FROM account_analytic_account AS analatyc_account 
+                        WHERE analatyc_account.analytic_account_type = %(type)s
+                        AND analatyc_account.company_id = %(company_id)s
+                        AND analatyc_account.group_id = %(group)s
+                    '''
+            params = {
+                'company_id': data["company_id"],
+                'type': 'project_site',
+                'group': data["group_id"],
+            }
+
+            cr.execute(query, params)
             project_site = cr.dictfetchall()
             if data['fa_depreciation_code'] and data[
                 'fa_depreciation_lim_code']:
@@ -684,6 +737,15 @@ class ProfitabilityReportOwned(models.Model):
                     service_revenue.mapped('credit'))
                 prof_rep.update({
                     'service_revenue': total,
+                })
+
+                site_rent_ids = projects.filtered(
+                    lambda x: x.account_id.id in data[
+                        'site_rent_ids'])
+                total = sum(site_rent_ids.mapped('debit')) - sum(
+                    site_rent_ids.mapped('credit'))
+                prof_rep.update({
+                    'site_rent_ids': total,
                 })
 
                 colocation = projects.filtered(
@@ -781,7 +843,7 @@ class ProfitabilityReportOwned(models.Model):
                     'security': total,
                 })
 
-                total_cost = prof_rep['site_maintenance'] + prof_rep[
+                total_cost = prof_rep['site_rent_ids'] +prof_rep['site_maintenance'] + prof_rep[
                     'insurance'] + \
                              prof_rep['energy_cost'] + prof_rep[
                                  'security'] + \
@@ -827,34 +889,34 @@ class ProfitabilityReportOwned(models.Model):
             profitability_owned.limits_pr = end_limit
             if end_limit <= len(project_site):
                 date = fields.Datetime.now()
-                xml_id = profitability_owned.cron_id.get_xml_id()
+                xml_id = profitability_owned.cron_id.get_external_id()
                 if xml_id.get(
                         profitability_owned.cron_id.id) == 'profitability_report_xlsx.action_profitability_owned_cron':
                     schedule = self.env.ref(
                         'profitability_report_xlsx.action_profitability_owned_cron_update')
                     schedule.update({
-                        'nextcall': date + timedelta(seconds=10),
+                        'nextcall': date + timedelta(seconds=15),
                     })
                 elif xml_id.get(
                         profitability_owned.cron_id.id) == 'profitability_report_xlsx.action_profitability_owned_cron_baghdad':
                     schedule = self.env.ref(
                         'profitability_report_xlsx.action_profitability_owned_cron_update_baghdad')
                     schedule.update({
-                        'nextcall': date + timedelta(seconds=10),
+                        'nextcall': date + timedelta(seconds=15),
                     })
                 elif xml_id.get(
                         profitability_owned.cron_id.id) == 'profitability_report_xlsx.action_profitability_owned_cron_erbill':
                     schedule = self.env.ref(
                         'profitability_report_xlsx.action_profitability_owned_cron_update_erbill')
                     schedule.update({
-                        'nextcall': date + timedelta(seconds=10),
+                        'nextcall': date + timedelta(seconds=15),
                     })
                 elif xml_id.get(
                         profitability_owned.cron_id.id) == 'profitability_report_xlsx.action_profitability_owned_cron_general':
                     schedule = self.env.ref(
                         'profitability_report_xlsx.action_profitability_owned_cron_update_general')
                     schedule.update({
-                        'nextcall': date + timedelta(seconds=10),
+                        'nextcall': date + timedelta(seconds=15),
                     })
                 else:
                     pass
@@ -904,7 +966,6 @@ class ProfitabilityReportOwned(models.Model):
 
         sheet.write('B3', 'Site Number', sub_heading)
         sheet.write('C3', 'Site code', sub_heading)
-
         sheet.write('B4', 'Site Number', sub_heading1)
         sheet.write('C4', 'Site code', sub_heading1)
         sheet.write('D4', 'Service Revenue', sub_heading1)
@@ -926,7 +987,6 @@ class ProfitabilityReportOwned(models.Model):
         sheet.write('U4', 'ROU Depreciation', sub_heading1)
         sheet.write('V4', 'FA Depreciation', sub_heading1)
         sheet.write('W4', 'Leases Finance Cost', sub_heading1)
-
         sheet.merge_range('B2:S2', profitability_object.current_filter,
                           main_head)
         sheet.merge_range('U2:W2', '', main_head)
@@ -950,6 +1010,7 @@ class ProfitabilityReportOwned(models.Model):
             sheet.write(row_num + 1, col_num + 7, i.get('discount'))
             sheet.write(row_num + 1, col_num + 8, i.get('total_revenue'))
             sheet.write(row_num + 1, col_num + 9, i.get('site_maintenance'))
+            sheet.write(row_num + 1, col_num + 10, i.get('site_rent_ids'))
             sheet.write(row_num + 1, col_num + 11, i.get('insurance'))
             sheet.write(row_num + 1, col_num + 12, i.get('energy_cost'))
             sheet.write(row_num + 1, col_num + 13, i.get('security'))
@@ -975,7 +1036,7 @@ class ProfitabilityReportOwned(models.Model):
         schedule = self.env.ref(
             'profitability_report_xlsx.action_profitability_owned_cron_general')
         schedule.update({
-            'nextcall': date + timedelta(seconds=10)
+            'nextcall': date + timedelta(seconds=15)
         })
 
     def profitability_owned_cron_update(self):
@@ -983,7 +1044,7 @@ class ProfitabilityReportOwned(models.Model):
         schedule = self.env.ref(
             'profitability_report_xlsx.action_profitability_owned_cron')
         schedule.update({
-            'nextcall': date + timedelta(seconds=10)
+            'nextcall': date + timedelta(seconds=15)
         })
 
     def profitability_owned_cron_update_baghdad(self):
@@ -991,7 +1052,7 @@ class ProfitabilityReportOwned(models.Model):
         schedule = self.env.ref(
             'profitability_report_xlsx.action_profitability_owned_cron_baghdad')
         schedule.update({
-            'nextcall': date + timedelta(seconds=10)
+            'nextcall': date + timedelta(seconds=15)
         })
 
     def profitability_owned_cron_update_erbill(self):
@@ -999,14 +1060,14 @@ class ProfitabilityReportOwned(models.Model):
         schedule = self.env.ref(
             'profitability_report_xlsx.action_profitability_owned_cron_erbill')
         schedule.update({
-            'nextcall': date + timedelta(seconds=10)
+            'nextcall': date + timedelta(seconds=15)
         })
 
     def schedule_owned_cron(self):
         date = fields.Datetime.now()
         schedule_action = self.cron_id
         schedule_action.update({
-            'nextcall': date + timedelta(seconds=1)
+            'nextcall': date + timedelta(seconds=15)
         })
         self.update({
             'limits_pr': 0,

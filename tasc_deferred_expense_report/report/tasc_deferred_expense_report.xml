@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="tasc_deferred_expense_report" model="account.report">
+        <field name="name">Tasc Deferred Expense Report</field>
+        <field name="filter_period_comparison" eval="False"/>
+        <field name="filter_hide_0_lines">never</field>
+        <field name="default_opening_date_filter">this_month</field>
+        <field name="search_bar" eval="True"/>
+        <field name="custom_handler_model_id"
+               ref="model_tasc_deferred_expense_report"/>
+        <field name="column_ids">
+            <record id="tasc_deferred_expense_name"
+                    model="account.report.column">
+                <field name="name">Deferral Name</field>
+                <field name="figure_type">string</field>
+                <field name="expression_label">name</field>
+            </record>
+            <record id="tasc_deferred_expense_entry"
+                    model="account.report.column">
+                <field name="name">Related Journal entry</field>
+                <field name="figure_type">integer</field>
+                <field name="expression_label">move_id</field>
+            </record>
+            <record id="tasc_deferred_expense_exp_account"
+                    model="account.report.column">
+                <field name="name">Expense Account</field>
+                <field name="figure_type">string</field>
+
+                <field name="expression_label">expense_account_id</field>
+            </record>
+            <record id="tasc_deferred_expense_deferred_account"
+                    model="account.report.column">
+                <field name="name">Deferred Account</field>
+                <field name="figure_type">string</field>
+
+                <field name="expression_label">deferred_account_id</field>
+            </record>
+            <record id="tasc_deferred_expense_project_site"
+                    model="account.report.column">
+                <field name="name">Project Site</field>
+                <field name="figure_type">string</field>
+
+                <field name="expression_label">project_site</field>
+            </record>
+            <record id="tasc_deferred_expense_cost_center"
+                    model="account.report.column">
+                <field name="name">Cost Center</field>
+                <field name="expression_label">cost_center</field>
+                <field name="figure_type">string</field>
+
+            </record>
+            <record id="tasc_deferred_expense_start_dater"
+                    model="account.report.column">
+                <field name="name">Start date</field>
+                <field name="figure_type">string</field>
+
+                <field name="expression_label">deferred_start_date</field>
+            </record>
+
+            <record id="tasc_deferred_expense_end_date"
+                    model="account.report.column">
+                <field name="name">End Date</field>
+                <field name="figure_type">string</field>
+
+                <field name="expression_label">deferred_end_date</field>
+            </record>
+            <record id="tasc_deferred_expense_currency"
+                    model="account.report.column">
+                <field name="name">Currency</field>
+                <field name="figure_type">string</field>
+
+                <field name="expression_label">currency</field>
+            </record>
+            <record id="tasc_deferred_expense_tot_period"
+                    model="account.report.column">
+                <field name="name">Total No of Period</field>
+                <field name="figure_type">integer</field>
+
+                <field name="expression_label">tot_period</field>
+            </record>
+            <record id="tasc_deferred_expense_period_posted"
+                    model="account.report.column">
+                <field name="name">Period Entry Posted</field>
+                <field name="figure_type">integer</field>
+
+                <field name="expression_label">tot_period_posted</field>
+            </record>
+            <record id="tasc_deferred_expense_remaining_period"
+                    model="account.report.column">
+                <field name="name">Total Remaining Period</field>
+                <field name="figure_type">integer</field>
+
+                <field name="expression_label">tot_remining_period</field>
+            </record>
+            <record id="tasc_deferred_expense_original_amount"
+                    model="account.report.column">
+                <field name="name">Original AMount</field>
+<!--                <field name="figure_type">monetary</field>-->
+                <field name="expression_label">original_amount</field>
+            </record>
+            <record id="tasc_deferred_expense_deferred_amount"
+                    model="account.report.column">
+                <field name="name">Deferred AMount</field>
+<!--                <field name="figure_type">monetary</field>-->
+                <field name="expression_label">deferred_amount</field>
+            </record>
+            <record id="tasc_deferred_expense_remaining_amount"
+                    model="account.report.column">
+                <field name="name">Remaining AMount</field>
+                <field name="expression_label">remaining_amount</field>
+            </record>
+        </field>
+    </record>
+    <record id="action_tasc_deferred_expense_report" model="ir.actions.client">
+        <field name="name">TASC Deferred Expense Report</field>
+        <field name="tag">account_report</field>
+        <field name="context"
+               eval="{'report_id': ref('tasc_deferred_expense_report.tasc_deferred_expense_report')}"/>
+    </record>
+    <menuitem id="menu_action_tasc_deferred_expense_report"
+              name="TASC Deferred Expense Report"
+              action="action_tasc_deferred_expense_report"
+              parent="cash_flow_statement_report.tasc_dynamic_reports"/>
+</odoo>

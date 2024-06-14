@@ -12,15 +12,15 @@ class ResUsers(models.Model):
     
     oauth_enforced = fields.Boolean(string='Enforce OAuth')
 
-    def __init__(self, pool, cr):
-        """ Override of __init__ to add access rights on oauth_enforced
-            field. Access rights are disabled by default, but allowed on some
-            specific fields defined in self.SELF_{READ/WRITE}ABLE_FIELDS.
-        """
-        init_res = super(ResUsers, self).__init__(pool, cr)
-        type(self).SELF_READABLE_FIELDS = list(self.SELF_READABLE_FIELDS)
-        type(self).SELF_READABLE_FIELDS.extend(['oauth_enforced'])
-        return init_res
+    # def __init__(self, pool, cr):
+    #     """ Override of __init__ to add access rights on oauth_enforced
+    #         field. Access rights are disabled by default, but allowed on some
+    #         specific fields defined in self.SELF_{READ/WRITE}ABLE_FIELDS.
+    #     """
+    #     init_res = super(ResUsers, self).__init__(pool, cr)
+    #     type(self).SELF_READABLE_FIELDS = list(self.SELF_READABLE_FIELDS)
+    #     type(self).SELF_READABLE_FIELDS.extend(['oauth_enforced'])
+    #     return init_res
 
     def _get_tokens(self, oauth_provider, params):
         response = requests.post(

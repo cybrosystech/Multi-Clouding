@@ -55,7 +55,7 @@ class AccountAsset(models.Model):
             schedule = self.env.ref(
                 'tasc_account_assets.action_set_asset_sequence_number_cron_update')
             schedule.update({
-                'nextcall': date + timedelta(seconds=30)
+                'nextcall': date + timedelta(seconds=15)
             })
 
     @api.model
@@ -64,7 +64,7 @@ class AccountAsset(models.Model):
         schedule = self.env.ref(
             'tasc_account_assets.action_set_asset_sequence_number')
         schedule.update({
-            'nextcall': date + timedelta(seconds=30)
+            'nextcall': date + timedelta(seconds=15)
         })
 
     def set_depreciable_value(self, limit):
@@ -100,7 +100,7 @@ class AccountAsset(models.Model):
             schedule = self.env.ref(
                 'tasc_account_assets.action_set_depreciable_value_cron_update')
             schedule.update({
-                'nextcall': date + timedelta(seconds=30)
+                'nextcall': date + timedelta(seconds=15)
             })
 
     def set_depreciable_value_cron_update(self):
@@ -108,5 +108,5 @@ class AccountAsset(models.Model):
         schedule = self.env.ref(
             'tasc_account_assets.action_set_depreciable_value')
         schedule.update({
-            'nextcall': date + timedelta(seconds=30)
+            'nextcall': date + timedelta(seconds=15)
         })

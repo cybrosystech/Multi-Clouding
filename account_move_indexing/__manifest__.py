@@ -7,11 +7,11 @@
     'author': "",
     'website': "",
     'category': 'Accounting',
-    'version': '14.0.1.0.0',
+    'version': '1.0',
     'depends': ['account'],
 
-    'data':
-        [
-
-        ]
+    "license": 'AGPL-3',
+    'installable': True,
+    'auto_install': False,
+    'application': False,
 }

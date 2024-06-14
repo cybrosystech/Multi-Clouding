@@ -7,6 +7,8 @@ from operator import itemgetter
 import xlsxwriter
 from odoo import models, fields, _, api
 from odoo.tools.safe_eval import dateutil
+from odoo.tools import format_date, date_utils, get_lang
+
 
 
 class LeaseManagementReport(models.Model):
@@ -72,7 +74,7 @@ class LeaseManagementReport(models.Model):
         schedule_action = self.env.ref(
             'tasc_lease_management_report.action_ll_rou_report_cron')
         schedule_action.update({
-            'nextcall': date + datetime.timedelta(seconds=1)
+            'nextcall': date + datetime.timedelta(seconds=15)
         })
         self.update({
             'll_rou_limit': 0,
@@ -84,7 +86,7 @@ class LeaseManagementReport(models.Model):
         schedule_action = self.env.ref(
             'tasc_lease_management_report.action_ll_aging_report_cron')
         schedule_action.update({
-            'nextcall': date + datetime.timedelta(seconds=1)
+            'nextcall': date + datetime.timedelta(seconds=15)
         })
         self.update({
             'll_aging_limit': 0,
@@ -96,7 +98,7 @@ class LeaseManagementReport(models.Model):
         schedule_action = self.env.ref(
             'tasc_lease_management_report.action_payment_aging_report_cron')
         schedule_action.update({
-            'nextcall': date + datetime.timedelta(seconds=1)
+            'nextcall': date + datetime.timedelta(seconds=15)
         })
         self.update({
             'payment_aging_limit': 0,
@@ -105,9 +107,9 @@ class LeaseManagementReport(models.Model):
 
     def action_schedule_lease_report(self):
         date = fields.Datetime.now()
-        schedule_action = self.env.ref('tasc_lease_management_report.action_lease_reports')
+        schedule_action = self.env.ref('lease_management_report.action_lease_reports')
         schedule_action.update({
-            'nextcall': date + datetime.timedelta(seconds=1)
+            'nextcall': date + datetime.timedelta(seconds=15)
         })
         self.update({
             'interest_amort_limit': 0,
@@ -208,7 +210,7 @@ class LeaseManagementReport(models.Model):
             'name': 'Payment Aging Report',
             'url': '/web/content/%s/%s/excel_sheet/%s?download=true' % (
                 self._name, self.id, self.excel_sheet_name),
-            'target': 'self'
+            'target': 'new'
         }
 
     def action_print_report_interest_and_amortizations(self):
@@ -304,7 +306,7 @@ class LeaseManagementReport(models.Model):
             'name': 'Lease Interest and Amortization Report',
             'url': '/web/content/%s/%s/excel_sheet/%s?download=true' % (
                 self._name, self.id, self.excel_sheet_name),
-            'target': 'self'
+            'target': 'new'
         }
 
     def action_print_report_ll_aging(self):
@@ -400,7 +402,7 @@ class LeaseManagementReport(models.Model):
             'name': 'LL Aging Report',
             'url': '/web/content/%s/%s/excel_sheet/%s?download=true' % (
                 self._name, self.id, self.excel_sheet_name),
-            'target': 'self'
+            'target': 'new'
         }
 
     def action_print_report_ll_rou(self):
@@ -495,7 +497,7 @@ class LeaseManagementReport(models.Model):
             'name': 'LL ROU Report',
             'url': '/web/content/%s/%s/excel_sheet/%s?download=true' % (
                 self._name, self.id, self.excel_sheet_name),
-            'target': 'self'
+            'target': 'new'
         }
 
     def lease_reports_cron(self, end_limit):
@@ -531,7 +533,7 @@ class LeaseManagementReport(models.Model):
             schedule = self.env.ref(
                 'tasc_lease_management_report.action_lease_reports_update_cron')
             schedule.update({
-                'nextcall': date + datetime.timedelta(seconds=10),
+                'nextcall': date + datetime.timedelta(seconds=15),
             })
         else:
             lease_management_report.interest_amort_limit = lease_management_report.end_limit
@@ -542,7 +544,7 @@ class LeaseManagementReport(models.Model):
         schedule = self.env.ref(
             'tasc_lease_management_report.action_lease_reports')
         schedule.update({
-            'nextcall': date + datetime.timedelta(seconds=10),
+            'nextcall': date + datetime.timedelta(seconds=15),
         })
 
     @api.model
@@ -551,7 +553,7 @@ class LeaseManagementReport(models.Model):
         schedule = self.env.ref(
             'tasc_lease_management_report.action_payment_aging_report_cron')
         schedule.update({
-            'nextcall': date + datetime.timedelta(seconds=10),
+            'nextcall': date + datetime.timedelta(seconds=15),
         })
 
     @api.model
@@ -560,7 +562,7 @@ class LeaseManagementReport(models.Model):
         schedule = self.env.ref(
             'tasc_lease_management_report.action_ll_aging_report_cron')
         schedule.update({
-            'nextcall': date + datetime.timedelta(seconds=10),
+            'nextcall': date + datetime.timedelta(seconds=15),
         })
 
     @api.model
@@ -569,7 +571,7 @@ class LeaseManagementReport(models.Model):
         schedule = self.env.ref(
             'tasc_lease_management_report.action_ll_rou_report_cron')
         schedule.update({
-            'nextcall': date + datetime.timedelta(seconds=10),
+            'nextcall': date + datetime.timedelta(seconds=15),
         })
 
     def action_ll_rou_reports_cron(self, end_limit):
@@ -601,7 +603,7 @@ class LeaseManagementReport(models.Model):
             schedule = self.env.ref(
                 'tasc_lease_management_report.action_ll_rou_report_cron_update')
             schedule.update({
-                'nextcall': date + datetime.timedelta(seconds=10),
+                'nextcall': date + datetime.timedelta(seconds=15),
             })
         else:
             lease_management_report.ll_rou_limit = lease_management_report.end_limit
@@ -640,7 +642,7 @@ class LeaseManagementReport(models.Model):
             schedule = self.env.ref(
                 'tasc_lease_management_report.action_payment_aging_report_cron_update')
             schedule.update({
-                'nextcall': date + datetime.timedelta(seconds=10),
+                'nextcall': date + datetime.timedelta(seconds=15),
             })
         else:
             lease_management_report.payment_aging_limit = lease_management_report.end_limit
@@ -677,7 +679,7 @@ class LeaseManagementReport(models.Model):
             schedule = self.env.ref(
                 'tasc_lease_management_report.action_ll_aging_report_cron_update')
             schedule.update({
-                'nextcall': date + datetime.timedelta(seconds=10),
+                'nextcall': date + datetime.timedelta(seconds=15),
             })
         else:
             lease_management_report.ll_aging_limit = lease_management_report.end_limit
@@ -992,12 +994,15 @@ class LeaseManagementReport(models.Model):
             years=5)
         if lease_contracts:
             # Less than 1 year
-
+            lang = self.env.user.lang or get_lang(self.env).code
+            project_site = f"COALESCE(project_site.name->>'{lang}', project_site.name->>'en_US')" if \
+                self.pool[
+                    'account.analytic.account'].name.translate else 'project_site.name'
             self._cr.execute(
                 'select sum(journal.amount_total) total, leasee.id as lease_id,'
                 'leasee.name as lease_name,leasee.company_id,'
                 'leasee.external_reference_number,currency.name as currency_name,'
-                'project_site.name from leasee_contract as leasee inner'
+                f'{project_site} as name from leasee_contract as leasee inner'
                 ' join account_move  as journal on '
                 'journal.leasee_contract_id=leasee.id inner join '
                 'res_currency as currency on '
@@ -1022,7 +1027,7 @@ class LeaseManagementReport(models.Model):
                 'select sum(journal.amount_total) total, leasee.id as lease_id,'
                 'leasee.name as lease_name,leasee.company_id,'
                 'leasee.external_reference_number,currency.name as currency_name,'
-                'project_site.name from leasee_contract as leasee inner'
+                f'{project_site} as name from leasee_contract as leasee inner'
                 ' join account_move  as journal on '
                 'journal.leasee_contract_id=leasee.id inner join '
                 'res_currency as currency on '
@@ -1047,7 +1052,7 @@ class LeaseManagementReport(models.Model):
                 'select sum(journal.amount_total) total, leasee.id as lease_id,'
                 'leasee.name as lease_name,leasee.company_id,'
                 'leasee.external_reference_number,currency.name as currency_name,'
-                'project_site.name from leasee_contract as leasee inner'
+                f'{project_site} as name from leasee_contract as leasee inner'
                 ' join account_move  as journal on '
                 'journal.leasee_contract_id=leasee.id inner join '
                 'res_currency as currency on '
@@ -1073,7 +1078,7 @@ class LeaseManagementReport(models.Model):
                 'select sum(journal.amount_total) total, leasee.id as lease_id,'
                 'leasee.name as lease_name,leasee.company_id,'
                 'leasee.external_reference_number,currency.name as currency_name,'
-                'project_site.name from leasee_contract as leasee inner'
+                f'{project_site} as name from leasee_contract as leasee inner'
                 ' join account_move  as journal on '
                 'journal.leasee_contract_id=leasee.id inner join '
                 'res_currency as currency on '
@@ -1722,7 +1727,7 @@ class LeaseManagementReport(models.Model):
                 )
                 interest_move_line_ids = self._cr.dictfetchall()
                 interest_lease_names = list(
-                    map(itemgetter('lease_name'), interest_move_line_ids))
+                    map(itemgetter('lease_id'), interest_move_line_ids))
                 for contract in lease_contract_ids:
                     amortization_amount = 0
                     dep_move_ids = contract.asset_id.depreciation_move_ids.ids

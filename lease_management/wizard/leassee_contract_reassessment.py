@@ -37,13 +37,13 @@ class Reassessment(models.TransientModel):
         })
         reassessment_installments = contract.installment_ids.filtered(lambda i: i.date >= self.reassessment_start_Date)
         first_installment = reassessment_installments[0]
+
         before_first = contract.installment_ids.filtered(
-            lambda i: i.get_period_order() == first_installment.get_period_order() - 1)
+            lambda i: i.get_period_order() == (first_installment.get_period_order() - 1))
         days_before_reassessment = (self.reassessment_start_Date - before_first.date).days
         days_after_reassessment = (first_installment.date - self.reassessment_start_Date).days
         old_amount = first_installment.amount
         old_subsequent = first_installment.subsequent_amount
-        # days = (first_installment.date - before_first.date).days if contract.is_contract_not_annual() else 365
         days = (first_installment.date - before_first.date).days
         old_remaining_liability = before_first.remaining_lease_liability + old_subsequent * days_before_reassessment / days
         remaining_lease_liability_before = self.get_before_remaining_lease(reassessment_installments,
@@ -59,7 +59,6 @@ class Reassessment(models.TransientModel):
                                                                        i + start, self.reassessment_start_Date,
                                                                        installment.date) for i, installment in
                                    enumerate(reassessment_installments)])
-        # num_days_year = 365 if contract.is_contract_not_annual() else contract.get_days_per_year(first_installment.date)
         period_ratio = ((
                                 first_installment.date - self.reassessment_start_Date).days) / 365
         interest_recognition = new_lease_liability * (
@@ -80,7 +79,6 @@ class Reassessment(models.TransientModel):
         })
         prev_install = first_installment
         for i, installment in enumerate(reassessment_installments[1:]):
-            # num_days_year = 365 if contract.is_contract_not_annual() else contract.get_days_per_year(installment.date)
             period_ratio = ((installment.date - prev_install.date).days) / 365
             interest_recognition = remaining_liability * ((1 + contract.interest_rate / 100) ** period_ratio - 1)
             remaining_liability -= (installment.amount - interest_recognition)
@@ -107,32 +105,9 @@ class Reassessment(models.TransientModel):
         rou_account = contract.asset_model_id.account_asset_id
         if amount:
             base_amount = amount
+
             if contract.leasee_currency_id != contract.company_id.currency_id:
                 amount = contract.leasee_currency_id._convert(amount, contract.company_id.currency_id, contract.company_id, self.reassessment_start_Date)
-            lines = [(0, 0, {
-                'name': 'Reassessment contract number %s' % contract.name,
-                'account_id': rou_account.id,
-                'credit': -amount if amount < 0 else 0,
-                'debit': amount if amount > 0 else 0,
-                'amount_currency': base_amount if base_amount > 0 else -base_amount,
-                'analytic_account_id': contract.analytic_account_id.id,
-                'project_site_id': contract.project_site_id.id,
-                'type_id': contract.type_id.id,
-                'location_id': contract.location_id.id,
-                'currency_id': contract.leasee_currency_id.id
-            }), (0, 0, {
-                'name': 'Reassessment contract number %s' % contract.name,
-                # 'account_id': contract.lease_liability_account_id.id,
-                'account_id': contract.long_lease_liability_account_id.id,
-                'debit': -amount if amount < 0 else 0,
-                'credit': amount if amount > 0 else 0,
-                'amount_currency': base_amount if base_amount > 0 else -base_amount,
-                'analytic_account_id': contract.analytic_account_id.id,
-                'project_site_id': contract.project_site_id.id,
-                'type_id': contract.type_id.id,
-                'location_id': contract.location_id.id,
-                'currency_id': contract.leasee_currency_id.id
-            })]
             move = self.env['account.move'].create({
                 'partner_id': contract.vendor_id.id,
                 'move_type': 'entry',
@@ -141,9 +116,29 @@ class Reassessment(models.TransientModel):
                 'date': self.reassessment_start_Date,
                 'journal_id': contract.asset_model_id.journal_id.id,
                 'leasee_contract_id': contract.id,
-                'line_ids': lines,
-                'auto_post': True,
+                'auto_post': 'at_date',
             })
+            move.line_ids = [(0, 0, {
+                'name': 'Reassessment contract number %s' % contract.name,
+                'account_id': rou_account.id,
+                'credit': -amount if amount < 0 else 0,
+                'debit': amount if amount > 0 else 0,
+                'move_id': move.id,
+                'analytic_account_id': contract.analytic_account_id.id,
+                'project_site_id': contract.project_site_id.id,
+                'analytic_distribution': contract.analytic_distribution,
+                'currency_id': contract.leasee_currency_id.id
+            }), (0, 0, {
+                'name': 'Reassessment contract number %s' % contract.name,
+                'account_id': contract.long_lease_liability_account_id.id,
+                'debit': -amount if amount < 0 else 0,
+                'credit': amount if amount > 0 else 0,
+                'move_id': move.id,
+                'analytic_account_id': contract.analytic_account_id.id,
+                'project_site_id': contract.project_site_id.id,
+                'analytic_distribution': contract.analytic_distribution,
+                'currency_id': contract.leasee_currency_id.id
+            })]
             if contract.leasee_currency_id != contract.company_id.currency_id:
                 test_amount_c = move.line_ids.filtered(lambda x: x.credit > 0)
                 test_amount_c.amount_currency = test_amount_c.amount_currency * -1
@@ -161,8 +156,6 @@ class Reassessment(models.TransientModel):
 
     def update_related_journal_items(self, installments_to_modify):
         contract = self.leasee_contract_id
-        # delta = contract.payment_frequency * (
-        #     1 if contract.payment_frequency_type == 'months' else 12)
         for i, ins in enumerate(installments_to_modify):
             if contract.leasor_type == 'single':
                 self.update_invoice_amount(ins.installment_invoice_id, ins.amount)
@@ -175,38 +168,32 @@ class Reassessment(models.TransientModel):
                     if invoice:
                         self.update_invoice_amount(invoice, amount)
             if i:
+                # delay = ins.interest_move_ids.sudo().with_delay(priority=1, eta=5)
+                # delay.with_context(force_delete=True).unlink()
                 ins.interest_move_ids.sudo().unlink()
         contract.create_contract_installment_entries(installments_to_modify[1].date)
         contract.leasee_action_generate_interest_entries_reassessment(installments_to_modify[1].date)
 
     def update_invoice_amount(self, invoice, new_amount):
-        inv_state = invoice.state
         if invoice:
+            inv_state = invoice.state
             if inv_state == 'posted':
                 invoice.button_draft()
 
             invoice_line = invoice.invoice_line_ids
-            new_invoice = invoice.new(invoice._convert_to_write(invoice._cache))
             line_values = {
                 'product_id': invoice_line.product_id.id,
                 'currency_id': invoice_line.currency_id.id,
                 'account_id': invoice_line.account_id.id,
                 'analytic_account_id': invoice_line.analytic_account_id.id,
                 'project_site_id': invoice_line.project_site_id.id,
-                'type_id': invoice_line.type_id.id,
-                'location_id': invoice_line.location_id.id,
+                # 'type_id': invoice_line.type_id.id,
+                # 'location_id': invoice_line.location_id.id,
+                'analytic_distribution':invoice_line.analytic_distribution,
                 'tax_ids': [(4, tax_id) for tax_id in invoice_line.tax_ids.ids],
+                'price_unit': new_amount
             }
-            new_invoice.invoice_line_ids = [(5,), (0, 0, line_values)]
-            new_invoice.invoice_line_ids.update({'price_unit': new_amount})
-            new_invoice.invoice_line_ids._onchange_price_subtotal()
-
-            new_invoice._compute_invoice_taxes_by_group()
-            new_invoice._onchange_invoice_line_ids()
-            new_invoice._compute_amount()
-            values = new_invoice._convert_to_write(new_invoice._cache)
-            invoice.write({'line_ids': values.get('line_ids')})
-
+            invoice.invoice_line_ids = [(5,), (0, 0, line_values)]
             if inv_state == 'posted':
                 invoice.action_post()
 
@@ -286,9 +273,11 @@ class Reassessment(models.TransientModel):
                     self.env.company,
                     move.date)
             move.write({'line_ids': [(1, debit_line.id, {'debit': interest_amount,
-                                                         'amount_currency': after_reassessment_base}),
+                                                         'amount_currency': after_reassessment_base
+                                                         }),
                                      (1, credit_line.id, {'credit': interest_amount,
-                                                          'amount_currency': -after_reassessment_base})]})
+                                                          'amount_currency': -after_reassessment_base
+                                                          })]})
         lease_liability_accounts = [contract.long_lease_liability_account_id.id, contract.lease_liability_account_id.id]
         amount = self.get_installment_entry_amount(first_installment)
         if amount:
@@ -353,30 +342,6 @@ class Reassessment(models.TransientModel):
                                                           contract.company_id.currency_id,
                                                           contract.company_id,
                                                           self.reassessment_start_Date)
-            lines = [(0, 0, {
-                'name': 'Reassessment Installment Entry',
-                'account_id': contract.long_lease_liability_account_id.id or contract.leasee_template_id.long_lease_liability_account_id.id,
-                'debit': amount if amount > 0 else 0,
-                'credit': -amount if amount < 0 else 0,
-                'amount_currency': amount_base if amount_base > 0 else -amount_base,
-                'analytic_account_id': contract.analytic_account_id.id,
-                'project_site_id': contract.project_site_id.id,
-                'type_id': contract.type_id.id,
-                'location_id': contract.location_id.id,
-                'currency_id': contract.leasee_currency_id.id
-            }),
-                     (0, 0, {
-                         'name': 'Reassessment Installment Entry',
-                         'account_id': contract.lease_liability_account_id.id,
-                         'credit': amount if amount > 0 else 0,
-                         'debit': -amount if amount < 0 else 0,
-                         'amount_currency': amount_base if amount_base > 0 else -amount_base,
-                         'analytic_account_id': contract.analytic_account_id.id,
-                         'project_site_id': contract.project_site_id.id,
-                         'type_id': contract.type_id.id,
-                         'location_id': contract.location_id.id,
-                         'currency_id': contract.leasee_currency_id.id
-                     })]
             move = self.env['account.move'].create({
                 'move_type': 'entry',
                 'currency_id': contract.leasee_currency_id.id,
@@ -384,9 +349,30 @@ class Reassessment(models.TransientModel):
                 'date': self.reassessment_start_Date,
                 'journal_id': contract.initial_journal_id.id,
                 'leasee_contract_id': contract.id,
-                'line_ids': lines,
-                'auto_post': True,
+                'auto_post': 'at_date',
             })
+            move.line_ids =[(0, 0, {
+                'name': 'Reassessment Installment Entry',
+                'account_id': contract.long_lease_liability_account_id.id or contract.leasee_template_id.long_lease_liability_account_id.id,
+                'debit': amount if amount > 0 else 0,
+                'credit': -amount if amount < 0 else 0,
+                'move_id': move.id,
+                'analytic_account_id': contract.analytic_account_id.id,
+                'project_site_id': contract.project_site_id.id,
+                'analytic_distribution': contract.analytic_distribution,
+                'currency_id': contract.leasee_currency_id.id
+            }),
+                     (0, 0, {
+                         'name': 'Reassessment Installment Entry',
+                         'account_id': contract.lease_liability_account_id.id,
+                         'credit': amount if amount > 0 else 0,
+                         'debit': -amount if amount < 0 else 0,
+                         'move_id': move.id,
+                         'analytic_account_id': contract.analytic_account_id.id,
+                         'project_site_id': contract.project_site_id.id,
+                         'analytic_distribution':contract.analytic_distribution,
+                         'currency_id': contract.leasee_currency_id.id
+                     })]
             if contract.leasee_currency_id != contract.company_id.currency_id:
                 test_amount_c = move.line_ids.filtered(lambda x: x.credit > 0)
                 test_amount_c.amount_currency = test_amount_c.amount_currency * -1

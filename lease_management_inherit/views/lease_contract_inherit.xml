@@ -5,7 +5,7 @@
         <field name="inherit_id" ref="lease_management.view_leasee_contract_form"/>
         <field name="arch" type="xml">
             <field name="remaining_lease_liability" position="after">
-                <field name="company_id"/>
+                <field name="company_id" invisible="1"/>
             </field>
         </field>
     </record>

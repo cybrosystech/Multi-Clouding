@@ -17,7 +17,9 @@ class AccountMove(models.Model):
                 [('id', 'in', rec.invoice_line_ids.ids)], limit=1,
                 order="id ASC")
             if move_line_id:
-                rec.project_site_id = move_line_id.project_site_id.id
+                # rec.project_site_id = move_line_id.project_site_id.id
+                rec.project_site_id = False
+
             else:
                 rec.project_site_id = False
 
@@ -40,29 +42,6 @@ class AccountMove(models.Model):
             move_ids = move_ids.filtered(
                 lambda l: l.project_site_id.id in project_sites.ids)
         return [('id', 'in', move_ids.ids)]
-
-    def _search_virtual_remaining_leaves(self, operator, value):
-        value = float(value)
-        leave_types = self.env['hr.leave.type'].search([])
-        valid_leave_types = self.env['hr.leave.type']
-
-        for leave_type in leave_types:
-            if leave_type.allocation_type != 'no':
-                if operator == '>' and leave_type.virtual_remaining_leaves > value:
-                    valid_leave_types |= leave_type
-                elif operator == '<' and leave_type.virtual_remaining_leaves < value:
-                    valid_leave_types |= leave_type
-                elif operator == '>=' and leave_type.virtual_remaining_leaves >= value:
-                    valid_leave_types |= leave_type
-                elif operator == '<=' and leave_type.virtual_remaining_leaves <= value:
-                    valid_leave_types |= leave_type
-                elif operator == '=' and leave_type.virtual_remaining_leaves == value:
-                    valid_leave_types |= leave_type
-                elif operator == '!=' and leave_type.virtual_remaining_leaves != value:
-                    valid_leave_types |= leave_type
-            else:
-                valid_leave_types |= leave_type
-        return [('id', 'in', valid_leave_types.ids)]
 
 
 class AccountMoveLine(models.Model):
