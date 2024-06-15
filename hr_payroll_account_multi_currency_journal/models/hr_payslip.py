@@ -29,7 +29,6 @@ class HrPayslip(models.Model):
 
     def action_payslip_done(self):
         """ update journal entry created with new amount based on journal currency """
-        print("action_payslip_done")
         res = super(HrPayslip, self).action_payslip_done()
         payslips_to_update = self.filtered(lambda slip: not slip.payslip_run_id)
         payslip_runs = (self - payslips_to_update).mapped('payslip_run_id')
@@ -79,8 +78,8 @@ class HrPayslip(models.Model):
     )
 
 
-class HrPayslipLine(models.Model):
-    _inherit = 'hr.payslip.line'
-    amount = fields.Float()
-    total = fields.Float(compute='_compute_total', string='Total', store=True)
-    currency_id = fields.Many2one('res.currency', related='slip_id.currency_id')
+# class HrPayslipLine(models.Model):
+#     _inherit = 'hr.payslip.line'
+#     amount = fields.Float()
+#     total = fields.Float(compute='_compute_total', string='Total', store=True)
+#     currency_id = fields.Many2one('res.currency', related='slip_id.currency_id')

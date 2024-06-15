@@ -1,13 +1,5 @@
 # -*- coding: utf-8 -*-
-
-import math
-from odoo import api, fields, models, _
-from odoo.exceptions import UserError
-from odoo.tools import float_compare, float_round
-from odoo.tools.misc import formatLang
-from dateutil.relativedelta import relativedelta
-from datetime import datetime
-import random
+from odoo import fields, models, _
 
 
 class AccoutGroup(models.Model):

@@ -51,7 +51,7 @@ class AccountMoveConfig(models.Model):
             date = fields.Datetime.now()
 
             schedule.update({
-                'nextcall': date + timedelta(seconds=20)
+                'nextcall': date + timedelta(seconds=15)
             })
         else:
             journal_config.state = 'draft'
@@ -64,7 +64,7 @@ class AccountMoveConfig(models.Model):
             date = fields.Datetime.now()
 
             schedule.update({
-                'nextcall': date + timedelta(seconds=20)
+                'nextcall': date + timedelta(seconds=15)
             })
 
     def schedule_journal_action(self):
@@ -81,7 +81,7 @@ class AccountMoveConfig(models.Model):
             date = fields.Datetime.now()
 
             schedule.update({
-                'nextcall': date + timedelta(seconds=20)
+                'nextcall': date + timedelta(seconds=15)
             })
             self.state = 'scheduled'
         else:

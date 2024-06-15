@@ -28,6 +28,8 @@
                 <t t-set="url" t-value="'/my/leaves'"/>
                 <t t-set="count" t-value="leaves_count"/>
                 <t t-set="placeholder_count" t-value="'leaves_count'"/>
+                <t t-set="config_card" t-value="True"/>
+                <t t-set="text">View, Create Leaves</t>
             </t>
         </xpath>
     </template>
@@ -79,6 +81,8 @@
                 </thead>
             </t>
             <t t-if="leaves" t-call="portal.portal_table">
+                <!--                <span>My Leaves-->
+                <!--                </span>-->
                 <thead>
                     <th colspan="8"
                         style="text-align:center;background-color:#7BA1B2;">My
@@ -86,6 +90,8 @@
                     </th>
                 </thead>
                 <t t-foreach="grouped_leave" t-as="group_leave">
+                    <!--                    <t t-if="grouped_leave"></t>-->
+
                     <thead>
                         <tr class="active"
                             t-attf-class="{{'thead-light' if not groupby == 'none' else ''}}">
@@ -112,7 +118,7 @@
                     </thead>
 
                     <t t-foreach="group_leave" t-as="leave">
-                        <t t-if="leave.employee_id.sudo().user_id.id==request.env.user.id">
+                        <t t-if="leave.employee_id.user_id.id==request.env.user.id">
                             <tr>
                                 <td></td>
                                 <td>
@@ -206,7 +212,7 @@
                     </thead>
 
                     <t t-foreach="group_leave" t-as="leave">
-                        <t t-if="leave.employee_id.parent_id.sudo().user_id.id==request.env.user.id or leave.employee_id.sudo().leave_manager_id.id==request.env.user.id">
+                        <t t-if="leave.employee_id.parent_id.user_id.id==request.env.user.id or leave.employee_id.leave_manager_id.id==request.env.user.id">
                             <tr>
                                 <td></td>
                                 <td>
@@ -531,7 +537,7 @@
                                     </div>
                                     <t>
                                         <t t-set="responsible"
-                                           t-value="employee.sudo() and employee.sudo().parent_id.sudo().user_id "/>
+                                           t-value="employee.sudo() and employee.sudo().parent_id.user_id "/>
 
                                     </t>
                                     <t t-if="responsible">
@@ -735,7 +741,9 @@
                 <t t-set="title">Attendance</t>
                 <t t-set="url" t-value="'/my/attandance'"/>
                 <t t-set="count" t-value="attendances_count"/>
+                <t t-set="text">View attendances and Checkin and Check</t>
                 <t t-set="placeholder_count" t-value="'attendances_count'"/>
+                <t t-set="config_card" t-value="True"/>
             </t>
         </xpath>
     </template>

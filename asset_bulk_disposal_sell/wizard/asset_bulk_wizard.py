@@ -24,7 +24,7 @@ class AssetBulkWizard(models.TransientModel):
             if record.action == 'dispose':
                 date = record.contract_end_date
             record.asset_id.set_to_close_bulk(
-                invoice_line_id=invoice_line if record.invoice_line_id or record.action == 'dispose' else record.invoice_id,
+                invoice_line_ids=invoice_line if record.invoice_line_id or record.action == 'dispose' else record.invoice_id,
                 partial=record.partial_bool,
                 partial_amount=record.partial_amount,
                 date=date)
@@ -48,7 +48,7 @@ class AssetSellDisposalLines(models.TransientModel):
                                  domain="[('move_type', 'in', ['out_invoice','in_refund']), ('state', '=', 'posted')]")
     invoice_line_id = fields.Many2one('account.move.line',
                                       help="There are multiple lines that could be the related to this asset",
-                                      domain="[('move_id', '=', invoice_id), ('exclude_from_invoice_tab', '=', False)]")
+                                      domain="[('move_id', '=', invoice_id)]")
     select_invoice_line_id = fields.Boolean(
         compute="_compute_select_invoice_line_id")
     gain_account_id = fields.Many2one('account.account',

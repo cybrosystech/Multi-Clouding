@@ -15,8 +15,10 @@
                                    groups="base.group_multi_company"/>
                         </group>
                     </group>
-                    <group>
-                        <div>
+<!--                    <group>-->
+<!--                        <div>-->
+                     <notebook>
+                        <page string="Budget Lines ">
                             <field name="budget_line_ids">
                                 <tree editable="bottom">
                                     <field name="name"/>
@@ -27,8 +29,10 @@
                                            widget="many2many_tags"/>
                                 </tree>
                             </field>
-                        </div>
-                    </group>
+                        </page>
+                     </notebook>
+<!--                        </div>-->
+<!--                    </group>-->
                 </sheet>
             </form>
         </field>

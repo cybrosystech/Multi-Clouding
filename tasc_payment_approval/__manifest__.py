@@ -1,15 +1,15 @@
 {
     'name': 'Payment Approval',
-    'summary': """""",
+    'summary': """Payment Approval""",
 
     'description': """
-    1. Modify cost center on journal items and invoice lines.
+    1.Payment approval by batches..
     """,
 
     'author': "Aswathi",
     'website': "",
     'category': 'Accounting',
-    'version': '14.0.1.0.0',
+    'version': '17.0.1.0.0',
     'depends': ['account', 'analytic_account_types'],
 
     'data':
@@ -18,11 +18,12 @@
             'security/ir.model.access.csv',
             'security/security.xml',
             'views/purpose_code_view.xml',
-            'wizard/account_payment_approval.xml',
-            'wizard/account_register_payment_view.xml',
+            'views/default_purpose_code_view.xml',
             'views/account_payment.xml',
             'views/payment_approval_check.xml',
-            'views/default_purpose_code_view.xml',
+            'wizard/account_register_payment_view.xml',
+            'wizard/account_payment_approval.xml',
+
         ],
     'qweb': [
     ],

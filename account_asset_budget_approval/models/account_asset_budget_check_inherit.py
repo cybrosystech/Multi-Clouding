@@ -1,4 +1,6 @@
-from odoo import models, fields
+import re
+
+from odoo import api, models, fields
 
 
 class AccountAssetBudget(models.Model):
@@ -25,13 +27,14 @@ class AccountAssetBudget(models.Model):
             else:
                 if self.env['budget.asset.check.in.out'].search(
                         [('active', '=', True),
-                         ('company_id', '=', self.env.company.id)]):
+                         ('company_id', '=', self.env.company.id),
+                         ('budget_line_ids', '!=', False)]):
                     rec.request_approval_bool = False
                 else:
                     rec.request_approval_bool = True
             if self.asset_approval_cycle_ids.filtered(
                     lambda x: x.is_approved == True):
-                self.request_approval_bool = True
+                self.request_approval_bool = False
 
     def compute_approval_process(self):
         approval_lines = self.asset_approval_cycle_ids

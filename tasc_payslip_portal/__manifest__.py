@@ -8,16 +8,9 @@
     'company': 'Cybrosys Techno Solutions',
     'website': 'https://www.cybrosys.com',
     'category': 'Website',
-    'version': '14.0.1.0.0',
+    'version': '17.0.1.0.0',
     'depends': ['base', 'portal', 'hr_payroll'],
-    'data':
-        [
-            'security/hr_payslip_security.xml',
-            'security/ir.model.access.csv',
-            'views/payslip_portal_template.xml',
-            'views/report_payslip_templates.xml',
-            'views/hr_payroll_report.xml',
-        ],
+    'data': [],
     'license': 'AGPL-3',
     'installable': True,
     'auto_install': False,

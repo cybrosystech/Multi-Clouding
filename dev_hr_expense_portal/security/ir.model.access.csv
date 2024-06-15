@@ -3,4 +3,3 @@ access_hr_expense_portal,access.hr.expense.portal,hr_expense.model_hr_expense,ba
 access_hr_expense_sheet_portal,access.hr.expense.sheet.portal,hr_expense.model_hr_expense_sheet,base.group_portal,1,0,0,0
 access_hr_employee_public_portal,access.hr.employee.public.portal,hr.model_hr_employee_public,base.group_portal,1,0,0,0
 access_product_product_portal,access.product.product.portal,product.model_product_product,base.group_portal,1,0,0,0
-access_expense_journal,access.expense.journal,model_expense_journal,base.group_user,1,1,1,1

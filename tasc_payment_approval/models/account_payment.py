@@ -6,7 +6,8 @@ class AccountPayment(models.Model):
 
     @api.model
     def _default_purpose_code_id(self):
-        default_purpose_code = self.env['default.purpose.code'].search([('company_id','=',self.env.company.id)])
+        default_purpose_code = self.env['default.purpose.code'].search(
+            [('company_id', '=', self.env.company.id)])
         if default_purpose_code:
             return default_purpose_code.purpose_code_id.id
         else:

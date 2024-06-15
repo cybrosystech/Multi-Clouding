@@ -43,7 +43,6 @@ var cashFlowReportWidget = AbstractAction.extend({
         return this._super.apply(this, arguments);
     },
     willStart: async function () {
-    console.log("lllllllllllll",this)
         const reportsInfoPromise = this._rpc({
             model: this.report_model,
             method: 'get_cash_flow_information',
@@ -64,7 +63,6 @@ var cashFlowReportWidget = AbstractAction.extend({
         this.render_template();
     },
     parse_reports_informations: function(values) {
-        console.log("values",values);
         this.buttons = values.buttons;
         this.$searchview_buttons = $(values.searchview_html);
         this.main_html = values.main_html;
@@ -90,16 +88,12 @@ var cashFlowReportWidget = AbstractAction.extend({
     },
 
     comparison_click: function(e) {
-    console.log("ooooooooooooo",this);
-    console.log("fghjk",e.target.attributes['data-filter']);
     var comparison_filter = e.target.attributes['data-filter'].value;
-    console.log("llllllllllllllllllllllllfffffffff",comparison_filter);
     this.report_options['comparison'] = comparison_filter;
     this.render_values()
     },
 
     prevent_menu: function(e){
-        console.log("hhhhhhhhhhh");
         e.stopPropagation();
         var panel_custom = this.$('#custom_date')
         if (panel_custom[0].style.display === "block") {

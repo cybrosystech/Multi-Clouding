@@ -111,7 +111,7 @@ class LeaseContractExtensionXlsxWizard(models.TransientModel):
             'name': 'Lease Extension Report',
             'url': '/web/content/%s/%s/excel_sheet/%s?download=true' % (
                 self._name, self.id, self.excel_sheet_name),
-            'target': 'self'
+            'target': 'new'
         }
 
     def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data,

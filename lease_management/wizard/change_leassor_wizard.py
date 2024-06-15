@@ -2,9 +2,7 @@
 """ init object """
 from odoo import fields, models, api, _
 from odoo.exceptions import ValidationError
-from datetime import  date
-
-
+from datetime import date
 import logging
 
 LOGGER = logging.getLogger(__name__)
@@ -42,22 +40,6 @@ class ChangeLeasorWizard(models.TransientModel):
         res['vendor_id'] = leasee_contract.vendor_id.id
         return res
 
-    # @api.model
-    # def create(self, vals):
-    #     res = super(ChangeLeasorWizard, self).create(vals)
-    #     if res.leasor_type == 'multi':
-    #         for ml in res.leasee_contract_id.multi_leasor_ids:
-    #             vals = {
-    #                 'wizard_id': res.id,
-    #                 'partner_id': ml.partner_id.id,
-    #                 'type': ml.type,
-    #                 'amount': ml.amount,
-    #                 'percentage': ml.percentage,
-    #                 'multi_leasor_id': ml.id,
-    #             }
-    #             self.env['change.leasor.line.wizard'].create(vals)
-    #     return res
-
     def check_leasor(self):
         percentage = 0
         if self.leasor_type == 'multi':
@@ -75,7 +57,6 @@ class ChangeLeasorWizard(models.TransientModel):
 
     def action_apply(self):
         self.check_leasor()
-        # self.check_date()
         contract = self.leasee_contract_id
         if self.leasor_type != contract.leasor_type:
             contract.leasor_type = self.leasor_type
@@ -83,7 +64,6 @@ class ChangeLeasorWizard(models.TransientModel):
                 ('leasee_contract_id', '=', contract.id),
                 ('move_type', '=', 'in_invoice'),
                 ('state', '=', 'draft'),
-                # ('leasee_installment_id', '!=', False),
             ]).filtered(lambda m: m.date >= self.change_date)
             bills.sudo().unlink()
 
@@ -100,7 +80,6 @@ class ChangeLeasorWizard(models.TransientModel):
                     ('leasee_contract_id', '=', contract.id),
                     ('move_type', '=', 'in_invoice'),
                     ('state', '=', 'draft'),
-                    # ('leasee_installment_id', '!=', False),
                 ]).filtered(lambda m: m.date >= self.change_date)
                 bills.unlink()
                 installments = self.env['leasee.installment'].search([
@@ -118,7 +97,6 @@ class ChangeLeasorWizard(models.TransientModel):
                         ('move_type', '=', 'in_invoice'),
                         ('state', '=', 'draft'),
                         ('partner_id', '=', line.partner_id.id),
-                        # ('leasee_installment_id', '!=', False),
                     ]).filtered(lambda m: m.date >= self.change_date)
                     bills.sudo().unlink()
             removed_lines.sudo().unlink()
@@ -147,7 +125,6 @@ class ChangeLeasorWizard(models.TransientModel):
                         ('move_type', '=', 'in_invoice'),
                         ('state', '=', 'draft'),
                         ('partner_id', '=', ml.partner_id.id),
-                        # ('leasee_installment_id', '!=', False),
                     ]).filtered(lambda m: m.date >= self.change_date)
 
                     installments = self.env['leasee.installment'].search([

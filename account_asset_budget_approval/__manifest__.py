@@ -7,8 +7,9 @@
     'author': "",
     'website': "",
     'category': 'Accounting',
-    'version': '14.0.1.0.0',
-    'depends': ['account', 'analytic_account_types', 'approve_status'],
+    'version': '1.0',
+    'depends': ['account', 'analytic_account_types',
+                'approve_status'],
 
     'data':
         [
@@ -17,5 +18,9 @@
             'data/data.xml',
             'views/in_out_assets_budget.xml',
             'views/account_asset_view_inherit.xml',
-        ]
+        ],
+    "license": 'AGPL-3',
+    'installable': True,
+    'auto_install': False,
+    'application': False,
 }

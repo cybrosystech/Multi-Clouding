@@ -12,23 +12,26 @@
                             </group>
                             <group>
                                 <field name="type"/>
-                                <field name="company_id" groups="base.group_multi_company"/>
+                                <field name="company_id"
+                                       groups="base.group_multi_company"/>
                             </group>
                         </group>
-                        <group>
-                            <div>
+                        <notebook>
+                            <page string="Budget Lines ">
                                 <field name="budget_line_ids">
                                     <tree editable="bottom">
                                         <field name="name"/>
                                         <field name="from_amount"/>
-                                        <field name="to_amount" invisible="1"/>
+                                        <field name="to_amount" invisible="1" column_invisible="1"/>
                                         <field name="approval_seq"/>
-                                        <field name="user_ids" widget="many2many_tags"/>
+                                        <field name="user_ids"
+                                               widget="many2many_tags"/>
                                     </tree>
                                 </field>
-                            </div>
-                        </group>
+                            </page>
+                        </notebook>
                     </sheet>
+
                 </form>
             </field>
         </record>
@@ -59,7 +62,8 @@
             </field>
         </record>
 
-        <menuitem id="menu_in_out_budget_view" name="Budget Check" parent="purchase.menu_purchase_config"
+        <menuitem id="menu_in_out_budget_view" name="Budget Check"
+                  parent="purchase.menu_purchase_config"
                   action="action_in_out_budget_view" sequence="100"/>
     </data>
 </odoo>

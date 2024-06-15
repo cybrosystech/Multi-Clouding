@@ -9,12 +9,15 @@
     'author': "",
     'website': "",
     'category': 'Accounting',
-    'version': '14.0.1.0.0',
+    'version': '17.0.1.0.0',
     'depends': ['account'],
 
     'data':
         [
             'data/journals_active_check_cron.xml',
             'views/account_move_active_view.xml'
-        ]
+        ],
+    'installable': True,
+    'auto_install': False,
+    'application': False,
 }

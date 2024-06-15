@@ -8,49 +8,72 @@
             <field name="arch" type="xml">
                 <form>
                     <header>
-                        <field name="child_ids" invisible="1" />
-                        <button name="action_activate" string="Activate" class="oe_highlight" states="draft"
+                        <field name="child_ids" invisible="1"/>
+                        <button name="action_activate" string="Activate"
+                                class="oe_highlight"
+                                invisible="state != 'draft'"
                                 type="object"/>
-                        <button name="action_create_installments" string="Create Installments" class="oe_highlight" states="draft"
+                        <button name="action_create_installments"
+                                string="Create Installments"
+                                class="oe_highlight"
+                                invisible="state != 'draft'"
                                 type="object"/>
-                        <button name="action_create_payment" string="Create Payment" class="oe_highlight" states="draft"
+                        <button name="action_create_payment"
+                                string="Create Payment" class="oe_highlight"
+                                invisible="state != 'draft'"
                                 type="object"/>
-                        <button name="action_terminate" string="Terminate" class="oe_highlight" states="active,extended"
+                        <button name="action_terminate" string="Terminate"
+                                class="oe_highlight"
+                                invisible="state not in ['active','extended']"
                                 type="object"/>
                         <button name="%(lease_management.view_leasee_contract_reassessment_action)d"
-                                string="Reassessment" class="oe_highlight" states="active,extended" type="action"/>
-                        <button name="%(lease_management.view_advance_leasee_wizard_action)d"
-                                string="Advance Installments" class="oe_highlight" states="active,extended" type="action"/>
-                        <button name="%(lease_management.view_leasee_period_extend_action)d" string="Extend Period"
-                                class="oe_highlight"
-                                attrs="{'invisible': ['|',('extendable', '!=', True),('state', 'not in', ['active', 'expired'])]}"
+                                string="Reassessment" class="oe_highlight"
+                                invisible="state not in ['active','extended']"
                                 type="action"/>
-                        <button name="%(lease_management.view_change_leasor_wizard_action)d" string="Change Leasor" class="oe_highlight"
-                                attrs="{'invisible': [('state', 'not in', ['active'])]}"
+                        <button name="%(lease_management.view_advance_leasee_wizard_action)d"
+                                string="Advance Installments"
+                                class="oe_highlight"
+                                invisible="state not in ['active','extended']"
+                                type="action"/>
+                        <button name="%(lease_management.view_leasee_period_extend_action)d"
+                                string="Extend Period"
+                                class="oe_highlight"
+                                invisible="extendable != True or state not in ['active', 'expired']"
+                                type="action"/>
+                        <button name="%(lease_management.view_change_leasor_wizard_action)d"
+                                string="Change Leasor" class="oe_highlight"
+                                invisible="state not in ['active']"
                                 type="action"
-                                />
-                        <field name="state" widget="statusbar" statusbar_visible=""/>
+                        />
+                        <field name="state" widget="statusbar"
+                               statusbar_visible=""/>
                     </header>
                     <sheet>
                         <div class="oe_button_box" name="button_box">
 
                             <button class="oe_stat_button" string="Bills"
-                                    name="action_open_bills" type="object" icon="fa-pencil-square-o">
+                                    name="action_open_bills" type="object"
+                                    icon="fa-pencil-square-o">
                             </button>
                             <button class="oe_stat_button" string="Payments"
-                                    name="action_open_payments" type="object" icon="fa-usd">
+                                    name="action_open_payments" type="object"
+                                    icon="fa-usd">
                             </button>
-                            <button class="oe_stat_button" string="Journal Entries"
-                                    name="action_open_journal_entries" type="object" icon="fa-book">
+                            <button class="oe_stat_button"
+                                    string="Journal Entries"
+                                    name="action_open_journal_entries"
+                                    type="object" icon="fa-book">
                             </button>
-                            <button class="oe_stat_button" string="Contract Extensions"
-                                    attrs="{'invisible': [('child_ids', '=', [] )]}"
-                                    name="action_open_extended_contract" type="object" icon="fa-paperclip">
+                            <button class="oe_stat_button"
+                                    string="Contract Extensions"
+                                    invisible="not child_ids"
+                                    name="action_open_extended_contract"
+                                    type="object" icon="fa-paperclip">
                             </button>
                             <button class="oe_stat_button" string="Asset"
-                                    name="action_view_asset" type="object" icon="fa-archive">
+                                    name="action_view_asset" type="object"
+                                    icon="fa-archive">
                             </button>
-
                         </div>
                         <div class="oe_title">
                             <label for="name" class="oe_edit_only"/>
@@ -60,111 +83,181 @@
                         </div>
                         <group>
                             <group>
-                                <field name="leasee_template_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                <field name="external_reference_number" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                <field name="leasor_type" attrs="{'readonly': [('state', '!=', 'draft')]}" />
-                                <field name="vendor_id" attrs="{'invisible':[('leasor_type','!=','single')],'required':[('leasor_type','=','single')],'readonly': [('state', '!=', 'draft')]}"/>
-                                <field name="inception_date" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                <field name="commencement_date" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                <field name="initial_payment_value" />
-                                <field name="estimated_ending_date" />
-                                <field name="rou_value" />
+                                <field name="leasee_template_id"
+                                       readonly="state != 'draft'"/>
+                                <field name="external_reference_number"
+                                       readonly="state != 'draft'"/>
+                                <field name="leasor_type"
+                                       readonly="state != 'draft'"/>
+                                <field name="vendor_id"
+                                       invisible="leasor_type != 'single'"
+                                       required="leasor_type == 'single'"
+                                       readonly="state != 'draft'"/>
+                                <field name="inception_date"
+                                       readonly="state != 'draft'"/>
+                                <field name="commencement_date"
+                                       readonly="state != 'draft'"/>
+                                <field name="initial_payment_value"/>
+                                <field name="estimated_ending_date"/>
+                                <field name="rou_value"/>
                                 <!--                                <field name="registered_paymen" />-->
-                                <field name="estimated_cost_dismantling" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="estimated_cost_dismantling"
+                                       raadonly="state != 'draft'"/>
                                 <field name="original_rou" readonly="1"/>
                                 <field name="original_ll" readonly="1"/>
                             </group>
                             <group>
-                                <field name="leasee_currency_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                <field name="asset_name" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                <field name="asset_description" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                <field name="initial_direct_cost" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                <field name="incentives_received" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                <field name="incentives_received_type" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                <field name="useful_life" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                <field name="installment_amount" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                <field name="leasee_currency_id"
+                                       readonly="state != 'draft'"/>
+                                <field name="asset_name"
+                                       readonly="state != 'draft'"/>
+                                <field name="asset_description"
+                                       readonly="state != 'draft'"
+                                />
+                                <field name="initial_direct_cost"
+                                       readonly="state != 'draft'"/>
+                                <field name="incentives_received"
+                                       readonly="state != 'draft'"/>
+                                <field name="incentives_received_type"
+                                       readonly="state != 'draft'"/>
+                                <field name="useful_life"
+                                       readonly="state != 'draft'"/>
+                                <field name="installment_amount"
+                                       readonly="state != 'draft'"/>
                                 <field name="lease_liability"/>
                                 <field name="remaining_lease_liability"/>
+                                <field name="company_id"/>
+
                             </group>
                         </group>
                         <notebook>
-                            <page string="Contract Details" attrs="{'readonly': [('state', '!=', 'draft')]}">
+                            <page string="Contract Details"
+                                  readonly="state != 'draft'">
                                 <group>
                                     <group>
-                                        <field name="lease_contract_period" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="lease_contract_period_type" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="terminate_month_number" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="lease_contract_period"
+                                               readonly="state != 'draft'"/>
+                                        <field name="lease_contract_period_type"
+                                               readonly="state != 'draft'"/>
+                                        <field name="terminate_month_number"
+                                               readonly="state != 'draft'"/>
                                         <!--                                        <field name="terminate_month_number" />-->
-                                        <field name="terminate_fine" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="type_terminate" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="extendable" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="prorata" />
+                                        <field name="terminate_fine"
+                                               readonly="state != 'draft'"/>
+                                        <field name="type_terminate"
+                                               readonly="state != 'draft'"/>
+                                        <field name="extendable"
+                                               readonly="state != 'draft'"/>
+                                        <field name="prorata_computation_type"/>
                                         <!--                                        <field name="asset_model_id" />-->
                                     </group>
                                     <group>
-                                        <field name="payment_method" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="interest_rate" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="payment_frequency_type" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="payment_frequency" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="increasement_frequency_type" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="increasement_frequency" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="increasement_rate" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-<!--                                        <field name="discount"/>-->
+                                        <field name="payment_method"
+                                               readonly="state != 'draft'"/>
+                                        <field name="interest_rate"
+                                               readonly="state != 'draft'"/>
+                                        <field name="payment_frequency_type"
+                                               readonly="state != 'draft'"/>
+                                        <field name="payment_frequency"
+                                               readonly="state != 'draft'"/>
+                                        <field name="increasement_frequency_type"
+                                               readonly="state != 'draft'"/>
+                                        <field name="increasement_frequency"
+                                               readonly="state != 'draft'"/>
+                                        <field name="increasement_rate"
+                                               readonly="state != 'draft'"/>
+                                        <!--                                        <field name="discount"/>-->
                                     </group>
                                 </group>
                             </page>
-                            <page string="Contract Accounts" attrs="{'readonly': [('state', '!=', 'draft')]}">
+                            <page string="Contract Accounts"
+                                  areadonly="state != 'draft'">
                                 <group>
                                     <group>
-                                        <field name="lease_liability_account_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="long_lease_liability_account_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="provision_dismantling_account_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="terminate_account_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="interest_expense_account_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="initial_journal_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="installment_journal_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="analytic_account_id" attrs="{'readonly': [('state', 'not in', ['draft', 'active'])]}"/>
-                                        <field name="project_site_id" attrs="{'readonly': [('state', 'not in', ['draft', 'active'])]}"/>
-                                        <field name="type_id" attrs="{'readonly': [('state', 'not in', ['draft', 'active'])]}"/>
-                                        <field name="location_id" attrs="{'readonly': [('state', 'not in', ['draft', 'active'])]}"/>
+                                        <field name="lease_liability_account_id"
+                                               readonly="state != 'draft'"/>
+                                        <field name="long_lease_liability_account_id"
+                                               readonly="state != 'draft'"/>
+                                        <field name="provision_dismantling_account_id"
+                                               readonly="state != 'draft'"/>
+                                        <field name="terminate_account_id"
+                                               readonly="state != 'draft'"/>
+                                        <field name="interest_expense_account_id"
+                                               readonly="state != 'draft'"/>
+                                        <field name="initial_journal_id"
+                                               readonly="state != 'draft'"/>
+                                        <field name="installment_journal_id"
+                                               readonly="state != 'draft'"/>
+                                        <field name="analytic_account_id"
+                                               readonly="state not in ['draft', 'active']"/>
+                                        <field name="project_site_id"
+                                               readonly="state not in ['draft', 'active']"/>
+                                        <field name="analytic_distribution"
+                                               widget="analytic_distribution"/>
+
                                     </group>
                                     <group>
-                                        <field name="terminate_product_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="installment_product_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="extension_product_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="initial_product_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="incentives_account_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="incentives_product_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
-                                        <field name="asset_model_id" attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                                        <field name="terminate_product_id"
+                                               readonly="state != 'draft'"/>
+                                        <field name="installment_product_id"
+                                               readonly="state != 'draft'"/>
+                                        <field name="extension_product_id"
+                                               readonly="state != 'draft'"/>
+                                        <field name="initial_product_id"
+                                               readonly="state != 'draft'"/>
+                                        <field name="incentives_account_id"
+                                               readonly="state != 'draft'"/>
+                                        <field name="incentives_product_id"
+                                               readonly="state != 'draft'"/>
+                                        <field name="asset_model_id"
+                                               readonly="state != 'draft'"/>
                                     </group>
                                 </group>
                             </page>
-                            <page string="Installments" >
-                                <field name="installment_ids" attrs="{'readonly': [('state', '!=', 'draft')]}">
-                                    <tree editable="bottom" edit="1" create="0" delete="0">
-                                        <field name="period" string="Installment" readonly="1"/>
-                                        <field name="date" />
-                                        <field name="amount" string="Installment Amount"/>
-                                        <field name="subsequent_amount" string="Interest Recognition"/>
-                                        <field name="interest_amount" string="Interest Recognition" readonly="1"/>
-                                        <field name="remaining_lease_liability" readonly="1"/>
+                            <page string="Installments">
+                                <field name="installment_ids"
+                                       readonly="state != 'draft'">
+                                    <tree editable="bottom" edit="1" create="0"
+                                          delete="0">
+                                        <field name="period"
+                                               string="Installment"
+                                               readonly="1"/>
+                                        <field name="date"/>
+                                        <field name="amount"
+                                               string="Installment Amount"/>
+                                        <field name="subsequent_amount"
+                                               string="Interest Recognition"/>
+                                        <field name="interest_amount"
+                                               string="Interest Recognition"
+                                               readonly="1"/>
+                                        <field name="remaining_lease_liability"
+                                               readonly="1"/>
+
                                     </tree>
                                 </field>
                             </page>
-                            <page string="Multi Leasors" attrs="{'invisible':[('leasor_type','=','single')]}">
-                                <field name="multi_leasor_ids" attrs="{'readonly': [('state', '!=', 'draft')]}" >
+                            <page string="Multi Leasors"
+                                  invisible="leasor_type == 'single'">
+                                <field name="multi_leasor_ids"
+                                       readonly="state != 'draft'">
                                     <tree editable="bottom">
-                                        <field name="partner_id" />
-                                        <field name="type" />
-                                        <field name="amount" attrs="{'invisible': [('type', '!=', 'amount')], 'required': [('type', '=', 'amount')]}"/>
-                                        <field name="percentage" attrs="{'invisible': [('type', '!=', 'percentage')], 'required': [('type', '=', 'percentage')]}" />
+                                        <field name="partner_id"/>
+                                        <field name="type"/>
+                                        <field name="amount"
+                                               invisible="type != 'amount'"
+                                               required="type == 'amount'"/>
+                                        <field name="percentage"
+                                               invisible="type != 'percentage'"
+                                               required="type == 'percentage'"/>
                                     </tree>
                                 </field>
                             </page>
                         </notebook>
                     </sheet>
                     <div class="oe_chatter">
-                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                        <field name="message_follower_ids"
+                               widget="mail_followers"
+                               groups="base.group_user"/>
                         <field name="activity_ids" widget="mail_activity"/>
                         <field name="message_ids" widget="mail_thread"/>
                     </div>
@@ -206,17 +299,18 @@
             <field name="binding_model_id" ref="model_leasee_contract"/>
             <field name="state">code</field>
             <field name="code">
-records.action_activate()
+                records.action_activate()
             </field>
         </record>
 
 
-
         <!--        <menuitem id="menuitem_lease_contract_categ" name="Leasee Contract" parent="account.menu_finance" sequence="10"/>-->
-        <menuitem id="menuitem_lease_contract_categ" name="Lease" parent="account_accountant.menu_accounting"
+        <menuitem id="menuitem_lease_contract_categ" name="Lease"
+                  parent="account_accountant.menu_accounting"
                   sequence="10"/>
         <menuitem id="menuitem_name_module" name="Leasee Contract"
-                  parent="lease_management.menuitem_lease_contract_categ" action="view_leasee_contract_action"
+                  parent="lease_management.menuitem_lease_contract_categ"
+                  action="view_leasee_contract_action"
                   sequence="1"/>
 
     </data>

@@ -18,6 +18,9 @@
                         <field name="active_sharing_fees" widget="many2many_tags"/>
                         <field name="discount" widget="many2many_tags"/>
                     </group>
+                      <group>
+                        <field name="site_rent_ids" widget="many2many_tags"/>
+                    </group>
                 </group>
                 <group>
                     <field name="site_maintenance" class="oe_inline" widget="many2many_tags"/>
@@ -56,7 +59,8 @@
                     </group>
                     <group>
                        <field name="lease_finance_cost" widget="many2many_tags"/>
-                       <field name="analatyc_account_group" invisible="1"/>
+<!--                       <field name="analatyc_account_group" invisible="1"/>-->
+                       <field name="group" invisible="1"/>
                     </group>
                 </group>
                 <group>
@@ -69,14 +73,18 @@
                 </group>
                 <group>
                     <label for="from_date" string="From"
-                           attrs="{'invisible': [('period', '!=', 'custom')]}"/>
+                    invisible="period != 'custom'"/>
                     <div>
                         <field name="from_date" class="oe_inline"
-                               attrs="{'invisible': [('period', '!=', 'custom')], 'required': [('period', '=', 'custom')]}"/>
+                               invisible="period != 'custom'"
+                               required="period == 'custom'"
+                               />
                         <label for="to_date" string="To"
-                               attrs="{'invisible': [('period', '!=', 'custom')]}"/>
+                        invisible="period != 'custom'"/>
                         <field name="to_date" class="oe_inline"
-                               attrs="{'invisible': [('period', '!=', 'custom')], 'required': [('period', '=', 'custom')]}"/>
+                               invisible="period != 'custom'"
+                               required="period == 'custom'"
+                               />
                     </div>
                 </group>
                 <footer>

@@ -66,6 +66,9 @@
         </field>
     </record>
 
+        <menuitem parent="account.menu_finance_entries" id="journal_tab_accounting" name="Journal" sequence="13" groups=""/>
+
+
     <menuitem id="menu_journal_entry_managed" name="Journal Entry Posting"
               parent="journal_tab_accounting"
               action="action_journal_entry_managed"

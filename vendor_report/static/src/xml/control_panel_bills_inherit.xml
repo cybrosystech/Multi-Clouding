@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<templates>
-    <t t-extend="BillsListView.buttons">
-        <t t-jquery="button.o_list_button_add" t-operation="after">
-            <button class="btn btn-secondary new" type="button">
-                Vendor Report
-            </button>
-        </t>
+<templates xml:space="preserve">
+    <t t-inherit="account.AccountViewUploadButton" t-inherit-mode="extension">
+        <xpath expr="//button[hasclass('o_button_upload_bill')]" position="after">
+            <button type="button" class="btn btn-secondary" style="margin-left:10px;" t-on-click.stop="onClickVendorReport">Vendor Report</button>
+        </xpath>
     </t>
 </templates>

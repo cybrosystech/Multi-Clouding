@@ -3,7 +3,7 @@
   "name"                 :  "HR Payroll Multi-Currency Journal",
   'summary'              :  """Allow to create journal entry for payslip with multi currency""",
   "category"             :  "HR",
-  "version"              :  "14.0.1.1.0",
+  "version"              :  "17.0.1.0.0",
   "author"               :  "Abdallah Mohamed",
   "license"              :  "OPL-1",
   "maintainer"           :  "Abdallah Mohammed",

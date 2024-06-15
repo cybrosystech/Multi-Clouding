@@ -6,17 +6,20 @@
 ##############################################################################
 
 {
-    'name' : 'Purchase Advance Payment',
+    'name': 'Purchase Advance Payment',
     'category': 'Purchases',
-    'version': '14.0.1.0',
+    'version': '17.0.1.0.0',
     'author': 'Equick ERP',
     'description': """
         This Module allows to create Suppliers Advance payment from Purchase order.
         * Allow user to manage the Suppliers Advance payment for the Purchase order.
         * Manage with Multi Company & Multi Currency.
     """,
-    'summary': """create Suppliers Advance payments from Purchase order advance payment | purchase payment | advance purchase payment | purchase order payment register payment from purchase order register payment from po advance payment purchase Supplier Advance Payments""",
-    'depends' : ['base', 'purchase'],
+    'summary': """create Suppliers Advance payments from Purchase order advance 
+    payment | purchase payment | advance purchase payment | purchase order payment
+     register payment from purchase order register payment from po advance payment 
+     purchase Supplier Advance Payments""",
+    'depends': ['base', 'purchase'],
     'price': 10,
     'currency': 'EUR',
     'license': 'OPL-1',

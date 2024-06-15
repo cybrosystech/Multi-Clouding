@@ -2,7 +2,6 @@
 # Copyright 2022 IZI PT Solusi Usaha Mudah
 
 from odoo import api, SUPERUSER_ID
-from odoo.exceptions import Warning
 
 
 def pre_init_hook(cr):

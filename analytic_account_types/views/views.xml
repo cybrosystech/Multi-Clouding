@@ -1,64 +1,64 @@
 <odoo>
   <data>
-     <record id="view_wizard_account_analytic_type_form" model="ir.ui.view">
-         <field name="name">view_wizard_account_analytic_type_form</field>
-         <field name="model">wizard.analytic.account.types</field>
-         <field name="arch" type="xml">
-             <form string="">
-                 <sheet>
-                     <group>
-                         <group>
-                           <field name="cost_center_id"/>
-                           <field name="project_site_id"/>
-                           <field name="type_id"/>
-                           <field name="location_id"/>
-                           <field name="budget_id"/>
-                           <field name="budget_line_id" domain="[('crossovered_budget_id','=',budget_id)]"/>
-                         </group>
-                         <group>
-                           <field name="so_line" invisible="1" force_save="1"/>
-                           <field name="po_line" invisible="1" force_save="1"/>
-                           <field name="move_line" invisible="1" force_save="1"/>
-                         </group>
-                     </group>
-                 </sheet>
-               <footer>
-                 <button name="set_analytics_lines" type="object" string="Confirm" class="btn-primary"/>
-                 OR
-                 <button special="cancel" string="Cancel" class="btn-primary"/>
-               </footer>
-             </form>
-         </field>
-     </record>
+<!--     <record id="view_wizard_account_analytic_type_form" model="ir.ui.view">-->
+<!--         <field name="name">view_wizard_account_analytic_type_form</field>-->
+<!--         <field name="model">wizard.analytic.account.types</field>-->
+<!--         <field name="arch" type="xml">-->
+<!--             <form string="">-->
+<!--                 <sheet>-->
+<!--                     <group>-->
+<!--                         <group>-->
+<!--                           <field name="cost_center_id"/>-->
+<!--                           <field name="project_site_id"/>-->
+<!--                           <field name="type_id"/>-->
+<!--                           <field name="location_id"/>-->
+<!--                           <field name="budget_id"/>-->
+<!--                           <field name="budget_line_id" domain="[('crossovered_budget_id','=',budget_id)]"/>-->
+<!--                         </group>-->
+<!--                         <group>-->
+<!--                           <field name="so_line" invisible="1" force_save="1"/>-->
+<!--                           <field name="po_line" invisible="1" force_save="1"/>-->
+<!--                           <field name="move_line" invisible="1" force_save="1"/>-->
+<!--                         </group>-->
+<!--                     </group>-->
+<!--                 </sheet>-->
+<!--               <footer>-->
+<!--                 <button name="set_analytics_lines" type="object" string="Confirm" class="btn-primary"/>-->
+<!--                 OR-->
+<!--                 <button special="cancel" string="Cancel" class="btn-primary"/>-->
+<!--               </footer>-->
+<!--             </form>-->
+<!--         </field>-->
+<!--     </record>-->
 
-    <record id="action_wizard_account_analytic_type_view" model="ir.actions.act_window">
-        <field name="name">Analytic Account Types</field>
-        <field name="type">ir.actions.act_window</field>
-        <field name="res_model">wizard.analytic.account.types</field>
-        <field name="view_mode">form</field>
-        <field name="help" type="html">
-          <p class="oe_view_nocontent_create">
+<!--    <record id="action_wizard_account_analytic_type_view" model="ir.actions.act_window">-->
+<!--        <field name="name">Analytic Account Types</field>-->
+<!--        <field name="type">ir.actions.act_window</field>-->
+<!--        <field name="res_model">wizard.analytic.account.types</field>-->
+<!--        <field name="view_mode">form</field>-->
+<!--        <field name="help" type="html">-->
+<!--          <p class="oe_view_nocontent_create">-->
 
-          </p><p>
+<!--          </p><p>-->
 
-          </p>
-        </field>
-    </record>
+<!--          </p>-->
+<!--        </field>-->
+<!--    </record>-->
 
 
       <!-- Inherit Form View to Modify it -->
-      <record id="view_inherit_view_account_analytic_account_form" model="ir.ui.view">
-          <field name="name">view_inherit_view_account_analytic_account_form</field>
-          <field name="model">account.analytic.account</field>
-          <field name="inherit_id" ref="analytic.view_account_analytic_account_form"/>
-          <field name="arch" type="xml">
-
-              <!-- position: after|before|replace|attributes|inside -->
-              <xpath expr="//field[@name='partner_id']" position="after">
-                  <field name="analytic_account_type"/>
-              </xpath>
-
-          </field>
-      </record>
+<!--      <record id="view_inherit_view_account_analytic_account_form" model="ir.ui.view">-->
+<!--          <field name="name">view_inherit_view_account_analytic_account_form</field>-->
+<!--          <field name="model">account.analytic.account</field>-->
+<!--          <field name="inherit_id" ref="analytic.view_account_analytic_account_form"/>-->
+<!--          <field name="arch" type="xml">-->
+<!--              <field name="currency_id" position="after">-->
+<!--                <field name="site_address"/>-->
+<!--            </field>-->
+<!--               <xpath expr="//field[@name='partner_id']" position="after">-->
+<!--                  <field name="analytic_account_type"/>-->
+<!--              </xpath>-->
+<!--          </field>-->
+<!--      </record>-->
   </data>
 </odoo>

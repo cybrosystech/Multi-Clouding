@@ -25,7 +25,7 @@
                 <group>
                     <group>
                         <field name="rou_depreciation" widget="many2many_tags"/>
-                        <field name="analytic_account_group" invisible="1"/>
+                        <field name="group" invisible="1"/>
                     </group>
                     <group>
                         <field name="fa_depreciation" widget="many2many_tags"/>
@@ -60,14 +60,20 @@
                 </group>
                 <group>
                     <label for="from_date" string="From"
-                           attrs="{'invisible': [('period', '!=', 'custom')]}"/>
+                           invisible="period !='custom'"
+                           />
                     <div>
                         <field name="from_date" class="oe_inline"
-                               attrs="{'invisible': [('period', '!=', 'custom')], 'required': [('period', '=', 'custom')]}"/>
+                               invisible="period != 'custom'"
+                               required="period == 'custom'"
+                               />
                         <label for="to_date" string="To"
-                               attrs="{'invisible': [('period', '!=', 'custom')]}"/>
+                               invisible="period != 'custom'"
+                               />
                         <field name="to_date" class="oe_inline"
-                               attrs="{'invisible': [('period', '!=', 'custom')], 'required': [('period', '=', 'custom')]}"/>
+                               invisible="period != 'custom'"
+                               required="period == 'custom'"
+                               />
                     </div>
                 </group>
                 <footer>

@@ -7,7 +7,7 @@
     'author': "",
     'website': "",
     'category': 'account_asset',
-    'version': '14.0.1.0.0',
+    'version': '17.0.1.0.0',
     'depends': ['account_asset'],
 
     'data':
@@ -17,5 +17,8 @@
             'views/account_asset_bulk_wizard_view.xml',
             'views/account_asset_bulk_relation_view.xml',
             'wizard/asset_bulk_pause_depreciation_view.xml',
-        ]
+        ],
+    'installable': True,
+    'auto_install': False,
+    'application': False,
 }

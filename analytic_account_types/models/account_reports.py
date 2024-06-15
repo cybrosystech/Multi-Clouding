@@ -89,6 +89,7 @@ class AccountReport(models.AbstractModel):
             options['selected_locations'] = [self.env['account.analytic.account'].browse(int(project)).name for project in
                                               options['location_ids']]
 
+
         # Check whether there are unposted entries for the selected period or not (if the report allows it)
         if options.get('date') and options.get('all_entries') is not None:
             date_to = options['date'].get('date_to') or options['date'].get('date') or fields.Date.today()

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="account_reports.general_ledger_report" model="account.report">
+        <field name="name">General Ledger</field>
+        <field name="filter_journals" eval="True"/>
+        <field name="filter_analytic" eval="True"/>
+        <field name="filter_period_comparison" eval="False"/>
+        <field name="filter_multi_company">selector</field>
+        <field name="filter_unfold_all" eval="True"/>
+        <field name="filter_hide_0_lines">never</field>
+        <field name="default_opening_date_filter">this_month</field>
+        <field name="search_bar" eval="True"/>
+        <field name="load_more_limit" eval="80"/>
+        <field name="custom_handler_model_id" ref="account_reports.model_account_general_ledger_report_handler"/>
+        <field name="column_ids">
+             <record id="general_ledger_report_project_site"
+                    model="account.report.column">
+                <field name="name">Project/Site</field>
+                <field name="expression_label">project_site</field>
+                <field name="figure_type">string</field>
+            </record>
+             <record id="general_ledger_report_cost_center"
+                    model="account.report.column">
+                <field name="name">Cost Center</field>
+                <field name="expression_label">cost_center</field>
+                <field name="figure_type">string</field>
+            </record>
+        </field>
+    </record>
+</odoo>

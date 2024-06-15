@@ -7,13 +7,18 @@
     'author': "",
     'website': "",
     'category': 'Accounting',
-    'version': '14.0.1.0.0',
-    'depends': ['base_automation', 'analytic_account_types', 'base'],
+    'version': '1.0',
+    'depends': ['analytic_account_types',
+                ],
 
     'data':
         [
             'security/budget_approval_group.xml',
+            'data/budget_approver_check_automated.xml',
             'views/account_move_form_inherit.xml',
-            'data/budget_approver_check_automated.xml'
-        ]
+        ],
+    "license": 'AGPL-3',
+    'installable': True,
+    'auto_install': False,
+    'application': False,
 }

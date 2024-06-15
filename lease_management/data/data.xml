@@ -131,7 +131,7 @@
         <record id="mail_activity_type_alert_date_expiration_reached" model="mail.activity.type">
             <field name="name">Alert Contact Expiration Date Reached</field>
             <field name="category">default</field>
-            <field name="res_model_id" ref="lease_management.model_leasee_contract"/>
+            <field name="res_model">leasee.contract</field>
             <field name="icon">fa-tasks</field>
             <field name="delay_count">0</field>
         </record>

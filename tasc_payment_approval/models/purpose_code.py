@@ -1,5 +1,4 @@
-from odoo import api,models,fields,_
-from odoo.exceptions import ValidationError
+from odoo import api, models, fields
 
 
 class PurposeCode(models.Model):
@@ -7,12 +6,11 @@ class PurposeCode(models.Model):
     _description = 'Purpose Code'
     _rec_name = 'code'
 
-    code = fields.Char(string="Code",required=True)
-    description = fields.Text(string="Description",required=True)
-    company_ids = fields.Many2many('res.company','purpose_code_company_rel')
+    code = fields.Char(string="Code", required=True)
+    description = fields.Text(string="Description", required=True)
+    company_ids = fields.Many2many('res.company', 'purpose_code_company_rel')
 
-    def name_get(self):
-        result = []
+    @api.depends('code')
+    def _compute_display_name(self):
         for rec in self:
-            result.append((rec.id, '%s - %s' % (rec.code, rec.description)))
-        return result
+            rec.display_name = f"{rec.code} - {rec.description}"

@@ -3,7 +3,7 @@
     'name': "Lease Management",
     'summary': """Lease Management""",
     'author': "Mahmoud Naguib",
-    "version": "14.0.1.0.0",
+    "version": "1.0",
     "category": "Accounting",
     "depends": ["account", "account_asset", "analytic_account_types"],
     "data": [
@@ -30,4 +30,6 @@
     ],
     "license": 'AGPL-3',
     'installable': True,
+    'auto_install': False,
+    'application': False,
 }

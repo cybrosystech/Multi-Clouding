@@ -8,7 +8,6 @@ from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DF
 from dateutil.relativedelta import relativedelta
 import calendar
 
-
 try:
     from odoo.tools.misc import xlsxwriter
 except ImportError:
@@ -25,7 +24,6 @@ class LeaseLiabilitySchedule(models.TransientModel):
         return first_day_this_month
 
     def _get_date_to(self):
-        # import calendar
         today = datetime.now().today()
         last_day = calendar.monthrange(today.year, today.month)
         last_day_this_month = date(day=last_day[1], month=today.month,
@@ -48,7 +46,6 @@ class LeaseLiabilitySchedule(models.TransientModel):
         data = []
         domain = [('date', '>=', self.date_from), ('date', '<=', self.date_to)]
         if self.contract_ids:
-            # domain.append(('leasee_contract_id', 'in', self.contract_ids.ids))
             domain.append(
                 ('leasee_contract_id', 'child_of', self.contract_ids.ids))
         elif self.analytic_account_ids:
@@ -69,7 +66,6 @@ class LeaseLiabilitySchedule(models.TransientModel):
                     period_no = installment.get_period_order()
                     opening_balance = installment.remaining_lease_liability - installment.subsequent_amount + installment.amount
                     closing_balance = installment.remaining_lease_liability
-                    # closing_balance = opening_balance + installment.subsequent_amount - installment.amount
                     if installment.leasee_contract_id.payment_frequency_type == 'months':
                         delta = relativedelta(months=contract.payment_frequency)
                     else:
@@ -271,7 +267,7 @@ class LeaseLiabilitySchedule(models.TransientModel):
             'name': 'Lease Liability Schedule',
             'url': '/web/content/%s/%s/excel_sheet/Lease Liability Schedule.xlsx?download=true' % (
                 self._name, self.id),
-            'target': 'self'
+            'target': 'new'
         }
 
     def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data,

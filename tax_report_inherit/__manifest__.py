@@ -1,17 +1,15 @@
+# -*- coding: utf-8 -*-
 {
     'name': 'Account Report Inherit',
     'summary': """""",
-
     'description': """""",
-
-    'author': "",
-    'website': "",
+    'author': "Cybrosys Techno Solutions",
+    'website': "https://www.cybrosys.com",
     'category': 'Accounting',
-    'version': '14.0.1.0.0',
+    'version': '17.0.1.0.0',
     'depends': ['account_reports'],
-
     'data':
         [
-            'views/generic_tax_report_inherit.xml',
+            'data/account_reports_data.xml',
         ]
 }

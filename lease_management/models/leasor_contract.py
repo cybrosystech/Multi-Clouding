@@ -21,10 +21,7 @@ class LeasorContract(models.Model):
     customer_id = fields.Many2one(comodel_name="res.partner", string="Leasee Name", required=True, )
     inception_date = fields.Date(default=lambda self: fields.Datetime.now(), required=False, )
     commencement_date = fields.Date(default=lambda self: fields.Datetime.now(), required=False, )
-    # initial_payment_value = fields.Float(compute='compute_initial_payment_value')
     estimated_ending_date = fields.Date(compute='compute_estimated_ending_date')
-
-    # lease_contract_period = fields.Float()
     lease_contract_period = fields.Integer()
     lease_contract_period_type = fields.Selection(string="Period Type", default="months",
                                               selection=[('years', 'Years'), ('months', 'Months'), ], required=True, )
@@ -43,7 +40,7 @@ class LeasorContract(models.Model):
     installment_product_id = fields.Many2one(comodel_name="product.product", string="", required=True, domain=[('type', '=', 'service')] )
     installment_journal_id = fields.Many2one(comodel_name="account.journal", domain=[('type', '=', 'sale')], required=True )
     prorate = fields.Boolean(string="Prorate Calculation", default=False  )
-    account_analytic_id = fields.Many2one(comodel_name="account.analytic.account", string="", required=False, )
+    account_analytic_id = fields.Many2one(comodel_name="account.analytic.account", string="Cost center", required=False, )
     project_site_id = fields.Many2one(comodel_name="account.analytic.account", string="Project/Site",
                                       domain=[('analytic_account_type', '=', 'project_site')], required=False, )
     type_id = fields.Many2one(comodel_name="account.analytic.account", string="Type",
@@ -153,6 +150,8 @@ class LeasorContract(models.Model):
 
             invoice_lines = [(0, 0, {
                 'product_id': self.installment_product_id.id,
+                'display_type': 'product',
+
                 'name': self.installment_product_id.name,
                 'product_uom_id': self.installment_product_id.uom_id.id,
                 'account_id': self.installment_product_id.product_tmpl_id.get_product_accounts()['expense'].id,
@@ -173,11 +172,10 @@ class LeasorContract(models.Model):
                 'invoice_line_ids': invoice_lines,
                 'journal_id': self.installment_journal_id.id,
                 'leasor_contract_id': self.id,
-                # 'auto_post': True,
             })
             if self.inception_date > self.commencement_date and invoice.date >= self.commencement_date and invoice.date <= self.inception_date:
                 invoice.date = self.inception_date
-                invoice.auto_post = True
+                invoice.auto_post = 'at_date'
             line = invoice.line_ids.filtered(lambda l: l.account_id == self.vendor_id.property_account_payable_id)
             if line:
                 line.write({
@@ -186,37 +184,3 @@ class LeasorContract(models.Model):
                     'type_id': self.type_id.id,
                     'location_id': self.location_id.id,
                 })
-
-    # def create_prorate_invoice(self, first_installment_date, invoice_date_due):
-    #     payment_period = self.payment_frequency* (30 if self.payment_frequency_type == 'months' else 365)
-    #     prorate_ratio = (invoice_date_due - first_installment_date).days / payment_period
-    #     amount = self.installment_amount * prorate_ratio
-    #     invoice_lines = [(0, 0, {
-    #         'product_id': self.installment_product_id.id,
-    #         'name': self.installment_product_id.name,
-    #         'product_uom_id': self.installment_product_id.uom_id.id,
-    #         'account_id': self.installment_product_id.product_tmpl_id.get_product_accounts()['expense'].id,
-    #         'price_unit': amount,
-    #         'quantity': 1,
-    #         'analytic_account_id': self.account_analytic_id.id,
-    #         'project_site_id': self.project_site_id.id,
-    #         'type_id': self.type_id.id,
-    #         'location_id': self.location_id.id,
-    #     })]
-    #     invoice = self.env['account.move'].create({
-    #         'partner_id': self.customer_id.id,
-    #         'move_type': 'out_invoice',
-    #         'currency_id': self.lease_currency_id.id,
-    #         'ref': self.name,
-    #         'invoice_date_due': invoice_date_due,
-    #         'invoice_date': first_installment_date,
-    #         'invoice_line_ids': invoice_lines,
-    #         'journal_id': self.installment_journal_id.id,
-    #         'leasor_contract_id': self.id,
-    #     })
-
-
-
-
-
-
