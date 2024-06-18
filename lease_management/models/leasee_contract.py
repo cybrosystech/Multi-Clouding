@@ -216,11 +216,18 @@ class LeaseeContract(models.Model):
                 rec.estimated_ending_date = rec.commencement_date + relativedelta(
                     months=rec.lease_contract_period, days=-1)
 
+    def copy(self, default=None):
+        if default is None:
+            default = {}
+        # Call the original copy method
+        lease = super(LeaseeContract, self).copy(default=default)
+
+        # Trigger onchange for the field you want
+        # Example: Assuming 'field_name' is the field you want to trigger onchange for
+        lease.onchange_project_site()
+        return lease
     @api.onchange('project_site_id', 'analytic_account_id')
     def onchange_project_site(self):
-        type = self.project_site_id.analytic_type_filter_id.id
-        location = self.project_site_id.analytic_location_id.id
-        co_location = self.project_site_id.co_location.id
         analytic_dist = {}
         analytic_distributions = ''
         if self.analytic_account_id:

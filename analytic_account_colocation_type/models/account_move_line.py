@@ -8,7 +8,7 @@ class AccountMoveLine(models.Model):
                                      string="Co location", domain=[(
             'analytic_account_type', '=', 'co_location')], required=False, )
 
-    @api.onchange('project_site_id', 'analytic_account_id')
+    @api.onchange('project_site_id')
     def onchange_project_site(self):
         analytic_dist = {}
         analytic_distributions = ''
@@ -31,3 +31,25 @@ class AccountMoveLine(models.Model):
         b = a.strip(",")
         analytic_dist.update({b: 100})
         self.analytic_distribution = analytic_dist
+
+
+class AccountMove(models.Model):
+    _inherit = 'account.move'
+
+    def copy(self, default=None):
+        if default is None:
+            default = {}
+        # Call the original copy method
+        move = super(AccountMove, self).copy(default=default)
+
+        # Trigger onchange for the field you want
+        # Example: Assuming 'field_name' is the field you want to trigger onchange for
+        if move.invoice_line_ids:
+            for line in move.invoice_line_ids.filtered(lambda x: x.project_site_id):
+                line.onchange_project_site()
+
+        if move.line_ids:
+            for line in move.line_ids.filtered(
+                    lambda x: x.project_site_id):
+                line.onchange_project_site()
+        return move

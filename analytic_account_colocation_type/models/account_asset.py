@@ -35,3 +35,14 @@ class AccountAsset(models.Model):
         b = a.strip(",")
         analytic_dist.update({b: 100})
         self.analytic_distribution = analytic_dist
+
+    def copy(self, default=None):
+        if default is None:
+            default = {}
+        # Call the original copy method
+        asset = super(AccountAsset, self).copy(default=default)
+
+        # Trigger onchange for the field you want
+        # Example: Assuming 'field_name' is the field you want to trigger onchange for
+        asset.onchange_project_site()
+        return asset

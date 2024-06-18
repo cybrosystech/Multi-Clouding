@@ -79,3 +79,19 @@ class PurchaseOrderLine(models.Model):
         analytic_dist.update({b: 100})
         self.analytic_distribution = analytic_dist
 
+
+class PurchaseOrder(models.Model):
+    _inherit = 'purchase.order'
+
+    def copy(self, default=None):
+        if default is None:
+            default = {}
+        # Call the original copy method
+        order = super(PurchaseOrder, self).copy(default=default)
+
+        # Trigger onchange for the field you want
+        # Example: Assuming 'field_name' is the field you want to trigger onchange for
+
+        for line in order.order_line.filtered(lambda x: x.project_site_id):
+            line.onchange_project_site()
+        return order
