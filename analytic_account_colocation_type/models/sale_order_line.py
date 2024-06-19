@@ -2,8 +2,23 @@ from odoo import models, api, fields
 from odoo.fields import Command
 from odoo.tools import frozendict
 
+
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        order = super(SaleOrder, self).create(vals_list)
+        for line in order.order_line.filtered(lambda x: x.project_site_id):
+            line.onchange_project_site()
+
+        return order
+
+    def write(self, vals_list):
+        order = super(SaleOrder, self).write(vals_list)
+        for line in self.order_line.filtered(lambda x: x.project_site_id):
+            line.onchange_project_site()
+        return order
 
     def copy(self, default=None):
         if default is None:

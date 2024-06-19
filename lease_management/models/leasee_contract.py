@@ -206,6 +206,14 @@ class LeaseeContract(models.Model):
     )
     analytic_distribution = fields.Json()
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        lease = super(LeaseeContract, self).create(vals_list)
+        if lease.project_site_id or lease.analytic_account_id:
+            lease.onchange_project_site()
+        return lease
+
+
     @api.depends('commencement_date', 'lease_contract_period')
     def compute_estimated_ending_date(self):
         for rec in self:
@@ -226,6 +234,7 @@ class LeaseeContract(models.Model):
         # Example: Assuming 'field_name' is the field you want to trigger onchange for
         lease.onchange_project_site()
         return lease
+
     @api.onchange('project_site_id', 'analytic_account_id')
     def onchange_project_site(self):
         analytic_dist = {}
@@ -286,6 +295,10 @@ class LeaseeContract(models.Model):
 
     def write(self, vals):
         super(LeaseeContract, self).write(vals)
+        if vals.get('analytic_account_id') or vals.get(
+                'project_site_id'):
+            self.onchange_project_site()
+
         if 'installment_ids' in vals and self.state == 'draft':
             self.update_reassessed_installments_before()
         account_move_lines = self.account_move_ids.filtered(
@@ -297,6 +310,7 @@ class LeaseeContract(models.Model):
                     'project_site_id': self.project_site_id.id,
                     'analytic_distribution': self.analytic_distribution,
                 })
+
         if self.asset_id:
             self.asset_id.update({
                 'analytic_account_id': self.analytic_account_id.id,

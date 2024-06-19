@@ -36,6 +36,33 @@ class AccountMoveLine(models.Model):
 class AccountMove(models.Model):
     _inherit = 'account.move'
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        move = super(AccountMove, self).create(vals_list)
+        if move.invoice_line_ids:
+            for line in move.invoice_line_ids.filtered(
+                    lambda x: x.project_site_id):
+                line.onchange_project_site()
+
+        if move.line_ids:
+            for line in move.line_ids.filtered(
+                    lambda x: x.project_site_id):
+                line.onchange_project_site()
+        return move
+
+    def write(self, vals_list):
+        move = super(AccountMove, self).write(vals_list)
+        if self.invoice_line_ids:
+            for line in self.invoice_line_ids.filtered(
+                    lambda x: x.project_site_id):
+                line.onchange_project_site()
+
+        if self.line_ids:
+            for line in self.line_ids.filtered(
+                    lambda x: x.project_site_id):
+                line.onchange_project_site()
+        return move
+
     def copy(self, default=None):
         if default is None:
             default = {}

@@ -95,3 +95,17 @@ class PurchaseOrder(models.Model):
         for line in order.order_line.filtered(lambda x: x.project_site_id):
             line.onchange_project_site()
         return order
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        order = super(PurchaseOrder, self).create(vals_list)
+        for line in order.order_line.filtered(lambda x: x.project_site_id):
+            line.onchange_project_site()
+
+        return order
+
+    def write(self, vals_list):
+        order = super(PurchaseOrder, self).write(vals_list)
+        for line in self.order_line.filtered(lambda x: x.project_site_id):
+            line.onchange_project_site()
+        return order
