@@ -2,3 +2,4 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_asset_bulk_wizard,asset.bulk.wizard,model_asset_bulk_wizard,,1,1,1,1
 access_asset_bulk_pause_wizard,asset.bulk.pause.wizard,model_asset_bulk_pause_wizard,base.group_user,1,1,1,1
 access_asset_sell_disposal_lines,asset_sell_disposal_lines,model_asset_sell_disposal_lines,,1,1,1,1
+access_asset_bulk_sale_dispose_wizard,asset.bulk.sale.dispose.wizard,model_asset_bulk_sale_dispose_wizard,base.group_user,1,1,1,1
