@@ -8,7 +8,7 @@ class AccountMoveLine(models.Model):
                                      string="Co location", domain=[(
             'analytic_account_type', '=', 'co_location')], required=False, )
 
-    @api.onchange('project_site_id')
+    @api.onchange('project_site_id', 'analytic_account_id')
     def onchange_project_site(self):
         analytic_dist = {}
         analytic_distributions = ''
