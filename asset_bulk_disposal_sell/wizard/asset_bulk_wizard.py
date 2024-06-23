@@ -2,17 +2,18 @@ from odoo import fields, models, api, _
 from odoo.exceptions import UserError
 
 
-
 class AssetBulkWizard(models.TransientModel):
     _name = 'asset.bulk.wizard'
 
-    asset_sell_disposal_ids = fields.One2many('asset.sell.disposal.lines', 'asset_bulk_wizard_id')
+    asset_sell_disposal_ids = fields.One2many('asset.sell.disposal.lines',
+                                              'asset_bulk_wizard_id')
 
     def action_apply(self):
         for record in self.asset_sell_disposal_ids:
             if record.asset_id.leasee_contract_ids:
                 if not record.contract_end_date:
-                    raise UserError('Please provide contract end date '+str(record.asset_id.name))
+                    raise UserError('Please provide contract end date ' + str(
+                        record.asset_id.name))
             # else:
             #     if not record.invoice_id:
             #         raise UserError('Please choose a invoice '+str(record.asset_id.name))
@@ -53,13 +54,16 @@ class AssetSellDisposalLines(models.TransientModel):
         compute="_compute_select_invoice_line_id")
     gain_account_id = fields.Many2one('account.account',
                                       domain="[('deprecated', '=', False), ('company_id', '=', company_id)]",
-                                    compute='_compute_accounts',inverse='_inverse_gain_account',
+                                      compute='_compute_accounts',
+                                      inverse='_inverse_gain_account',
+                                      compute_sudo=True,
                                       help="Account used to write the journal item in case of gain",
                                       readonly=False)
     loss_account_id = fields.Many2one('account.account',
                                       domain="[('deprecated', '=', False), ('company_id', '=', company_id)]",
                                       compute='_compute_accounts',
                                       inverse='_inverse_loss_account',
+                                      compute_sudo=True,
                                       help="Account used to write the journal item in case of loss",
                                       readonly=False)
 
