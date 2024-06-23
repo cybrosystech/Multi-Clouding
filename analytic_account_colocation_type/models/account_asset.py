@@ -12,6 +12,30 @@ class AccountAsset(models.Model):
     site_address = fields.Char(string='Site Address',
                                related='project_site_id.site_address')
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        asset = super(AccountAsset, self).create(vals_list)
+        if asset.project_site_id or asset.analytic_account_id:
+            asset.onchange_project_site()
+        return asset
+
+    def write(self, vals_list):
+        asset = super().write(vals_list)
+        if vals_list.get('analytic_account_id') or vals_list.get('project_site_id'):
+            self.onchange_project_site()
+        return asset
+
+    def copy(self, default=None):
+        if default is None:
+            default = {}
+        # Call the original copy method
+        asset = super(AccountAsset, self).copy(default=default)
+
+        # Trigger onchange for the field you want
+        # Example: Assuming 'field_name' is the field you want to trigger onchange for
+        asset.onchange_project_site()
+        return asset
+
     @api.onchange('project_site_id', 'analytic_account_id')
     def onchange_project_site(self):
         analytic_dist = {}
@@ -35,3 +59,7 @@ class AccountAsset(models.Model):
         b = a.strip(",")
         analytic_dist.update({b: 100})
         self.analytic_distribution = analytic_dist
+
+
+
+

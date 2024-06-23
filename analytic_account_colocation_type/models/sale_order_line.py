@@ -3,6 +3,36 @@ from odoo.fields import Command
 from odoo.tools import frozendict
 
 
+class SaleOrder(models.Model):
+    _inherit = 'sale.order'
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        order = super(SaleOrder, self).create(vals_list)
+        for line in order.order_line.filtered(lambda x: x.project_site_id):
+            line.onchange_project_site()
+
+        return order
+
+    def write(self, vals_list):
+        order = super(SaleOrder, self).write(vals_list)
+        for line in self.order_line.filtered(lambda x: x.project_site_id):
+            line.onchange_project_site()
+        return order
+
+    def copy(self, default=None):
+        if default is None:
+            default = {}
+        # Call the original copy method
+        order = super(SaleOrder, self).copy(default=default)
+
+        # Trigger onchange for the field you want
+        # Example: Assuming 'field_name' is the field you want to trigger onchange for
+        # order.order_line.filtered(lambda x: x.project_site_id).onchange_project_site()
+        for line in order.order_line.filtered(lambda x: x.project_site_id):
+            line.onchange_project_site()
+        return order
+
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
 

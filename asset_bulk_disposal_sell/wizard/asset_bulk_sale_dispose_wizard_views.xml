@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="asset_bulk_sale_dispose_wizard_view_form" model="ir.ui.view">
+        <field name="name">asset.bulk.sale.dispose.wizard.view.form</field>
+        <field name="model">asset.bulk.sale.dispose.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="company_id"/>
+                            <field name="from_date"/>
+                            <field name="to_date"/>
+                        </group>
+                        <group>
+                            <field name="state"/>
+                            <field name="records"/>
+                            <field name="disposal_date"/>
+                            <field name="limit"/>
+                        </group>
+                    </group>
+                    <footer>
+                        <button name="action_bulk_sale_dispose"
+                                string="Sale/Dispose"
+                                type="object" default_focus="1"
+                                class="oe_highlight"/>
+                        <button string="Cancel" class="btn btn-secondary"
+                                special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="asset_bulk_sale_dispose_wizard_action"
+            model="ir.actions.act_window">
+        <field name="name">Bulk Sale Dispose</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">asset.bulk.sale.dispose.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_asset_bulk_sale_dispose_wizard"
+              name="Bulk Sale/Dispose"
+              parent="base.menu_custom"/>
+    <menuitem id="menu_asset_bulk_sale_dispose_wizard_act"
+              action="asset_bulk_sale_dispose_wizard_action"
+              parent="menu_asset_bulk_sale_dispose_wizard"
+    />
+
+</odoo>

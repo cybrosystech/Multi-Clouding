@@ -17,6 +17,7 @@
             'views/account_asset_bulk_wizard_view.xml',
             'views/account_asset_bulk_relation_view.xml',
             'wizard/asset_bulk_pause_depreciation_view.xml',
+            'wizard/asset_bulk_sale_dispose_wizard_views.xml',
         ],
     'installable': True,
     'auto_install': False,

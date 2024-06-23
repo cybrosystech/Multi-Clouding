@@ -206,6 +206,14 @@ class LeaseeContract(models.Model):
     )
     analytic_distribution = fields.Json()
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        lease = super(LeaseeContract, self).create(vals_list)
+        if lease.project_site_id or lease.analytic_account_id:
+            lease.onchange_project_site()
+        return lease
+
+
     @api.depends('commencement_date', 'lease_contract_period')
     def compute_estimated_ending_date(self):
         for rec in self:
@@ -216,11 +224,19 @@ class LeaseeContract(models.Model):
                 rec.estimated_ending_date = rec.commencement_date + relativedelta(
                     months=rec.lease_contract_period, days=-1)
 
+    def copy(self, default=None):
+        if default is None:
+            default = {}
+        # Call the original copy method
+        lease = super(LeaseeContract, self).copy(default=default)
+
+        # Trigger onchange for the field you want
+        # Example: Assuming 'field_name' is the field you want to trigger onchange for
+        lease.onchange_project_site()
+        return lease
+
     @api.onchange('project_site_id', 'analytic_account_id')
     def onchange_project_site(self):
-        type = self.project_site_id.analytic_type_filter_id.id
-        location = self.project_site_id.analytic_location_id.id
-        co_location = self.project_site_id.co_location.id
         analytic_dist = {}
         analytic_distributions = ''
         if self.analytic_account_id:
@@ -279,6 +295,10 @@ class LeaseeContract(models.Model):
 
     def write(self, vals):
         super(LeaseeContract, self).write(vals)
+        if vals.get('analytic_account_id') or vals.get(
+                'project_site_id'):
+            self.onchange_project_site()
+
         if 'installment_ids' in vals and self.state == 'draft':
             self.update_reassessed_installments_before()
         account_move_lines = self.account_move_ids.filtered(
@@ -290,6 +310,7 @@ class LeaseeContract(models.Model):
                     'project_site_id': self.project_site_id.id,
                     'analytic_distribution': self.analytic_distribution,
                 })
+
         if self.asset_id:
             self.asset_id.update({
                 'analytic_account_id': self.analytic_account_id.id,
