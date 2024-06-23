@@ -53,16 +53,13 @@ class AssetSellDisposalLines(models.TransientModel):
         compute="_compute_select_invoice_line_id")
     gain_account_id = fields.Many2one('account.account',
                                       domain="[('deprecated', '=', False), ('company_id', '=', company_id)]",
-                                      compute="_compute_accounts",
-                                      inverse="_inverse_gain_account",
-                                      compute_sudo=True,
+                                    compute='_compute_accounts',inverse='_inverse_gain_account',
                                       help="Account used to write the journal item in case of gain",
                                       readonly=False)
     loss_account_id = fields.Many2one('account.account',
                                       domain="[('deprecated', '=', False), ('company_id', '=', company_id)]",
-                                      compute="_compute_accounts",
-                                      inverse="_inverse_loss_account",
-                                      compute_sudo=True,
+                                      compute='_compute_accounts',
+                                      inverse='_inverse_loss_account',
                                       help="Account used to write the journal item in case of loss",
                                       readonly=False)
 
