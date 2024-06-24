@@ -557,7 +557,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                               GROUP BY 
                                 asset.id, 
                                 account.id, 
-                                currency.id
+                                currency.id,
                                 project_sites.id, 
                                 co_locations.id, 
                                 model.name
