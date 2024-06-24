@@ -10,13 +10,15 @@
                         <group>
                             <field name="company_id"/>
                             <field name="from_date"/>
-                            <field name="to_date"/>
+                            <field name="records"/>
+                            <field name="gain_account_id"/>
+                            <field name="limit"/>
                         </group>
                         <group>
                             <field name="state"/>
-                            <field name="records"/>
+                            <field name="to_date"/>
                             <field name="disposal_date"/>
-                            <field name="limit"/>
+                            <field name="loss_account_id"/>
                         </group>
                     </group>
                     <footer>

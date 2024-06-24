@@ -16,6 +16,15 @@ class AssetBulkSaleDisposeWizard(models.Model):
         [('draft', 'Draft'), ('open', 'Running'), ('close', 'Close'),
          ('paused', 'On Hold'), ('to_approve', 'To Approve')], required=True)
 
+    loss_account_id = fields.Many2one('account.account',
+                                      domain="[('deprecated', '=', False), ('company_id', '=', company_id)]",
+                                      help="Account used to write the journal item in case of loss",
+                                      readonly=False)
+    gain_account_id = fields.Many2one('account.account',
+                                      domain="[('deprecated', '=', False), ('company_id', '=', company_id)]",
+                                      help="Account used to write the journal item in case of gain",
+                                      readonly=False)
+
     def action_bulk_sale_dispose(self):
         if self.from_date and self.to_date:
             items = self.env['account.asset'].search(
@@ -46,12 +55,16 @@ class AssetBulkSaleDisposeWizard(models.Model):
                     'from_leasee_contract': True,
                     'action': 'dispose',
                     'contract_end_date': self.disposal_date,
+                    'loss_account_id': self.loss_account_id.id,
+                    'gain_account_id': self.gain_account_id.id,
                 })
             else:
                 asset_bulk = self.env['asset.sell.disposal.lines'].create({
                     'asset_id': rec.id,
                     'action': 'dispose',
                     'contract_end_date': self.disposal_date,
+                    'loss_account_id': self.loss_account_id.id,
+                    'gain_account_id': self.gain_account_id.id,
                 })
             abc.append(asset_bulk.id)
         dd = self.env['asset.bulk.wizard'].create({
@@ -91,5 +104,4 @@ class AssetBulkSaleDisposeWizard(models.Model):
                 [('state', '=', self.state),
                  ('company_id', '=', self.company_id.id),
                  ])
-
 
