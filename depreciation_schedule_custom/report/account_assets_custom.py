@@ -196,7 +196,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                                               'date_to'])
 
         options['custom_columns_subheaders'] = [
-            {"name": _("Characteristics"), "colspan": 11},
+            {"name": _("Characteristics"), "colspan": 13},
             {"name": _("Assets"), "colspan": 4},
             {"name": _("Depreciation"), "colspan": 4},
             {"name": _("Book Value"), "colspan": 1}
@@ -361,6 +361,8 @@ class AssetsReportCustomHandler(models.AbstractModel):
                 "asset_sequence_number": al["sequence_number"],
                 "co_location": al["co_location"],
                 "asset_model": al["asset_model_name"],
+                "fixed_asset_account": al["account_name"],
+                "currency": al["currency_name"],
                 "serial_no": al["serial_no"],
                 "additional_info": al["additional_info"],
             }
@@ -518,9 +520,10 @@ class AssetsReportCustomHandler(models.AbstractModel):
                                 asset.state AS asset_state, 
                                 asset.company_id AS company_id, 
                                 account.code AS account_code, 
-                                account.name AS account_name, 
+                                COALESCE(account.name ->> 'en_US', '') as account_name, 
                                 account.id AS account_id, 
                                 model.name as asset_model_name,
+                                currency.name as currency_name,
                                 COALESCE(
                                   SUM(move.depreciation_value) FILTER (
                                     WHERE move.date <  %(date_from)s AND move.state = 'posted' AND {move_filter}
@@ -543,6 +546,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                                 LEFT JOIN account_analytic_account co_locations ON asset.co_location = co_locations.id 
                                 LEFT JOIN account_move move ON move.asset_id = asset.id 
                                 LEFT JOIN account_asset model ON model.id = asset.model_id
+                                LEFT JOIN res_currency as currency ON asset.currency_id = currency.id
                               WHERE 
                                 asset.active 
                                 AND (asset.disposal_date >=  %(date_from)s OR asset.disposal_date IS NULL)
@@ -553,6 +557,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                               GROUP BY 
                                 asset.id, 
                                 account.id, 
+                                currency.id
                                 project_sites.id, 
                                 co_locations.id, 
                                 model.name
@@ -585,9 +590,10 @@ class AssetsReportCustomHandler(models.AbstractModel):
                       asset.state AS asset_state, 
                       asset.company_id AS company_id, 
                       account.code AS account_code, 
-                      account.name AS account_name, 
+                      COALESCE(account.name ->> 'en_US', '') as account_name, 
                       account.id AS account_id, 
                       model.name as asset_model_name,
+                      currency.name as currency_name,
                       COALESCE(
                         SUM(move.depreciation_value) FILTER (
                           WHERE move.date <  %(date_from)s AND move.state = 'posted' AND {move_filter}
@@ -610,6 +616,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                       LEFT JOIN account_analytic_account co_locations ON asset.co_location = co_locations.id 
                       LEFT JOIN account_move move ON move.asset_id = asset.id 
                       LEFT JOIN account_asset model ON model.id = asset.model_id
+                      LEFT JOIN res_currency currency ON asset.currency_id= currency.id
                     WHERE 
                       asset.active 
                       AND (asset.disposal_date >=  %(date_from)s OR asset.disposal_date IS NULL)
@@ -620,6 +627,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                     GROUP BY 
                       asset.id, 
                       account.id, 
+                      currency.id,
                       project_sites.id, 
                       co_locations.id, 
                       model.name
