@@ -20,9 +20,13 @@
                        position="attributes">
                     <attribute name="invisible">show_request_approve_button == False or show_post_button == False or state != 'draft'</attribute>
                 </xpath>
-                <xpath expr="//button[@name='button_cancel']"
+                <xpath expr="//button[@name='button_cancel'][1]"
                        position="attributes">
-                    <attribute name="invisible">id == False or state not in ['draft','to_approve']</attribute>
+                    <attribute name="invisible">not id or state not in ['draft','to_approve'] or move_type != 'entry'</attribute>
+                </xpath>
+                <xpath expr="//button[@name='button_cancel'][2]"
+                       position="attributes">
+                    <attribute name="invisible">not id or state not in ['draft','to_approve'] or move_type == 'entry'</attribute>
                 </xpath>
                 <xpath expr="//button[@name='action_post']" position="after">
                     <field name="show_approve_button" invisible="1"/>
@@ -48,7 +52,7 @@
                     />
                     <button name="button_approve_purchase_cycle"
                             string="Approve" type="object" class="btn-primary"
-                            invisible="show_approve_button == False"
+                            invisible="show_approve_button == False or state=='draft' or state == 'cancel'"
                     />
                 </xpath>
 

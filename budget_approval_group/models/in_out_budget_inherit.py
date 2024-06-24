@@ -1,4 +1,26 @@
-from odoo import models, api, fields
+from odoo import models, api, fields, _
+from odoo.addons.account.models.account_move import AccountMove
+
+from odoo.exceptions import UserError
+
+
+def button_cancel(self):
+    # Shortcut to move from posted to cancelled directly. This is useful for E-invoices that must not be changed
+    # when sent to the government.
+    moves_to_reset_draft = self.filtered(lambda x: x.state == 'posted')
+    if moves_to_reset_draft:
+        moves_to_reset_draft.button_draft()
+
+    if any(move.state not in ['draft', 'to_approve'] for move in self):
+        raise UserError(_("Only draft journal entries can be cancelled."))
+
+    self.write(
+        {'auto_post': 'no', 'state': 'cancel', 'request_approve_bool': False,
+         'purchase_approval_cycle_ids': [(5, 0, 0)]
+         })
+
+
+AccountMove.button_cancel = button_cancel
 
 
 class BudgetInOutLinesInvoicesInherit(models.Model):
@@ -28,7 +50,7 @@ class BudgetInOutLinesInvoicesInherit(models.Model):
         })
 
 
-class AccountMove(models.Model):
+class AccountMoveCustom(models.Model):
     _inherit = 'account.move'
 
     is_reset_to_draft_show = fields.Boolean(
@@ -38,7 +60,8 @@ class AccountMove(models.Model):
     def compute_is_reset_to_draft_show(self):
         for rec in self:
             if self.env.user.user_has_groups(
-                    'budget_approval_group.group_budget_check_approver') and rec.state == 'posted':
+                    'budget_approval_group.group_budget_check_approver') and rec.state in [
+                'posted', 'to_approve']:
                 rec.is_reset_to_draft_show = True
             else:
                 rec.is_reset_to_draft_show = False
