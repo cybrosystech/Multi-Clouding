@@ -573,8 +573,6 @@ class AccountMoveLine(models.Model):
                                     compute='get_budget_remaining_amount',
                                     )
     local_subtotal = fields.Float(compute='compute_local_subtotal', store=True)
-    price_unit = fields.Float(string='Unit Pricess', digits=dp.get_precision(
-        str(lambda self: self.env.company.name)))
 
     @api.onchange('analytic_distribution')
     def _inverse_analytic_distribution(self):
