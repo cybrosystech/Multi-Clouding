@@ -6,6 +6,24 @@
             <field name="model">account.move</field>
             <field name="inherit_id" ref="account.view_move_form"/>
             <field name="arch" type="xml">
+                 <xpath expr="//div[@name='journal_div']" position="replace">
+                        <div name="journal_div"
+                                     class="d-flex"
+                                     groups="account.group_account_readonly"
+                                     >
+                                    <field name="journal_id"
+                                        options="{'no_create': True, 'no_open': True}"
+                                        readonly="posted_before"/>
+                                    <span class="oe_inline o_form_label mx-3"
+                                          groups="base.group_multi_currency"
+                                          invisible="move_type == 'entry'"> in </span>
+                                    <field name="currency_id"
+                                           readonly="state != 'draft'"
+                                           options="{'no_create': True}"
+                                           context="{'search_default_active': 1, 'search_default_inactive': 1}"/>
+                                </div>
+
+                 </xpath>
                 <xpath expr="//field[@name='invoice_date']"
                        position="attributes">
                     <attribute name="required">move_type in ('out_invoice', 'out_refund', 'in_invoice', 'in_refund', 'out_receipt','in_receipt')</attribute>
