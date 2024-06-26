@@ -55,7 +55,8 @@ class AccountAsset(models.Model):
             self.method_number = model.method_number
             self.method_period = model.method_period
             self.method_progress_factor = model.method_progress_factor
-            self.prorata_date = fields.Date.today()
+            if not self.env.context.get('auto_create_asset'):
+                self.prorata_date = fields.Date.today()
             if model.analytic_distribution:
                 self.analytic_distribution = model.analytic_distribution
             self.account_asset_id = model.account_asset_id.id

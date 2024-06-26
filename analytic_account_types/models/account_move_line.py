@@ -608,7 +608,7 @@ class AccountMove(models.Model):
         for asset, vals, invoice, validate in zip(assets, create_list,
                                                   invoice_list, auto_validate):
             if 'model_id' in vals:
-                asset._onchange_model_id()
+                asset.with_context(auto_create_asset=True)._onchange_model_id()
                 if validate:
                     asset.validate()
             if invoice:
