@@ -531,6 +531,7 @@ class AccountMove(models.Model):
                                     (6, False, move_line.ids)],
                                 'state': 'draft',
                                 'original_value': original_value,
+                                'prorata_date': move.date,
                             }
                             model_id = move_line.account_id.asset_model
                             if model_id:
@@ -590,6 +591,7 @@ class AccountMove(models.Model):
                                         (6, False, move_line.ids)],
                                     'state': 'draft',
                                     'original_value': original_value,
+                                    'prorata_date': move.date,
                                 }
                                 model_id = move_line.account_id.asset_model
                                 if model_id:
