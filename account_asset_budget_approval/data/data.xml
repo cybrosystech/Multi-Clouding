@@ -14,7 +14,7 @@
                 </tr>
                 <tr>
                     <td class="content-block">
-                    Hello <t t-esc="ctx.get('name', '')"> Test Name </t>,
+                    Hello <t t-esc="ctx.get('name', '')"> </t>,
                     </td>
                 </tr>
                 <tr>
