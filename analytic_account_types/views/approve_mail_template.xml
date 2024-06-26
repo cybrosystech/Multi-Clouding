@@ -4,12 +4,12 @@
 
         <record id="email_template_send_mail_approval_sales" model="mail.template">
             <field name="name">Multi Level Sales Approval Mail Template</field>
-            <field name="email_from">${object.company_id.email}</field>
+            <field name="email_from">{{object.company_id.email}}</field>
             <field name="subject">Sales Order Approval</field>
             <field name="email_to"></field>
             <field name="model_id" ref="sale.model_sale_order"/>
             <field name="auto_delete" eval="True"/>
-            <field name="lang">${object.partner_id.lang}</field>
+            <field name="lang">{{object.partner_id.lang}}</field>
             <field name="body_html" type="html">
                 <meta itemprop="name" content="Notification Email"/>
                 <table width="100%" cellpadding="0" cellspacing="0">
@@ -20,18 +20,18 @@
                     </tr>
                     <tr>
                         <td class="content-block">
-                            Hello ${ctx['name']},
+                            Hello  <t t-esc="ctx.get('name', '')"> Test Name </t>,
                         </td>
                     </tr>
                     <tr>
                         <td class="content-block">
-                            ${object.display_name} requires your approval. 
+                            <t t-out="object.display_name"/>  requires your approval.
                             Please follow the link below to open the item.
                         </td>
                     </tr>
                     <tr>
                         <td class="content-block" itemprop="handler" itemtype="http://schema.org/HttpActionHandler">
-                            <a href="/web?#id=${object.id}&amp;view_type=form&amp;model=sale.order&amp;action=" class="btn-basic" itemprop="url">Open</a>
+                            <a t-attf-href="/web?#id={{ object.id }}&amp;view_type=form&amp;model=sale.order&amp;action=" class="btn-basic" itemprop="url">Open</a>
                         </td>
                     </tr>
                 </table>
@@ -40,12 +40,12 @@
 
         <record id="email_template_send_mail_approval_account" model="mail.template">
             <field name="name">Multi Level Invoice Approval Mail Template</field>
-            <field name="email_from">${object.company_id.email}</field>
+            <field name="email_from">{{object.company_id.email}}</field>
             <field name="subject">Invoice Approval</field>
             <field name="email_to"></field>
             <field name="model_id" ref="account.model_account_move"/>
             <field name="auto_delete" eval="True"/>
-            <field name="lang">${object.partner_id.lang}</field>
+            <field name="lang">{{ object.partner_id.lang }}</field>
             <field name="body_html" type="html">
                 <meta itemprop="name" content="Notification Email"/>
                 <table width="100%" cellpadding="0" cellspacing="0">
@@ -56,18 +56,19 @@
                     </tr>
                     <tr>
                         <td class="content-block">
-                            Hello ${ctx['name']},
+                            Hello <t t-esc="ctx.get('name', '')"> Test Name </t>,
                         </td>
                     </tr>
                     <tr>
                         <td class="content-block">
-                            ${object.display_name} requires your approval. 
+
+                            <t t-out="object.display_name"/> requires your approval.
                             Please follow the link below to open the item.
                         </td>
                     </tr>
                     <tr>
                         <td class="content-block" itemprop="handler" itemtype="http://schema.org/HttpActionHandler">
-                            <a href="/web?#id=${object.id}&amp;view_type=form&amp;model=account.move&amp;action=" class="btn-basic" itemprop="url">Open</a>
+                            <a t-attf-href="/web?#id={{ object.id }}&amp;view_type=form&amp;model=account.move&amp;action=" class="btn-basic" itemprop="url">Open</a>
                         </td>
                     </tr>
                 </table>
@@ -76,12 +77,12 @@
 
         <record id="email_template_send_mail_approval_purchase" model="mail.template">
             <field name="name">Multi Level Purchase Approval Mail Template</field>
-            <field name="email_from">${object.company_id.email}</field>
+            <field name="email_from">{{object.company_id.email}}</field>
             <field name="subject">Purchase Order Approval</field>
             <field name="email_to"></field>
             <field name="model_id" ref="purchase.model_purchase_order"/>
             <field name="auto_delete" eval="True"/>
-            <field name="lang">${object.partner_id.lang}</field>
+            <field name="lang">{{object.partner_id.lang}}</field>
             <field name="body_html" type="html">
                 <meta itemprop="name" content="Notification Email"/>
                 <table width="100%" cellpadding="0" cellspacing="0">
@@ -92,18 +93,18 @@
                     </tr>
                     <tr>
                         <td class="content-block">
-                            Hello ${ctx['name']},
+                            Hello <t t-esc="ctx.get('name', '')"> Test Name </t>,
                         </td>
                     </tr>
                     <tr>
                         <td class="content-block">
-                            ${object.display_name} requires your approval. 
+                           <t t-out="object.display_name"/> requires your approval.
                             Please follow the link below to open the item.
                         </td>
                     </tr>
                     <tr>
                         <td class="content-block" itemprop="handler" itemtype="http://schema.org/HttpActionHandler">
-                            <a href="/web?#id=${object.id}&amp;view_type=form&amp;model=purchase.order&amp;action=" class="btn-basic" itemprop="url">Open</a>
+                            <a t-attf-href="/web?#id={{object.id}}&amp;view_type=form&amp;model=purchase.order&amp;action=" class="btn-basic" itemprop="url">Open</a>
                         </td>
                     </tr>
                 </table>
