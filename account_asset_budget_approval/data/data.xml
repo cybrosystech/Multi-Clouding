@@ -14,19 +14,19 @@
                 </tr>
                 <tr>
                     <td class="content-block">
-                        Hello ${ctx['name']},
+                    Hello <t t-esc="ctx.get('name', '')"> Test Name </t>,
                     </td>
                 </tr>
                 <tr>
                     <td class="content-block">
-                        ${object.name} requires your approval.
+                        <t t-out="object.name"/> requires your approval.
                         Please follow the link below to open the item.
                     </td>
                 </tr>
                 <tr>
                     <td class="content-block" itemprop="handler"
                         itemtype="http://schema.org/HttpActionHandler">
-                        <a href="/web?#id=${object.id}&amp;view_type=form&amp;model=account.asset&amp;action="
+                        <a t-attf-href="/web?#id={{ object.id }}&amp;view_type=form&amp;model=account.asset&amp;action="
                            class="btn-basic" itemprop="url">Open
                         </a>
                     </td>
