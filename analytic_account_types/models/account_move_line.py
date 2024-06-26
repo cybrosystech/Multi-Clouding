@@ -379,6 +379,102 @@ class AccountMove(models.Model):
 
     # /////////// End of Approval Cycle According To In Budget or Out Budget in Po Configuration //////////////
 
+    # def _auto_create_asset(self):
+    #     create_list = []
+    #     invoice_list = []
+    #     auto_validate = []
+    #     for move in self:
+    #         if not move.move_type == 'entry':
+    #             if not move.is_invoice():
+    #                 continue
+    #
+    #             for move_line in move.line_ids:
+    #                 if (
+    #                         move_line.account_id
+    #                         and (move_line.account_id.can_create_asset)
+    #                         and move_line.account_id.create_asset != "no"
+    #                         and not (
+    #                         move_line.currency_id or move.currency_id).is_zero(
+    #                     move_line.price_total)
+    #                         and not move_line.asset_ids
+    #                         and not move_line.tax_line_id
+    #                         and move_line.price_total > 0
+    #                         and not (move.move_type in ('out_invoice',
+    #                                                     'out_refund') and move_line.account_id.internal_group == 'asset')
+    #                 ):
+    #                     if not move_line.name:
+    #                         raise UserError(
+    #                             _('Journal Items of {account} should have a label in order to generate an asset').format(
+    #                                 account=move_line.account_id.display_name))
+    #                     amount_total = amount_left = move_line.debit + move_line.credit
+    #                     unit_uom = self.env.ref('uom.product_uom_unit')
+    #
+    #                     if move_line.account_id.multiple_assets_per_line and ((
+    #                                                                                   move_line.product_uom_id and move_line.product_uom_id.category_id.id == unit_uom.category_id.id) or not move_line.product_uom_id):
+    #                         units_quantity = move_line.product_uom_id._compute_quantity(
+    #                             move_line.quantity, unit_uom, False)
+    #                     else:
+    #                         units_quantity = 1
+    #
+    #                     while units_quantity > 0:
+    #                         if units_quantity > 1:
+    #                             original_value = float_round(
+    #                                 amount_left / units_quantity,
+    #                                 precision_rounding=move_line.company_currency_id.rounding)
+    #                             amount_left = float_round(
+    #                                 amount_left - original_value,
+    #                                 precision_rounding=move_line.company_currency_id.rounding)
+    #                         else:
+    #                             original_value = amount_left
+    #                         vals = {
+    #                             'name': move_line.name,
+    #                             'company_id': move_line.company_id.id,
+    #                             'currency_id': move_line.company_currency_id.id,
+    #                             'analytic_distribution': move_line.analytic_distribution,
+    #                             'original_move_line_ids': [
+    #                                 (6, False, move_line.ids)],
+    #                             'state': 'draft',
+    #                             'acquisition_date': move.invoice_date if not move.reversed_entry_id else move.reversed_entry_id.invoice_date,
+    #                             'original_value': original_value,
+    #                         }
+    #                         model_id = move_line.account_id.asset_model
+    #                         if model_id:
+    #                             vals.update({
+    #                                 'model_id': model_id.id,
+    #                             })
+    #                         auto_validate.append(
+    #                             move_line.account_id.create_asset == 'validate')
+    #                         invoice_list.append(move)
+    #                         create_list.append(vals)
+    #                         units_quantity -= 1
+    #                     model_id = move_line.account_id.asset_model
+    #                     if model_id:
+    #                         vals.update({
+    #                             'model_id': model_id.id,
+    #                         })
+    #                     auto_validate.extend([
+    #                                              move_line.account_id.create_asset == 'validate'] * units_quantity)
+    #                     invoice_list.extend([move] * units_quantity)
+    #                     for i in range(1, units_quantity + 1):
+    #                         if units_quantity > 1:
+    #                             vals['name'] = move_line.name + _(" (%s of %s)",
+    #                                                               i,
+    #                                                               units_quantity)
+    #                         create_list.extend([vals.copy()])
+    #
+    #     assets = self.env['account.asset'].with_context({}).create(create_list)
+    #     for asset, vals, invoice, validate in zip(assets, create_list,
+    #                                               invoice_list, auto_validate):
+    #         if 'model_id' in vals:
+    #             asset._onchange_model_id()
+    #             if validate:
+    #                 asset.validate()
+    #         if invoice:
+    #             asset.message_post(body=escape(
+    #                 _('Asset created from invoice: %s')) % invoice._get_html_link())
+    #             asset._post_non_deductible_tax_value()
+    #     return assets
+
     def _auto_create_asset(self):
         create_list = []
         invoice_list = []
@@ -388,19 +484,19 @@ class AccountMove(models.Model):
                 if not move.is_invoice():
                     continue
 
-                for move_line in move.line_ids:
+                for move_line in move.line_ids.filtered(
+                        lambda line: not (move.move_type in (
+                                'out_invoice',
+                                'out_refund') and line.account_id.user_type_id.internal_group == 'asset')):
                     if (
                             move_line.account_id
                             and (move_line.account_id.can_create_asset)
                             and move_line.account_id.create_asset != "no"
+                            and not move.reversed_entry_id
                             and not (
                             move_line.currency_id or move.currency_id).is_zero(
                         move_line.price_total)
                             and not move_line.asset_ids
-                            and not move_line.tax_line_id
-                            and move_line.price_total > 0
-                            and not (move.move_type in ('out_invoice',
-                                                        'out_refund') and move_line.account_id.internal_group == 'asset')
                     ):
                         if not move_line.name:
                             raise UserError(
@@ -408,14 +504,12 @@ class AccountMove(models.Model):
                                     account=move_line.account_id.display_name))
                         amount_total = amount_left = move_line.debit + move_line.credit
                         unit_uom = self.env.ref('uom.product_uom_unit')
-
                         if move_line.account_id.multiple_assets_per_line and ((
                                                                                       move_line.product_uom_id and move_line.product_uom_id.category_id.id == unit_uom.category_id.id) or not move_line.product_uom_id):
                             units_quantity = move_line.product_uom_id._compute_quantity(
                                 move_line.quantity, unit_uom, False)
                         else:
                             units_quantity = 1
-
                         while units_quantity > 0:
                             if units_quantity > 1:
                                 original_value = float_round(
@@ -430,11 +524,12 @@ class AccountMove(models.Model):
                                 'name': move_line.name,
                                 'company_id': move_line.company_id.id,
                                 'currency_id': move_line.company_currency_id.id,
+                                'analytic_account_id': move_line.analytic_account_id.id,
+                                'project_site_id': move_line.project_site_id.id,
                                 'analytic_distribution': move_line.analytic_distribution,
                                 'original_move_line_ids': [
                                     (6, False, move_line.ids)],
                                 'state': 'draft',
-                                'acquisition_date': move.invoice_date if not move.reversed_entry_id else move.reversed_entry_id.invoice_date,
                                 'original_value': original_value,
                             }
                             model_id = move_line.account_id.asset_model
@@ -447,22 +542,67 @@ class AccountMove(models.Model):
                             invoice_list.append(move)
                             create_list.append(vals)
                             units_quantity -= 1
-                        model_id = move_line.account_id.asset_model
-                        if model_id:
-                            vals.update({
-                                'model_id': model_id.id,
-                            })
-                        auto_validate.extend([
-                                                 move_line.account_id.create_asset == 'validate'] * units_quantity)
-                        invoice_list.extend([move] * units_quantity)
-                        for i in range(1, units_quantity + 1):
-                            if units_quantity > 1:
-                                vals['name'] = move_line.name + _(" (%s of %s)",
-                                                                  i,
-                                                                  units_quantity)
-                            create_list.extend([vals.copy()])
+            else:
+                # to create asset based on the account configured in move lines and restricted if there already asset ex
+                if not move.asset_id:
+                    for move_line in move.line_ids.filtered(
+                            lambda line: not (move.move_type in (
+                                    'out_invoice',
+                                    'out_refund') and line.account_id.user_type_id.internal_group == 'asset')):
+                        if (
+                                move_line.account_id
+                                and (move_line.account_id.can_create_asset)
+                                and move_line.account_id.create_asset != "no"
+                                and not move.reversed_entry_id
+                                and not move_line.asset_ids
+                        ):
+                            if not move_line.name:
+                                raise UserError(
+                                    _('Journal Items of {account} should have a label in order to generate an asset').format(
+                                        account=move_line.account_id.display_name))
+                            amount_total = amount_left = move_line.debit + move_line.credit
+                            unit_uom = self.env.ref('uom.product_uom_unit')
+                            if move_line.account_id.multiple_assets_per_line and (
+                                    (
+                                            move_line.product_uom_id and move_line.product_uom_id.category_id.id == unit_uom.category_id.id) or not move_line.product_uom_id):
+                                units_quantity = move_line.product_uom_id._compute_quantity(
+                                    move_line.quantity, unit_uom, False)
+                            else:
+                                units_quantity = 1
+                            while units_quantity > 0:
+                                if units_quantity > 1:
+                                    original_value = float_round(
+                                        amount_left / units_quantity,
+                                        precision_rounding=move_line.company_currency_id.rounding)
+                                    amount_left = float_round(
+                                        amount_left - original_value,
+                                        precision_rounding=move_line.company_currency_id.rounding)
+                                else:
+                                    original_value = amount_left
+                                vals = {
+                                    'name': move_line.name,
+                                    'company_id': move_line.company_id.id,
+                                    'currency_id': move_line.company_currency_id.id,
+                                    'analytic_account_id': move_line.analytic_account_id.id,
+                                    'project_site_id': move_line.project_site_id.id,
+                                    'analytic_distribution': move_line.analytic_distribution,
+                                    'original_move_line_ids': [
+                                        (6, False, move_line.ids)],
+                                    'state': 'draft',
+                                    'original_value': original_value,
+                                }
+                                model_id = move_line.account_id.asset_model
+                                if model_id:
+                                    vals.update({
+                                        'model_id': model_id.id,
+                                    })
+                                auto_validate.append(
+                                    move_line.account_id.create_asset == 'validate')
+                                invoice_list.append(move)
+                                create_list.append(vals)
+                                units_quantity -= 1
 
-        assets = self.env['account.asset'].with_context({}).create(create_list)
+        assets = self.env['account.asset'].create(create_list)
         for asset, vals, invoice, validate in zip(assets, create_list,
                                                   invoice_list, auto_validate):
             if 'model_id' in vals:
