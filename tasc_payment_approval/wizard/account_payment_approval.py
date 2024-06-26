@@ -24,7 +24,7 @@ class PaymentApproval(models.Model):
     payment_approval_cycle_ids = fields.One2many(
         comodel_name="purchase.approval.cycle", inverse_name="payment_id",
         string="", required=False, )
-    request_approve_bool = fields.Boolean(default=False)
+    request_approve_bool = fields.Boolean(default=False,copy=False)
     show_request_approve_button = fields.Boolean(string="", copy=False)
     show_approve_button = fields.Boolean(string="",
                                          compute='check_show_approve_button')
@@ -82,7 +82,6 @@ class PaymentApproval(models.Model):
         self.show_approve_button = False
         current_approve = self.payment_approval_cycle_ids.filtered(
             lambda x: x.is_approved).mapped('approval_seq')
-
         last_approval = max(current_approve) if current_approve else 0
         check_last_approval_is_approved = self.payment_approval_cycle_ids.filtered(
             lambda x: x.approval_seq == int(last_approval))
@@ -95,6 +94,7 @@ class PaymentApproval(models.Model):
                 if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids:
                     self.show_approve_button = True
                     break
+
                 break
 
     def action_generate_approval_batch(self):

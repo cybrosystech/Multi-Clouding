@@ -5,12 +5,11 @@
                 model="mail.template">
             <field name="name">Multi Level Payment Approval Mail Template
             </field>
-            <field name="email_from">${object.company_id.email}</field>
+            <field name="email_from">{{object.company_id.email}}</field>
             <field name="subject">Payment Approval</field>
             <field name="email_to"></field>
             <field name="model_id" ref="tasc_payment_approval.model_account_payment_approval"/>
             <field name="auto_delete" eval="True"/>
-<!--            <field name="lang">${object.partner_id.lang}</field>-->
             <field name="body_html" type="html">
                 <meta itemprop="name" content="Notification Email"/>
                 <table width="100%" cellpadding="0" cellspacing="0">
@@ -21,19 +20,19 @@
                     </tr>
                     <tr>
                         <td class="content-block">
-                            Dear ${ctx['name']},
+                           Dear <t t-esc="ctx.get('name', '')">  </t>,
                         </td>
                     </tr>
                     <tr>
                         <td class="content-block">
-                            ${object.batch_name} with amount $ ${ctx['tot_payment_amount']} requires your approval.
+                            <t t-out="object.batch_name"/> with amount $ <t t-esc="ctx.get('tot_payment_amount', '')"> 1000 </t> requires your approval.
                             Please follow the link below to open the item.
                         </td>
                     </tr>
                     <tr>
                         <td class="content-block" itemprop="handler"
                             itemtype="http://schema.org/HttpActionHandler">
-                            <a href="/web?#id=${object.id}&amp;view_type=form&amp;model=account.payment.approval&amp;action="
+                            <a t-attf-href="/web?#id={{ object.id }}&amp;view_type=form&amp;model=account.payment.approval&amp;action="
                                class="btn-basic" itemprop="url">Open
                             </a>
                         </td>
