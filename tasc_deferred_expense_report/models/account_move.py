@@ -10,6 +10,15 @@ class AccountMoveLine(models.Model):
                                           domain="[('account_type','in',['asset_prepayments','asset_current'])]",
                                           copy=False)
 
+    @api.model
+    def _get_deferred_lines_values(self, account_id, balance, ref, analytic_distribution, line):
+        deferred_lines_values = super()._get_deferred_lines_values(account_id, balance, ref, analytic_distribution)
+        return {
+            **deferred_lines_values,
+            'project_site_id': int(line['project_site_id'] or 0) or None,
+            'analytic_account_id': int(line['analytic_account_id'] or 0) or None,
+        }
+
 
 class AccountMove(models.Model):
     _inherit = 'account.move'
@@ -121,3 +130,21 @@ class AccountMove(models.Model):
                 remaining_balance -= deferral_move.line_ids[0].balance
                 line.move_id.deferred_move_ids |= deferral_move
                 deferral_move._post(soft=True)
+
+
+
+    @api.model
+    def _get_deferred_lines(self, line, deferred_account, period, ref, force_balance=None):
+        """
+        :return: a list of Command objects to create the deferred lines of a single given period
+        """
+        deferred_amounts = self._get_deferred_amounts_by_line(line, [period])[0]
+        balance = deferred_amounts[period] if force_balance is None else force_balance
+        return [
+            Command.create({
+                **self.env['account.move.line']._get_deferred_lines_values(account.id, coeff * balance, ref, line.analytic_distribution, line),
+                'partner_id': line.partner_id.id,
+                'product_id': line.product_id.id,
+            })
+            for (account, coeff) in [(deferred_amounts['account_id'], 1), (deferred_account, -1)]
+        ]

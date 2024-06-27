@@ -14,6 +14,8 @@
                             <field name="vendor_id"
                                    invisible="leasor_type != 'single'"
                                    required="leasor_type == 'single'"/>
+                                                </group>
+
                             <notebook>
                                 <page string="Multi Leasors"
                                 invisible="leasor_type == 'single'">
@@ -29,7 +31,6 @@
                                     </field>
                                 </page>
                             </notebook>
-                        </group>
                     </sheet>
                     <footer>
                         <button name="action_apply" string="Apply" type="object"
