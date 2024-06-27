@@ -37,7 +37,6 @@ class Reassessment(models.TransientModel):
         })
         reassessment_installments = contract.installment_ids.filtered(lambda i: i.date >= self.reassessment_start_Date)
         first_installment = reassessment_installments[0]
-
         before_first = contract.installment_ids.filtered(
             lambda i: i.get_period_order() == (first_installment.get_period_order() - 1))
         days_before_reassessment = (self.reassessment_start_Date - before_first.date).days

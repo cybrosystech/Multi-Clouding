@@ -4,7 +4,7 @@
 
         <record id="email_template_send_mail_approval_sales" model="mail.template">
             <field name="name">Multi Level Sales Approval Mail Template</field>
-            <field name="email_from">{{object.company_id.email}}</field>
+            <field name="email_from"></field>
             <field name="subject">Sales Order Approval</field>
             <field name="email_to"></field>
             <field name="model_id" ref="sale.model_sale_order"/>
@@ -40,7 +40,7 @@
 
         <record id="email_template_send_mail_approval_account" model="mail.template">
             <field name="name">Multi Level Invoice Approval Mail Template</field>
-            <field name="email_from">{{object.company_id.email}}</field>
+            <field name="email_from"></field>
             <field name="subject">Invoice Approval</field>
             <field name="email_to"></field>
             <field name="model_id" ref="account.model_account_move"/>
@@ -77,7 +77,7 @@
 
         <record id="email_template_send_mail_approval_purchase" model="mail.template">
             <field name="name">Multi Level Purchase Approval Mail Template</field>
-            <field name="email_from">{{object.company_id.email}}</field>
+            <field name="email_from"></field>
             <field name="subject">Purchase Order Approval</field>
             <field name="email_to"></field>
             <field name="model_id" ref="purchase.model_purchase_order"/>

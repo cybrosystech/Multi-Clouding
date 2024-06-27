@@ -89,11 +89,14 @@ class SaleOrder(models.Model):
                         'analytic_account_types.email_template_send_mail_approval_sales')
                     ctx = self._context.copy()
                     ctx.update({'name': use.name})
+                    email_from = self.env["ir.config_parameter"].get_param(
+                        "mail.default.from", "migrate+default_from")
                     if email_template_id:
                         email_template_id.with_context(ctx).send_mail(self.id,
                                                                       force_send=True,
                                                                       email_values={
                                                                           'email_to': use.email,
+                                                                          'email_from': email_from,
                                                                           'model': None,
                                                                           'res_id': None})
 
