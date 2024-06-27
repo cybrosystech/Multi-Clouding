@@ -17,6 +17,12 @@
                     <field name="expression_label">asset_model</field>
                     <field name="figure_type">string</field>
                 </record>
+                <record id="depreciation_schedule_status"
+                        model="account.report.column">
+                    <field name="name">Status</field>
+                    <field name="expression_label">status</field>
+                    <field name="figure_type">string</field>
+                </record>
                 <record id="depreciation_schedule_acquisition_date"
                         model="account.report.column">
                     <field name="name">Acquisition Date</field>

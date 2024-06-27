@@ -56,7 +56,6 @@ class AssetsReportCustomHandler(models.AbstractModel):
                                                              '_report_expand_unfoldable_line_assets_report_prefix_group',
                                                              0)
 
-
         # add the groups by account
 
         # add the total line
@@ -196,7 +195,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                                               'date_to'])
 
         options['custom_columns_subheaders'] = [
-            {"name": _("Characteristics"), "colspan": 13},
+            {"name": _("Characteristics"), "colspan": 14},
             {"name": _("Assets"), "colspan": 4},
             {"name": _("Depreciation"), "colspan": 4},
             {"name": _("Book Value"), "colspan": 1}
@@ -250,10 +249,11 @@ class AssetsReportCustomHandler(models.AbstractModel):
                     al['asset_method_period'])
                 months = total_months % 12
                 years = total_months // 12
-                asset_depreciation_rate = " ".join(part for part in [
-                    years and _("%s y", years),
-                    months and _("%s m", months),
-                ] if part)
+                # asset_depreciation_rate = " ".join(part for part in [
+                #     years and _("%s y", years),
+                #     months and _("%s m", months),
+                # ] if part)
+                asset_depreciation_rate = " ".join(_("%s m", total_months))
             elif al['asset_method'] == 'linear':
                 asset_depreciation_rate = '0.00 %'
             else:
@@ -334,6 +334,23 @@ class AssetsReportCustomHandler(models.AbstractModel):
             else:
                 apex_type = ''
 
+            if al["asset_state"] == 'draft':
+                status = 'Draft'
+            elif al["asset_state"] == 'model':
+                status = 'Model'
+            elif al["asset_state"] == 'open':
+                status = 'Running'
+            elif al["asset_state"] == 'paused':
+                status = 'On Hold'
+            elif al["asset_state"] == 'close':
+                status = 'Closed'
+            elif al["asset_state"] == 'cancelled':
+                status = 'Cancelled'
+            elif al["asset_state"] == 'to_approve':
+                status = 'To Approve'
+            else:
+                status = ''
+
             # Format the data
             columns_by_expr_label = {
                 "acquisition_date": al[
@@ -361,7 +378,9 @@ class AssetsReportCustomHandler(models.AbstractModel):
                 "asset_sequence_number": al["sequence_number"],
                 "co_location": al["co_location"],
                 "asset_model": al["asset_model_name"],
-                "fixed_asset_account": al["account_name"],
+                "status": status,
+                "fixed_asset_account": al["account_code"] + "-" + al[
+                    "account_name"],
                 "currency": al["currency_name"],
                 "serial_no": al["serial_no"],
                 "additional_info": al["additional_info"],
@@ -727,7 +746,7 @@ class AccountReport(models.Model):
                 {'font_name': 'Arial', 'font_size': 12,
                  'font_color': '#666666'})
 
-            print_mode_self = self.with_context(no_format=True,is_xlsx=True)
+            print_mode_self = self.with_context(no_format=True, is_xlsx=True)
             lines = self._filter_out_depreciation_schedule_folded_children(
                 print_mode_self._get_lines(options))
             # For reports with lines generated for accounts, the account name and codes are shown in a single column.
