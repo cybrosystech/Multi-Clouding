@@ -240,13 +240,10 @@ class AccountMove(models.Model):
                     ctx = self._context.copy()
                     ctx.update({'name': us.name})
                     if email_template_id:
-                        email_from = self.env["ir.config_parameter"].get_param(
-                            "mail.default.from", "migrate+default_from")
                         email_template_id.with_context(ctx).send_mail(self.id,
                                                                       force_send=True,
                                                                       email_values={
                                                                           'email_to': us.email,
-                                                                          'email_from': email_from,
                                                                           'model': None,
                                                                           'res_id': None})
 
