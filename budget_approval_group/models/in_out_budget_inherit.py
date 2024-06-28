@@ -61,7 +61,7 @@ class AccountMoveCustom(models.Model):
         for rec in self:
             if self.env.user.user_has_groups(
                     'budget_approval_group.group_budget_check_approver') and rec.state in [
-                'posted', 'to_approve']:
+                'posted', 'to_approve'] and rec.payment_state in ['not_paid','in_payment'] and not rec.deferred_move_ids and not rec.asset_ids:
                 rec.is_reset_to_draft_show = True
             else:
                 rec.is_reset_to_draft_show = False
