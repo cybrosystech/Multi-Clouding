@@ -136,8 +136,7 @@ class AccountMove(models.Model):
         return name + (
             f" ({shorten(self.ref, width=50)})" if show_ref and self.ref else '')
 
-    @api.depends('state', 'auto_post', 'move_type', 'is_from_purchase',
-                 'is_from_sales', 'purchase_approval_cycle_ids')
+    @api.depends()
     def check_show_confirm_and_post_buttons(self):
         for rec in self:
             rec.show_post_button = False
@@ -179,8 +178,7 @@ class AccountMove(models.Model):
                 if sales:
                     rec.is_from_sales = True
 
-    @api.depends('purchase_approval_cycle_ids',
-                 'purchase_approval_cycle_ids.is_approved')
+    @api.depends()
     def check_show_approve_button(self):
         self.show_approve_button = False
         current_approve = self.purchase_approval_cycle_ids.filtered(
@@ -209,7 +207,7 @@ class AccountMove(models.Model):
                 if all(approve_list):
                     self.state = 'posted'
 
-    @api.depends('line_ids')
+    @api.depends('budget_collect_ids')
     def check_out_budget(self):
         for rec in self:
             if not rec.env.context.get('generate_analytic_distribution'):
@@ -301,26 +299,6 @@ class AccountMove(models.Model):
                 user = notification_to_user.user_approve_ids
                 journals.state = 'to_approve'
                 journals.send_user_notification(user)
-
-    def button_approve_purchase_cycle(self):
-        for journal in self:
-            min_seq_approval = min(
-                journal.purchase_approval_cycle_ids.filtered(
-                    lambda x: x.is_approved is not True).mapped('approval_seq'))
-            last_approval = journal.purchase_approval_cycle_ids.filtered(
-                lambda x: x.approval_seq == int(min_seq_approval))
-            if journal.env.user not in last_approval.user_approve_ids:
-                raise UserError(
-                    'You cannot approve this record' + ' ' + str(journal.name))
-            last_approval.is_approved = True
-            journal.send_user_notification(last_approval.user_approve_ids)
-            if not journal.purchase_approval_cycle_ids.filtered(
-                    lambda x: x.is_approved is False):
-                journal.action_post()
-            message = 'Level ' + str(
-                last_approval.approval_seq) + ' Approved by :' + str(
-                journal.env.user.name)
-            journal.message_post(body=message)
 
     def request_approval_button(self):
         self.get_budgets_in_out_budget_tab()
@@ -501,7 +479,7 @@ class AccountMove(models.Model):
                 for move_line in move.line_ids.filtered(
                         lambda line: not (move.move_type in (
                                 'out_invoice',
-                                'out_refund') and line.account_id.user_type_id.internal_group == 'asset')):
+                                'out_refund') and line.account_id.internal_group == 'asset')):
                     if (
                             move_line.account_id
                             and (move_line.account_id.can_create_asset)
@@ -563,7 +541,7 @@ class AccountMove(models.Model):
                     for move_line in move.line_ids.filtered(
                             lambda line: not (move.move_type in (
                                     'out_invoice',
-                                    'out_refund') and line.account_id.user_type_id.internal_group == 'asset')):
+                                    'out_refund') and line.account_id.internal_group == 'asset')):
                         if (
                                 move_line.account_id
                                 and (move_line.account_id.can_create_asset)
@@ -726,7 +704,7 @@ class AccountMoveLine(models.Model):
                                      index=True)
 
     remaining_amount = fields.Float(string="Remaining Amount", required=False,
-                                    compute='get_budget_remaining_amount',
+                                    compute='get_budget_remaining_amount',store=True
                                     )
     local_subtotal = fields.Float(compute='compute_local_subtotal', store=True)
 
@@ -760,7 +738,7 @@ class AccountMoveLine(models.Model):
                 else:
                     rec.local_subtotal = 0
 
-    @api.depends('budget_id', 'purchase_line_id',
+    @api.depends('budget_id', 'purchase_line_id', 'sale_line_ids',
                  'budget_line_id.remaining_amount')
     def get_budget_remaining_amount(self):
         for rec in self:
