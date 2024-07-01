@@ -1,8 +1,10 @@
 import json
 import operator
-from odoo.addons.base_import.models.base_import import ImportValidationError,Import
+from odoo.addons.base_import.models.base_import import ImportValidationError, \
+    Import
 from odoo import api, fields, models
 from odoo.tools.translate import _
+
 
 # class BaseImport(Import):
 
@@ -56,9 +58,9 @@ def _convert_import_data(self, fields, options):
                     break
 
     data = []
-    i=0
+    i = 0
     for row in map(mapper, rows_to_import):
-        i+=1
+        i += 1
         if len(indices_analytic_distribution) > 0:
             if not row[indices_analytic_distribution[0]] == '':
                 data_dict = json.loads(row[indices_analytic_distribution[0]])
@@ -72,10 +74,12 @@ def _convert_import_data(self, fields, options):
                             'account.analytic.account'].search(
                             [('name', '=', account)])
                         if analytic_account:
-                            analytic_distributions += ',' + str(analytic_account.id)
+                            analytic_distributions += ',' + str(
+                                analytic_account.id)
                         else:
                             raise ImportValidationError(
-                                _("Analytic distribution contains incorrect values %s on row %d",row[indices_analytic_distribution[0]],i+1))
+                                _("Analytic distribution contains incorrect values %s on row %d",
+                                  row[indices_analytic_distribution[0]], i + 1))
                     new_dict.update({str(analytic_distributions): val})
                 new_analytic_dist = json.dumps(new_dict)
                 row = list(row)
@@ -93,5 +97,5 @@ def _convert_import_data(self, fields, options):
     # data offsets from load are post-filtering
     return data[options.get('skip'):], import_fields
 
-Import._convert_import_data=_convert_import_data
 
+Import._convert_import_data = _convert_import_data
