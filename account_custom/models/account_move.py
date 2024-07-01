@@ -10,7 +10,7 @@ class AccountMove(models.Model):
                                       help=" Project Site",
                                       search='_search_project_site_id')
 
-    @api.depends('invoice_line_ids')
+    @api.depends()
     def compute_project_site(self):
         for rec in self:
             move_line_id = self.env['account.move.line'].search(
