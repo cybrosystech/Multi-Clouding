@@ -56,28 +56,31 @@ def _convert_import_data(self, fields, options):
                     break
 
     data = []
+    i=0
     for row in map(mapper, rows_to_import):
+        i+=1
         if len(indices_analytic_distribution) > 0:
-            data_dict = json.loads(row[indices_analytic_distribution[0]])
-            new_dict = {}
-            for key in data_dict:
-                val = data_dict.get(key)
-                split_keys = key.split(',')
-                analytic_distributions = ''
-                for account in split_keys:
-                    analytic_account = self.env[
-                        'account.analytic.account'].search(
-                        [('name', '=', account)])
-                    if analytic_account:
-                        analytic_distributions += ',' + str(analytic_account.id)
-                    else:
-                        raise ImportValidationError(
-                            _("Analytic distribution contains incorrect values"))
-                new_dict.update({str(analytic_distributions): val})
-            new_analytic_dist = json.dumps(new_dict)
-            row = list(row)
-            row[indices_analytic_distribution[0]] = new_analytic_dist
-            row = tuple(row)
+            if not row[indices_analytic_distribution[0]] == '':
+                data_dict = json.loads(row[indices_analytic_distribution[0]])
+                new_dict = {}
+                for key in data_dict:
+                    val = data_dict.get(key)
+                    split_keys = key.split(',')
+                    analytic_distributions = ''
+                    for account in split_keys:
+                        analytic_account = self.env[
+                            'account.analytic.account'].search(
+                            [('name', '=', account)])
+                        if analytic_account:
+                            analytic_distributions += ',' + str(analytic_account.id)
+                        else:
+                            raise ImportValidationError(
+                                _("Analytic distribution contains incorrect values %s on row %d",row[indices_analytic_distribution[0]],i+1))
+                    new_dict.update({str(analytic_distributions): val})
+                new_analytic_dist = json.dumps(new_dict)
+                row = list(row)
+                row[indices_analytic_distribution[0]] = new_analytic_dist
+                row = tuple(row)
         data.append(list(row))
     # data = [
     #     list(row) for row in map(mapper, rows_to_import)

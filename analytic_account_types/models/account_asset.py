@@ -27,7 +27,8 @@ class AccountAsset(models.Model):
     @api.depends('analytic_distribution')
     def compute_site_address(self):
         for rec in self:
-            rec.site_address = False
+            if not rec.env.context.get('generate_analytic_distribution'):
+                rec.site_address = False
 
     def action_oe_validate(self):
         if self.filtered(lambda aa: aa.state != 'draft'):

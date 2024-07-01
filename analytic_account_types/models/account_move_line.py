@@ -160,22 +160,24 @@ class AccountMove(models.Model):
                 else:
                     rec.show_confirm_button = False
 
-    @api.depends('invoice_line_ids')
+    @api.depends()
     def check_if_from_purchase(self):
         for rec in self:
-            rec.is_from_purchase = False
-            purchased = rec.invoice_line_ids.filtered(
-                lambda x: x.purchase_line_id)
-            if purchased:
-                rec.is_from_purchase = True
+            if not rec.env.context.get('generate_analytic_distribution'):
+                rec.is_from_purchase = False
+                purchased = rec.invoice_line_ids.filtered(
+                    lambda x: x.purchase_line_id)
+                if purchased:
+                    rec.is_from_purchase = True
 
-    @api.depends('invoice_line_ids')
+    @api.depends()
     def check_if_from_sales(self):
         for rec in self:
-            rec.is_from_sales = False
-            sales = rec.invoice_line_ids.filtered(lambda x: x.sale_line_ids)
-            if sales:
-                rec.is_from_sales = True
+            if not rec.env.context.get('generate_analytic_distribution'):
+                rec.is_from_sales = False
+                sales = rec.invoice_line_ids.filtered(lambda x: x.sale_line_ids)
+                if sales:
+                    rec.is_from_sales = True
 
     @api.depends('purchase_approval_cycle_ids',
                  'purchase_approval_cycle_ids.is_approved')
@@ -209,26 +211,29 @@ class AccountMove(models.Model):
 
     @api.depends('line_ids')
     def check_out_budget(self):
-        self.out_budget = False
-        lines = self.line_ids.filtered(lambda x: not x.budget_id)
-        if lines.filtered(
-                lambda x: x.remaining_amount < x.debit or x.remaining_amount < x.credit):
-            self.out_budget = True
+        for rec in self:
+            if not rec.env.context.get('generate_analytic_distribution'):
+                rec.out_budget = False
+                lines = rec.line_ids.filtered(lambda x: not x.budget_id)
+                if lines.filtered(
+                        lambda x: x.remaining_amount < x.debit or x.remaining_amount < x.credit):
+                    rec.out_budget = True
 
     @api.onchange('invoice_line_ids')
     def get_budgets_in_out_budget_tab(self):
-        if not self.is_from_purchase and not self.is_from_sales:
-            budgets = self.invoice_line_ids.mapped('budget_id')
-            self.budget_collect_ids = False
-            budget_lines = []
-            budgets = set(budgets)
+        if not self.env.context.get('generate_analytic_distribution'):
+            if not self.is_from_purchase and not self.is_from_sales:
+                budgets = self.invoice_line_ids.mapped('budget_id')
+                self.budget_collect_ids = False
+                budget_lines = []
+                budgets = set(budgets)
 
-            for bud in budgets:
-                if bud not in self.budget_collect_ids.mapped('budget_id'):
-                    budget_lines.append((0, 0, {
-                        'budget_id': bud.id
-                    }))
-            self.write({'budget_collect_ids': budget_lines})
+                for bud in budgets:
+                    if bud not in self.budget_collect_ids.mapped('budget_id'):
+                        budget_lines.append((0, 0, {
+                            'budget_id': bud.id
+                        }))
+                self.write({'budget_collect_ids': budget_lines})
 
     def send_user_notification(self, user):
         for us in user:
@@ -240,6 +245,8 @@ class AccountMove(models.Model):
                     ctx = self._context.copy()
                     ctx.update({'name': us.name})
                     if email_template_id:
+                        # email_from = self.env["ir.config_parameter"].get_param(
+                        #     "mail.default.from", "migrate+default_from")
                         email_template_id.with_context(ctx).send_mail(self.id,
                                                                       force_send=True,
                                                                       email_values={
