@@ -85,6 +85,8 @@ class PurchaseOrder(models.Model):
                         'analytic_account_types.email_template_send_mail_approval_purchase')
                     ctx = self._context.copy()
                     ctx.update({'name': us.name})
+                    # email_from = self.env["ir.config_parameter"].get_param(
+                    #     "mail.default.from", "migrate+default_from")
                     if email_template_id:
                         email_template_id.with_context(ctx).send_mail(self.id,
                                                                       force_send=True,
