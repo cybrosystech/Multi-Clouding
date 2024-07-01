@@ -83,29 +83,30 @@ class PurchaseOrderLine(models.Model):
 class PurchaseOrder(models.Model):
     _inherit = 'purchase.order'
 
-    def copy(self, default=None):
-        if default is None:
-            default = {}
-        # Call the original copy method
-        order = super(PurchaseOrder, self).copy(default=default)
+    # def copy(self, default=None):
+    #     if default is None:
+    #         default = {}
+    #     # Call the original copy method
+    #     order = super(PurchaseOrder, self).copy(default=default)
+    #
+    #     # Trigger onchange for the field you want
+    #     # Example: Assuming 'field_name' is the field you want to trigger onchange for
+    #
+    #     for line in order.order_line.filtered(lambda x: x.project_site_id):
+    #         line.onchange_project_site()
+    #     return order
 
-        # Trigger onchange for the field you want
-        # Example: Assuming 'field_name' is the field you want to trigger onchange for
-
-        for line in order.order_line.filtered(lambda x: x.project_site_id):
-            line.onchange_project_site()
-        return order
-
-    @api.model_create_multi
-    def create(self, vals_list):
-        order = super(PurchaseOrder, self).create(vals_list)
-        for line in order.order_line.filtered(lambda x: x.project_site_id):
-            line.onchange_project_site()
-
-        return order
-
-    def write(self, vals_list):
-        order = super(PurchaseOrder, self).write(vals_list)
-        for line in self.order_line.filtered(lambda x: x.project_site_id):
-            line.onchange_project_site()
-        return order
+    # @api.model_create_multi
+    # def create(self, vals_list):
+    #     order = super(PurchaseOrder, self).create(vals_list)
+    #     for line in order.order_line.filtered(lambda x: x.project_site_id):
+    #         line.onchange_project_site()
+    #
+    #     return order
+    #
+    # def write(self, vals_list):
+    #     order = super(PurchaseOrder, self).write(vals_list)
+    #     if self.order_line:
+    #         for line in self.order_line.filtered(lambda x: x.project_site_id):
+    #             line.onchange_project_site()
+    #     return order

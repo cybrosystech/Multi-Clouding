@@ -13,7 +13,7 @@
 
     'data':
         [
-            'views/account_assets_inherit_view.xml'
+            'views/account_assets_inherit_view.xml',
         ],
     "license": 'AGPL-3',
     'installable': True,
