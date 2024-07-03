@@ -176,6 +176,7 @@
                                         <span t-esc="'{:20,.2f}'.format(line.price_subtotal)"/>
                                     </td>
                                     <td>
+
                                         <span t-esc="round(exchange_rate, 4)"/>
                                     </td>
                                     <td>

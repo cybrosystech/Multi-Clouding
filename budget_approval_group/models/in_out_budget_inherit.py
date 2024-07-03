@@ -54,14 +54,15 @@ class AccountMoveCustom(models.Model):
     _inherit = 'account.move'
 
     is_reset_to_draft_show = fields.Boolean(
-        compute='compute_is_reset_to_draft_show')
+    )
 
-    @api.depends('state')
+    @api.depends('state', 'payment_state', 'deferred_move_ids', 'asset_ids')
     def compute_is_reset_to_draft_show(self):
         for rec in self:
             if self.env.user.user_has_groups(
                     'budget_approval_group.group_budget_check_approver') and rec.state in [
-                'posted', 'to_approve'] and rec.payment_state in ['not_paid','in_payment'] and not rec.deferred_move_ids and not rec.asset_ids:
+                'posted', 'to_approve'] and rec.payment_state in ['not_paid',
+                                                                  'in_payment'] and not rec.deferred_move_ids and not rec.asset_ids:
                 rec.is_reset_to_draft_show = True
             else:
                 rec.is_reset_to_draft_show = False

@@ -6,7 +6,6 @@ class PaymentApproval(models.Model):
     _name = 'account.payment.approval'
     _rec_name = 'batch_name'
     _inherit = ['mail.thread', 'mail.activity.mixin']
-
     _description = 'Payment Approval'
 
     from_date = fields.Date(string="Date From", help="Date From")
@@ -24,7 +23,7 @@ class PaymentApproval(models.Model):
     payment_approval_cycle_ids = fields.One2many(
         comodel_name="purchase.approval.cycle", inverse_name="payment_id",
         string="", required=False, )
-    request_approve_bool = fields.Boolean(default=False,copy=False)
+    request_approve_bool = fields.Boolean(default=False, copy=False)
     show_request_approve_button = fields.Boolean(string="", copy=False)
     show_approve_button = fields.Boolean(string="",
                                          compute='check_show_approve_button')
@@ -156,18 +155,23 @@ class PaymentApproval(models.Model):
                     tot_payment_amount = sum(
                         pay.payment_ids.mapped('amount_in_usd'))
                     ctx.update({'name': us.name,
-                                'tot_payment_amount': tot_payment_amount, })
+                                'tot_payment_amount': round(tot_payment_amount,
+                                                            2), })
                     if email_template_id:
+                        email_from = self.env["ir.config_parameter"].get_param(
+                            "mail.default.from", "migrate+default_from")
                         email_template_id.with_context(ctx).send_mail(pay.id,
                                                                       force_send=True,
                                                                       email_values={
                                                                           'email_to': us.email,
+                                                                          'email_from': email_from,
                                                                           'model': None,
                                                                           'res_id': None})
 
 
 class PaymentApprovalLine(models.Model):
     _name = 'account.payment.approval.line'
+    _description = 'Payment approval line'
 
     payment_id = fields.Many2one('account.payment',
                                  domain="[('company_id','=',company_id)]")
@@ -190,6 +194,7 @@ class PaymentApprovalLine(models.Model):
     amount_in_usd = fields.Float(string="Payment Amount ($)",
                                  compute='compute_amount_in_usd')
     usd_currency = fields.Many2one('res.currency', readonly=True)
+    description = fields.Char(string="Description", help="Description")
 
     @api.model
     def create(self, vals):
@@ -198,6 +203,13 @@ class PaymentApprovalLine(models.Model):
         if payment:
             payment.payment_approval_batch_id = vals.get(
                 "payment_approval_batch_id")
+
+            if payment.reconciled_bill_ids:
+                bill_ids = payment.reconciled_bill_ids
+                bill = bill_ids[0]
+                if bill.invoice_line_ids:
+                    first_line = bill.invoice_line_ids[0]
+                    res.description = first_line.name
         return res
 
     def unlink(self):

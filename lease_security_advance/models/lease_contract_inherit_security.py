@@ -216,7 +216,8 @@ class LeaseeContractInheritAdvance(models.Model):
              ('move_id.move_type', 'in', ['in_invoice']),
              ('deferred_start_date', '=', False),
              ('deferred_end_date', '=', False),
-             ('move_id.state', 'in', ['draft', 'to_approve'])], limit=limits)
+             ('move_id.state', 'in', ['draft', 'to_approve']),
+             ('debit', '>', 0)], limit=limits)
         for line in security_move_line:
 
             if line.move_id.lease_security_advance_id.leasee_contract_id.payment_frequency_type == 'months':
@@ -235,7 +236,8 @@ class LeaseeContractInheritAdvance(models.Model):
              ('move_id.move_type', 'in', ['in_invoice']),
              ('deferred_start_date', '=', False),
              ('deferred_end_date', '=', False),
-             ('move_id.state', 'in', ['draft', 'to_approve'])], limit=limits)
+             ('move_id.state', 'in', ['draft', 'to_approve']),
+             ('debit', '>', 0)], limit=limits)
         schedule = self.env.ref(
             'lease_security_advance.action_set_deferred_start_and_end_date_cron_update')
         if len(security_move_lines) > 0 and schedule.active:
