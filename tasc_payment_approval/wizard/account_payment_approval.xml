@@ -48,7 +48,8 @@
                         <page string="Payments">
                             <field name="payment_ids" readonly="state == 'approved'">
                                 <tree>
-                                    <field name="payment_id" invisible="1"/>
+                                    <field name="payment_id" invisible="1" column_invisible="1"/>
+                                    <field name="description"/>
                                     <field name="invoice_number"
                                            style="width:25px;"/>
                                     <field name="partner_id"/>

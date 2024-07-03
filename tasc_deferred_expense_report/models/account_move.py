@@ -50,17 +50,19 @@ class AccountMove(models.Model):
         for line in self.line_ids.filtered(
                 lambda l: l.deferred_start_date and l.deferred_end_date):
             if is_deferred_expense:
-                if not line.deferred_account_id and not self.company_id.deferred_expense_account_id:
+                if not line.deferred_account_id:
                     raise UserError(
-                        _("Please set the deferred accounts in the accounting settings or on the invoice line."))
+                        _("Deferred account cannot be empty if deferred start "
+                          "date and deferred end date is set."))
                 else:
-                    deferred_account = line.deferred_account_id if line.deferred_account_id else self.company_id.deferred_expense_account_id
+                    deferred_account = line.deferred_account_id if line.deferred_account_id else False
             else:
-                if not line.deferred_account_id and not self.company_id.deferred_revenue_account_id:
+                if not line.deferred_account_id:
                     raise UserError(
-                        _("Please set the deferred accounts in the accounting settings or on the invoice line."))
+                        _("Deferred account cannot be empty if deferred start "
+                          "date and deferred end date is set."))
                 else:
-                    deferred_account = line.deferred_account_id if line.deferred_account_id else self.company_id.deferred_revenue_account_id
+                    deferred_account = line.deferred_account_id if line.deferred_account_id else False
             periods = line._get_deferred_periods()
             if not periods:
                 continue
@@ -130,21 +132,3 @@ class AccountMove(models.Model):
                 remaining_balance -= deferral_move.line_ids[0].balance
                 line.move_id.deferred_move_ids |= deferral_move
                 deferral_move._post(soft=True)
-
-
-
-    @api.model
-    def _get_deferred_lines(self, line, deferred_account, period, ref, force_balance=None):
-        """
-        :return: a list of Command objects to create the deferred lines of a single given period
-        """
-        deferred_amounts = self._get_deferred_amounts_by_line(line, [period])[0]
-        balance = deferred_amounts[period] if force_balance is None else force_balance
-        return [
-            Command.create({
-                **self.env['account.move.line']._get_deferred_lines_values(account.id, coeff * balance, ref, line.analytic_distribution, line),
-                'partner_id': line.partner_id.id,
-                'product_id': line.product_id.id,
-            })
-            for (account, coeff) in [(deferred_amounts['account_id'], 1), (deferred_account, -1)]
-        ]

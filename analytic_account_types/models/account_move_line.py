@@ -136,8 +136,33 @@ class AccountMove(models.Model):
         return name + (
             f" ({shorten(self.ref, width=50)})" if show_ref and self.ref else '')
 
-    @api.depends()
+    # @api.depends()
+    # def check_show_confirm_and_post_buttons(self):
+    #     print("9")
+    #     for rec in self:
+    #         rec.show_post_button = False
+    #         rec.show_confirm_button = False
+    #         if rec.state not in ['draft',
+    #                              'to_approve'] or rec.auto_post or rec.move_type != 'entry':
+    #             if rec.is_from_purchase or rec.is_from_sales:
+    #                 rec.show_post_button = True
+    #             elif not rec.is_from_purchase and not rec.is_from_sales:
+    #                 if not rec.purchase_approval_cycle_ids:
+    #                     rec.show_post_button = True
+    #                 else:
+    #                     rec.show_post_button = False
+    #             else:
+    #                 rec.show_post_button = False
+    #         elif rec.state not in ['draft',
+    #                                'to_approve'] or rec.auto_post == True or rec.move_type == 'entry':
+    #             if rec.is_from_purchase or rec.is_from_sales:
+    #                 rec.show_confirm_button = True
+    #             else:
+    #                 rec.show_confirm_button = False
+
+    @api.depends('state','auto_post','move_type','is_from_purchase','is_from_sales','purchase_approval_cycle_ids')
     def check_show_confirm_and_post_buttons(self):
+        print("9")
         for rec in self:
             rec.show_post_button = False
             rec.show_confirm_button = False
@@ -159,8 +184,9 @@ class AccountMove(models.Model):
                 else:
                     rec.show_confirm_button = False
 
-    @api.depends()
+    @api.depends('invoice_line_ids.purchase_line_id')
     def check_if_from_purchase(self):
+        print("10")
         for rec in self:
             if not rec.env.context.get('generate_analytic_distribution'):
                 rec.is_from_purchase = False
@@ -169,8 +195,9 @@ class AccountMove(models.Model):
                 if purchased:
                     rec.is_from_purchase = True
 
-    @api.depends()
+    @api.depends('invoice_line_ids.sale_line_ids')
     def check_if_from_sales(self):
+        print("11")
         for rec in self:
             if not rec.env.context.get('generate_analytic_distribution'):
                 rec.is_from_sales = False
@@ -178,37 +205,69 @@ class AccountMove(models.Model):
                 if sales:
                     rec.is_from_sales = True
 
-    @api.depends()
+    # @api.depends()
+    # def check_show_approve_button(self):
+    #     print("12")
+    #     self.show_approve_button = False
+    #     current_approve = self.purchase_approval_cycle_ids.filtered(
+    #         lambda x: x.is_approved).mapped('approval_seq')
+    #
+    #     last_approval = max(current_approve) if current_approve else 0
+    #     a = self.purchase_approval_cycle_ids.mapped('approval_seq')
+    #     check_last_approval_is_approved = self.purchase_approval_cycle_ids.filtered(
+    #         lambda x: x.approval_seq == int(last_approval))
+    #
+    #     for rec in self.purchase_approval_cycle_ids:
+    #         if check_last_approval_is_approved:
+    #             if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids and check_last_approval_is_approved.is_approved:
+    #                 self.show_approve_button = True
+    #                 break
+    #         else:
+    #             if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids:
+    #                 self.show_approve_button = True
+    #                 break
+    #             break
+    #
+    #     if self.state != 'posted':
+    #         if self.purchase_approval_cycle_ids:
+    #             approve_list = self.purchase_approval_cycle_ids.mapped(
+    #                 'is_approved')
+    #             if all(approve_list):
+    #                 self.state = 'posted'
+
+    @api.depends('purchase_approval_cycle_ids','state','purchase_approval_cycle_ids.is_approved','purchase_approval_cycle_ids.user_approve_ids')
     def check_show_approve_button(self):
-        self.show_approve_button = False
-        current_approve = self.purchase_approval_cycle_ids.filtered(
-            lambda x: x.is_approved).mapped('approval_seq')
+        print("12")
+        for r in self:
+            r.show_approve_button = False
+            current_approve = r.purchase_approval_cycle_ids.filtered(
+                lambda x: x.is_approved).mapped('approval_seq')
 
-        last_approval = max(current_approve) if current_approve else 0
-        a = self.purchase_approval_cycle_ids.mapped('approval_seq')
-        check_last_approval_is_approved = self.purchase_approval_cycle_ids.filtered(
-            lambda x: x.approval_seq == int(last_approval))
+            last_approval = max(current_approve) if current_approve else 0
+            check_last_approval_is_approved = r.purchase_approval_cycle_ids.filtered(
+                lambda x: x.approval_seq == int(last_approval))
 
-        for rec in self.purchase_approval_cycle_ids:
-            if check_last_approval_is_approved:
-                if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids and check_last_approval_is_approved.is_approved:
-                    self.show_approve_button = True
+            for rec in r.purchase_approval_cycle_ids:
+                if check_last_approval_is_approved:
+                    if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids and check_last_approval_is_approved.is_approved:
+                        r.show_approve_button = True
+                        break
+                else:
+                    if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids:
+                        r.show_approve_button = True
+                        break
                     break
-            else:
-                if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids:
-                    self.show_approve_button = True
-                    break
-                break
 
-        if self.state != 'posted':
-            if self.purchase_approval_cycle_ids:
-                approve_list = self.purchase_approval_cycle_ids.mapped(
-                    'is_approved')
-                if all(approve_list):
-                    self.state = 'posted'
+            if r.state != 'posted':
+                if r.purchase_approval_cycle_ids:
+                    approve_list = r.purchase_approval_cycle_ids.mapped(
+                        'is_approved')
+                    if all(approve_list):
+                        r.state = 'posted'
 
-    @api.depends('budget_collect_ids')
+    @api.depends('line_ids.budget_id', 'line_ids.remaining_amount')
     def check_out_budget(self):
+        print("13")
         for rec in self:
             if not rec.env.context.get('generate_analytic_distribution'):
                 rec.out_budget = False
@@ -219,6 +278,7 @@ class AccountMove(models.Model):
 
     @api.onchange('invoice_line_ids')
     def get_budgets_in_out_budget_tab(self):
+        print("i")
         if not self.env.context.get('generate_analytic_distribution'):
             if not self.is_from_purchase and not self.is_from_sales:
                 budgets = self.invoice_line_ids.mapped('budget_id')
@@ -710,6 +770,7 @@ class AccountMoveLine(models.Model):
 
     @api.onchange('analytic_distribution')
     def _inverse_analytic_distribution(self):
+        print("j")
         """ Unlink and recreate analytic_lines when modifying the distribution."""
         lines_to_modify = self.env['account.move.line'].browse([
             line.id for line in self if line.parent_state == "posted"
@@ -719,11 +780,13 @@ class AccountMoveLine(models.Model):
 
     @api.onchange('budget_id')
     def onchange_budget_id(self):
+        print("k")
         return {'domain': {'budget_line_id': [
             ('crossovered_budget_id', '=', self.budget_id.id)]}}
 
     @api.depends('price_subtotal')
     def compute_local_subtotal(self):
+        print("14")
         for rec in self:
             if rec.move_id.move_type == 'entry':
                 rec.local_subtotal = abs(rec.credit) if rec.credit else abs(
@@ -741,6 +804,7 @@ class AccountMoveLine(models.Model):
     @api.depends('budget_id', 'purchase_line_id', 'sale_line_ids',
                  'budget_line_id.remaining_amount')
     def get_budget_remaining_amount(self):
+        print("15")
         for rec in self:
             rec.remaining_amount = 0.0
             if rec.purchase_line_id:

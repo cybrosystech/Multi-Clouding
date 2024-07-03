@@ -5,7 +5,7 @@
                 model="mail.template">
             <field name="name">Multi Level Payment Approval Mail Template
             </field>
-            <field name="email_from">{{object.company_id.email}}</field>
+            <field name="email_from"></field>
             <field name="subject">Payment Approval</field>
             <field name="email_to"></field>
             <field name="model_id" ref="tasc_payment_approval.model_account_payment_approval"/>
