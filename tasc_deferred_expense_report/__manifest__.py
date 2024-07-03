@@ -8,7 +8,7 @@
     'website': "",
     'category': 'Accounting',
     'version': '17.0.1.0.0',
-    'depends': ['account_asset', 'account_reports',
+    'depends': ['account_accountant','account_asset', 'account_reports',
                 'cash_flow_statement_report', 'tasc_budget_analysis_report'],
 
     'data':
