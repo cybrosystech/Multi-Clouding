@@ -4,7 +4,7 @@ from odoo.exceptions import ValidationError
 
 
 class ReportInvoiceTaxReport(models.AbstractModel):
-    _name = 'report.tasc_invoice_tax_report.inv_tax_report'
+    _name = 'report.invoice_tax_report.inv_tax_report'
     _description = 'Invoice Tax report'
 
     @api.model
