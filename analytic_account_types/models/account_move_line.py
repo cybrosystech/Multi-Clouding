@@ -162,7 +162,6 @@ class AccountMove(models.Model):
 
     @api.depends('state','auto_post','move_type','is_from_purchase','is_from_sales','purchase_approval_cycle_ids')
     def check_show_confirm_and_post_buttons(self):
-        print("9")
         for rec in self:
             rec.show_post_button = False
             rec.show_confirm_button = False
@@ -186,7 +185,6 @@ class AccountMove(models.Model):
 
     @api.depends('invoice_line_ids.purchase_line_id')
     def check_if_from_purchase(self):
-        print("10")
         for rec in self:
             if not rec.env.context.get('generate_analytic_distribution'):
                 rec.is_from_purchase = False
@@ -197,7 +195,6 @@ class AccountMove(models.Model):
 
     @api.depends('invoice_line_ids.sale_line_ids')
     def check_if_from_sales(self):
-        print("11")
         for rec in self:
             if not rec.env.context.get('generate_analytic_distribution'):
                 rec.is_from_sales = False
@@ -237,7 +234,6 @@ class AccountMove(models.Model):
 
     @api.depends('purchase_approval_cycle_ids','state','purchase_approval_cycle_ids.is_approved','purchase_approval_cycle_ids.user_approve_ids')
     def check_show_approve_button(self):
-        print("12")
         for r in self:
             r.show_approve_button = False
             current_approve = r.purchase_approval_cycle_ids.filtered(
@@ -267,7 +263,6 @@ class AccountMove(models.Model):
 
     @api.depends('line_ids.budget_id', 'line_ids.remaining_amount')
     def check_out_budget(self):
-        print("13")
         for rec in self:
             if not rec.env.context.get('generate_analytic_distribution'):
                 rec.out_budget = False
@@ -278,7 +273,6 @@ class AccountMove(models.Model):
 
     @api.onchange('invoice_line_ids')
     def get_budgets_in_out_budget_tab(self):
-        print("i")
         if not self.env.context.get('generate_analytic_distribution'):
             if not self.is_from_purchase and not self.is_from_sales:
                 budgets = self.invoice_line_ids.mapped('budget_id')
@@ -770,7 +764,6 @@ class AccountMoveLine(models.Model):
 
     @api.onchange('analytic_distribution')
     def _inverse_analytic_distribution(self):
-        print("j")
         """ Unlink and recreate analytic_lines when modifying the distribution."""
         lines_to_modify = self.env['account.move.line'].browse([
             line.id for line in self if line.parent_state == "posted"
@@ -780,13 +773,11 @@ class AccountMoveLine(models.Model):
 
     @api.onchange('budget_id')
     def onchange_budget_id(self):
-        print("k")
         return {'domain': {'budget_line_id': [
             ('crossovered_budget_id', '=', self.budget_id.id)]}}
 
     @api.depends('price_subtotal')
     def compute_local_subtotal(self):
-        print("14")
         for rec in self:
             if rec.move_id.move_type == 'entry':
                 rec.local_subtotal = abs(rec.credit) if rec.credit else abs(
@@ -804,7 +795,6 @@ class AccountMoveLine(models.Model):
     @api.depends('budget_id', 'purchase_line_id', 'sale_line_ids',
                  'budget_line_id.remaining_amount')
     def get_budget_remaining_amount(self):
-        print("15")
         for rec in self:
             rec.remaining_amount = 0.0
             if rec.purchase_line_id:

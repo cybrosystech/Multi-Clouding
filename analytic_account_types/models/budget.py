@@ -48,7 +48,6 @@ class CrossOveredBudgetLines(models.Model):
     @api.depends("crossovered_budget_id", "general_budget_id",
                  "analytic_account_id")
     def _compute_line_name(self):
-        print("18")
         # just in case someone opens the budget line in form view
         for record in self:
             computed_name = record.crossovered_budget_id.name
@@ -65,7 +64,6 @@ class CrossOveredBudgetLines(models.Model):
             record.name = computed_name
 
     def _compute_practical_amount(self):
-        print("555555555")
         analytic_line_ids = []
         for line in self:
             if 'default_move_type' not in list(self._context.keys()):

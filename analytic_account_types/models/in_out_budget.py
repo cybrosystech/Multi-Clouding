@@ -50,7 +50,6 @@ class BudgetInOutLines(models.Model):
 
     @api.onchange('approval_seq')
     def approval_seq_check(self):
-        print("l")
         for rec in self:
             if rec.name and rec.approval_seq <= 0:
                 rec.approval_seq = False
@@ -109,7 +108,6 @@ class BudgetInOutLinesSales(models.Model):
 
     @api.onchange('approval_seq')
     def approval_seq_check(self):
-        print("m")
         for rec in self:
             if rec.name and rec.approval_seq <= 0:
                 rec.approval_seq = False
@@ -172,7 +170,6 @@ class BudgetInOutLinesInvoices(models.Model):
 
     @api.onchange('approval_seq')
     def approval_seq_check(self):
-        print("m")
         for rec in self:
             if rec.name and rec.approval_seq <= 0:
                 rec.approval_seq = False
