@@ -135,11 +135,12 @@ class VendorReportWizard(models.TransientModel):
         for rec in journals:
             payment_widget = ''
             paid_amount = 0
-            if rec.invoice_payments_widget and json.loads(rec.invoice_payments_widget):
-                payment_widget = ', '.join(map(lambda x: x['date'], json.loads(
-                    rec.invoice_payments_widget)['content']))
-                paid_amount = sum(map(lambda x: x['amount'], json.loads(
-                    rec.invoice_payments_widget)['content']))
+            if rec.invoice_payments_widget and 'content' in rec.invoice_payments_widget:
+                payment_widget = ', '.join(map(lambda x: str(x['date']),
+                                               rec.invoice_payments_widget[
+                                                   'content']))
+                paid_amount = sum(map(lambda x: x['amount'],
+                                      rec.invoice_payments_widget['content']))
             for lines in rec.invoice_line_ids:
                 rate = self.env['res.currency']._get_conversion_rate(
                     rec.currency_id, rec.company_id.currency_id,
