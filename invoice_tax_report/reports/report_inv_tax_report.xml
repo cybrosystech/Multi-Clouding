@@ -207,8 +207,8 @@
                     </table>
                 </div>
                 <div class="row">
-                    <div class="col-6"/>
-                    <div class="col-6 row">
+                    <div class="col-3"/>
+                    <div class="col-9 row">
                         <div class="col-6 text-right" style="text-align: right;">
                             <t t-set="taxes"
                                t-value="', '.join(map(lambda x: (x.name), doc.invoice_line_ids.mapped('tax_ids')))"/>

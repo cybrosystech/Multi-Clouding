@@ -105,7 +105,7 @@ class VendorReportWizard(models.TransientModel):
 
         sheet.set_row(2, 25)
         sheet.set_column('A2:L2', 20)
-        sheet.merge_range('S2:V2', 'Book Currency' + str(
+        sheet.merge_range('T2:W2', 'Book Currency' + str(
             self.env.company.currency_id.symbol),
                           head)
         sheet.write('A3', 'Bill Date', head)
@@ -126,20 +126,24 @@ class VendorReportWizard(models.TransientModel):
         sheet.write('P3', 'Tax ID', head)
         sheet.write('Q3', 'payment date', head)
         sheet.write('R3', 'payment Amount', head)
-        sheet.write('S3', 'pre Vat Amount', head)
-        sheet.write('T3', 'Vat Amount', head)
-        sheet.write('U3', 'Total', head)
-        sheet.write('V3', 'payment Amount', head)
+        sheet.write('S3', 'Payment Number', head)
+        sheet.write('T3', 'pre Vat Amount', head)
+        sheet.write('U3', 'Vat Amount', head)
+        sheet.write('V3', 'Total', head)
+        sheet.write('W3', 'payment Amount', head)
         row_num = 2
         col_num = 0
         for rec in journals:
             payment_widget = ''
             paid_amount = 0
-            if rec.invoice_payments_widget and json.loads(rec.invoice_payments_widget):
-                payment_widget = ', '.join(map(lambda x: x['date'], json.loads(
-                    rec.invoice_payments_widget)['content']))
-                paid_amount = sum(map(lambda x: x['amount'], json.loads(
-                    rec.invoice_payments_widget)['content']))
+            payment_ref = ''
+            if rec.invoice_payments_widget and 'content' in rec.invoice_payments_widget:
+                payment_widget = ', '.join(map(lambda x: str(x['date']),
+                                               rec.invoice_payments_widget[
+                                                   'content']))
+                paid_amount = sum(map(lambda x: x['amount'],
+                                      rec.invoice_payments_widget['content']))
+                payment_ref = rec.invoice_payments_widget['content'][0]['payment_ref']
             for lines in rec.invoice_line_ids:
                 rate = self.env['res.currency']._get_conversion_rate(
                     rec.currency_id, rec.company_id.currency_id,
@@ -197,13 +201,15 @@ class VendorReportWizard(models.TransientModel):
                                 payment_widget, date_format)
                     sheet.write(row_num + 1, col_num + 17,
                                 paid_amount, num)
-                    sheet.write(row_num + 1, col_num + 18, sub_total * rate,
+                    sheet.write(row_num + 1, col_num + 18,
+                                payment_ref, num)
+                    sheet.write(row_num + 1, col_num + 19, sub_total * rate,
                                 num)
-                    sheet.write(row_num + 1, col_num + 19, tax_amount * rate,
+                    sheet.write(row_num + 1, col_num + 20, tax_amount * rate,
                                 num)
-                    sheet.write(row_num + 1, col_num + 20,
+                    sheet.write(row_num + 1, col_num + 21,
                                tot, num)
-                    sheet.write(row_num + 1, col_num + 21, paid_amount * rate,
+                    sheet.write(row_num + 1, col_num + 22, paid_amount * rate,
                                 num)
                     row_num = row_num + 1
                 else:
@@ -213,7 +219,7 @@ class VendorReportWizard(models.TransientModel):
                     tot = sub_total +tax_amount
                     tot1 = sub_total * rate
                     tot2 = tax_amount * rate
-                    tot3 =  (sub_total * rate) + (tax_amount * rate)
+                    tot3 = (sub_total * rate) + (tax_amount * rate)
                     tot4 = paid_amount * rate
                     if rec.move_type == 'in_refund':
                         sub_total = -abs(sub_total)
@@ -263,13 +269,15 @@ class VendorReportWizard(models.TransientModel):
                                 payment_widget, date_format)
                     sheet.write(row_num + 1, col_num + 17,
                                 paid_amount, num)
-                    sheet.write(row_num + 1, col_num + 18, tot1,
+                    sheet.write(row_num + 1, col_num + 18,
+                                payment_ref, num)
+                    sheet.write(row_num + 1, col_num + 19, tot1,
                                 num)
-                    sheet.write(row_num + 1, col_num + 19, tot2,
+                    sheet.write(row_num + 1, col_num + 20, tot2,
                                 num)
-                    sheet.write(row_num + 1, col_num + 20,
+                    sheet.write(row_num + 1, col_num + 21,
                                 tot3, num)
-                    sheet.write(row_num + 1, col_num + 21, tot4,
+                    sheet.write(row_num + 1, col_num + 22, tot4,
                                 num)
                     row_num = row_num + 1
         workbook.close()
