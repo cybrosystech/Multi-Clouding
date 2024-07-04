@@ -8,7 +8,7 @@
     'website': "",
     'category': 'Accounting',
     'version': '1.0',
-    'depends': ['analytic_account_types',
+    'depends': ['analytic_account_types','tasc_deferred_expense_report'
                 ],
 
     'data':

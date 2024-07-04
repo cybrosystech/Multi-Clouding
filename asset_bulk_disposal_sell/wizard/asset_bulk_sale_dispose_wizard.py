@@ -11,7 +11,7 @@ class AssetBulkSaleDisposeWizard(models.Model):
     limit = fields.Integer(string="Limit", required=True)
     from_date = fields.Date(string="Acquisition From Date")
     to_date = fields.Date(string="Acquisition To Date")
-    disposal_date = fields.Date(string="Disposal Date",required=True)
+    disposal_date = fields.Date(string="Disposal Date", required=True)
     state = fields.Selection(
         [('draft', 'Draft'), ('open', 'Running'), ('close', 'Close'),
          ('paused', 'On Hold'), ('to_approve', 'To Approve')], required=True)
@@ -26,27 +26,35 @@ class AssetBulkSaleDisposeWizard(models.Model):
                                       readonly=False)
 
     def action_bulk_sale_dispose(self):
-        if self.from_date and self.to_date:
+        if self.company_id and self.state and self.from_date and self.to_date:
             items = self.env['account.asset'].search(
                 [('state', '=', self.state),
                  ('company_id', '=', self.company_id.id),
                  ('acquisition_date', '>=', self.from_date),
-                 ('acquisition_date', '<=', self.to_date)], limit=self.limit)
-        elif self.from_date:
+                 ('acquisition_date', '<=', self.to_date),
+                 ('state', '!=', 'model'), ('state', '!=', 'model'),
+                 ('parent_id', '=', False)])
+        elif self.company_id and self.state and self.from_date:
             items = self.env['account.asset'].search(
                 [('state', '=', self.state),
                  ('company_id', '=', self.company_id.id),
                  ('acquisition_date', '>=', self.from_date),
-                 ], limit=self.limit)
-        elif self.to_date:
+                 ('state', '!=', 'model'), ('parent_id', '=', False)])
+        elif self.company_id and self.state and self.to_date:
             items = self.env['account.asset'].search(
                 [('state', '=', self.state),
                  ('company_id', '=', self.company_id.id),
-                 ('acquisition_date', '<=', self.to_date)], limit=self.limit)
+                 ('acquisition_date', '<=', self.to_date),
+                 ('state', '!=', 'model'), ('parent_id', '=', False)])
+        elif self.company_id and self.state:
+            items = self.env['account.asset'].search(
+                [('state', '=', self.state),
+                 ('company_id', '=', self.company_id.id),
+                 ('state', '!=', 'model'), ('parent_id', '=', False)])
         else:
             items = self.env['account.asset'].search(
-                [('state', '=', self.state),
-                 ('company_id', '=', self.company_id.id)], limit=self.limit)
+                [('company_id', '=', self.company_id.id),
+                 ('state', '!=', 'model'), ('parent_id', '=', False)])
         abc = []
         for rec in items:
             if rec.leasee_contract_ids:
@@ -79,29 +87,34 @@ class AssetBulkSaleDisposeWizard(models.Model):
             'res_id': dd.id,
         }
 
-
-    @api.onchange('from_date', 'to_date', 'company_id','state')
+    @api.onchange('from_date', 'to_date', 'company_id', 'state')
     def onchange_from_value(self):
-        if self.from_date and self.to_date:
+        if self.company_id and self.state and self.from_date and self.to_date:
             self.records = self.env['account.asset'].search_count(
                 [('state', '=', self.state),
                  ('company_id', '=', self.company_id.id),
                  ('acquisition_date', '>=', self.from_date),
-                 ('acquisition_date', '<=', self.to_date)])
-        elif self.from_date:
+                 ('acquisition_date', '<=', self.to_date),
+                 ('state', '!=', 'model'), ('state', '!=', 'model'),
+                 ('parent_id', '=', False)])
+        elif self.company_id and self.state and self.from_date:
             self.records = self.env['account.asset'].search_count(
                 [('state', '=', self.state),
                  ('company_id', '=', self.company_id.id),
                  ('acquisition_date', '>=', self.from_date),
-                ])
-        elif self.to_date:
+                 ('state', '!=', 'model'), ('parent_id', '=', False)])
+        elif self.company_id and self.state and self.to_date:
             self.records = self.env['account.asset'].search_count(
                 [('state', '=', self.state),
                  ('company_id', '=', self.company_id.id),
-                 ('acquisition_date', '<=', self.to_date)])
+                 ('acquisition_date', '<=', self.to_date),
+                 ('state', '!=', 'model'), ('parent_id', '=', False)])
+        elif self.company_id and self.state:
+            self.records = self.env['account.asset'].search_count(
+                [('state', '=', self.state),
+                 ('company_id', '=', self.company_id.id),
+                 ('state', '!=', 'model'), ('parent_id', '=', False)])
         else:
             self.records = self.env['account.asset'].search_count(
-                [('state', '=', self.state),
-                 ('company_id', '=', self.company_id.id),
-                 ])
-
+                [('company_id', '=', self.company_id.id),
+                 ('state', '!=', 'model'), ('parent_id', '=', False)])
