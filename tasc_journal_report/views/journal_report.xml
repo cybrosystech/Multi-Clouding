@@ -67,20 +67,6 @@
                                         <td><t  t-esc="', '.join(map(lambda x: (x.name), line.mapped('tax_ids')))"/></td>
                                     </tr>
                                 </t>
-<!--                                <tr>-->
-<!--                                    <td/>-->
-<!--                                    <td/>-->
-<!--                                    <td/>-->
-<!--                                    <td/>-->
-<!--                                    <td>Total</td>-->
-<!--                                    <td>-->
-<!--                                        <t t-esc="'{:20,.2f}'.format(sum(o.line_ids.mapped(lambda x: x.debit)))"/>-->
-<!--                                    </td>-->
-<!--                                    <td>-->
-<!--                                        <t t-esc="'{:20,.2f}'.format(sum(o.line_ids.mapped(lambda x: x.credit)))"/>-->
-<!--                                    </td>-->
-<!--                                    <td/>-->
-<!--                                </tr>-->
                             </tbody>
                         </table>
                         <div>
@@ -95,7 +81,10 @@
                                             <!--Tax totals-->
                                             <t t-set="tax_totals"
                                                t-value="o.tax_totals"/>
-                                            <t t-call="account.document_tax_totals"/>
+                                            <t t-if="tax_totals">
+                                                <t t-call="account.document_tax_totals"/>
+                                            </t>
+
 
                                             <!--Payments-->
                                             <t t-if="print_with_payments">
