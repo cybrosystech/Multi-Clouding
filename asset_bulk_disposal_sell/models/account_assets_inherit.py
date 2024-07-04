@@ -7,6 +7,21 @@ from odoo.exceptions import UserError
 class AccountAssetBulkSaleDisposal(models.Model):
     _inherit = 'account.asset'
 
+    @api.constrains('depreciation_move_ids')
+    def _check_depreciations(self):
+        for asset in self:
+            if (
+                    asset.state == 'open'
+                    and asset.depreciation_move_ids
+                    and not asset.currency_id.is_zero(
+                asset.depreciation_move_ids.sorted(lambda x: (x.date, x.id))[
+                    -1].asset_remaining_value
+            )
+            ):
+                raise UserError(
+                    _("The remaining value on the last depreciation entry must"
+                      " be 0 for the asset %s", asset.name))
+
     def asset_bulk_sale_dispose(self):
         abc = []
         for rec in self:
@@ -51,14 +66,41 @@ class AccountAssetBulkSaleDisposal(models.Model):
     def set_to_close_bulk(self, invoice_line_ids, partial, partial_amount, date=None):
         self.ensure_one()
         disposal_date = date or fields.Date.today()
-        if invoice_line_ids and self.children_ids.filtered(lambda a: a.state in ('draft', 'open') or a.value_residual > 0):
-            raise UserError(_("You cannot automate the journal entry for an asset that has a running gross increase. Please use 'Dispose' on the increase(s)."))
+        if invoice_line_ids and self.children_ids.filtered(
+                lambda a: a.state in ('draft', 'open') or a.value_residual > 0):
+            raise UserError(
+                _("You cannot automate the journal entry for an asset that has "
+                  "a running gross increase. Please use 'Dispose' on the "
+                  "increase(s)."))
         full_asset = self + self.children_ids
-        full_asset._get_disposal_moves_bulk([invoice_line_ids] * len(full_asset), disposal_date, partial, partial_amount)
+
+        move_ids = full_asset._get_disposal_moves(
+            [invoice_line_ids] * len(full_asset), disposal_date, partial,
+            partial_amount)
         if not partial:
             full_asset.write({'state': 'close'})
-        # if move_ids:
-        #     return self._return_disposal_view(move_ids)
+        if move_ids:
+            name = _('Disposal Move')
+            view_mode = 'form'
+            return {
+                'name': name,
+                'view_mode': view_mode,
+                'res_model': 'account.move',
+                'type': 'ir.actions.act_window',
+                'target': 'current',
+                'res_id': move_ids[0],
+                'domain': [('id', 'in', move_ids)]
+            }
+        # self.ensure_one()
+        # disposal_date = date or fields.Date.today()
+        # if invoice_line_ids and self.children_ids.filtered(lambda a: a.state in ('draft', 'open') or a.value_residual > 0):
+        #     raise UserError(_("You cannot automate the journal entry for an asset that has a running gross increase. Please use 'Dispose' on the increase(s)."))
+        # full_asset = self + self.children_ids
+        # full_asset._get_disposal_moves_bulk([invoice_line_ids] * len(full_asset), disposal_date, partial, partial_amount)
+        # if not partial:
+        #     full_asset.write({'state': 'close'})
+        # # if move_ids:
+        # #     return self._return_disposal_view(move_ids)
 
     def _get_disposal_moves_bulk(self, invoice_line_ids, disposal_date, partial, partial_amount):
         def get_line(asset, amount, account):
