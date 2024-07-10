@@ -158,13 +158,10 @@ class PaymentApproval(models.Model):
                                 'tot_payment_amount': round(tot_payment_amount,
                                                             2), })
                     if email_template_id:
-                        email_from = self.env["ir.config_parameter"].get_param(
-                            "mail.default.from", "migrate+default_from")
                         email_template_id.with_context(ctx).send_mail(pay.id,
                                                                       force_send=True,
                                                                       email_values={
                                                                           'email_to': us.email,
-                                                                          'email_from': email_from,
                                                                           'model': None,
                                                                           'res_id': None})
 
