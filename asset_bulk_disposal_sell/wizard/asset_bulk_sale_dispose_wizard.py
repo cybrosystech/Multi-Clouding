@@ -5,7 +5,9 @@ class AssetBulkSaleDisposeWizard(models.Model):
     _name = 'asset.bulk.sale.dispose.wizard'
     _description = 'Asset Bulk Sale Dispose'
 
-    company_id = fields.Many2one('res.company', string='Company', required=True)
+    company_id = fields.Many2one('res.company', string='Company', required=True,
+                                 domain=lambda self: [
+                                     ('id', 'in', self.env.companies.ids)])
 
     records = fields.Integer(string="Records")
     limit = fields.Integer(string="Limit", required=True)
@@ -26,35 +28,80 @@ class AssetBulkSaleDisposeWizard(models.Model):
                                       readonly=False)
 
     def action_bulk_sale_dispose(self):
-        if self.company_id and self.state and self.from_date and self.to_date:
-            items = self.env['account.asset'].search(
-                [('state', '=', self.state),
-                 ('company_id', '=', self.company_id.id),
-                 ('acquisition_date', '>=', self.from_date),
-                 ('acquisition_date', '<=', self.to_date),
-                 ('state', '!=', 'model'), ('state', '!=', 'model'),
-                 ('parent_id', '=', False)])
-        elif self.company_id and self.state and self.from_date:
-            items = self.env['account.asset'].search(
-                [('state', '=', self.state),
-                 ('company_id', '=', self.company_id.id),
-                 ('acquisition_date', '>=', self.from_date),
-                 ('state', '!=', 'model'), ('parent_id', '=', False)])
-        elif self.company_id and self.state and self.to_date:
-            items = self.env['account.asset'].search(
-                [('state', '=', self.state),
-                 ('company_id', '=', self.company_id.id),
-                 ('acquisition_date', '<=', self.to_date),
-                 ('state', '!=', 'model'), ('parent_id', '=', False)])
-        elif self.company_id and self.state:
-            items = self.env['account.asset'].search(
-                [('state', '=', self.state),
-                 ('company_id', '=', self.company_id.id),
-                 ('state', '!=', 'model'), ('parent_id', '=', False)])
+        if self.limit != 0:
+            if self.company_id and self.state and self.from_date and self.to_date:
+                items = self.env['account.asset'].search(
+                    [('state', '=', self.state),
+                     ('company_id', '=', self.company_id.id),
+                     ('acquisition_date', '>=', self.from_date),
+                     ('acquisition_date', '<=', self.to_date),
+                     ('state', '!=', 'model'), ('state', '!=', 'model'),
+                     ('leasee_contract_ids', '=', False),
+                     ('parent_id', '=', False)], limit=self.limit)
+            elif self.company_id and self.state and self.from_date:
+                items = self.env['account.asset'].search(
+                    [('state', '=', self.state),
+                     ('company_id', '=', self.company_id.id),
+                     ('acquisition_date', '>=', self.from_date),
+                     ('leasee_contract_ids', '=', False),
+                     ('state', '!=', 'model'), ('parent_id', '=', False)],
+                    limit=self.limit)
+            elif self.company_id and self.state and self.to_date:
+                items = self.env['account.asset'].search(
+                    [('state', '=', self.state),
+                     ('company_id', '=', self.company_id.id),
+                     ('acquisition_date', '<=', self.to_date),
+                     ('leasee_contract_ids', '=', False),
+                     ('state', '!=', 'model'), ('parent_id', '=', False)],
+                    limit=self.limit)
+            elif self.company_id and self.state:
+                items = self.env['account.asset'].search(
+                    [('state', '=', self.state),
+                     ('company_id', '=', self.company_id.id),
+                     ('leasee_contract_ids', '=', False),
+                     ('state', '!=', 'model'), ('parent_id', '=', False)],
+                    limit=self.limit)
+            else:
+                items = self.env['account.asset'].search(
+                    [('company_id', '=', self.company_id.id),
+                     ('leasee_contract_ids', '=', False),
+                     ('state', '!=', 'model'), ('parent_id', '=', False)],
+                    limit=self.limit)
         else:
-            items = self.env['account.asset'].search(
-                [('company_id', '=', self.company_id.id),
-                 ('state', '!=', 'model'), ('parent_id', '=', False)])
+            if self.company_id and self.state and self.from_date and self.to_date:
+                items = self.env['account.asset'].search(
+                    [('state', '=', self.state),
+                     ('company_id', '=', self.company_id.id),
+                     ('acquisition_date', '>=', self.from_date),
+                     ('acquisition_date', '<=', self.to_date),
+                     ('leasee_contract_ids', '=', False),
+                     ('state', '!=', 'model'), ('state', '!=', 'model'),
+                     ('parent_id', '=', False)])
+            elif self.company_id and self.state and self.from_date:
+                items = self.env['account.asset'].search(
+                    [('state', '=', self.state),
+                     ('company_id', '=', self.company_id.id),
+                     ('leasee_contract_ids', '=', False),
+                     ('acquisition_date', '>=', self.from_date),
+                     ('state', '!=', 'model'), ('parent_id', '=', False)])
+            elif self.company_id and self.state and self.to_date:
+                items = self.env['account.asset'].search(
+                    [('state', '=', self.state),
+                     ('company_id', '=', self.company_id.id),
+                     ('acquisition_date', '<=', self.to_date),
+                     ('leasee_contract_ids', '=', False),
+                     ('state', '!=', 'model'), ('parent_id', '=', False)])
+            elif self.company_id and self.state:
+                items = self.env['account.asset'].search(
+                    [('state', '=', self.state),
+                     ('leasee_contract_ids', '=', False),
+                     ('company_id', '=', self.company_id.id),
+                     ('state', '!=', 'model'), ('parent_id', '=', False)])
+            else:
+                items = self.env['account.asset'].search(
+                    [('company_id', '=', self.company_id.id),
+                     ('leasee_contract_ids', '=', False),
+                     ('state', '!=', 'model'), ('parent_id', '=', False)])
         abc = []
         for rec in items:
             if rec.leasee_contract_ids:
@@ -95,6 +142,7 @@ class AssetBulkSaleDisposeWizard(models.Model):
                  ('company_id', '=', self.company_id.id),
                  ('acquisition_date', '>=', self.from_date),
                  ('acquisition_date', '<=', self.to_date),
+                 ('leasee_contract_ids', '=', False),
                  ('state', '!=', 'model'), ('state', '!=', 'model'),
                  ('parent_id', '=', False)])
         elif self.company_id and self.state and self.from_date:
@@ -102,19 +150,23 @@ class AssetBulkSaleDisposeWizard(models.Model):
                 [('state', '=', self.state),
                  ('company_id', '=', self.company_id.id),
                  ('acquisition_date', '>=', self.from_date),
+                 ('leasee_contract_ids', '=', False),
                  ('state', '!=', 'model'), ('parent_id', '=', False)])
         elif self.company_id and self.state and self.to_date:
             self.records = self.env['account.asset'].search_count(
                 [('state', '=', self.state),
                  ('company_id', '=', self.company_id.id),
                  ('acquisition_date', '<=', self.to_date),
+                 ('leasee_contract_ids', '=', False),
                  ('state', '!=', 'model'), ('parent_id', '=', False)])
         elif self.company_id and self.state:
             self.records = self.env['account.asset'].search_count(
                 [('state', '=', self.state),
                  ('company_id', '=', self.company_id.id),
+                 ('leasee_contract_ids', '=', False),
                  ('state', '!=', 'model'), ('parent_id', '=', False)])
         else:
             self.records = self.env['account.asset'].search_count(
                 [('company_id', '=', self.company_id.id),
+                 ('leasee_contract_ids', '=', False),
                  ('state', '!=', 'model'), ('parent_id', '=', False)])

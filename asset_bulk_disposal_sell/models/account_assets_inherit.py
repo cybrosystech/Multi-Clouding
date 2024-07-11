@@ -1,6 +1,7 @@
 from odoo import models, fields, api, _
 from math import copysign
 from odoo.tools import float_compare
+from odoo.tools.misc import formatLang
 from odoo.exceptions import UserError
 
 
@@ -392,4 +393,20 @@ class AccountAssetBulkSaleDisposal(models.Model):
                         [('asset_id', '=', asset.id),
                          ('state', '=', 'draft')]).ids
             # return move_ids
+
+
+class AccountMove(models.Model):
+    _inherit = 'account.move'
+
+    def _log_depreciation_asset(self):
+        for move in self.filtered(lambda m: m.asset_id):
+            asset = move.asset_id
+            msg = _('Depreciation entry %s posted (%s)', move.name,
+                    formatLang(self.env, move.depreciation_value,
+                               currency_obj=move.company_id.currency_id))
+            if not self.env.context.get('is_asset_bulk_disposal'):
+                asset.message_post(body=msg)
+            else:
+                asset.message_post(body=msg,
+                                   author_id=self.env.ref('base.partner_root').id)
 
