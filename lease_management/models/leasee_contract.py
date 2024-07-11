@@ -206,13 +206,23 @@ class LeaseeContract(models.Model):
     )
     analytic_distribution = fields.Json()
 
+    @api.onchange('lease_contract_period', 'company_id')
+    def onchange_lease_contract_period(self):
+        if self.lease_contract_period_type == 'years':
+            interest_rate = self.env['leasee.interest.rate'].search(
+                [('years', '=', self.lease_contract_period),
+                 ('company_id', '=', self.company_id.id)])
+            if interest_rate:
+                self.interest_rate = interest_rate.rate
+            else:
+                self.interest_rate = 0.0
+
     @api.model_create_multi
     def create(self, vals_list):
         lease = super(LeaseeContract, self).create(vals_list)
         if lease.project_site_id or lease.analytic_account_id:
             lease.onchange_project_site()
         return lease
-
 
     @api.depends('commencement_date', 'lease_contract_period')
     def compute_estimated_ending_date(self):
