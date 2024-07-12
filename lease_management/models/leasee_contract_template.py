@@ -103,6 +103,17 @@ class LeaseContractTemplate(models.Model):
         required=True, default='constant_periods',
     )
 
+    @api.onchange('lease_contract_period', 'company_id')
+    def onchange_lease_contract_period(self):
+        if self.lease_contract_period_type == 'years':
+            interest_rate = self.env['leasee.interest.rate'].search(
+                [('years', '=', self.lease_contract_period),
+                 ('company_id', '=', self.company_id.id)])
+            if interest_rate:
+                self.interest_rate = interest_rate.rate
+            else:
+                self.interest_rate = 0.0
+
     @api.onchange('project_site_id', 'analytic_account_id')
     def onchange_project_site(self):
         type = self.project_site_id.analytic_type_filter_id.id

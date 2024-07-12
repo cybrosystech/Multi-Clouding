@@ -29,6 +29,16 @@ class LeaseePeriodExtend(models.TransientModel):
     interest_rate = fields.Float(string="Interest Rate %", default=0.0,
                                  required=False, digits=(16, 5), tracking=True)
 
+    @api.onchange('new_contract_period')
+    def onchange_new_contract_period(self):
+        interest_rate = self.env['leasee.interest.rate'].search(
+            [('years', '=', self.new_contract_period),
+             ('company_id', '=', self.leasee_contract_id.company_id.id)])
+        if interest_rate:
+            self.interest_rate = interest_rate.rate
+        else:
+            self.interest_rate = 0.0
+
     @api.model
     def default_get(self, fields):
         res = super(LeaseePeriodExtend, self).default_get(fields)
@@ -100,6 +110,12 @@ class LeaseePeriodExtend(models.TransientModel):
                 'interest_rate': self.interest_rate,
             })
         contract.state = 'extended'
+        for leasor in new_contract.multi_leasor_ids:
+            if leasor.type != 'percentage':
+                percentage = leasor.amount/contract.installment_amount*100
+                new_amount = new_contract.installment_amount*(percentage/100)
+                leasor.amount = new_amount
+
         new_contract.action_activate()
         self.update_asset_value(new_contract.rou_value)
 
