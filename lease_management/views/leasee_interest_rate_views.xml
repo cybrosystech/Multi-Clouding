@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="leasee_interest_rate_view_form" model="ir.ui.view">
+        <field name="name">leasee.interest.rate.view.form</field>
+        <field name="model">leasee.interest.rate</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="company_id"/>
+                            <field name="years"/>
+                        </group>
+                        <group>
+                            <field name="rate"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="leasee_interest_rate_view_tree" model="ir.ui.view">
+        <field name="name">leasee.interest.rate.view.tree</field>
+        <field name="model">leasee.interest.rate</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="company_id"/>
+                <field name="years"/>
+                <field name="rate"/>
+            </tree>
+        </field>
+    </record>
+
+            <record id="action_leasee_interest_rate" model="ir.actions.act_window">
+            <field name="name">Leasee Interest Rate</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">leasee.interest.rate</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+    <menuitem id="menu_leasee_interest_rate" name="Leasee Interest Rate"
+                  parent="lease_management.menuitem_lease_contract_categ"
+                  action="action_leasee_interest_rate"
+                  />
+</odoo>

@@ -8,15 +8,27 @@ class AssetBulkWizard(models.TransientModel):
     asset_sell_disposal_ids = fields.One2many('asset.sell.disposal.lines',
                                               'asset_bulk_wizard_id')
 
+    def split_list(self, lst, limit):
+        return [lst[i:i + limit] for i in range(0, len(lst), limit)]
+
     def action_apply(self):
-        for record in self.asset_sell_disposal_ids:
+        my_list = self.asset_sell_disposal_ids.ids
+        sublists = self.split_list(my_list, 300)
+        self.create_jobs(sublists)
+
+    def create_jobs(self, sublist):
+        for i in sublist:
+            self.with_delay(priority=5)._process_job(i)
+
+    def _process_job(self, iteration):
+        # Process the job
+        # Perform your task here
+        for asset in iteration:
+            record = self.env['asset.sell.disposal.lines'].browse(asset)
             if record.asset_id.leasee_contract_ids:
                 if not record.contract_end_date:
                     raise UserError('Please provide contract end date ' + str(
                         record.asset_id.name))
-            # else:
-            #     if not record.invoice_id:
-            #         raise UserError('Please choose a invoice '+str(record.asset_id.name))
 
             record.ensure_one()
             invoice_line = self.env[
@@ -24,7 +36,7 @@ class AssetBulkWizard(models.TransientModel):
             date = invoice_line.move_id.invoice_date
             if record.action == 'dispose':
                 date = record.contract_end_date
-            record.asset_id.set_to_close_bulk(
+            record.asset_id.with_context(is_asset_bulk_disposal=True).set_to_close_bulk(
                 invoice_line_ids=invoice_line if record.invoice_line_id or record.action == 'dispose' else record.invoice_id,
                 partial=record.partial_bool,
                 partial_amount=record.partial_amount,

@@ -9,3 +9,4 @@ from . import leasee_reassissment_increase
 from . import leasee_extend_log
 from . import res_config_settings
 from . import leasor_contract
+from . import leasee_interest_rate
