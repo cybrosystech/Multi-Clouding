@@ -13,14 +13,16 @@ class AssetBulkWizard(models.TransientModel):
 
     def action_apply(self):
         my_list = self.asset_sell_disposal_ids.ids
-        sublists = self.split_list(my_list, 300)
+        sublists = self.split_list(my_list, 20)
         self.create_jobs(sublists)
 
     def create_jobs(self, sublist):
         for i in sublist:
-            self.with_delay(priority=5)._process_job(i)
+            assets = self.env['asset.sell.disposal.lines'].search(
+                [('id', 'in', i)]).mapped('asset_id')
+            self.with_delay(priority=5)._process_job(i, assets)
 
-    def _process_job(self, iteration):
+    def _process_job(self, iteration, assets):
         # Process the job
         # Perform your task here
         for asset in iteration:
@@ -36,7 +38,8 @@ class AssetBulkWizard(models.TransientModel):
             date = invoice_line.move_id.invoice_date
             if record.action == 'dispose':
                 date = record.contract_end_date
-            record.asset_id.with_context(is_asset_bulk_disposal=True).set_to_close_bulk(
+            record.asset_id.with_context(
+                is_asset_bulk_disposal=True).set_to_close_bulk(
                 invoice_line_ids=invoice_line if record.invoice_line_id or record.action == 'dispose' else record.invoice_id,
                 partial=record.partial_bool,
                 partial_amount=record.partial_amount,
