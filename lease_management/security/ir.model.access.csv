@@ -19,4 +19,6 @@ access_advance_leasee_line_wizard,advance.leasee.line.wizard,model_advance_lease
 access_cancel_lease_entries,cancel_lease_entries,model_cancel_lease_entries,,1,1,1,1
 access_leasee_interest_rate_erp_manager,leasee.interest.rate.erp_manager,model_leasee_interest_rate,base.group_erp_manager,1,1,1,1
 access_leasee_interest_rate_system,leasee.interest.rate.system,model_leasee_interest_rate,base.group_system,1,1,1,1
+access_leasee_interest_rate_user,leasee.interest.rate.user,model_leasee_interest_rate,base.group_user,1,1,1,1
+
 
