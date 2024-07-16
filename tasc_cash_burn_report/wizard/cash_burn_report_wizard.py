@@ -517,7 +517,7 @@ class CashBurnReportWizard(models.Model):
                                     STYLE_LINE_Data)
                     col += 1
                     if debit_lines.analytic_account_id:
-                        worksheet.write(row, col, line.analytic_account_id.name,
+                        worksheet.write(row, col, debit_lines.analytic_account_id.name,
                                         STYLE_LINE_Data)
                     else:
                         worksheet.write(row, col, '',
@@ -525,7 +525,7 @@ class CashBurnReportWizard(models.Model):
 
                     col += 1
                     if debit_lines.project_site_id:
-                        worksheet.write(row, col, line.project_site_id.name,
+                        worksheet.write(row, col, debit_lines.project_site_id.name,
                                         STYLE_LINE_Data)
                     else:
                         worksheet.write(row, col, '',
