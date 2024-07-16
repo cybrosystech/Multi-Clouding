@@ -168,9 +168,9 @@ class CashBurnReportWizard(models.Model):
         col += 1
         worksheet.write(row, col, _('Net'), header_format)
         col += 1
+        row += 1
         for line in report_data:
             col = 0
-            row += 1
             debit_lines = line.line_ids.filtered(lambda x: x.debit != 0)
             if len(debit_lines.ids) == 1:
                 reconcile_items = line.open_reconcile_view()
@@ -240,18 +240,21 @@ class CashBurnReportWizard(models.Model):
                                                 STYLE_LINE_Data)
                             else:
                                 worksheet.write(row, col, '', STYLE_LINE_Data)
-                            col+=1
+                            col += 1
                             worksheet.write(row, col, debit_lines.credit,
                                             STYLE_LINE_Data)
                             col += 1
                             worksheet.write(row, col, debit_lines.debit,
                                             STYLE_LINE_Data)
                             col += 1
-                            worksheet.write(row, col, abs(debit_lines.debit) + abs(
-                                debit_lines.credit),
+                            worksheet.write(row, col,
+                                            abs(debit_lines.debit) + abs(
+                                                debit_lines.credit),
                                             STYLE_LINE_Data)
+                            row += 1
                         else:
                             for mv_line in move_lines:
+                                col = 0
                                 if line.date:
                                     worksheet.write(row, col, line.date,
                                                     date_format)
@@ -328,13 +331,14 @@ class CashBurnReportWizard(models.Model):
                                                 abs(debit_lines.debit) + abs(
                                                     debit_lines.credit),
                                                 STYLE_LINE_Data)
+                                row += 1
 
                     else:
                         for move in move_ids:
                             col = 0
 
                             move_lines = move.invoice_line_ids
-                            if len(move_lines.ids) ==1:
+                            if len(move_lines.ids) == 1:
                                 if line.date:
                                     worksheet.write(row, col, line.date,
                                                     date_format)
@@ -373,29 +377,33 @@ class CashBurnReportWizard(models.Model):
                                                     move_lines.analytic_account_id.name,
                                                     STYLE_LINE_Data)
                                 else:
-                                    worksheet.write(row, col, '', STYLE_LINE_Data)
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
                                 col += 1
                                 if move_lines.project_site_id:
                                     worksheet.write(row, col,
                                                     move_lines.project_site_id.name,
                                                     STYLE_LINE_Data)
                                 else:
-                                    worksheet.write(row, col, '', STYLE_LINE_Data)
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
                                 col += 1
                                 if move_lines.account_id:
                                     worksheet.write(row, col,
                                                     str(move_lines.account_id.code) + " " + move_lines.account_id.name,
                                                     STYLE_LINE_Data)
                                 else:
-                                    worksheet.write(row, col, '', STYLE_LINE_Data)
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
                                 col += 1
                                 if move.partner_id:
                                     worksheet.write(row, col,
                                                     move.partner_id.name,
                                                     STYLE_LINE_Data)
                                 else:
-                                    worksheet.write(row, col, '', STYLE_LINE_Data)
-                                col+=1
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
                                 worksheet.write(row, col, debit_lines.credit,
                                                 STYLE_LINE_Data)
                                 col += 1
@@ -406,8 +414,10 @@ class CashBurnReportWizard(models.Model):
                                                 abs(debit_lines.debit) + abs(
                                                     debit_lines.credit),
                                                 STYLE_LINE_Data)
+                                row += 1
                             else:
                                 for mv_line in move_lines:
+                                    col = 0
                                     if line.date:
                                         worksheet.write(row, col, line.date,
                                                         date_format)
@@ -487,6 +497,7 @@ class CashBurnReportWizard(models.Model):
                                                     abs(debit_lines.debit) + abs(
                                                         debit_lines.credit),
                                                     STYLE_LINE_Data)
+                                    row += 1
 
                 else:
                     if line.date:
@@ -517,7 +528,8 @@ class CashBurnReportWizard(models.Model):
                                     STYLE_LINE_Data)
                     col += 1
                     if debit_lines.analytic_account_id:
-                        worksheet.write(row, col, debit_lines.analytic_account_id.name,
+                        worksheet.write(row, col,
+                                        debit_lines.analytic_account_id.name,
                                         STYLE_LINE_Data)
                     else:
                         worksheet.write(row, col, '',
@@ -525,7 +537,8 @@ class CashBurnReportWizard(models.Model):
 
                     col += 1
                     if debit_lines.project_site_id:
-                        worksheet.write(row, col, debit_lines.project_site_id.name,
+                        worksheet.write(row, col,
+                                        debit_lines.project_site_id.name,
                                         STYLE_LINE_Data)
                     else:
                         worksheet.write(row, col, '',
@@ -542,7 +555,7 @@ class CashBurnReportWizard(models.Model):
                     col += 1
                     if debit_lines.move_id.partner_id:
                         worksheet.write(row, col,
-                                       debit_lines.move_id.partner_id.name,
+                                        debit_lines.move_id.partner_id.name,
                                         STYLE_LINE_Data)
                     else:
                         worksheet.write(row, col, '',
@@ -558,9 +571,10 @@ class CashBurnReportWizard(models.Model):
                     worksheet.write(row, col, abs(debit_lines.debit) + abs(
                         debit_lines.credit),
                                     STYLE_LINE_Data)
-
+                    row += 1
             else:
                 for debit_ln in debit_lines:
+                    col = 0
                     reconcile_items = line.open_reconcile_view()
                     move = self.env['account.move.line'].search(
                         reconcile_items['domain']).filtered(
@@ -647,8 +661,11 @@ class CashBurnReportWizard(models.Model):
                                                 abs(debit_ln.debit) + abs(
                                                     debit_ln.credit),
                                                 STYLE_LINE_Data)
+                                row += 1
                             else:
+                                print("kkkkkkkkkkk")
                                 for mv_line in move_lines:
+                                    col = 0
                                     if line.date:
                                         worksheet.write(row, col, line.date,
                                                         date_format)
@@ -729,6 +746,7 @@ class CashBurnReportWizard(models.Model):
                                                     abs(debit_ln.debit) + abs(
                                                         debit_ln.credit),
                                                     STYLE_LINE_Data)
+                                    row += 1
 
                         else:
                             for move in move_ids:
@@ -815,8 +833,10 @@ class CashBurnReportWizard(models.Model):
                                                     abs(debit_ln.debit) + abs(
                                                         debit_ln.credit),
                                                     STYLE_LINE_Data)
+                                    row += 1
                                 else:
                                     for mv_line in move_lines:
+                                        col = 0
                                         if line.date:
                                             worksheet.write(row, col, line.date,
                                                             date_format)
@@ -897,6 +917,7 @@ class CashBurnReportWizard(models.Model):
                                                         abs(debit_ln.debit) + abs(
                                                             debit_ln.credit),
                                                         STYLE_LINE_Data)
+                                        row += 1
 
                     else:
                         if line.date:
@@ -929,7 +950,7 @@ class CashBurnReportWizard(models.Model):
                         col += 1
                         if debit_ln.analytic_account_id:
                             worksheet.write(row, col,
-                                            line.analytic_account_id.name,
+                                            debit_ln.analytic_account_id.name,
                                             STYLE_LINE_Data)
                         else:
                             worksheet.write(row, col, '',
@@ -937,7 +958,8 @@ class CashBurnReportWizard(models.Model):
 
                         col += 1
                         if debit_ln.project_site_id:
-                            worksheet.write(row, col, line.project_site_id.name,
+                            worksheet.write(row, col,
+                                            debit_ln.project_site_id.name,
                                             STYLE_LINE_Data)
                         else:
                             worksheet.write(row, col, '',
@@ -970,3 +992,4 @@ class CashBurnReportWizard(models.Model):
                         worksheet.write(row, col, abs(debit_ln.debit) + abs(
                             debit_ln.credit),
                                         STYLE_LINE_Data)
+                        row += 1
