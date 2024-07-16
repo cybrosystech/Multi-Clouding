@@ -105,21 +105,21 @@ class CashBurnReportWizard(models.Model):
             self.add_xlsx_sheet(report_data, workbook, STYLE_LINE_Data,
                                 header_format, STYLE_LINE_HEADER, date_format)
 
-        self.excel_sheet_name = 'Cash Burn Report'
+        self.excel_sheet_name = 'Tasc Cash Burn Report'
         workbook.close()
         output.seek(0)
         self.excel_sheet = base64.b64encode(output.read())
         self.excel_sheet_name = str(self.excel_sheet_name) + '.xlsx'
         return {
             'type': 'ir.actions.act_url',
-            'name': 'Cash Burn Report',
+            'name': 'Tasc Cash Burn Report',
             'url': '/web/content/%s/%s/excel_sheet/%s?download=true' % (
                 self._name, self.id, self.excel_sheet_name),
             'target': 'new'
         }
 
     def get_report_data(self):
-        """Method to compute Cash Burn Report."""
+        """Method to compute Tasc Cash Burn Report."""
         move_ids = self.env['account.move'].search(
             [('journal_id.type', '=', 'bank'),
              ('company_id', '=', self.company_id.id),
@@ -128,9 +128,9 @@ class CashBurnReportWizard(models.Model):
 
     def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data,
                        header_format, STYLE_LINE_HEADER, date_format):
-        """ Method to add datas to the Cash Burn xlsx report"""
+        """ Method to add datas to the Tasc Cash Burn xlsx report"""
         self.ensure_one()
-        worksheet = workbook.add_worksheet(_('Cash Burn Report'))
+        worksheet = workbook.add_worksheet(_('Tasc Cash Burn Report'))
         lang = self.env.user.lang
         if lang.startswith('ar_'):
             worksheet.right_to_left()
@@ -138,7 +138,7 @@ class CashBurnReportWizard(models.Model):
         row = 0
         col = 0
         worksheet.merge_range(row, row, col, col + 12,
-                              _('Cash Burn Report'),
+                              _('Tasc Cash Burn Report'),
                               STYLE_LINE_HEADER)
         row += 1
         col = 0
@@ -169,233 +169,804 @@ class CashBurnReportWizard(models.Model):
         worksheet.write(row, col, _('Net'), header_format)
         col += 1
         for line in report_data:
-            invoice_line = line.line_ids.filtered(
-                lambda x: x.account_id.account_type == 'asset_cash')
             col = 0
             row += 1
-            if invoice_line:
+            debit_lines = line.line_ids.filtered(lambda x: x.debit != 0)
+            if len(debit_lines.ids) == 1:
                 reconcile_items = line.open_reconcile_view()
                 move = self.env['account.move.line'].search(
                     reconcile_items['domain']).filtered(
                     lambda x: x.move_id.journal_id.type in ['sale', 'purchase'])
                 move_ids = move.mapped('move_id')
-                if line.date:
-                    worksheet.write(row, col, line.date, date_format)
-                else:
-                    worksheet.write(row, col, '', date_format)
-
-                col += 1
-                if line.name:
-                    worksheet.write(row, col, line.name, STYLE_LINE_Data)
-                else:
-                    worksheet.write(row, col, '', STYLE_LINE_Data)
-
-                col += 1
-                if line.ref:
-                    worksheet.write(row, col, line.ref, STYLE_LINE_Data)
-                else:
-                    worksheet.write(row, col, '', STYLE_LINE_Data)
-                col += 1
-
-                if len(move_ids.ids) == 1:
-                    move_lines = move_ids.invoice_line_ids
-                    if len(move_lines.ids) == 1:
-                        label = move_lines.name
-                        if move_lines.name:
-                            worksheet.write(row, col, label, STYLE_LINE_Data)
-                        else:
-                            worksheet.write(row, col, '', STYLE_LINE_Data)
-
-                        col += 1
-                        if move_lines.move_id:
-                            worksheet.write(row, col, move_lines.move_id.name,
+                if move_ids:
+                    if len(move_ids.ids) == 1:
+                        move_lines = move_ids.invoice_line_ids
+                        if len(move_lines.ids) == 1:
+                            if line.date:
+                                worksheet.write(row, col, line.date,
+                                                date_format)
+                            else:
+                                worksheet.write(row, col, '', date_format)
+                            col += 1
+                            if line.name:
+                                worksheet.write(row, col, line.name,
+                                                STYLE_LINE_Data)
+                            else:
+                                worksheet.write(row, col, '', STYLE_LINE_Data)
+                            col += 1
+                            if line.ref:
+                                worksheet.write(row, col, line.ref,
+                                                STYLE_LINE_Data)
+                            else:
+                                worksheet.write(row, col, '', STYLE_LINE_Data)
+                            col += 1
+                            if debit_lines.name:
+                                worksheet.write(row, col, debit_lines.name,
+                                                STYLE_LINE_Data)
+                            else:
+                                worksheet.write(row, col, '', STYLE_LINE_Data)
+                            col += 1
+                            worksheet.write(row, col, move_ids.name,
                                             STYLE_LINE_Data)
-                        else:
-                            worksheet.write(row, col, '', STYLE_LINE_Data)
-                        col += 1
-                        if line.journal_id:
+                            col += 1
                             worksheet.write(row, col, line.journal_id.name,
                                             STYLE_LINE_Data)
-                        else:
-                            worksheet.write(row, col, '', STYLE_LINE_Data)
-                        col += 1
-                        if move_lines.analytic_account_id:
-                            worksheet.write(row, col,
-                                            move_lines.analytic_account_id.name,
-                                            STYLE_LINE_Data)
-                        else:
-                            worksheet.write(row, col, '', STYLE_LINE_Data)
-                        col += 1
-                        if move_lines.project_site_id:
-                            worksheet.write(row, col,
-                                            move_lines.project_site_id.name,
-                                            STYLE_LINE_Data)
-                        else:
-                            worksheet.write(row, col, '', STYLE_LINE_Data)
-                        col += 1
-                        if move_lines.account_id:
-                            worksheet.write(row, col,
-                                            move_lines.account_id.name,
-                                            STYLE_LINE_Data)
-                        else:
-                            worksheet.write(row, col, '', STYLE_LINE_Data)
-                        col += 1
-                        if move_lines.partner_id:
-                            worksheet.write(row, col,
-                                            move_lines.partner_id.name,
-                                            STYLE_LINE_Data)
-                        else:
-                            worksheet.write(row, col, '', STYLE_LINE_Data)
-                        col += 1
-                        worksheet.write(row, col, move_lines.credit,
-                                        STYLE_LINE_Data)
-                        col += 1
-                        worksheet.write(row, col, move_lines.debit,
-                                        STYLE_LINE_Data)
-                        col += 1
-                        worksheet.write(row, col, abs(move_lines.debit) + abs(
-                            move_lines.credit),
-                                        STYLE_LINE_Data)
-                        col += 1
-                else:
-                    r = row
-                    c = 2
-                    for mv in move_ids:
-                        move_lines = mv.invoice_line_ids
-                        for l in move_lines:
-                            r += 1
-                            c += 1
-                            if l.name:
-                                label = l.name
-                                worksheet.write(r, c, label, STYLE_LINE_Data)
-                            else:
-                                worksheet.write(r, c, '', STYLE_LINE_Data)
-                            c += 1
-                            if l.move_id.name:
-                                worksheet.write(r, c, l.move_id.name,
-                                                STYLE_LINE_Data)
-                            else:
-                                worksheet.write(r, c, '',
-                                                STYLE_LINE_Data)
-                            c += 1
-                            if line.journal_id.name:
-                                worksheet.write(r, c, line.journal_id.name,
-                                                STYLE_LINE_Data)
-                            else:
-                                worksheet.write(r, c, '',
-                                                STYLE_LINE_Data)
-                            c += 1
-                            if l.analytic_account_id:
-                                worksheet.write(r, c,
-                                                l.analytic_account_id.name,
-                                                STYLE_LINE_Data)
-                            else:
-                                worksheet.write(r, c, '',
-                                                STYLE_LINE_Data)
-                            c += 1
-                            if l.project_site_id:
-                                worksheet.write(r, c, l.project_site_id.name,
-                                                STYLE_LINE_Data)
-                            else:
-                                worksheet.write(r, c, '',
-                                                STYLE_LINE_Data)
-                            c += 1
-                            if l.account_id:
-                                worksheet.write(r, c, l.account_id.name,
-                                                STYLE_LINE_Data)
-                            else:
-                                worksheet.write(r, c, '',
-                                                STYLE_LINE_Data)
-                            c += 1
-                            if l.partner_id:
-                                worksheet.write(r, c, l.partner_id.name,
-                                                STYLE_LINE_Data)
-                            else:
-                                worksheet.write(r, c, '',
-                                                STYLE_LINE_Data)
-                            c += 1
-                            worksheet.write(r, c, l.credit,
-                                            STYLE_LINE_Data)
-                            c += 1
-                            worksheet.write(r, c, l.debit,
-                                            STYLE_LINE_Data)
-                            c += 1
-                            worksheet.write(r, c, abs(l.debit) + abs(l.credit),
-                                            STYLE_LINE_Data)
-                            c += 1
-                        c = 2
-                    row = r
-            else:
-                lines = self.env['account.move.line'].search(
-                    [('id', 'in', line.line_ids.ids),
-                     ('account_id.account_type', '=', 'asset_cash')])
-                if line.date:
-                    worksheet.write(row, col, line.date, date_format)
-                else:
-                    worksheet.write(row, col, '', date_format)
+                            col += 1
 
-                col += 1
-                if line.name:
-                    worksheet.write(row, col, line.name, STYLE_LINE_Data)
-                else:
-                    worksheet.write(row, col, '', STYLE_LINE_Data)
+                            if move_lines.analytic_account_id:
+                                worksheet.write(row, col,
+                                                move_lines.analytic_account_id.name,
+                                                STYLE_LINE_Data)
+                            else:
+                                worksheet.write(row, col, '', STYLE_LINE_Data)
+                            col += 1
+                            if move_lines.project_site_id:
+                                worksheet.write(row, col,
+                                                move_lines.project_site_id.name,
+                                                STYLE_LINE_Data)
+                            else:
+                                worksheet.write(row, col, '', STYLE_LINE_Data)
+                            col += 1
+                            if move_lines.account_id:
+                                worksheet.write(row, col,
+                                                str(move_lines.account_id.code) + " " + move_lines.account_id.name,
+                                                STYLE_LINE_Data)
+                            else:
+                                worksheet.write(row, col, '', STYLE_LINE_Data)
+                            col += 1
+                            if move_ids.partner_id:
+                                worksheet.write(row, col,
+                                                move_ids.partner_id.name,
+                                                STYLE_LINE_Data)
+                            else:
+                                worksheet.write(row, col, '', STYLE_LINE_Data)
+                            col+=1
+                            worksheet.write(row, col, debit_lines.credit,
+                                            STYLE_LINE_Data)
+                            col += 1
+                            worksheet.write(row, col, debit_lines.debit,
+                                            STYLE_LINE_Data)
+                            col += 1
+                            worksheet.write(row, col, abs(debit_lines.debit) + abs(
+                                debit_lines.credit),
+                                            STYLE_LINE_Data)
+                        else:
+                            for mv_line in move_lines:
+                                if line.date:
+                                    worksheet.write(row, col, line.date,
+                                                    date_format)
+                                else:
+                                    worksheet.write(row, col, '', date_format)
+                                col += 1
+                                if line.name:
+                                    worksheet.write(row, col, line.name,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
+                                if line.ref:
+                                    worksheet.write(row, col, line.ref,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
+                                if debit_lines.name:
+                                    worksheet.write(row, col, debit_lines.name,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
+                                worksheet.write(row, col, move_ids.name,
+                                                STYLE_LINE_Data)
+                                col += 1
+                                worksheet.write(row, col, line.journal_id.name,
+                                                STYLE_LINE_Data)
+                                col += 1
 
-                col += 1
-                if line.ref:
-                    worksheet.write(row, col, line.ref, STYLE_LINE_Data)
-                else:
-                    worksheet.write(row, col, '', STYLE_LINE_Data)
-                col += 1
-                label = lines.name
-                if lines.name:
-                    worksheet.write(row, col, label, STYLE_LINE_Data)
-                else:
-                    worksheet.write(row, col, '', STYLE_LINE_Data)
+                                if mv_line.analytic_account_id:
+                                    worksheet.write(row, col,
+                                                    mv_line.analytic_account_id.name,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
+                                if mv_line.project_site_id:
+                                    worksheet.write(row, col,
+                                                    mv_line.project_site_id.name,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
+                                if mv_line.account_id:
+                                    worksheet.write(row, col,
+                                                    str(mv_line.account_id.code) + " " + mv_line.account_id.name,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
+                                if move_ids.partner_id:
+                                    worksheet.write(row, col,
+                                                    move_ids.partner_id.name,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
+                                worksheet.write(row, col, debit_lines.credit,
+                                                STYLE_LINE_Data)
+                                col += 1
+                                worksheet.write(row, col, debit_lines.debit,
+                                                STYLE_LINE_Data)
+                                col += 1
+                                worksheet.write(row, col,
+                                                abs(debit_lines.debit) + abs(
+                                                    debit_lines.credit),
+                                                STYLE_LINE_Data)
 
-                col += 1
-                if lines.move_id:
-                    worksheet.write(row, col, lines.move_id.name,
+                    else:
+                        for move in move_ids:
+                            col = 0
+
+                            move_lines = move.invoice_line_ids
+                            if len(move_lines.ids) ==1:
+                                if line.date:
+                                    worksheet.write(row, col, line.date,
+                                                    date_format)
+                                else:
+                                    worksheet.write(row, col, '', date_format)
+                                col += 1
+                                if line.name:
+                                    worksheet.write(row, col, line.name,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
+                                if line.ref:
+                                    worksheet.write(row, col, line.ref,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
+                                if debit_lines.name:
+                                    worksheet.write(row, col, debit_lines.name,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
+                                worksheet.write(row, col, move.name,
+                                                STYLE_LINE_Data)
+                                col += 1
+                                worksheet.write(row, col, line.journal_id.name,
+                                                STYLE_LINE_Data)
+                                col += 1
+                                if move_lines.analytic_account_id:
+                                    worksheet.write(row, col,
+                                                    move_lines.analytic_account_id.name,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '', STYLE_LINE_Data)
+                                col += 1
+                                if move_lines.project_site_id:
+                                    worksheet.write(row, col,
+                                                    move_lines.project_site_id.name,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '', STYLE_LINE_Data)
+                                col += 1
+                                if move_lines.account_id:
+                                    worksheet.write(row, col,
+                                                    str(move_lines.account_id.code) + " " + move_lines.account_id.name,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '', STYLE_LINE_Data)
+                                col += 1
+                                if move.partner_id:
+                                    worksheet.write(row, col,
+                                                    move.partner_id.name,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '', STYLE_LINE_Data)
+                                col+=1
+                                worksheet.write(row, col, debit_lines.credit,
+                                                STYLE_LINE_Data)
+                                col += 1
+                                worksheet.write(row, col, debit_lines.debit,
+                                                STYLE_LINE_Data)
+                                col += 1
+                                worksheet.write(row, col,
+                                                abs(debit_lines.debit) + abs(
+                                                    debit_lines.credit),
+                                                STYLE_LINE_Data)
+                            else:
+                                for mv_line in move_lines:
+                                    if line.date:
+                                        worksheet.write(row, col, line.date,
+                                                        date_format)
+                                    else:
+                                        worksheet.write(row, col, '',
+                                                        date_format)
+                                    col += 1
+                                    if line.name:
+                                        worksheet.write(row, col, line.name,
+                                                        STYLE_LINE_Data)
+                                    else:
+                                        worksheet.write(row, col, '',
+                                                        STYLE_LINE_Data)
+                                    col += 1
+                                    if line.ref:
+                                        worksheet.write(row, col, line.ref,
+                                                        STYLE_LINE_Data)
+                                    else:
+                                        worksheet.write(row, col, '',
+                                                        STYLE_LINE_Data)
+                                    col += 1
+                                    if debit_lines.name:
+                                        worksheet.write(row, col,
+                                                        debit_lines.name,
+                                                        STYLE_LINE_Data)
+                                    else:
+                                        worksheet.write(row, col, '',
+                                                        STYLE_LINE_Data)
+                                    col += 1
+                                    worksheet.write(row, col, move.name,
+                                                    STYLE_LINE_Data)
+                                    col += 1
+                                    worksheet.write(row, col,
+                                                    line.journal_id.name,
+                                                    STYLE_LINE_Data)
+                                    col += 1
+                                    if mv_line.analytic_account_id:
+                                        worksheet.write(row, col,
+                                                        mv_line.analytic_account_id.name,
+                                                        STYLE_LINE_Data)
+                                    else:
+                                        worksheet.write(row, col, '',
+                                                        STYLE_LINE_Data)
+                                    col += 1
+                                    if mv_line.project_site_id:
+                                        worksheet.write(row, col,
+                                                        mv_line.project_site_id.name,
+                                                        STYLE_LINE_Data)
+                                    else:
+                                        worksheet.write(row, col, '',
+                                                        STYLE_LINE_Data)
+                                    col += 1
+                                    if mv_line.account_id:
+                                        worksheet.write(row, col,
+                                                        str(mv_line.account_id.code) + " " + mv_line.account_id.name,
+                                                        STYLE_LINE_Data)
+                                    else:
+                                        worksheet.write(row, col, '',
+                                                        STYLE_LINE_Data)
+                                    col += 1
+                                    if move.partner_id:
+                                        worksheet.write(row, col,
+                                                        move.partner_id.name,
+                                                        STYLE_LINE_Data)
+                                    else:
+                                        worksheet.write(row, col, '',
+                                                        STYLE_LINE_Data)
+                                    col += 1
+                                    worksheet.write(row, col,
+                                                    debit_lines.credit,
+                                                    STYLE_LINE_Data)
+                                    col += 1
+                                    worksheet.write(row, col, debit_lines.debit,
+                                                    STYLE_LINE_Data)
+                                    col += 1
+                                    worksheet.write(row, col,
+                                                    abs(debit_lines.debit) + abs(
+                                                        debit_lines.credit),
+                                                    STYLE_LINE_Data)
+
+                else:
+                    if line.date:
+                        worksheet.write(row, col, line.date, date_format)
+                    else:
+                        worksheet.write(row, col, '', date_format)
+                    col += 1
+                    if line.name:
+                        worksheet.write(row, col, line.name, STYLE_LINE_Data)
+                    else:
+                        worksheet.write(row, col, '', STYLE_LINE_Data)
+                    col += 1
+                    if line.ref:
+                        worksheet.write(row, col, line.ref, STYLE_LINE_Data)
+                    else:
+                        worksheet.write(row, col, '', STYLE_LINE_Data)
+                    col += 1
+                    if debit_lines.name:
+                        worksheet.write(row, col, debit_lines.name,
+                                        STYLE_LINE_Data)
+                    else:
+                        worksheet.write(row, col, '', STYLE_LINE_Data)
+                    col += 1
+                    worksheet.write(row, col, '',
                                     STYLE_LINE_Data)
-                else:
-                    worksheet.write(row, col, '', STYLE_LINE_Data)
-                col += 1
-                if line.journal_id:
+                    col += 1
                     worksheet.write(row, col, line.journal_id.name,
                                     STYLE_LINE_Data)
-                else:
-                    worksheet.write(row, col, '', STYLE_LINE_Data)
-                col += 1
-                if lines.analytic_account_id:
-                    worksheet.write(row, col,
-                                    lines.analytic_account_id.name,
+                    col += 1
+                    if debit_lines.analytic_account_id:
+                        worksheet.write(row, col, line.analytic_account_id.name,
+                                        STYLE_LINE_Data)
+                    else:
+                        worksheet.write(row, col, '',
+                                        STYLE_LINE_Data)
+
+                    col += 1
+                    if debit_lines.project_site_id:
+                        worksheet.write(row, col, line.project_site_id.name,
+                                        STYLE_LINE_Data)
+                    else:
+                        worksheet.write(row, col, '',
+                                        STYLE_LINE_Data)
+                    col += 1
+                    if debit_lines.account_id:
+                        worksheet.write(row, col,
+                                        str(debit_lines.code) + " " + debit_lines.account_id.name,
+                                        STYLE_LINE_Data)
+                    else:
+                        worksheet.write(row, col, '',
+                                        STYLE_LINE_Data)
+
+                    col += 1
+                    if debit_lines.move_id.partner_id:
+                        worksheet.write(row, col,
+                                       debit_lines.move_id.partner_id.name,
+                                        STYLE_LINE_Data)
+                    else:
+                        worksheet.write(row, col, '',
+                                        STYLE_LINE_Data)
+
+                    col += 1
+                    worksheet.write(row, col, debit_lines.credit,
                                     STYLE_LINE_Data)
-                else:
-                    worksheet.write(row, col, '', STYLE_LINE_Data)
-                col += 1
-                if lines.project_site_id:
-                    worksheet.write(row, col, lines.project_site_id.name,
+                    col += 1
+                    worksheet.write(row, col, debit_lines.debit,
                                     STYLE_LINE_Data)
-                else:
-                    worksheet.write(row, col, '', STYLE_LINE_Data)
-                col += 1
-                if lines.account_id:
-                    worksheet.write(row, col, lines.account_id.name,
+                    col += 1
+                    worksheet.write(row, col, abs(debit_lines.debit) + abs(
+                        debit_lines.credit),
                                     STYLE_LINE_Data)
-                else:
-                    worksheet.write(row, col, '', STYLE_LINE_Data)
-                col += 1
-                if lines.partner_id:
-                    worksheet.write(row, col, lines.partner_id.name,
-                                    STYLE_LINE_Data)
-                else:
-                    worksheet.write(row, col, '', STYLE_LINE_Data)
-                col += 1
-                worksheet.write(row, col, lines.credit,
-                                STYLE_LINE_Data)
-                col += 1
-                worksheet.write(row, col, lines.debit,
-                                STYLE_LINE_Data)
-                col += 1
-                worksheet.write(row, col, abs(lines.debit) + abs(lines.credit),
-                                STYLE_LINE_Data)
-                col += 1
+
+            else:
+                for debit_ln in debit_lines:
+                    reconcile_items = line.open_reconcile_view()
+                    move = self.env['account.move.line'].search(
+                        reconcile_items['domain']).filtered(
+                        lambda x: x.move_id.journal_id.type in ['sale',
+                                                                'purchase'])
+                    move_ids = move.mapped('move_id')
+                    if move_ids:
+                        if len(move_ids.ids) == 1:
+                            move_lines = move_ids.invoice_line_ids
+                            if len(move_lines.ids) == 1:
+                                if line.date:
+                                    worksheet.write(row, col, line.date,
+                                                    date_format)
+                                else:
+                                    worksheet.write(row, col, '', date_format)
+                                col += 1
+                                if line.name:
+                                    worksheet.write(row, col, line.name,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
+                                if line.ref:
+                                    worksheet.write(row, col, line.ref,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
+                                if debit_ln.name:
+                                    worksheet.write(row, col, debit_ln.name,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
+                                worksheet.write(row, col, move_ids.name,
+                                                STYLE_LINE_Data)
+                                col += 1
+                                worksheet.write(row, col, line.journal_id.name,
+                                                STYLE_LINE_Data)
+                                col += 1
+
+                                if move_lines.analytic_account_id:
+                                    worksheet.write(row, col,
+                                                    move_lines.analytic_account_id.name,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
+                                if move_lines.project_site_id:
+                                    worksheet.write(row, col,
+                                                    move_lines.project_site_id.name,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
+                                if move_lines.account_id:
+                                    worksheet.write(row, col,
+                                                    str(move_lines.account_id.code) + " " + move_lines.account_id.name,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
+                                if move_ids.partner_id:
+                                    worksheet.write(row, col,
+                                                    move_ids.partner_id.name,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
+                                worksheet.write(row, col, debit_ln.credit,
+                                                STYLE_LINE_Data)
+                                col += 1
+                                worksheet.write(row, col, debit_ln.debit,
+                                                STYLE_LINE_Data)
+                                col += 1
+                                worksheet.write(row, col,
+                                                abs(debit_ln.debit) + abs(
+                                                    debit_ln.credit),
+                                                STYLE_LINE_Data)
+                            else:
+                                for mv_line in move_lines:
+                                    if line.date:
+                                        worksheet.write(row, col, line.date,
+                                                        date_format)
+                                    else:
+                                        worksheet.write(row, col, '',
+                                                        date_format)
+                                    col += 1
+                                    if line.name:
+                                        worksheet.write(row, col, line.name,
+                                                        STYLE_LINE_Data)
+                                    else:
+                                        worksheet.write(row, col, '',
+                                                        STYLE_LINE_Data)
+                                    col += 1
+                                    if line.ref:
+                                        worksheet.write(row, col, line.ref,
+                                                        STYLE_LINE_Data)
+                                    else:
+                                        worksheet.write(row, col, '',
+                                                        STYLE_LINE_Data)
+                                    col += 1
+                                    if debit_ln.name:
+                                        worksheet.write(row, col,
+                                                        debit_ln.name,
+                                                        STYLE_LINE_Data)
+                                    else:
+                                        worksheet.write(row, col, '',
+                                                        STYLE_LINE_Data)
+                                    col += 1
+                                    worksheet.write(row, col, move_ids.name,
+                                                    STYLE_LINE_Data)
+                                    col += 1
+                                    worksheet.write(row, col,
+                                                    line.journal_id.name,
+                                                    STYLE_LINE_Data)
+                                    col += 1
+
+                                    if mv_line.analytic_account_id:
+                                        worksheet.write(row, col,
+                                                        mv_line.analytic_account_id.name,
+                                                        STYLE_LINE_Data)
+                                    else:
+                                        worksheet.write(row, col, '',
+                                                        STYLE_LINE_Data)
+                                    col += 1
+                                    if mv_line.project_site_id:
+                                        worksheet.write(row, col,
+                                                        mv_line.project_site_id.name,
+                                                        STYLE_LINE_Data)
+                                    else:
+                                        worksheet.write(row, col, '',
+                                                        STYLE_LINE_Data)
+                                    col += 1
+                                    if mv_line.account_id:
+                                        worksheet.write(row, col,
+                                                        str(mv_line.account_id.code) + " " + mv_line.account_id.name,
+                                                        STYLE_LINE_Data)
+                                    else:
+                                        worksheet.write(row, col, '',
+                                                        STYLE_LINE_Data)
+                                    col += 1
+                                    if move_ids.partner_id:
+                                        worksheet.write(row, col,
+                                                        move_ids.partner_id.name,
+                                                        STYLE_LINE_Data)
+                                    else:
+                                        worksheet.write(row, col, '',
+                                                        STYLE_LINE_Data)
+                                    col += 1
+                                    worksheet.write(row, col,
+                                                    debit_ln.credit,
+                                                    STYLE_LINE_Data)
+                                    col += 1
+                                    worksheet.write(row, col, debit_ln.debit,
+                                                    STYLE_LINE_Data)
+                                    col += 1
+                                    worksheet.write(row, col,
+                                                    abs(debit_ln.debit) + abs(
+                                                        debit_ln.credit),
+                                                    STYLE_LINE_Data)
+
+                        else:
+                            for move in move_ids:
+                                col = 0
+
+                                move_lines = move.invoice_line_ids
+                                if len(move_lines.ids) == 1:
+                                    if line.date:
+                                        worksheet.write(row, col, line.date,
+                                                        date_format)
+                                    else:
+                                        worksheet.write(row, col, '',
+                                                        date_format)
+                                    col += 1
+                                    if line.name:
+                                        worksheet.write(row, col, line.name,
+                                                        STYLE_LINE_Data)
+                                    else:
+                                        worksheet.write(row, col, '',
+                                                        STYLE_LINE_Data)
+                                    col += 1
+                                    if line.ref:
+                                        worksheet.write(row, col, line.ref,
+                                                        STYLE_LINE_Data)
+                                    else:
+                                        worksheet.write(row, col, '',
+                                                        STYLE_LINE_Data)
+                                    col += 1
+                                    if debit_ln.name:
+                                        worksheet.write(row, col,
+                                                        debit_ln.name,
+                                                        STYLE_LINE_Data)
+                                    else:
+                                        worksheet.write(row, col, '',
+                                                        STYLE_LINE_Data)
+                                    col += 1
+                                    worksheet.write(row, col, move.name,
+                                                    STYLE_LINE_Data)
+                                    col += 1
+                                    worksheet.write(row, col,
+                                                    line.journal_id.name,
+                                                    STYLE_LINE_Data)
+                                    col += 1
+                                    if move_lines.analytic_account_id:
+                                        worksheet.write(row, col,
+                                                        move_lines.analytic_account_id.name,
+                                                        STYLE_LINE_Data)
+                                    else:
+                                        worksheet.write(row, col, '',
+                                                        STYLE_LINE_Data)
+                                    col += 1
+                                    if move_lines.project_site_id:
+                                        worksheet.write(row, col,
+                                                        move_lines.project_site_id.name,
+                                                        STYLE_LINE_Data)
+                                    else:
+                                        worksheet.write(row, col, '',
+                                                        STYLE_LINE_Data)
+                                    col += 1
+                                    if move_lines.account_id:
+                                        worksheet.write(row, col,
+                                                        str(move_lines.account_id.code) + " " + move_lines.account_id.name,
+                                                        STYLE_LINE_Data)
+                                    else:
+                                        worksheet.write(row, col, '',
+                                                        STYLE_LINE_Data)
+                                    col += 1
+                                    if move.partner_id:
+                                        worksheet.write(row, col,
+                                                        move.partner_id.name,
+                                                        STYLE_LINE_Data)
+                                    else:
+                                        worksheet.write(row, col, '',
+                                                        STYLE_LINE_Data)
+                                    col += 1
+                                    worksheet.write(row, col,
+                                                    debit_ln.credit,
+                                                    STYLE_LINE_Data)
+                                    col += 1
+                                    worksheet.write(row, col, debit_ln.debit,
+                                                    STYLE_LINE_Data)
+                                    col += 1
+                                    worksheet.write(row, col,
+                                                    abs(debit_ln.debit) + abs(
+                                                        debit_ln.credit),
+                                                    STYLE_LINE_Data)
+                                else:
+                                    for mv_line in move_lines:
+                                        if line.date:
+                                            worksheet.write(row, col, line.date,
+                                                            date_format)
+                                        else:
+                                            worksheet.write(row, col, '',
+                                                            date_format)
+                                        col += 1
+                                        if line.name:
+                                            worksheet.write(row, col, line.name,
+                                                            STYLE_LINE_Data)
+                                        else:
+                                            worksheet.write(row, col, '',
+                                                            STYLE_LINE_Data)
+                                        col += 1
+                                        if line.ref:
+                                            worksheet.write(row, col, line.ref,
+                                                            STYLE_LINE_Data)
+                                        else:
+                                            worksheet.write(row, col, '',
+                                                            STYLE_LINE_Data)
+                                        col += 1
+                                        if debit_ln.name:
+                                            worksheet.write(row, col,
+                                                            debit_ln.name,
+                                                            STYLE_LINE_Data)
+                                        else:
+                                            worksheet.write(row, col, '',
+                                                            STYLE_LINE_Data)
+                                        col += 1
+                                        worksheet.write(row, col, move.name,
+                                                        STYLE_LINE_Data)
+                                        col += 1
+                                        worksheet.write(row, col,
+                                                        line.journal_id.name,
+                                                        STYLE_LINE_Data)
+                                        col += 1
+                                        if mv_line.analytic_account_id:
+                                            worksheet.write(row, col,
+                                                            mv_line.analytic_account_id.name,
+                                                            STYLE_LINE_Data)
+                                        else:
+                                            worksheet.write(row, col, '',
+                                                            STYLE_LINE_Data)
+                                        col += 1
+                                        if mv_line.project_site_id:
+                                            worksheet.write(row, col,
+                                                            mv_line.project_site_id.name,
+                                                            STYLE_LINE_Data)
+                                        else:
+                                            worksheet.write(row, col, '',
+                                                            STYLE_LINE_Data)
+                                        col += 1
+                                        if mv_line.account_id:
+                                            worksheet.write(row, col,
+                                                            str(mv_line.account_id.code) + " " + mv_line.account_id.name,
+                                                            STYLE_LINE_Data)
+                                        else:
+                                            worksheet.write(row, col, '',
+                                                            STYLE_LINE_Data)
+                                        col += 1
+                                        if move.partner_id:
+                                            worksheet.write(row, col,
+                                                            move.partner_id.name,
+                                                            STYLE_LINE_Data)
+                                        else:
+                                            worksheet.write(row, col, '',
+                                                            STYLE_LINE_Data)
+                                        col += 1
+                                        worksheet.write(row, col,
+                                                        debit_ln.credit,
+                                                        STYLE_LINE_Data)
+                                        col += 1
+                                        worksheet.write(row, col,
+                                                        debit_ln.debit,
+                                                        STYLE_LINE_Data)
+                                        col += 1
+                                        worksheet.write(row, col,
+                                                        abs(debit_ln.debit) + abs(
+                                                            debit_ln.credit),
+                                                        STYLE_LINE_Data)
+
+                    else:
+                        if line.date:
+                            worksheet.write(row, col, line.date, date_format)
+                        else:
+                            worksheet.write(row, col, '', date_format)
+                        col += 1
+                        if line.name:
+                            worksheet.write(row, col, line.name,
+                                            STYLE_LINE_Data)
+                        else:
+                            worksheet.write(row, col, '', STYLE_LINE_Data)
+                        col += 1
+                        if line.ref:
+                            worksheet.write(row, col, line.ref, STYLE_LINE_Data)
+                        else:
+                            worksheet.write(row, col, '', STYLE_LINE_Data)
+                        col += 1
+                        if debit_ln.name:
+                            worksheet.write(row, col, debit_ln.name,
+                                            STYLE_LINE_Data)
+                        else:
+                            worksheet.write(row, col, '', STYLE_LINE_Data)
+                        col += 1
+                        worksheet.write(row, col, '',
+                                        STYLE_LINE_Data)
+                        col += 1
+                        worksheet.write(row, col, line.journal_id.name,
+                                        STYLE_LINE_Data)
+                        col += 1
+                        if debit_ln.analytic_account_id:
+                            worksheet.write(row, col,
+                                            line.analytic_account_id.name,
+                                            STYLE_LINE_Data)
+                        else:
+                            worksheet.write(row, col, '',
+                                            STYLE_LINE_Data)
+
+                        col += 1
+                        if debit_ln.project_site_id:
+                            worksheet.write(row, col, line.project_site_id.name,
+                                            STYLE_LINE_Data)
+                        else:
+                            worksheet.write(row, col, '',
+                                            STYLE_LINE_Data)
+                        col += 1
+                        if debit_ln.account_id:
+                            worksheet.write(row, col,
+                                            str(debit_ln.code) + " " + debit_ln.account_id.name,
+                                            STYLE_LINE_Data)
+                        else:
+                            worksheet.write(row, col, '',
+                                            STYLE_LINE_Data)
+
+                        col += 1
+                        if debit_ln.move_id.partner_id:
+                            worksheet.write(row, col,
+                                            debit_ln.move_id.partner_id.name,
+                                            STYLE_LINE_Data)
+                        else:
+                            worksheet.write(row, col, '',
+                                            STYLE_LINE_Data)
+
+                        col += 1
+                        worksheet.write(row, col, debit_ln.credit,
+                                        STYLE_LINE_Data)
+                        col += 1
+                        worksheet.write(row, col, debit_ln.debit,
+                                        STYLE_LINE_Data)
+                        col += 1
+                        worksheet.write(row, col, abs(debit_ln.debit) + abs(
+                            debit_ln.credit),
+                                        STYLE_LINE_Data)
