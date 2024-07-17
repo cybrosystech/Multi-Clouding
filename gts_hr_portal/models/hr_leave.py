@@ -23,7 +23,8 @@ class HolidaysRequest(models.Model):
 
     is_manager_approved = fields.Boolean(string="Is Manager Approved",
                                          help="To show that the manager is "
-                                              "approved or not.")
+                                              "approved or not.",
+                                         default=False)
 
     def get_portal_url(self, suffix=None, report_type=None, download=None,
                        query_string=None, anchor=None):
