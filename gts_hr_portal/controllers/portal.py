@@ -40,9 +40,10 @@ class CustomerPortal(CustomerPortal):
     def approve_leave(self, leave_id, page=1, **kw):
         leave = request.env['hr.leave'].browse(leave_id)
         if leave.holiday_status_id.leave_validation_type == 'manager':
-            leave.state = 'validate'
+            leave.sudo().state = 'validate'
         if leave.holiday_status_id.leave_validation_type == 'both':
             leave.state = 'validate1'
+            leave.is_manager_approved = True
         template = request.env.ref(
             'gts_hr_portal.email_template_leave_approve_manager').sudo()
         template.with_context(date_from=leave.date_from.date(),
@@ -60,9 +61,10 @@ class CustomerPortal(CustomerPortal):
     def approve_leave_timeoff_approver(self, leave_id, page=1, **kw):
         leave = request.env['hr.leave'].browse(leave_id)
         # leave.sudo().state = 'validate'
-        if leave.holiday_status_id.leave_validation_type == 'hr' or  leave.holiday_status_id.leave_validation_type == 'both' :
-            leave.state = 'validate'
-        leave.sudo().state = 'validate'
+        if leave.holiday_status_id.leave_validation_type == 'hr' or leave.holiday_status_id.leave_validation_type == 'both':
+            leave.sudo().state = 'validate'
+        if leave.holiday_status_id.leave_validation_type == 'manager':
+            leave.sudo().state = 'validate'
         template = request.env.ref(
             'gts_hr_portal.email_template_leave_approve_timeoff_approver').sudo()
         template.with_context(date_from=leave.date_from.date(),
