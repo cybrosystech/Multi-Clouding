@@ -1067,9 +1067,9 @@ class CashBurnReportWizard(models.Model):
                                         worksheet.write(row, col, '',
                                                         STYLE_LINE_Data)
                                     col += 1
-                                    if move_lines.name:
+                                    if mv_line.name:
                                         worksheet.write(row, col,
-                                                        move_lines.name,
+                                                        mv_line.name,
                                                         STYLE_LINE_Data)
                                     else:
                                         worksheet.write(row, col, '',
