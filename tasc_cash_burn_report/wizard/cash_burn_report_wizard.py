@@ -201,7 +201,7 @@ class CashBurnReportWizard(models.Model):
                                 worksheet.write(row, col, '', STYLE_LINE_Data)
                             col += 1
                             if debit_lines.name:
-                                worksheet.write(row, col, debit_lines.name,
+                                worksheet.write(row, col, move_lines.name,
                                                 STYLE_LINE_Data)
                             else:
                                 worksheet.write(row, col, '', STYLE_LINE_Data)
@@ -300,7 +300,7 @@ class CashBurnReportWizard(models.Model):
                                                     STYLE_LINE_Data)
                                 col += 1
                                 if debit_lines.name:
-                                    worksheet.write(row, col, debit_lines.name,
+                                    worksheet.write(row, col, mv_line.name,
                                                     STYLE_LINE_Data)
                                 else:
                                     worksheet.write(row, col, '',
@@ -418,7 +418,7 @@ class CashBurnReportWizard(models.Model):
                                                     STYLE_LINE_Data)
                                 col += 1
                                 if debit_lines.name:
-                                    worksheet.write(row, col, debit_lines.name,
+                                    worksheet.write(row, col, move_lines.name,
                                                     STYLE_LINE_Data)
                                 else:
                                     worksheet.write(row, col, '',
@@ -524,7 +524,7 @@ class CashBurnReportWizard(models.Model):
                                     col += 1
                                     if debit_lines.name:
                                         worksheet.write(row, col,
-                                                        debit_lines.name,
+                                                        mv_line.name,
                                                         STYLE_LINE_Data)
                                     else:
                                         worksheet.write(row, col, '',
@@ -698,23 +698,128 @@ class CashBurnReportWizard(models.Model):
                                     STYLE_LINE_Data)
                     row += 1
             else:
-                for debit_ln in debit_lines:
-                    col = 0
-                    reconcile_items = line.open_reconcile_view()
-                    move = self.env['account.move.line'].search(
-                        reconcile_items['domain']).filtered(
-                        lambda x: x.move_id.journal_id.type in ['sale',
-                                                                'purchase'])
-                    move_ids = move.mapped('move_id')
-                    if move_ids:
-                        if len(move_ids.ids) == 1:
-                            move_lines = move_ids.invoice_line_ids
-                            if len(move_lines.ids) == 1:
+                # for debit_ln in debit_lines:
+                reconcile_items = line.open_reconcile_view()
+                move = self.env['account.move.line'].search(
+                    reconcile_items['domain']).filtered(
+                    lambda x: x.move_id.journal_id.type in ['sale',
+                                                            'purchase'])
+                move_ids = move.mapped('move_id')
+                if move_ids:
+                    if len(move_ids.ids) == 1:
+                        move_lines = move_ids.invoice_line_ids
+                        if len(move_lines.ids) == 1:
+                            if line.date:
+                                worksheet.write(row, col, line.date,
+                                                date_format)
+                            else:
+                                worksheet.write(row, col, '', date_format)
+                            col += 1
+                            if line.name:
+                                worksheet.write(row, col, line.name,
+                                                STYLE_LINE_Data)
+                            else:
+                                worksheet.write(row, col, '',
+                                                STYLE_LINE_Data)
+                            col += 1
+                            if line.ref:
+                                worksheet.write(row, col, line.ref,
+                                                STYLE_LINE_Data)
+                            else:
+                                worksheet.write(row, col, '',
+                                                STYLE_LINE_Data)
+                            col += 1
+                            if move_lines.name:
+                                worksheet.write(row, col, move_lines.name,
+                                                STYLE_LINE_Data)
+                            else:
+                                worksheet.write(row, col, '',
+                                                STYLE_LINE_Data)
+                            col += 1
+                            worksheet.write(row, col, move_ids.name,
+                                            STYLE_LINE_Data)
+                            col += 1
+                            worksheet.write(row, col, line.journal_id.name,
+                                            STYLE_LINE_Data)
+                            col += 1
+
+                            if move_lines.analytic_account_id:
+                                if move_lines.analytic_account_id.code:
+                                    analytic_name = move_lines.analytic_account_id.code + " " + move_lines.analytic_account_id.name
+                                else:
+                                    analytic_name = move_lines.analytic_account_id.name
+                                worksheet.write(row, col,
+                                                analytic_name,
+                                                STYLE_LINE_Data)
+                            else:
+                                worksheet.write(row, col, '',
+                                                STYLE_LINE_Data)
+                            col += 1
+                            if move_lines.project_site_id:
+                                if move_lines.project_site_id.code:
+                                    project_site_name = move_lines.project_site_id.code + " " + move_lines.project_site_id.name
+                                else:
+                                    project_site_name = move_lines.project_site_id.name
+                                worksheet.write(row, col,
+                                                project_site_name,
+                                                STYLE_LINE_Data)
+                            else:
+                                worksheet.write(row, col, '',
+                                                STYLE_LINE_Data)
+                            col += 1
+                            if move_lines.account_id:
+                                worksheet.write(row, col,
+                                                str(move_lines.account_id.code) + " " + move_lines.account_id.name,
+                                                STYLE_LINE_Data)
+                            else:
+                                worksheet.write(row, col, '',
+                                                STYLE_LINE_Data)
+                            col += 1
+                            if move_ids.partner_id:
+                                worksheet.write(row, col,
+                                                move_ids.partner_id.name,
+                                                STYLE_LINE_Data)
+                            else:
+                                worksheet.write(row, col, '',
+                                                STYLE_LINE_Data)
+                            col += 1
+                            credit_amt = 0
+                            debit_amt = 0
+                            if move_ids.move_type in ['in_invoice',
+                                                      'out_refund',
+                                                      'in_receipt']:
+                                amt_lines = move_ids.line_ids.filtered(
+                                    lambda x: x.debit != 0)
+                                credit_amt = sum(amt_lines.mapped('credit'))
+                                debit_amt = sum(amt_lines.mapped('debit'))
+                            else:
+                                amt_lines = move_ids.line_ids.filtered(
+                                    lambda x: x.credit != 0)
+                                credit_amt = sum(
+                                    amt_lines.mapped('credit'))
+                                debit_amt = sum(
+                                    amt_lines.mapped('debit'))
+
+                            worksheet.write(row, col, credit_amt,
+                                            STYLE_LINE_Data)
+                            col += 1
+                            worksheet.write(row, col, debit_amt,
+                                            STYLE_LINE_Data)
+                            col += 1
+                            worksheet.write(row, col,
+                                            abs(debit_amt) + abs(
+                                                credit_amt),
+                                            STYLE_LINE_Data)
+                            row += 1
+                        else:
+                            for mv_line in move_lines:
+                                col = 0
                                 if line.date:
                                     worksheet.write(row, col, line.date,
                                                     date_format)
                                 else:
-                                    worksheet.write(row, col, '', date_format)
+                                    worksheet.write(row, col, '',
+                                                    date_format)
                                 col += 1
                                 if line.name:
                                     worksheet.write(row, col, line.name,
@@ -730,8 +835,9 @@ class CashBurnReportWizard(models.Model):
                                     worksheet.write(row, col, '',
                                                     STYLE_LINE_Data)
                                 col += 1
-                                if debit_ln.name:
-                                    worksheet.write(row, col, debit_ln.name,
+                                if mv_line.name:
+                                    worksheet.write(row, col,
+                                                    mv_line.name,
                                                     STYLE_LINE_Data)
                                 else:
                                     worksheet.write(row, col, '',
@@ -740,10 +846,132 @@ class CashBurnReportWizard(models.Model):
                                 worksheet.write(row, col, move_ids.name,
                                                 STYLE_LINE_Data)
                                 col += 1
-                                worksheet.write(row, col, line.journal_id.name,
+                                worksheet.write(row, col,
+                                                line.journal_id.name,
                                                 STYLE_LINE_Data)
                                 col += 1
 
+                                if mv_line.analytic_account_id:
+                                    if mv_line.analytic_account_id.code:
+                                        analytic_name = mv_line.analytic_account_id.code + " " + mv_line.analytic_account_id.name
+                                    else:
+                                        analytic_name = mv_line.analytic_account_id.name
+                                    worksheet.write(row, col,
+                                                    analytic_name,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
+                                if mv_line.project_site_id:
+                                    if mv_line.project_site_id.code:
+                                        project_site_name = mv_line.project_site_id.code + " " + mv_line.project_site_id.name
+                                    else:
+                                        project_site_name = mv_line.project_site_id.name
+                                    worksheet.write(row, col,
+                                                    project_site_name,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
+                                if mv_line.account_id:
+                                    worksheet.write(row, col,
+                                                    str(mv_line.account_id.code) + " " + mv_line.account_id.name,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
+                                if move_ids.partner_id:
+                                    worksheet.write(row, col,
+                                                    move_ids.partner_id.name,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
+                                credit_amt = 0
+                                debit_amt = 0
+                                if move.move_type in ['in_invoice',
+                                                      'out_refund',
+                                                      'in_receipt']:
+                                    credit_amt = 0
+                                    if mv_line.currency_id.id == self.env.company.currency_id.id:
+                                        debit_amt = mv_line.price_total
+                                    else:
+                                        debit_amt = mv_line.currency_id._convert(
+                                            from_amount=mv_line.price_total,
+                                            to_currency=self.env.company.currency_id,
+                                            company=self.env.company,
+                                            date=mv_line.move_id.date,
+                                        )
+                                else:
+                                    debit_amt = 0
+                                    if mv_line.currency_id.id == self.env.company.currency_id.id:
+                                        credit_amt = mv_line.price_total
+                                    else:
+                                        credit_amt = mv_line.currency_id._convert(
+                                            from_amount=mv_line.price_total,
+                                            to_currency=self.env.company.currency_id,
+                                            company=self.env.company,
+                                            date=mv_line.move_id.date,
+                                        )
+                                worksheet.write(row, col,
+                                                credit_amt,
+                                                STYLE_LINE_Data)
+                                col += 1
+                                worksheet.write(row, col, debit_amt,
+                                                STYLE_LINE_Data)
+                                col += 1
+                                worksheet.write(row, col,
+                                                abs(debit_amt) + abs(
+                                                    credit_amt),
+                                                STYLE_LINE_Data)
+                                row += 1
+
+                    else:
+                        for move in move_ids:
+                            col = 0
+
+                            move_lines = move.invoice_line_ids
+                            if len(move_lines.ids) == 1:
+                                if line.date:
+                                    worksheet.write(row, col, line.date,
+                                                    date_format)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    date_format)
+                                col += 1
+                                if line.name:
+                                    worksheet.write(row, col, line.name,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
+                                if line.ref:
+                                    worksheet.write(row, col, line.ref,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
+                                if move_lines.name:
+                                    worksheet.write(row, col,
+                                                    move_lines.name,
+                                                    STYLE_LINE_Data)
+                                else:
+                                    worksheet.write(row, col, '',
+                                                    STYLE_LINE_Data)
+                                col += 1
+                                worksheet.write(row, col, move.name,
+                                                STYLE_LINE_Data)
+                                col += 1
+                                worksheet.write(row, col,
+                                                line.journal_id.name,
+                                                STYLE_LINE_Data)
+                                col += 1
                                 if move_lines.analytic_account_id:
                                     if move_lines.analytic_account_id.code:
                                         analytic_name = move_lines.analytic_account_id.code + " " + move_lines.analytic_account_id.name
@@ -776,9 +1004,9 @@ class CashBurnReportWizard(models.Model):
                                     worksheet.write(row, col, '',
                                                     STYLE_LINE_Data)
                                 col += 1
-                                if move_ids.partner_id:
+                                if move.partner_id:
                                     worksheet.write(row, col,
-                                                    move_ids.partner_id.name,
+                                                    move.partner_id.name,
                                                     STYLE_LINE_Data)
                                 else:
                                     worksheet.write(row, col, '',
@@ -786,22 +1014,25 @@ class CashBurnReportWizard(models.Model):
                                 col += 1
                                 credit_amt = 0
                                 debit_amt = 0
-                                if move_ids.move_type in ['in_invoice',
-                                                          'out_refund',
-                                                          'in_receipt']:
-                                    amt_lines = move_ids.line_ids.filtered(
+                                if move.move_type in ['in_invoice',
+                                                      'out_refund',
+                                                      'in_receipt']:
+                                    amt_lines = move.line_ids.filtered(
                                         lambda x: x.debit != 0)
-                                    credit_amt = sum(amt_lines.mapped('credit'))
-                                    debit_amt = sum(amt_lines.mapped('debit'))
+                                    credit_amt = sum(
+                                        amt_lines.mapped('credit'))
+                                    debit_amt = sum(
+                                        amt_lines.mapped('debit'))
                                 else:
-                                    amt_lines = move_ids.line_ids.filtered(
+                                    amt_lines = move.line_ids.filtered(
                                         lambda x: x.credit != 0)
                                     credit_amt = sum(
                                         amt_lines.mapped('credit'))
                                     debit_amt = sum(
                                         amt_lines.mapped('debit'))
 
-                                worksheet.write(row, col, credit_amt,
+                                worksheet.write(row, col,
+                                                credit_amt,
                                                 STYLE_LINE_Data)
                                 col += 1
                                 worksheet.write(row, col, debit_amt,
@@ -836,22 +1067,21 @@ class CashBurnReportWizard(models.Model):
                                         worksheet.write(row, col, '',
                                                         STYLE_LINE_Data)
                                     col += 1
-                                    if debit_ln.name:
+                                    if move_lines.name:
                                         worksheet.write(row, col,
-                                                        debit_ln.name,
+                                                        move_lines.name,
                                                         STYLE_LINE_Data)
                                     else:
                                         worksheet.write(row, col, '',
                                                         STYLE_LINE_Data)
                                     col += 1
-                                    worksheet.write(row, col, move_ids.name,
+                                    worksheet.write(row, col, move.name,
                                                     STYLE_LINE_Data)
                                     col += 1
                                     worksheet.write(row, col,
                                                     line.journal_id.name,
                                                     STYLE_LINE_Data)
                                     col += 1
-
                                     if mv_line.analytic_account_id:
                                         if mv_line.analytic_account_id.code:
                                             analytic_name = mv_line.analytic_account_id.code + " " + mv_line.analytic_account_id.name
@@ -884,9 +1114,9 @@ class CashBurnReportWizard(models.Model):
                                         worksheet.write(row, col, '',
                                                         STYLE_LINE_Data)
                                     col += 1
-                                    if move_ids.partner_id:
+                                    if move.partner_id:
                                         worksheet.write(row, col,
-                                                        move_ids.partner_id.name,
+                                                        move.partner_id.name,
                                                         STYLE_LINE_Data)
                                     else:
                                         worksheet.write(row, col, '',
@@ -918,11 +1148,13 @@ class CashBurnReportWizard(models.Model):
                                                 company=self.env.company,
                                                 date=mv_line.move_id.date,
                                             )
+
                                     worksheet.write(row, col,
                                                     credit_amt,
                                                     STYLE_LINE_Data)
                                     col += 1
-                                    worksheet.write(row, col, debit_amt,
+                                    worksheet.write(row, col,
+                                                    debit_amt,
                                                     STYLE_LINE_Data)
                                     col += 1
                                     worksheet.write(row, col,
@@ -930,241 +1162,8 @@ class CashBurnReportWizard(models.Model):
                                                         credit_amt),
                                                     STYLE_LINE_Data)
                                     row += 1
-
-                        else:
-                            for move in move_ids:
-                                col = 0
-
-                                move_lines = move.invoice_line_ids
-                                if len(move_lines.ids) == 1:
-                                    if line.date:
-                                        worksheet.write(row, col, line.date,
-                                                        date_format)
-                                    else:
-                                        worksheet.write(row, col, '',
-                                                        date_format)
-                                    col += 1
-                                    if line.name:
-                                        worksheet.write(row, col, line.name,
-                                                        STYLE_LINE_Data)
-                                    else:
-                                        worksheet.write(row, col, '',
-                                                        STYLE_LINE_Data)
-                                    col += 1
-                                    if line.ref:
-                                        worksheet.write(row, col, line.ref,
-                                                        STYLE_LINE_Data)
-                                    else:
-                                        worksheet.write(row, col, '',
-                                                        STYLE_LINE_Data)
-                                    col += 1
-                                    if debit_ln.name:
-                                        worksheet.write(row, col,
-                                                        debit_ln.name,
-                                                        STYLE_LINE_Data)
-                                    else:
-                                        worksheet.write(row, col, '',
-                                                        STYLE_LINE_Data)
-                                    col += 1
-                                    worksheet.write(row, col, move.name,
-                                                    STYLE_LINE_Data)
-                                    col += 1
-                                    worksheet.write(row, col,
-                                                    line.journal_id.name,
-                                                    STYLE_LINE_Data)
-                                    col += 1
-                                    if move_lines.analytic_account_id:
-                                        if move_lines.analytic_account_id.code:
-                                            analytic_name = move_lines.analytic_account_id.code + " " + move_lines.analytic_account_id.name
-                                        else:
-                                            analytic_name = move_lines.analytic_account_id.name
-                                        worksheet.write(row, col,
-                                                        analytic_name,
-                                                        STYLE_LINE_Data)
-                                    else:
-                                        worksheet.write(row, col, '',
-                                                        STYLE_LINE_Data)
-                                    col += 1
-                                    if move_lines.project_site_id:
-                                        if move_lines.project_site_id.code:
-                                            project_site_name = move_lines.project_site_id.code + " " + move_lines.project_site_id.name
-                                        else:
-                                            project_site_name = move_lines.project_site_id.name
-                                        worksheet.write(row, col,
-                                                        project_site_name,
-                                                        STYLE_LINE_Data)
-                                    else:
-                                        worksheet.write(row, col, '',
-                                                        STYLE_LINE_Data)
-                                    col += 1
-                                    if move_lines.account_id:
-                                        worksheet.write(row, col,
-                                                        str(move_lines.account_id.code) + " " + move_lines.account_id.name,
-                                                        STYLE_LINE_Data)
-                                    else:
-                                        worksheet.write(row, col, '',
-                                                        STYLE_LINE_Data)
-                                    col += 1
-                                    if move.partner_id:
-                                        worksheet.write(row, col,
-                                                        move.partner_id.name,
-                                                        STYLE_LINE_Data)
-                                    else:
-                                        worksheet.write(row, col, '',
-                                                        STYLE_LINE_Data)
-                                    col += 1
-                                    credit_amt = 0
-                                    debit_amt = 0
-                                    if move.move_type in ['in_invoice',
-                                                          'out_refund',
-                                                          'in_receipt']:
-                                        amt_lines = move.line_ids.filtered(
-                                            lambda x: x.debit != 0)
-                                        credit_amt = sum(
-                                            amt_lines.mapped('credit'))
-                                        debit_amt = sum(
-                                            amt_lines.mapped('debit'))
-                                    else:
-                                        amt_lines = move.line_ids.filtered(
-                                            lambda x: x.credit != 0)
-                                        credit_amt = sum(
-                                            amt_lines.mapped('credit'))
-                                        debit_amt = sum(
-                                            amt_lines.mapped('debit'))
-
-                                    worksheet.write(row, col,
-                                                    credit_amt,
-                                                    STYLE_LINE_Data)
-                                    col += 1
-                                    worksheet.write(row, col, debit_amt,
-                                                    STYLE_LINE_Data)
-                                    col += 1
-                                    worksheet.write(row, col,
-                                                    abs(debit_amt) + abs(
-                                                        credit_amt),
-                                                    STYLE_LINE_Data)
-                                    row += 1
-                                else:
-                                    for mv_line in move_lines:
-                                        col = 0
-                                        if line.date:
-                                            worksheet.write(row, col, line.date,
-                                                            date_format)
-                                        else:
-                                            worksheet.write(row, col, '',
-                                                            date_format)
-                                        col += 1
-                                        if line.name:
-                                            worksheet.write(row, col, line.name,
-                                                            STYLE_LINE_Data)
-                                        else:
-                                            worksheet.write(row, col, '',
-                                                            STYLE_LINE_Data)
-                                        col += 1
-                                        if line.ref:
-                                            worksheet.write(row, col, line.ref,
-                                                            STYLE_LINE_Data)
-                                        else:
-                                            worksheet.write(row, col, '',
-                                                            STYLE_LINE_Data)
-                                        col += 1
-                                        if debit_ln.name:
-                                            worksheet.write(row, col,
-                                                            debit_ln.name,
-                                                            STYLE_LINE_Data)
-                                        else:
-                                            worksheet.write(row, col, '',
-                                                            STYLE_LINE_Data)
-                                        col += 1
-                                        worksheet.write(row, col, move.name,
-                                                        STYLE_LINE_Data)
-                                        col += 1
-                                        worksheet.write(row, col,
-                                                        line.journal_id.name,
-                                                        STYLE_LINE_Data)
-                                        col += 1
-                                        if mv_line.analytic_account_id:
-                                            if mv_line.analytic_account_id.code:
-                                                analytic_name = mv_line.analytic_account_id.code + " " + mv_line.analytic_account_id.name
-                                            else:
-                                                analytic_name = mv_line.analytic_account_id.name
-                                            worksheet.write(row, col,
-                                                            analytic_name,
-                                                            STYLE_LINE_Data)
-                                        else:
-                                            worksheet.write(row, col, '',
-                                                            STYLE_LINE_Data)
-                                        col += 1
-                                        if mv_line.project_site_id:
-                                            if mv_line.project_site_id.code:
-                                                project_site_name = mv_line.project_site_id.code + " " + mv_line.project_site_id.name
-                                            else:
-                                                project_site_name = mv_line.project_site_id.name
-                                            worksheet.write(row, col,
-                                                            project_site_name,
-                                                            STYLE_LINE_Data)
-                                        else:
-                                            worksheet.write(row, col, '',
-                                                            STYLE_LINE_Data)
-                                        col += 1
-                                        if mv_line.account_id:
-                                            worksheet.write(row, col,
-                                                            str(mv_line.account_id.code) + " " + mv_line.account_id.name,
-                                                            STYLE_LINE_Data)
-                                        else:
-                                            worksheet.write(row, col, '',
-                                                            STYLE_LINE_Data)
-                                        col += 1
-                                        if move.partner_id:
-                                            worksheet.write(row, col,
-                                                            move.partner_id.name,
-                                                            STYLE_LINE_Data)
-                                        else:
-                                            worksheet.write(row, col, '',
-                                                            STYLE_LINE_Data)
-                                        col += 1
-                                        credit_amt = 0
-                                        debit_amt = 0
-                                        if move.move_type in ['in_invoice',
-                                                              'out_refund',
-                                                              'in_receipt']:
-                                            credit_amt = 0
-                                            if mv_line.currency_id.id == self.env.company.currency_id.id:
-                                                debit_amt = mv_line.price_total
-                                            else:
-                                                debit_amt = mv_line.currency_id._convert(
-                                                    from_amount=mv_line.price_total,
-                                                    to_currency=self.env.company.currency_id,
-                                                    company=self.env.company,
-                                                    date=mv_line.move_id.date,
-                                                )
-                                        else:
-                                            debit_amt = 0
-                                            if mv_line.currency_id.id == self.env.company.currency_id.id:
-                                                credit_amt = mv_line.price_total
-                                            else:
-                                                credit_amt = mv_line.currency_id._convert(
-                                                    from_amount=mv_line.price_total,
-                                                    to_currency=self.env.company.currency_id,
-                                                    company=self.env.company,
-                                                    date=mv_line.move_id.date,
-                                                )
-
-                                        worksheet.write(row, col,
-                                                        credit_amt,
-                                                        STYLE_LINE_Data)
-                                        col += 1
-                                        worksheet.write(row, col,
-                                                        debit_amt,
-                                                        STYLE_LINE_Data)
-                                        col += 1
-                                        worksheet.write(row, col,
-                                                        abs(debit_amt) + abs(
-                                                            credit_amt),
-                                                        STYLE_LINE_Data)
-                                        row += 1
-
-                    else:
+                else:
+                    for debit_ln in debit_lines:
                         if line.date:
                             worksheet.write(row, col, line.date, date_format)
                         else:
