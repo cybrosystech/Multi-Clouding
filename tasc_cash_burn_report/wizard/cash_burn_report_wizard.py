@@ -1164,6 +1164,7 @@ class CashBurnReportWizard(models.Model):
                                     row += 1
                 else:
                     for debit_ln in debit_lines:
+                        col = 0
                         if line.date:
                             worksheet.write(row, col, line.date, date_format)
                         else:
