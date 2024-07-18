@@ -214,15 +214,23 @@ class CashBurnReportWizard(models.Model):
                             col += 1
 
                             if move_lines.analytic_account_id:
+                                if move_lines.analytic_account_id.code:
+                                    analytic_name = move_lines.analytic_account_id.code + " " + move_lines.analytic_account_id.name
+                                else:
+                                    analytic_name = move_lines.analytic_account_id.name
                                 worksheet.write(row, col,
-                                                move_lines.analytic_account_id.name,
+                                                analytic_name,
                                                 STYLE_LINE_Data)
                             else:
                                 worksheet.write(row, col, '', STYLE_LINE_Data)
                             col += 1
                             if move_lines.project_site_id:
+                                if move_lines.project_site_id.code:
+                                    project_site_name = move_lines.project_site_id.code + " " + move_lines.project_site_id.name
+                                else:
+                                    project_site_name = move_lines.project_site_id.name
                                 worksheet.write(row, col,
-                                                move_lines.project_site_id.name,
+                                                project_site_name,
                                                 STYLE_LINE_Data)
                             else:
                                 worksheet.write(row, col, '', STYLE_LINE_Data)
@@ -241,15 +249,31 @@ class CashBurnReportWizard(models.Model):
                             else:
                                 worksheet.write(row, col, '', STYLE_LINE_Data)
                             col += 1
-                            worksheet.write(row, col, debit_lines.credit,
+                            credit_amt = 0
+                            debit_amt = 0
+                            if move_ids.move_type in ['in_invoice',
+                                                      'out_refund',
+                                                      'in_receipt']:
+                                amt_lines = move_ids.line_ids.filtered(
+                                    lambda x: x.debit != 0)
+                                credit_amt = sum(amt_lines.mapped('credit'))
+                                debit_amt = sum(amt_lines.mapped('debit'))
+                            else:
+                                amt_lines = move_ids.line_ids.filtered(
+                                    lambda x: x.credit != 0)
+                                credit_amt = sum(
+                                    amt_lines.mapped('credit'))
+                                debit_amt = sum(
+                                    amt_lines.mapped('debit'))
+
+                            worksheet.write(row, col, credit_amt,
                                             STYLE_LINE_Data)
                             col += 1
-                            worksheet.write(row, col, debit_lines.debit,
+                            worksheet.write(row, col, debit_amt,
                                             STYLE_LINE_Data)
                             col += 1
                             worksheet.write(row, col,
-                                            abs(debit_lines.debit) + abs(
-                                                debit_lines.credit),
+                                            abs(debit_amt) + abs(credit_amt),
                                             STYLE_LINE_Data)
                             row += 1
                         else:
@@ -290,16 +314,24 @@ class CashBurnReportWizard(models.Model):
                                 col += 1
 
                                 if mv_line.analytic_account_id:
+                                    if mv_line.analytic_account_id.code:
+                                        analytic_name = mv_line.analytic_account_id.code + " " + mv_line.analytic_account_id.name
+                                    else:
+                                        analytic_name = mv_line.analytic_account_id.name
                                     worksheet.write(row, col,
-                                                    mv_line.analytic_account_id.name,
+                                                    analytic_name,
                                                     STYLE_LINE_Data)
                                 else:
                                     worksheet.write(row, col, '',
                                                     STYLE_LINE_Data)
                                 col += 1
                                 if mv_line.project_site_id:
+                                    if mv_line.project_site_id.code:
+                                        project_site_name = mv_line.project_site_id.code + " " + mv_line.project_site_id.name
+                                    else:
+                                        project_site_name = mv_line.project_site_id.name
                                     worksheet.write(row, col,
-                                                    mv_line.project_site_id.name,
+                                                    project_site_name,
                                                     STYLE_LINE_Data)
                                 else:
                                     worksheet.write(row, col, '',
@@ -321,15 +353,41 @@ class CashBurnReportWizard(models.Model):
                                     worksheet.write(row, col, '',
                                                     STYLE_LINE_Data)
                                 col += 1
-                                worksheet.write(row, col, debit_lines.credit,
+                                credit_amt = 0
+                                debit_amt = 0
+                                if move.move_type in ['in_invoice',
+                                                      'out_refund',
+                                                      'in_receipt']:
+                                    credit_amt = 0
+                                    if mv_line.currency_id.id == self.env.company.currency_id.id:
+                                        debit_amt = mv_line.price_total
+                                    else:
+                                        debit_amt = mv_line.currency_id._convert(
+                                            from_amount=mv_line.price_total,
+                                            to_currency=self.env.company.currency_id,
+                                            company=self.env.company,
+                                            date=mv_line.move.date,
+                                        )
+                                else:
+                                    debit_amt = 0
+                                    if mv_line.currency_id.id == self.env.company.currency_id.id:
+                                        credit_amt = mv_line.price_total
+                                    else:
+                                        credit_amt = mv_line.currency_id._convert(
+                                            from_amount=mv_line.price_total,
+                                            to_currency=self.env.company.currency_id,
+                                            company=self.env.company,
+                                            date=mv_line.move.date,
+                                        )
+                                worksheet.write(row, col, credit_amt,
                                                 STYLE_LINE_Data)
                                 col += 1
-                                worksheet.write(row, col, debit_lines.debit,
+                                worksheet.write(row, col, debit_amt,
                                                 STYLE_LINE_Data)
                                 col += 1
                                 worksheet.write(row, col,
-                                                abs(debit_lines.debit) + abs(
-                                                    debit_lines.credit),
+                                                abs(debit_amt) + abs(
+                                                    credit_amt),
                                                 STYLE_LINE_Data)
                                 row += 1
 
@@ -373,16 +431,24 @@ class CashBurnReportWizard(models.Model):
                                                 STYLE_LINE_Data)
                                 col += 1
                                 if move_lines.analytic_account_id:
+                                    if move_lines.analytic_account_id.code:
+                                        analytic_name = move_lines.analytic_account_id.code + " " + move_lines.analytic_account_id.name
+                                    else:
+                                        analytic_name = move_lines.analytic_account_id.name
                                     worksheet.write(row, col,
-                                                    move_lines.analytic_account_id.name,
+                                                    analytic_name,
                                                     STYLE_LINE_Data)
                                 else:
                                     worksheet.write(row, col, '',
                                                     STYLE_LINE_Data)
                                 col += 1
                                 if move_lines.project_site_id:
+                                    if move_lines.project_site_id.code:
+                                        project_site_name = move_lines.project_site_id.code + " " + move_lines.project_site_id.name
+                                    else:
+                                        project_site_name = move_lines.project_site_id.name
                                     worksheet.write(row, col,
-                                                    move_lines.project_site_id.name,
+                                                    project_site_name,
                                                     STYLE_LINE_Data)
                                 else:
                                     worksheet.write(row, col, '',
@@ -404,15 +470,32 @@ class CashBurnReportWizard(models.Model):
                                     worksheet.write(row, col, '',
                                                     STYLE_LINE_Data)
                                 col += 1
-                                worksheet.write(row, col, debit_lines.credit,
+                                credit_amt = 0
+                                debit_amt = 0
+                                if move.move_type in ['in_invoice',
+                                                      'out_refund',
+                                                      'in_receipt']:
+                                    amt_lines = move.line_ids.filtered(
+                                        lambda x: x.debit != 0)
+                                    credit_amt = sum(amt_lines.mapped('credit'))
+                                    debit_amt = sum(amt_lines.mapped('debit'))
+                                else:
+                                    amt_lines = move.line_ids.filtered(
+                                        lambda x: x.credit != 0)
+                                    credit_amt = sum(
+                                        amt_lines.mapped('credit'))
+                                    debit_amt = sum(
+                                        amt_lines.mapped('debit'))
+
+                                worksheet.write(row, col, credit_amt,
                                                 STYLE_LINE_Data)
                                 col += 1
-                                worksheet.write(row, col, debit_lines.debit,
+                                worksheet.write(row, col, debit_amt,
                                                 STYLE_LINE_Data)
                                 col += 1
                                 worksheet.write(row, col,
-                                                abs(debit_lines.debit) + abs(
-                                                    debit_lines.credit),
+                                                abs(debit_amt) + abs(
+                                                    credit_amt),
                                                 STYLE_LINE_Data)
                                 row += 1
                             else:
@@ -455,16 +538,24 @@ class CashBurnReportWizard(models.Model):
                                                     STYLE_LINE_Data)
                                     col += 1
                                     if mv_line.analytic_account_id:
+                                        if mv_line.analytic_account_id.code:
+                                            analytic_name = mv_line.analytic_account_id.code + " " + mv_line.analytic_account_id.name
+                                        else:
+                                            analytic_name = mv_line.analytic_account_id.name
                                         worksheet.write(row, col,
-                                                        mv_line.analytic_account_id.name,
+                                                        analytic_name,
                                                         STYLE_LINE_Data)
                                     else:
                                         worksheet.write(row, col, '',
                                                         STYLE_LINE_Data)
                                     col += 1
                                     if mv_line.project_site_id:
+                                        if mv_line.project_site_id.code:
+                                            project_site_name = mv_line.project_site_id.code + " " + mv_line.project_site_id.name
+                                        else:
+                                            project_site_name = mv_line.project_site_id.name
                                         worksheet.write(row, col,
-                                                        mv_line.project_site_id.name,
+                                                        project_site_name,
                                                         STYLE_LINE_Data)
                                     else:
                                         worksheet.write(row, col, '',
@@ -486,16 +577,42 @@ class CashBurnReportWizard(models.Model):
                                         worksheet.write(row, col, '',
                                                         STYLE_LINE_Data)
                                     col += 1
+                                    credit_amt = 0
+                                    debit_amt = 0
+                                    if move.move_type in ['in_invoice',
+                                                          'out_refund',
+                                                          'in_receipt']:
+                                        credit_amt = 0
+                                        if mv_line.currency_id.id == self.env.company.currency_id.id:
+                                            debit_amt = mv_line.price_total
+                                        else:
+                                            debit_amt = mv_line.currency_id._convert(
+                                                from_amount=mv_line.price_total,
+                                                to_currency=self.env.company.currency_id,
+                                                company=self.env.company,
+                                                date=mv_line.move.date,
+                                            )
+                                    else:
+                                        debit_amt = 0
+                                        if mv_line.currency_id.id == self.env.company.currency_id.id:
+                                            credit_amt = mv_line.price_total
+                                        else:
+                                            credit_amt = mv_line.currency_id._convert(
+                                                from_amount=mv_line.price_total,
+                                                to_currency=self.env.company.currency_id,
+                                                company=self.env.company,
+                                                date=mv_line.move.date,
+                                            )
                                     worksheet.write(row, col,
-                                                    debit_lines.credit,
+                                                    credit_amt,
                                                     STYLE_LINE_Data)
                                     col += 1
-                                    worksheet.write(row, col, debit_lines.debit,
+                                    worksheet.write(row, col, debit_amt,
                                                     STYLE_LINE_Data)
                                     col += 1
                                     worksheet.write(row, col,
-                                                    abs(debit_lines.debit) + abs(
-                                                        debit_lines.credit),
+                                                    abs(debit_amt) + abs(
+                                                        credit_amt),
                                                     STYLE_LINE_Data)
                                     row += 1
 
@@ -528,8 +645,12 @@ class CashBurnReportWizard(models.Model):
                                     STYLE_LINE_Data)
                     col += 1
                     if debit_lines.analytic_account_id:
+                        if debit_lines.analytic_account_id.code:
+                            analytic_name = debit_lines.analytic_account_id.code + " " + debit_lines.analytic_account_id.name
+                        else:
+                            analytic_name = debit_lines.analytic_account_id.name
                         worksheet.write(row, col,
-                                        debit_lines.analytic_account_id.name,
+                                        analytic_name,
                                         STYLE_LINE_Data)
                     else:
                         worksheet.write(row, col, '',
@@ -537,8 +658,12 @@ class CashBurnReportWizard(models.Model):
 
                     col += 1
                     if debit_lines.project_site_id:
+                        if debit_lines.project_site_id.code:
+                            project_site_name = debit_lines.project_site_id.code + " " + debit_lines.project_site_id.name
+                        else:
+                            project_site_name = debit_lines.project_site_id.name
                         worksheet.write(row, col,
-                                        debit_lines.project_site_id.name,
+                                        project_site_name,
                                         STYLE_LINE_Data)
                     else:
                         worksheet.write(row, col, '',
@@ -620,16 +745,24 @@ class CashBurnReportWizard(models.Model):
                                 col += 1
 
                                 if move_lines.analytic_account_id:
+                                    if move_lines.analytic_account_id.code:
+                                        analytic_name = move_lines.analytic_account_id.code + " " + move_lines.analytic_account_id.name
+                                    else:
+                                        analytic_name = move_lines.analytic_account_id.name
                                     worksheet.write(row, col,
-                                                    move_lines.analytic_account_id.name,
+                                                    analytic_name,
                                                     STYLE_LINE_Data)
                                 else:
                                     worksheet.write(row, col, '',
                                                     STYLE_LINE_Data)
                                 col += 1
                                 if move_lines.project_site_id:
+                                    if move_lines.project_site_id.code:
+                                        project_site_name = move_lines.project_site_id.code + " " + move_lines.project_site_id.name
+                                    else:
+                                        project_site_name = move_lines.project_site_id.name
                                     worksheet.write(row, col,
-                                                    move_lines.project_site_id.name,
+                                                    project_site_name,
                                                     STYLE_LINE_Data)
                                 else:
                                     worksheet.write(row, col, '',
@@ -651,19 +784,35 @@ class CashBurnReportWizard(models.Model):
                                     worksheet.write(row, col, '',
                                                     STYLE_LINE_Data)
                                 col += 1
-                                worksheet.write(row, col, debit_ln.credit,
+                                credit_amt = 0
+                                debit_amt = 0
+                                if move_ids.move_type in ['in_invoice',
+                                                          'out_refund',
+                                                          'in_receipt']:
+                                    amt_lines = move_ids.line_ids.filtered(
+                                        lambda x: x.debit != 0)
+                                    credit_amt = sum(amt_lines.mapped('credit'))
+                                    debit_amt = sum(amt_lines.mapped('debit'))
+                                else:
+                                    amt_lines = move_ids.line_ids.filtered(
+                                        lambda x: x.credit != 0)
+                                    credit_amt = sum(
+                                        amt_lines.mapped('credit'))
+                                    debit_amt = sum(
+                                        amt_lines.mapped('debit'))
+
+                                worksheet.write(row, col, credit_amt,
                                                 STYLE_LINE_Data)
                                 col += 1
-                                worksheet.write(row, col, debit_ln.debit,
+                                worksheet.write(row, col, debit_amt,
                                                 STYLE_LINE_Data)
                                 col += 1
                                 worksheet.write(row, col,
-                                                abs(debit_ln.debit) + abs(
-                                                    debit_ln.credit),
+                                                abs(debit_amt) + abs(
+                                                    credit_amt),
                                                 STYLE_LINE_Data)
                                 row += 1
                             else:
-                                print("kkkkkkkkkkk")
                                 for mv_line in move_lines:
                                     col = 0
                                     if line.date:
@@ -704,16 +853,24 @@ class CashBurnReportWizard(models.Model):
                                     col += 1
 
                                     if mv_line.analytic_account_id:
+                                        if mv_line.analytic_account_id.code:
+                                            analytic_name = mv_line.analytic_account_id.code + " " + mv_line.analytic_account_id.name
+                                        else:
+                                            analytic_name = mv_line.analytic_account_id.name
                                         worksheet.write(row, col,
-                                                        mv_line.analytic_account_id.name,
+                                                        analytic_name,
                                                         STYLE_LINE_Data)
                                     else:
                                         worksheet.write(row, col, '',
                                                         STYLE_LINE_Data)
                                     col += 1
                                     if mv_line.project_site_id:
+                                        if mv_line.project_site_id.code:
+                                            project_site_name = mv_line.project_site_id.code + " " + mv_line.project_site_id.name
+                                        else:
+                                            project_site_name = mv_line.project_site_id.name
                                         worksheet.write(row, col,
-                                                        mv_line.project_site_id.name,
+                                                        project_site_name,
                                                         STYLE_LINE_Data)
                                     else:
                                         worksheet.write(row, col, '',
@@ -735,16 +892,42 @@ class CashBurnReportWizard(models.Model):
                                         worksheet.write(row, col, '',
                                                         STYLE_LINE_Data)
                                     col += 1
+                                    credit_amt = 0
+                                    debit_amt = 0
+                                    if move.move_type in ['in_invoice',
+                                                          'out_refund',
+                                                          'in_receipt']:
+                                        credit_amt = 0
+                                        if mv_line.currency_id.id == self.env.company.currency_id.id:
+                                            debit_amt = mv_line.price_total
+                                        else:
+                                            debit_amt = mv_line.currency_id._convert(
+                                                from_amount=mv_line.price_total,
+                                                to_currency=self.env.company.currency_id,
+                                                company=self.env.company,
+                                                date=mv_line.move.date,
+                                            )
+                                    else:
+                                        debit_amt = 0
+                                        if mv_line.currency_id.id == self.env.company.currency_id.id:
+                                            credit_amt = mv_line.price_total
+                                        else:
+                                            credit_amt = mv_line.currency_id._convert(
+                                                from_amount=mv_line.price_total,
+                                                to_currency=self.env.company.currency_id,
+                                                company=self.env.company,
+                                                date=mv_line.move.date,
+                                            )
                                     worksheet.write(row, col,
-                                                    debit_ln.credit,
+                                                    credit_amt,
                                                     STYLE_LINE_Data)
                                     col += 1
-                                    worksheet.write(row, col, debit_ln.debit,
+                                    worksheet.write(row, col, debit_amt,
                                                     STYLE_LINE_Data)
                                     col += 1
                                     worksheet.write(row, col,
-                                                    abs(debit_ln.debit) + abs(
-                                                        debit_ln.credit),
+                                                    abs(debit_amt) + abs(
+                                                        credit_amt),
                                                     STYLE_LINE_Data)
                                     row += 1
 
@@ -791,16 +974,24 @@ class CashBurnReportWizard(models.Model):
                                                     STYLE_LINE_Data)
                                     col += 1
                                     if move_lines.analytic_account_id:
+                                        if move_lines.analytic_account_id.code:
+                                            analytic_name = move_lines.analytic_account_id.code + " " + move_lines.analytic_account_id.name
+                                        else:
+                                            analytic_name = move_lines.analytic_account_id.name
                                         worksheet.write(row, col,
-                                                        move_lines.analytic_account_id.name,
+                                                        analytic_name,
                                                         STYLE_LINE_Data)
                                     else:
                                         worksheet.write(row, col, '',
                                                         STYLE_LINE_Data)
                                     col += 1
                                     if move_lines.project_site_id:
+                                        if move_lines.project_site_id.code:
+                                            project_site_name = move_lines.project_site_id.code + " " + move_lines.project_site_id.name
+                                        else:
+                                            project_site_name = move_lines.project_site_id.name
                                         worksheet.write(row, col,
-                                                        move_lines.project_site_id.name,
+                                                        project_site_name,
                                                         STYLE_LINE_Data)
                                     else:
                                         worksheet.write(row, col, '',
@@ -822,16 +1013,35 @@ class CashBurnReportWizard(models.Model):
                                         worksheet.write(row, col, '',
                                                         STYLE_LINE_Data)
                                     col += 1
+                                    credit_amt = 0
+                                    debit_amt = 0
+                                    if move.move_type in ['in_invoice',
+                                                          'out_refund',
+                                                          'in_receipt']:
+                                        amt_lines = move.line_ids.filtered(
+                                            lambda x: x.debit != 0)
+                                        credit_amt = sum(
+                                            amt_lines.mapped('credit'))
+                                        debit_amt = sum(
+                                            amt_lines.mapped('debit'))
+                                    else:
+                                        amt_lines = move.line_ids.filtered(
+                                            lambda x: x.credit != 0)
+                                        credit_amt = sum(
+                                            amt_lines.mapped('credit'))
+                                        debit_amt = sum(
+                                            amt_lines.mapped('debit'))
+
                                     worksheet.write(row, col,
-                                                    debit_ln.credit,
+                                                    credit_amt,
                                                     STYLE_LINE_Data)
                                     col += 1
-                                    worksheet.write(row, col, debit_ln.debit,
+                                    worksheet.write(row, col, debit_amt,
                                                     STYLE_LINE_Data)
                                     col += 1
                                     worksheet.write(row, col,
-                                                    abs(debit_ln.debit) + abs(
-                                                        debit_ln.credit),
+                                                    abs(debit_amt) + abs(
+                                                        credit_amt),
                                                     STYLE_LINE_Data)
                                     row += 1
                                 else:
@@ -874,16 +1084,24 @@ class CashBurnReportWizard(models.Model):
                                                         STYLE_LINE_Data)
                                         col += 1
                                         if mv_line.analytic_account_id:
+                                            if mv_line.analytic_account_id.code:
+                                                analytic_name = mv_line.analytic_account_id.code + " " + mv_line.analytic_account_id.name
+                                            else:
+                                                analytic_name = mv_line.analytic_account_id.name
                                             worksheet.write(row, col,
-                                                            mv_line.analytic_account_id.name,
+                                                            analytic_name,
                                                             STYLE_LINE_Data)
                                         else:
                                             worksheet.write(row, col, '',
                                                             STYLE_LINE_Data)
                                         col += 1
                                         if mv_line.project_site_id:
+                                            if mv_line.project_site_id.code:
+                                                project_site_name = mv_line.project_site_id.code + " " + mv_line.project_site_id.name
+                                            else:
+                                                project_site_name = mv_line.project_site_id.name
                                             worksheet.write(row, col,
-                                                            mv_line.project_site_id.name,
+                                                            project_site_name,
                                                             STYLE_LINE_Data)
                                         else:
                                             worksheet.write(row, col, '',
@@ -905,17 +1123,44 @@ class CashBurnReportWizard(models.Model):
                                             worksheet.write(row, col, '',
                                                             STYLE_LINE_Data)
                                         col += 1
+                                        credit_amt = 0
+                                        debit_amt = 0
+                                        if move.move_type in ['in_invoice',
+                                                              'out_refund',
+                                                              'in_receipt']:
+                                            credit_amt = 0
+                                            if mv_line.currency_id.id == self.env.company.currency_id.id:
+                                                debit_amt = mv_line.price_total
+                                            else:
+                                                debit_amt = mv_line.currency_id._convert(
+                                                    from_amount=mv_line.price_total,
+                                                    to_currency=self.env.company.currency_id,
+                                                    company=self.env.company,
+                                                    date=mv_line.move.date,
+                                                )
+                                        else:
+                                            debit_amt = 0
+                                            if mv_line.currency_id.id == self.env.company.currency_id.id:
+                                                credit_amt = mv_line.price_total
+                                            else:
+                                                credit_amt = mv_line.currency_id._convert(
+                                                    from_amount=mv_line.price_total,
+                                                    to_currency=self.env.company.currency_id,
+                                                    company=self.env.company,
+                                                    date=mv_line.move.date,
+                                                )
+
                                         worksheet.write(row, col,
-                                                        debit_ln.credit,
+                                                        credit_amt,
                                                         STYLE_LINE_Data)
                                         col += 1
                                         worksheet.write(row, col,
-                                                        debit_ln.debit,
+                                                        debit_amt,
                                                         STYLE_LINE_Data)
                                         col += 1
                                         worksheet.write(row, col,
-                                                        abs(debit_ln.debit) + abs(
-                                                            debit_ln.credit),
+                                                        abs(debit_amt) + abs(
+                                                            credit_amt),
                                                         STYLE_LINE_Data)
                                         row += 1
 
@@ -949,8 +1194,12 @@ class CashBurnReportWizard(models.Model):
                                         STYLE_LINE_Data)
                         col += 1
                         if debit_ln.analytic_account_id:
+                            if debit_ln.analytic_account_id.code:
+                                analytic_name = debit_ln.analytic_account_id.code + " " + debit_ln.analytic_account_id.name
+                            else:
+                                analytic_name = debit_ln.analytic_account_id.name
                             worksheet.write(row, col,
-                                            debit_ln.analytic_account_id.name,
+                                            analytic_name,
                                             STYLE_LINE_Data)
                         else:
                             worksheet.write(row, col, '',
@@ -958,8 +1207,12 @@ class CashBurnReportWizard(models.Model):
 
                         col += 1
                         if debit_ln.project_site_id:
+                            if debit_ln.project_site_id.code:
+                                project_site_name = debit_ln.project_site_id.code + " " + debit_ln.project_site_id.name
+                            else:
+                                project_site_name = debit_ln.project_site_id.name
                             worksheet.write(row, col,
-                                            debit_ln.project_site_id.name,
+                                            project_site_name,
                                             STYLE_LINE_Data)
                         else:
                             worksheet.write(row, col, '',
