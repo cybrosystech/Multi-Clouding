@@ -366,7 +366,7 @@ class CashBurnReportWizard(models.Model):
                                             from_amount=mv_line.price_total,
                                             to_currency=self.env.company.currency_id,
                                             company=self.env.company,
-                                            date=mv_line.move.date,
+                                            date=mv_line.move_id.date,
                                         )
                                 else:
                                     debit_amt = 0
@@ -377,7 +377,7 @@ class CashBurnReportWizard(models.Model):
                                             from_amount=mv_line.price_total,
                                             to_currency=self.env.company.currency_id,
                                             company=self.env.company,
-                                            date=mv_line.move.date,
+                                            date=mv_line.move_id.date,
                                         )
                                 worksheet.write(row, col, credit_amt,
                                                 STYLE_LINE_Data)
@@ -590,7 +590,7 @@ class CashBurnReportWizard(models.Model):
                                                 from_amount=mv_line.price_total,
                                                 to_currency=self.env.company.currency_id,
                                                 company=self.env.company,
-                                                date=mv_line.move.date,
+                                                date=mv_line.move_id.date,
                                             )
                                     else:
                                         debit_amt = 0
@@ -601,7 +601,7 @@ class CashBurnReportWizard(models.Model):
                                                 from_amount=mv_line.price_total,
                                                 to_currency=self.env.company.currency_id,
                                                 company=self.env.company,
-                                                date=mv_line.move.date,
+                                                date=mv_line.move_id.date,
                                             )
                                     worksheet.write(row, col,
                                                     credit_amt,
@@ -905,7 +905,7 @@ class CashBurnReportWizard(models.Model):
                                                 from_amount=mv_line.price_total,
                                                 to_currency=self.env.company.currency_id,
                                                 company=self.env.company,
-                                                date=mv_line.move.date,
+                                                date=mv_line.move_id.date,
                                             )
                                     else:
                                         debit_amt = 0
@@ -916,7 +916,7 @@ class CashBurnReportWizard(models.Model):
                                                 from_amount=mv_line.price_total,
                                                 to_currency=self.env.company.currency_id,
                                                 company=self.env.company,
-                                                date=mv_line.move.date,
+                                                date=mv_line.move_id.date,
                                             )
                                     worksheet.write(row, col,
                                                     credit_amt,
@@ -1136,7 +1136,7 @@ class CashBurnReportWizard(models.Model):
                                                     from_amount=mv_line.price_total,
                                                     to_currency=self.env.company.currency_id,
                                                     company=self.env.company,
-                                                    date=mv_line.move.date,
+                                                    date=mv_line.move_id.date,
                                                 )
                                         else:
                                             debit_amt = 0
@@ -1147,7 +1147,7 @@ class CashBurnReportWizard(models.Model):
                                                     from_amount=mv_line.price_total,
                                                     to_currency=self.env.company.currency_id,
                                                     company=self.env.company,
-                                                    date=mv_line.move.date,
+                                                    date=mv_line.move_id.date,
                                                 )
 
                                         worksheet.write(row, col,
