@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="cash_burn_report_wizard_view_form" model="ir.ui.view">
+        <field name="name">Tasc Cash Burn Report wizard view</field>
+        <field name="model">cash.burn.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Report Options">
+                <group>
+                    <group>
+                        <field name="company_id"/>
+                        <field name="end_date"/>
+                    </group>
+                    <group>
+                        <field name="start_date"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="print_report_xlsx" string="PRINT"
+                            type="object"
+                            default_focus="1" class="oe_highlight"/>
+                    <button string="Cancel" class="btn btn-default"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_cash_burn_report_wizard"
+            model="ir.actions.act_window">
+        <field name="name">Tasc Cash Burn Report</field>
+        <field name="res_model">cash.burn.report.wizard</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+    <menuitem id="menu_cash_burn_report"
+              name="Tasc Cash Burn Report"
+              parent="cash_flow_statement_report.tasc_dynamic_reports"
+              action="action_cash_burn_report_wizard"/>
+</odoo>
