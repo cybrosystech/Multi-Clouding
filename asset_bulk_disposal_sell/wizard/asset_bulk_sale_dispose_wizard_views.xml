@@ -19,6 +19,8 @@
                             <field name="to_date"/>
                             <field name="disposal_date"/>
                             <field name="loss_account_id"/>
+                            <field name="asset_model_selected"
+                                   readonly="1"/>
                         </group>
                     </group>
                     <footer>
