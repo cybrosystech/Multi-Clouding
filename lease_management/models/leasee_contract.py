@@ -85,7 +85,8 @@ class LeaseeContract(models.Model):
                                index=True)
 
     leasee_currency_id = fields.Many2one(comodel_name="res.currency", string="",
-                                         required=True, )
+                                         required=True, default=lambda
+            self: self.env.company.currency_id)
     asset_name = fields.Char(string="", default="", required=False, )
     asset_description = fields.Text(string="", default="", required=False, )
     initial_direct_cost = fields.Float(copy=True, tracking=True)
@@ -171,7 +172,7 @@ class LeaseeContract(models.Model):
                                       string="Project/Site",
                                       domain=[('analytic_account_type', '=',
                                                'project_site')],
-                                      required=False, )
+                                      required=True, )
     parent_id = fields.Many2one(comodel_name="leasee.contract", string="",
                                 required=False, copy=False, index=True)
     child_ids = fields.One2many(comodel_name="leasee.contract",

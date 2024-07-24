@@ -14,18 +14,28 @@ class LeaseePeriodExtend(models.TransientModel):
     _name = 'leasee.period.extend'
     _description = 'Leasee Period Extend'
 
-    leasee_contract_id = fields.Many2one(comodel_name="leasee.contract", string="", required=False,ondelete='cascade' )
-    new_contract_period = fields.Integer(string="Extended Contract Period", default=1, required=True, )
-    estimated_cost_dismantling = fields.Float(string="", default=0.0, required=False, )
+    leasee_contract_id = fields.Many2one(comodel_name="leasee.contract",
+                                         string="", required=False,
+                                         ondelete='cascade')
+    new_contract_period = fields.Integer(string="Extended Contract Period",
+                                         default=1, required=True, )
+    estimated_cost_dismantling = fields.Float(string="", default=0.0,
+                                              required=False, )
     incentives_received = fields.Float(string="", default=0.0, required=False, )
-    incentives_received_type = fields.Selection(default="receivable", selection=[('receivable', 'Receivable'), ('rent_free', 'Rent Free'), ], required=True, )
+    incentives_received_type = fields.Selection(default="receivable",
+                                                selection=[('receivable',
+                                                            'Receivable'), (
+                                                           'rent_free',
+                                                           'Rent Free'), ],
+                                                required=True, )
     initial_direct_cost = fields.Float(string="", default=0.0, required=False, )
     installment_amount = fields.Float(string="", default=0.0, required=False, )
     increasement_rate = fields.Float(default=0, required=False, )
     increasement_frequency = fields.Integer(default=1, required=False, )
     inception_date = fields.Date(default=lambda self: fields.Datetime.now(),
                                  required=False, )
-    security_amount = fields.Float(string="Security Amount", help="Security Amount")
+    security_amount = fields.Float(string="Security Amount",
+                                   help="Security Amount")
     interest_rate = fields.Float(string="Interest Rate %", default=0.0,
                                  required=False, digits=(16, 5), tracking=True)
 
@@ -71,7 +81,8 @@ class LeaseePeriodExtend(models.TransientModel):
             new_contract = contract.copy({
                 'name': contract.name,
                 'inception_date': self.inception_date,
-                'commencement_date': contract.estimated_ending_date + relativedelta(days=1),
+                'commencement_date': contract.estimated_ending_date + relativedelta(
+                    days=1),
                 'installment_amount': self.installment_amount,
                 'lease_contract_period': self.new_contract_period,
                 'parent_id': contract.id,
@@ -86,6 +97,8 @@ class LeaseePeriodExtend(models.TransientModel):
                 'security_amount': self.security_amount,
                 'security_prepaid_account': contract.security_prepaid_account.id,
                 'interest_rate': self.interest_rate,
+                'useful_life': self.new_contract_period,
+
             })
         else:
             new_contract = contract.copy({
@@ -108,12 +121,14 @@ class LeaseePeriodExtend(models.TransientModel):
                 'security_amount': self.security_amount,
                 'security_prepaid_account': contract.security_prepaid_account.id,
                 'interest_rate': self.interest_rate,
+                'useful_life': self.new_contract_period,
             })
         contract.state = 'extended'
         for leasor in new_contract.multi_leasor_ids:
             if leasor.type != 'percentage':
-                percentage = leasor.amount/contract.installment_amount*100
-                new_amount = new_contract.installment_amount*(percentage/100)
+                percentage = leasor.amount / contract.installment_amount * 100
+                new_amount = new_contract.installment_amount * (
+                            percentage / 100)
                 leasor.amount = new_amount
 
         new_contract.action_activate()
@@ -132,7 +147,7 @@ class LeaseePeriodExtend(models.TransientModel):
             'project_site_id': contract.project_site_id.id,
             'type_id': contract.type_id.id,
             'location_id': contract.location_id.id,
-        }),(0, 0, {
+        }), (0, 0, {
             'name': 'Extend contract number %s' % contract.name,
             'account_id': contract.lease_liability_account_id.id,
             'debit': 0,
@@ -159,7 +174,8 @@ class LeaseePeriodExtend(models.TransientModel):
     def update_asset_value(self, new_value):
         contract = self.leasee_contract_id
         asset = contract.asset_id
-        new_period = (self.new_contract_period) * (1 if contract.lease_contract_period_type == 'months' else 12)
+        new_period = (self.new_contract_period) * (
+            1 if contract.lease_contract_period_type == 'months' else 12)
         self.env['asset.modify'].create({
             'name': "Extend Leasee Contract",
             'date': contract.estimated_ending_date + relativedelta(days=1),

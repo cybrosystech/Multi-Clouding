@@ -2,7 +2,8 @@
 <odoo>
     <record id="inherit_view_leasee_contract_template_form_security"
             model="ir.ui.view">
-        <field name="name">leasee.contract.template.form.inherit.security</field>
+        <field name="name">leasee.contract.template.form.inherit.security
+        </field>
         <field name="model">leasee.contract</field>
         <field name="inherit_id"
                ref="lease_management.view_leasee_contract_form"/>
@@ -24,11 +25,41 @@
                 <field name="security_amount"/>
                 <field name="security_advance_bool" invisible="1"/>
                 <field name="security_button_bool" invisible="1"/>
+                <field name="sd_date_same_as_lease"/>
+                <field name="sd_date"
+                       invisible="sd_date_same_as_lease == 'yes' or sd_date_same_as_lease == False"
+                       required="sd_date_same_as_lease == 'no'"/>
+                <field name="sd_lessor_name_same_as_lease"/>
+                <field name="sd_leasor" invisible="is_new_sd_leasor_visible == False"
+                       required="sd_lessor_name_same_as_lease == 'no'"/>
+                <field name="is_new_sd_leasor_visible" invisible="1"/>
+                <field name="is_new_sd_leasor_ids_visible" invisible="1"/>
             </field>
             <field name="asset_model_id" position="after">
                 <field name="security_prepaid_account"/>
                 <field name="security_deferred_account"/>
             </field>
+            <xpath expr="//form/sheet/notebook" position="inside">
+                <page string="SD Leasors"
+                      invisible="is_new_sd_leasor_ids_visible == False">
+                    <field name="new_sd_leasor_ids"
+                           readonly="state != 'draft'">
+                        <tree editable="bottom">
+                            <field name="leasee_contract_id" invisible="1" column_invisible="1"/>
+                            <field name="partner_id"/>
+                            <field name="type"/>
+                            <field name="amount"
+                                   readonly="type != 'amount'"
+                                   required="type == 'amount'"/>
+                            <field name="percentage"
+                                   invisible="type != 'percentage'"
+                                   required="type == 'percentage'"/>
+                        </tree>
+                    </field>
+                </page>
+
+
+            </xpath>
         </field>
     </record>
 </odoo>
