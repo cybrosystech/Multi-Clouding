@@ -26,8 +26,13 @@ class AssetBulkSaleDisposeWizard(models.Model):
                                       domain="[('deprecated', '=', False), ('company_id', '=', company_id)]",
                                       help="Account used to write the journal item in case of gain",
                                       readonly=False)
+    asset_model_selected = fields.Char('Asset Models')
 
     def action_bulk_sale_dispose(self):
+        asset_models_to_remove = self.env['account.asset'].search(
+            ['|', '|', ('name', '=', 'Ground Lease'),
+             ('name', '=', 'Office Equipments'),
+             ('name', '=', 'FireFight System')])
         if self.limit != 0:
             if self.company_id and self.state and self.from_date and self.to_date:
                 items = self.env['account.asset'].search(
@@ -37,14 +42,18 @@ class AssetBulkSaleDisposeWizard(models.Model):
                      ('acquisition_date', '<=', self.to_date),
                      ('state', '!=', 'model'), ('state', '!=', 'model'),
                      ('leasee_contract_ids', '=', False),
-                     ('parent_id', '=', False)], limit=self.limit)
+                     ('parent_id', '=', False),
+                     ('model_id', 'not in', asset_models_to_remove.ids)],
+                    limit=self.limit)
             elif self.company_id and self.state and self.from_date:
                 items = self.env['account.asset'].search(
                     [('state', '=', self.state),
                      ('company_id', '=', self.company_id.id),
                      ('acquisition_date', '>=', self.from_date),
                      ('leasee_contract_ids', '=', False),
-                     ('state', '!=', 'model'), ('parent_id', '=', False)],
+                     ('state', '!=', 'model'), ('parent_id', '=', False),
+                     ('model_id', 'not in', asset_models_to_remove.ids)
+                     ],
                     limit=self.limit)
             elif self.company_id and self.state and self.to_date:
                 items = self.env['account.asset'].search(
@@ -52,20 +61,26 @@ class AssetBulkSaleDisposeWizard(models.Model):
                      ('company_id', '=', self.company_id.id),
                      ('acquisition_date', '<=', self.to_date),
                      ('leasee_contract_ids', '=', False),
-                     ('state', '!=', 'model'), ('parent_id', '=', False)],
+                     ('state', '!=', 'model'), ('parent_id', '=', False),
+                     ('model_id', 'not in', asset_models_to_remove.ids)
+                     ],
                     limit=self.limit)
             elif self.company_id and self.state:
                 items = self.env['account.asset'].search(
                     [('state', '=', self.state),
                      ('company_id', '=', self.company_id.id),
                      ('leasee_contract_ids', '=', False),
-                     ('state', '!=', 'model'), ('parent_id', '=', False)],
+                     ('state', '!=', 'model'), ('parent_id', '=', False),
+                     ('model_id', 'not in', asset_models_to_remove.ids)
+                     ],
                     limit=self.limit)
             else:
                 items = self.env['account.asset'].search(
                     [('company_id', '=', self.company_id.id),
                      ('leasee_contract_ids', '=', False),
-                     ('state', '!=', 'model'), ('parent_id', '=', False)],
+                     ('state', '!=', 'model'), ('parent_id', '=', False),
+                     ('model_id', 'not in', asset_models_to_remove.ids)
+                     ],
                     limit=self.limit)
         else:
             if self.company_id and self.state and self.from_date and self.to_date:
@@ -76,32 +91,42 @@ class AssetBulkSaleDisposeWizard(models.Model):
                      ('acquisition_date', '<=', self.to_date),
                      ('leasee_contract_ids', '=', False),
                      ('state', '!=', 'model'), ('state', '!=', 'model'),
-                     ('parent_id', '=', False)])
+                     ('parent_id', '=', False),
+                     ('model_id', 'not in', asset_models_to_remove.ids)
+                     ])
             elif self.company_id and self.state and self.from_date:
                 items = self.env['account.asset'].search(
                     [('state', '=', self.state),
                      ('company_id', '=', self.company_id.id),
                      ('leasee_contract_ids', '=', False),
                      ('acquisition_date', '>=', self.from_date),
-                     ('state', '!=', 'model'), ('parent_id', '=', False)])
+                     ('state', '!=', 'model'), ('parent_id', '=', False),
+                     ('model_id', 'not in', asset_models_to_remove.ids)
+                     ])
             elif self.company_id and self.state and self.to_date:
                 items = self.env['account.asset'].search(
                     [('state', '=', self.state),
                      ('company_id', '=', self.company_id.id),
                      ('acquisition_date', '<=', self.to_date),
                      ('leasee_contract_ids', '=', False),
-                     ('state', '!=', 'model'), ('parent_id', '=', False)])
+                     ('state', '!=', 'model'), ('parent_id', '=', False),
+                     ('model_id', 'not in', asset_models_to_remove.ids)
+                     ])
             elif self.company_id and self.state:
                 items = self.env['account.asset'].search(
                     [('state', '=', self.state),
                      ('leasee_contract_ids', '=', False),
                      ('company_id', '=', self.company_id.id),
-                     ('state', '!=', 'model'), ('parent_id', '=', False)])
+                     ('state', '!=', 'model'), ('parent_id', '=', False),
+                     ('model_id', 'not in', asset_models_to_remove.ids)
+                     ])
             else:
                 items = self.env['account.asset'].search(
                     [('company_id', '=', self.company_id.id),
                      ('leasee_contract_ids', '=', False),
-                     ('state', '!=', 'model'), ('parent_id', '=', False)])
+                     ('state', '!=', 'model'), ('parent_id', '=', False),
+                     ('model_id', 'not in', asset_models_to_remove.ids)
+                     ])
         abc = []
         for rec in items:
             if rec.leasee_contract_ids:
@@ -136,37 +161,59 @@ class AssetBulkSaleDisposeWizard(models.Model):
 
     @api.onchange('from_date', 'to_date', 'company_id', 'state')
     def onchange_from_value(self):
+        asset_models_to_remove = self.env['account.asset'].search(
+            ['|', '|', ('name', '=', 'Ground Lease'),
+             ('name', '=', 'Office Equipments'),
+             ('name', '=', 'FireFight System')])
         if self.company_id and self.state and self.from_date and self.to_date:
-            self.records = self.env['account.asset'].search_count(
+            records = self.env['account.asset'].search(
                 [('state', '=', self.state),
                  ('company_id', '=', self.company_id.id),
                  ('acquisition_date', '>=', self.from_date),
                  ('acquisition_date', '<=', self.to_date),
                  ('leasee_contract_ids', '=', False),
                  ('state', '!=', 'model'), ('state', '!=', 'model'),
-                 ('parent_id', '=', False)])
+                 ('parent_id', '=', False),('model_id', 'not in', asset_models_to_remove.ids)
+                 ])
+            self.records = len(records.ids)
+            self.asset_model_selected = records.mapped('model_id.name')
         elif self.company_id and self.state and self.from_date:
-            self.records = self.env['account.asset'].search_count(
+            records = self.env['account.asset'].search(
                 [('state', '=', self.state),
                  ('company_id', '=', self.company_id.id),
                  ('acquisition_date', '>=', self.from_date),
                  ('leasee_contract_ids', '=', False),
-                 ('state', '!=', 'model'), ('parent_id', '=', False)])
+                 ('state', '!=', 'model'), ('parent_id', '=', False),
+                 ('model_id', 'not in', asset_models_to_remove.ids)
+                 ])
+            self.records = len(records.ids)
+            self.asset_model_selected = records.mapped('model_id.name')
         elif self.company_id and self.state and self.to_date:
-            self.records = self.env['account.asset'].search_count(
+            records = self.env['account.asset'].search(
                 [('state', '=', self.state),
                  ('company_id', '=', self.company_id.id),
                  ('acquisition_date', '<=', self.to_date),
                  ('leasee_contract_ids', '=', False),
-                 ('state', '!=', 'model'), ('parent_id', '=', False)])
+                 ('state', '!=', 'model'), ('parent_id', '=', False),
+                 ('model_id', 'not in', asset_models_to_remove.ids)
+                 ])
+            self.records = len(records.ids)
+            self.asset_model_selected = records.mapped('model_id.name')
         elif self.company_id and self.state:
-            self.records = self.env['account.asset'].search_count(
+            records = self.env['account.asset'].search(
                 [('state', '=', self.state),
                  ('company_id', '=', self.company_id.id),
                  ('leasee_contract_ids', '=', False),
-                 ('state', '!=', 'model'), ('parent_id', '=', False)])
+                 ('state', '!=', 'model'), ('parent_id', '=', False),
+                 ('model_id', 'not in', asset_models_to_remove.ids)
+                 ])
+            self.records = len(records.ids)
+            self.asset_model_selected = records.mapped('model_id.name')
         else:
-            self.records = self.env['account.asset'].search_count(
+            records = self.env['account.asset'].search(
                 [('company_id', '=', self.company_id.id),
                  ('leasee_contract_ids', '=', False),
-                 ('state', '!=', 'model'), ('parent_id', '=', False)])
+                 ('state', '!=', 'model'), ('parent_id', '=', False),
+                 ('model_id', 'not in', asset_models_to_remove.ids)])
+            self.records = len(records.ids)
+            self.asset_model_selected = records.mapped('model_id.name')

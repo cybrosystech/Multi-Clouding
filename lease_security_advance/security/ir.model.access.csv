@@ -1,2 +1,3 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_leasee_security_advance,leasee_security_advance,model_leasee_security_advance,,1,1,1,1
+access_sd_leasor_user,sd.leasor.user,model_sd_leasor,base.group_user,1,1,1,1
