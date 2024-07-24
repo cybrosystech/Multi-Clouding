@@ -3,6 +3,7 @@ from datetime import timedelta
 from odoo import models, fields, _, api
 from odoo.exceptions import ValidationError
 from odoo.tools.safe_eval import dateutil
+import dateutil.relativedelta as relativedelta
 
 
 class LeaseeContractInheritAdvance(models.Model):
@@ -15,7 +16,67 @@ class LeaseeContractInheritAdvance(models.Model):
     security_button_bool = fields.Boolean(default=False, copy=False)
     security_advance_id = fields.Many2one('leasee.security.advance', copy=False)
     security_deferred_account = fields.Many2one('account.account',
-                                                string="Security Deferred Account")
+                                                string="Security Deferred"
+                                                       " Account")
+    sd_date_same_as_lease = fields.Selection(string="SD Date same as Lease",
+                                             selection=[('yes', 'Yes'),
+                                                        ('no', 'No')],
+                                             copy=False,
+                                             default='yes')
+
+    sd_lessor_name_same_as_lease = fields.Selection(
+        string="SD Lessor name same as Lease",
+        selection=[('yes', 'Yes'), ('no', 'No')], copy=False, default='yes')
+    sd_date = fields.Date(string='SD Date',
+                          help="SD date for security advance bills.",
+                          copy=False)
+    sd_leasor = fields.Many2one('res.partner', string="SD Leasor",
+                                help="Leasor for security advance "
+                                     "bills.")
+    new_sd_leasor_ids = fields.One2many(comodel_name="sd.leasor",
+                                        inverse_name="leasee_contract_id",
+                                        string="", required=False, copy=False,
+                                        tracking=True)
+    is_new_sd_leasor_visible = fields.Boolean(string="Is new sd leasor visible",
+                                              compute='compute_is_new_sd_leasor_visible',
+                                              store=True)
+    is_new_sd_leasor_ids_visible = fields.Boolean(
+        string="Is new sd leasors visible",
+        compute='compute_is_new_sd_leasor_visible', store=True)
+
+    @api.depends('leasor_type', 'sd_lessor_name_same_as_lease')
+    def compute_is_new_sd_leasor_visible(self):
+        for rec in self:
+            if rec.sd_lessor_name_same_as_lease == 'no' and rec.leasor_type == 'single':
+                rec.is_new_sd_leasor_visible = True
+                rec.is_new_sd_leasor_ids_visible = False
+            elif rec.sd_lessor_name_same_as_lease == 'no' and rec.leasor_type == 'multi':
+                rec.is_new_sd_leasor_visible = False
+                rec.is_new_sd_leasor_ids_visible = True
+            else:
+                rec.is_new_sd_leasor_visible = False
+                rec.is_new_sd_leasor_ids_visible = False
+
+    @api.constrains('new_sd_leasor_ids')
+    def onsave_new_sd_leasor_ids(self):
+        if self.new_sd_leasor_ids:
+            percentage = 0
+            for leasor in self.new_sd_leasor_ids:
+                if leasor.type == 'percentage':
+                    percentage += leasor.percentage
+                else:
+                    percentage += (
+                            leasor.amount / self.installment_amount * 100)
+            if round(percentage, 3) != 100.0:
+                raise ValidationError(_('New Leasors Total must be 100%'))
+
+    @api.onchange('leasor_type')
+    def onchange_leasor_type(self):
+        if self.leasor_type == 'single':
+            if self.new_sd_leasor_ids:
+                self.new_sd_leasor_ids = [(5, 0, 0)]
+        else:
+            self.sd_leasor = False
 
     @api.onchange('leasee_template_id')
     def onchange_leasee_template_id(self):
@@ -66,32 +127,70 @@ class LeaseeContractInheritAdvance(models.Model):
             })
             rec.security_advance_id = advance_security_id.id
             instalment_date = []
+            if rec.sd_date:
+                invoice_date = rec.sd_date
+            else:
+                invoice_date = False
+
             for instalment in rec.installment_ids:
                 if instalment.date not in instalment_date:
                     if rec.leasor_type == 'single':
-                        rec.create_security_moves(instalment,
-                                                  advance_security_id,
-                                                  rec.security_amount,
-                                                  rec.vendor_id)
-                        instalment_date.append(instalment.date)
-                    else:
-                        for leasor in rec.multi_leasor_ids:
-                            partner = leasor.partner_id
-                            leasor_amount = leasor.amount / sum(
-                                rec.multi_leasor_ids.mapped(
-                                    'amount')) * rec.security_amount if leasor.type == 'amount' else leasor.percentage / sum(
-                                rec.multi_leasor_ids.mapped(
-                                    'percentage')) * rec.security_amount
+                        if rec.sd_lessor_name_same_as_lease == 'no':
                             rec.create_security_moves(instalment,
                                                       advance_security_id,
-                                                      leasor_amount,
-                                                      partner)
-                            instalment_date.append(instalment.date)
+                                                      rec.security_amount,
+                                                      rec.sd_leasor,
+                                                      invoice_date)
+                        else:
+                            rec.create_security_moves(instalment,
+                                                      advance_security_id,
+                                                      rec.security_amount,
+                                                      rec.vendor_id,
+                                                      invoice_date)
+                        instalment_date.append(instalment.date)
+                    else:
+                        if rec.sd_lessor_name_same_as_lease == 'no':
+                            for leasor in rec.new_sd_leasor_ids:
+                                partner = leasor.partner_id
+                                leasor_amount = leasor.amount / sum(
+                                    rec.multi_leasor_ids.mapped(
+                                        'amount')) * rec.security_amount if leasor.type == 'amount' else leasor.percentage / sum(
+                                    rec.multi_leasor_ids.mapped(
+                                        'percentage')) * rec.security_amount
+                                rec.create_security_moves(instalment,
+                                                          advance_security_id,
+                                                          leasor_amount,
+                                                          partner, invoice_date)
+                                instalment_date.append(instalment.date)
+                        else:
+                            for leasor in rec.multi_leasor_ids:
+                                partner = leasor.partner_id
+                                leasor_amount = leasor.amount / sum(
+                                    rec.multi_leasor_ids.mapped(
+                                        'amount')) * rec.security_amount if leasor.type == 'amount' else leasor.percentage / sum(
+                                    rec.multi_leasor_ids.mapped(
+                                        'percentage')) * rec.security_amount
+                                rec.create_security_moves(instalment,
+                                                          advance_security_id,
+                                                          leasor_amount,
+                                                          partner, invoice_date)
+                                instalment_date.append(instalment.date)
+                    if rec.sd_date and rec.sd_date_same_as_lease == 'no':
+                        if rec.lease_contract_period_type == 'years':
+                            if rec.payment_frequency_type == 'years':
+                                invoice_date = invoice_date + relativedelta.relativedelta(
+                                    years=1)
+                            else:
+                                invoice_date = invoice_date + relativedelta.relativedelta(
+                                    months=1)
+                        else:
+                            invoice_date = invoice_date + relativedelta.relativedelta(
+                                months=1)
             rec.security_advance_bool = True
             rec.security_button_bool = False
 
     def create_security_moves(self, instalment, advance_security_id, amount,
-                              partner):
+                              partner, invoice_date):
         if instalment.leasee_contract_id.lease_contract_period and instalment.leasee_contract_id.payment_frequency:
             total_contract_months = instalment.leasee_contract_id.lease_contract_period * (
                 1 if instalment.leasee_contract_id.lease_contract_period_type == 'months' else 12)
@@ -130,7 +229,7 @@ class LeaseeContractInheritAdvance(models.Model):
             'currency_id': self.leasee_currency_id.id,
             'ref': self.name + '- SD - ' + instalment.date.strftime(
                 '%d/%m/%Y'),
-            'invoice_date': instalment.date,
+            'invoice_date': invoice_date if invoice_date and self.sd_date_same_as_lease == 'no' else instalment.date,
             'invoice_date_due': instalment.date,
             'invoice_payment_term_id': self.env.ref(
                 'account.account_payment_term_immediate').id,
@@ -149,7 +248,7 @@ class LeaseeContractInheritAdvance(models.Model):
             [('leasee_contract_id', '=', self.id)])
         if advance_security_id:
             domain = [
-                ('lease_security_advance_id', '=', advance_security_id.id),
+                ('lease_security_advance_id', 'in', advance_security_id.ids),
                 ('move_type', 'in', ['in_invoice'])]
             view_tree = {
                 'name': _(' Vendor Bills '),
@@ -254,3 +353,17 @@ class LeaseeContractInheritAdvance(models.Model):
         schedule.update({
             'nextcall': date + timedelta(seconds=15)
         })
+
+
+class SDLeasor(models.Model):
+    _name = 'sd.leasor'
+    _description = 'New SD Leasor'
+
+    leasee_contract_id = fields.Many2one(comodel_name="leasee.contract",
+                                         ondelete='cascade')
+    partner_id = fields.Many2one(comodel_name="res.partner", required=True)
+    type = fields.Selection(default="percentage",
+                            selection=[('percentage', 'Percentage'),
+                                       ('amount', 'Amount'), ], required=True, )
+    amount = fields.Float(string="", default=0.0, required=False)
+    percentage = fields.Float(string="", default=100, required=False)

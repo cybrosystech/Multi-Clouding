@@ -85,7 +85,7 @@ class LeaseContractTemplate(models.Model):
                                       string="Project/Site",
                                       domain=[('analytic_account_type', '=',
                                                'project_site')],
-                                      required=False, )
+                                      required=True, )
     analytic_distribution = fields.Json()
 
     incentives_account_id = fields.Many2one(comodel_name="account.account",
