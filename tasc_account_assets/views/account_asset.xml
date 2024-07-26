@@ -13,6 +13,11 @@
                     <field name="sequence_number"
                     />
                 </xpath>
+                <xpath expr="//button[@name='set_to_cancelled']"
+                       position="replace">
+                    <button name="set_to_cancelled" string="Cancel Asset"
+                            type="object" invisible="1"/>
+                </xpath>
             </field>
         </record>
 
