@@ -102,7 +102,8 @@ class PaymentApproval(models.Model):
         payments = self.env['account.payment'].search(
             [('payment_approval_batch_id', '=', False),
              ('date', '>=', self.from_date), ('date', '<=', self.to_date),
-             ('company_id', '=', self.company_id.id)
+             ('company_id', '=', self.company_id.id),
+             ('payment_type', '=', 'outbound')
              ])
         for line in payments:
             usd_currency = self.env['res.currency'].search(
@@ -210,8 +211,17 @@ class PaymentApprovalLine(models.Model):
         return res
 
     def unlink(self):
-        if self.payment_id:
-            self.payment_id.payment_approval_batch_id = False
+        for record in self:
+            if record.payment_id:
+                record.payment_id.payment_approval_batch_id = False
+            parent = record.payment_approval_batch_id
+            if parent:
+                if parent.state in ['selected', 'in_approval']:
+                    # Add log message to the parent model
+                    message = 'Deleted the payment line for the payment ' + str(
+                        record.payment_id.name) + ' by :' + str(
+                        self.env.user.name)
+                    parent.message_post(body=message)
         super(PaymentApprovalLine, self).unlink()
 
     @api.depends('payment_amount', 'currency_id')

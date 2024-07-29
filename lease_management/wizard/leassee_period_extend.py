@@ -95,7 +95,8 @@ class LeaseePeriodExtend(models.TransientModel):
                 'increasement_frequency': self.increasement_frequency,
                 'company_id': self.env.company.id,
                 'security_amount': self.security_amount,
-                'security_prepaid_account': contract.security_prepaid_account.id,
+                'security_prepaid_account': contract.leasee_template_id.security_prepaid_account.id,
+                'security_deferred_account': contract.leasee_template_id.security_deferred_account.id,
                 'interest_rate': self.interest_rate,
                 'useful_life': self.new_contract_period,
 
@@ -119,7 +120,8 @@ class LeaseePeriodExtend(models.TransientModel):
                 'increasement_frequency': self.increasement_frequency,
                 'company_id': self.env.company.id,
                 'security_amount': self.security_amount,
-                'security_prepaid_account': contract.security_prepaid_account.id,
+                'security_prepaid_account': contract.leasee_template_id.security_prepaid_account.id,
+                'security_deferred_account': contract.leasee_template_id.security_deferred_account.id,
                 'interest_rate': self.interest_rate,
                 'useful_life': self.new_contract_period,
             })
