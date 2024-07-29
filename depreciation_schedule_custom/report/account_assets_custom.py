@@ -697,20 +697,34 @@ class AccountReport(models.Model):
     _inherit = 'account.report'
 
     def _init_options_buttons(self, options, previous_options=None):
-        options['buttons'] = [
-            {'name': _('PDF'), 'sequence': 10, 'action': 'export_file',
-             'action_param': 'export_to_pdf', 'file_export_type': _('PDF'),
-             'branch_allowed': True},
-            {'name': _('XLSX'), 'sequence': 20, 'action': 'export_file',
-             'action_param': 'export_to_xlsx', 'file_export_type': _('XLSX'),
-             'branch_allowed': True},
-            {'name': _('TASC XLSX'), 'sequence': 20, 'action': 'export_file',
-             'action_param': 'tasc_export_to_xlsx',
-             'file_export_type': _('XLSX'),
-             'branch_allowed': True},
-            {'name': _('Save'), 'sequence': 100,
-             'action': 'open_report_export_wizard'},
-        ]
+        if options["available_variants"][0][
+            "name"] == 'Tasc Depreciation Schedule':
+            options['buttons'] = [
+                {'name': _('PDF'), 'sequence': 10, 'action': 'export_file',
+                 'action_param': 'export_to_pdf', 'file_export_type': _('PDF'),
+                 'branch_allowed': True},
+                {'name': _('XLSX'), 'sequence': 20, 'action': 'export_file',
+                 'action_param': 'export_to_xlsx', 'file_export_type': _('XLSX'),
+                 'branch_allowed': True},
+                {'name': _('TASC XLSX'), 'sequence': 20, 'action': 'export_file',
+                 'action_param': 'tasc_export_to_xlsx',
+                 'file_export_type': _('XLSX'),
+                 'branch_allowed': True},
+                {'name': _('Save'), 'sequence': 100,
+                 'action': 'open_report_export_wizard'},
+            ]
+        else:
+            options['buttons'] = [
+                {'name': _('PDF'), 'sequence': 10, 'action': 'export_file',
+                 'action_param': 'export_to_pdf', 'file_export_type': _('PDF'),
+                 'branch_allowed': True},
+                {'name': _('XLSX'), 'sequence': 20, 'action': 'export_file',
+                 'action_param': 'export_to_xlsx',
+                 'file_export_type': _('XLSX'),
+                 'branch_allowed': True},
+                {'name': _('Save'), 'sequence': 100,
+                 'action': 'open_report_export_wizard'},
+            ]
 
     def split_list(self, lst, limit):
         return [lst[i:i + limit] for i in range(0, len(lst), limit)]
@@ -1166,6 +1180,7 @@ class AccountReport(models.Model):
         }
 
     def _inject_report_into_xlsx_sheet(self, options, workbook, sheet):
+        print("_inject_report_into_xlsx_sheetjjjjjjjjjjjjj")
         if options["available_variants"][0][
             "name"] == 'Tasc Depreciation Schedule':
             def write_with_colspan(sheet, x, y, value, colspan, style):
