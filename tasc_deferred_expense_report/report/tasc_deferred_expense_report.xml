@@ -94,7 +94,7 @@
             </record>
             <record id="tasc_deferred_expense_original_amount"
                     model="account.report.column">
-                <field name="name">Original AMount</field>
+                <field name="name">Original Amount</field>
 <!--                <field name="figure_type">monetary</field>-->
                 <field name="expression_label">original_amount</field>
             </record>
