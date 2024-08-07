@@ -2,7 +2,7 @@
 <odoo>
 
     <menuitem id="menu_action_account_report_budget_analysis"
-              name="Tasc Budget Analysis" action="action_account_report_tba"
+              name="TASC Budget Analysis" action="action_account_report_tba"
               parent="cash_flow_statement_report.tasc_dynamic_reports"
               groups="account.group_account_readonly"/>
 

@@ -2,7 +2,7 @@
 <odoo>
     <data>
         <record id="action_account_report_tba" model="ir.actions.client">
-            <field name="name">Tasc Budget Analysis</field>
+            <field name="name">TASC Budget Analysis</field>
             <field name="tag">account_report</field>
             <field name="context"
                    eval="{'report_id': ref('tasc_budget_analysis_report.tasc_budget_analysis_report')}"/>
