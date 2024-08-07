@@ -143,6 +143,22 @@ class AccountMoveReferenceInherit(models.Model):
                         'Vendor Bill')
             return res
 
+    def button_request_purchase_cycle(self):
+        journal = self.env['account.journal'].search([('name', '=',
+                                                       'Vendor Bills')],
+                                                     limit=1)
+        for record in self:
+            res = super(AccountMoveReferenceInherit,
+                        record).button_request_purchase_cycle()
+            for rec in journal:
+                if record.journal_id.id == rec.id:
+                    if not record.payment_reference:
+                        raise ValidationError(
+                            'please provide a Invoice no / payment reference for '
+                            'Vendor Bill')
+            return res
+
+
     def action_post(self):
         """inherit of the function from account. Move to check the validation of
         payment reference"""
