@@ -66,7 +66,7 @@ class LeaseeContractInheritAdvance(models.Model):
                     percentage += leasor.percentage
                 else:
                     percentage += (
-                            leasor.amount / self.installment_amount * 100)
+                            leasor.amount / self.security_amount * 100)
             if round(percentage, 3) != 100.0:
                 raise ValidationError(_('New Leasors Total must be 100%'))
 
@@ -152,11 +152,7 @@ class LeaseeContractInheritAdvance(models.Model):
                         if rec.sd_lessor_name_same_as_lease == 'no':
                             for leasor in rec.new_sd_leasor_ids:
                                 partner = leasor.partner_id
-                                leasor_amount = leasor.amount / sum(
-                                    rec.multi_leasor_ids.mapped(
-                                        'amount')) * rec.security_amount if leasor.type == 'amount' else leasor.percentage / sum(
-                                    rec.multi_leasor_ids.mapped(
-                                        'percentage')) * rec.security_amount
+                                leasor_amount = leasor.amount if leasor.type == 'amount' else (leasor.percentage/100 )* rec.security_amount
                                 rec.create_security_moves(instalment,
                                                           advance_security_id,
                                                           leasor_amount,
