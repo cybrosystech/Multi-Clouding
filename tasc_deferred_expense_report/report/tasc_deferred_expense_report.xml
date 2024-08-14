@@ -94,7 +94,7 @@
             </record>
             <record id="tasc_deferred_expense_original_amount"
                     model="account.report.column">
-                <field name="name">Original AMount</field>
+                <field name="name">Original Amount</field>
 <!--                <field name="figure_type">monetary</field>-->
                 <field name="expression_label">original_amount</field>
             </record>
@@ -118,7 +118,7 @@
                eval="{'report_id': ref('tasc_deferred_expense_report.tasc_deferred_expense_report')}"/>
     </record>
     <menuitem id="menu_action_tasc_deferred_expense_report"
-              name="TASC Deferred Expense Report"
+              name="TASC Deferred Expense"
               action="action_tasc_deferred_expense_report"
               parent="cash_flow_statement_report.tasc_dynamic_reports"/>
 </odoo>

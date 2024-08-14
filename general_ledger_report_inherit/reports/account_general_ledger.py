@@ -128,6 +128,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
                 already_present_result['credit'] += aml_result['credit']
                 already_present_result['balance'] += aml_result['balance']
                 already_present_result['amount_currency'] += aml_result['amount_currency']
+                already_present_result['date'] += aml_result['date']
             else:
                 account_result[aml_key][aml_result['column_group_key']] = aml_result
 

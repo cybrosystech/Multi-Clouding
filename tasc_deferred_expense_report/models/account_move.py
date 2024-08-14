@@ -32,6 +32,16 @@ class AccountMove(models.Model):
         else:
             res = super().request_approval_button()
 
+    def button_request_purchase_cycle(self):
+        for rec in self:
+            if any(not c.deferred_account_id and (
+                    c.deferred_start_date != False or c.deferred_end_date != False)
+                   for c in rec.invoice_line_ids):
+                raise ValidationError(
+                    _('Please set deferred account on invoice lines.'))
+            else:
+                res = super(AccountMove, rec).button_request_purchase_cycle()
+
     def _generate_deferred_entries(self):
         """
         Generates the deferred entries for the invoice.

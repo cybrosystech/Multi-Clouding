@@ -179,8 +179,6 @@ class PaymentApprovalLine(models.Model):
                                  related='payment_id.partner_id')
     currency_id = fields.Many2one('res.currency',
                                   related='payment_id.currency_id')
-    invoice_amount = fields.Float(string="Invoice Amount",
-                                  related='payment_id.invoice_amount')
     payment_amount = fields.Monetary(string="Payment Amount",
                                      related='payment_id.amount')
     payment_approval_batch_id = fields.Many2one('account.payment.approval',

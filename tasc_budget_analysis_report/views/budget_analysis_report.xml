@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="tasc_budget_analysis_report" model="account.report">
-        <field name="name">Tasc Budget Analysis</field>
+        <field name="name">TASC Budget Analysis</field>
         <field name="filter_unfold_all" eval="False"/>
         <field name="filter_date_range" eval="True"/>
         <field name="filter_journals" eval="False"/>
