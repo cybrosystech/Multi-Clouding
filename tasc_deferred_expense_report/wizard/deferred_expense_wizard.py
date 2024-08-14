@@ -148,10 +148,10 @@ class DeferredExpenseWizard(models.Model):
             l.name AS line_name,
             SUM(CASE WHEN l.parent_state = 'posted' THEN l.credit ELSE 0 END) AS sum_posted_credits,
             SUM(CASE WHEN l.parent_state not in ('posted','cancel') THEN l.credit ELSE 0 END) AS sum_unposted_credits,
-            SUM(l.credit) AS total_credits,
+            SUM(CASE WHEN l.parent_state not in ('cancel') THEN l.credit ELSE 0 END)  AS total_credits,
             COUNT(CASE WHEN l.parent_state = 'posted' THEN 1 END) AS count_posted,
             COUNT(CASE WHEN l.parent_state not in ('posted','cancel') THEN 1 END) AS count_unposted,
-            COUNT(*) AS total_count,
+            COUNT(CASE WHEN l.parent_state not in ('cancel') THEN 1 END) AS total_count,
             debit_ac.name AS debit_account_name,
             debit_ac.code AS debit_account_code,
             r.name AS partner_name,
@@ -201,8 +201,7 @@ class DeferredExpenseWizard(models.Model):
                 ac.code AS account_code,
                 SUM(CASE WHEN l.parent_state = 'posted' THEN l.credit ELSE 0 END) AS sum_posted_credits,
                 SUM(CASE WHEN l.parent_state not in ('posted','cancel') THEN l.credit ELSE 0 END) AS sum_unposted_credits,
-                SUM(l.credit) AS total_credits
-               
+                SUM(CASE WHEN l.parent_state not in ('cancel') THEN l.credit ELSE 0 END)  AS total_credits
             FROM 
                 account_move_line l
                 INNER JOIN account_account ac ON ac.id = l.account_id
