@@ -56,8 +56,6 @@
                                     <field name="usd_currency" invisible="1"
                                            column_invisible="1"/>
                                     <field name="currency_id"/>
-                                    <field name="invoice_amount"
-                                           sum="Total Invoice"/>
                                     <field name="payment_amount"
                                            string="Payment Amount"
                                            sum="Total Payment"/>
