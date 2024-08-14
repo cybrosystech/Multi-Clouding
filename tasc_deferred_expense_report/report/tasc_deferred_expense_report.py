@@ -186,13 +186,13 @@ class TascDeferredExpenseReport(models.AbstractModel):
             #                                            self.env.company,
             #                                            al["move_date"])
 
-            if al["posted_deferred_move_amount_total"] != None:
-                posted_amt = al["posted_deferred_move_amount_total"]
-
-            if al["deferred_move_amount_total"] != None:
-                tot_amt = al["deferred_move_amount_total"]
-
-            remaining_amount = tot_amt - posted_amt
+            # if al["posted_deferred_move_amount_total"] != None:
+            #     posted_amt = al["posted_deferred_move_amount_total"]
+            #
+            # if al["deferred_move_amount_total"] != None:
+            #     tot_amt = al["deferred_move_amount_total"]
+            #
+            # remaining_amount = tot_amt - posted_amt
 
             # Format the data
             columns_by_expr_label = {
@@ -201,17 +201,16 @@ class TascDeferredExpenseReport(models.AbstractModel):
                 "move_id": al["move_name"],
                 "project_site": al["project_site"],
                 "cost_center": al["cost_center"],
-                "deferred_start_date": al["start_date"],
-                "deferred_end_date": al["end_date"],
+                "deferred_start_date": al["deferred_start_date"],
+                "deferred_end_date": al["deferred_end_date"],
                 "currency": al["currency"],
-                "tot_period": al["posted_deferred_moves"] + al[
-                    "unposted_deferred_moves"],
-                "tot_period_posted": al["posted_deferred_moves"],
-                "tot_remining_period": al["unposted_deferred_moves"],
-                "original_amount": tot_amt,
-                "deferred_amount": posted_amt,
-                "remaining_amount": remaining_amount,
-                "expense_account_id": al["exp_account_name"],
+                "tot_period": al["total_count"] ,
+                "tot_period_posted": al["posted_count"],
+                "tot_remining_period": al["unposted_count"],
+                "original_amount": al["total_credits"],
+                "deferred_amount": al["posted_credits"],
+                "remaining_amount": al["unposted_credits"],
+                "expense_account_id": al["expense_account"],
             }
 
             lines.append(
@@ -335,173 +334,239 @@ class TascDeferredExpenseReport(models.AbstractModel):
             # analytical_query = 'AND aml.analytic_distribution ?| array[%(analytic_account_ids)s]'
             query_params['analytic_account_ids'] = analytic_account_ids
         lang = self.env.user.lang or get_lang(self.env).code
-        project_site_name = f"COALESCE(project_sites.name->>'{lang}', project_sites.name->>'en_US')" if \
+        project_site_name = f"COALESCE(project_site.name->>'{lang}', project_site.name->>'en_US')" if \
             self.pool[
-                'account.analytic.account'].name.translate else 'project_sites.name'
+                'account.analytic.account'].name.translate else 'project_site.name'
         cc_name = f"COALESCE(cc.name->>'{lang}', cc.name->>'en_US')" if \
             self.pool[
                 'account.analytic.account'].name.translate else 'cc.name'
         account_name = f"COALESCE(account.name->>'{lang}', account.name->>'en_US')" if \
             self.pool[
                 'account.account'].name.translate else 'account.name'
-        exp_account_name = f"COALESCE(exp_account.name->>'{lang}', exp_account.name->>'en_US')" if \
+        exp_account_name = f"COALESCE(ae.name->>'{lang}', ae.name->>'en_US')" if \
             self.pool[
-                'account.account'].name.translate else 'exp_account.name'
+                'account.account'].name.translate else 'ae.name'
+
+        # sql = f"""
+        #         SELECT
+        #         move.date as move_date,
+        #         move.amount_untaxed as amount_untaxed,
+        #         {account_name} as account_name,
+        #         account.id AS account_id,
+        #         move.name as move_name,
+        #         move.id as move_id,
+        #         aml.name as deferral_name,
+        #         aml.deferred_start_date as start_date,
+        #         aml.deferred_end_date as end_date,
+        #         {project_site_name} as project_site,
+        #         {cc_name} as cost_center,
+        #         currency.name as currency,
+        #         currency.id as currency_id,
+        #         count(
+        #             CASE
+        #                 WHEN aml.deferred_account_id IS NULL THEN
+        #                     (
+        #                         SELECT COUNT(*)
+        #                         FROM account_move_line aml2
+        #                         inner join account_move m on aml2.move_id = m.id
+        #                         WHERE aml2.move_id = amd.deferred_move_id and m.state='posted'
+        #                     )
+        #                 ELSE posted_deferred_move_amounts.deferred_move_id
+        #             END
+        #         ) as posted_deferred_moves,
+        #         abs(
+        #             sum(
+        #                 CASE
+        #                     WHEN aml.deferred_account_id IS NULL THEN
+        #                         (
+        #                             SELECT SUM(abs(aml2.credit))
+        #                             FROM account_move_line aml2
+        #                             inner join account_move m on aml2.move_id = m.id
+        #                             WHERE aml2.move_id = amd.deferred_move_id and m.state='posted'
+        #                         )
+        #                     ELSE posted_deferred_move_amounts.debit_total
+        #                 END
+        #             )
+        #         ) as posted_deferred_move_amount_total,
+        #         count(
+        #             CASE
+        #                 WHEN aml.deferred_account_id IS NULL THEN
+        #                     (
+        #                         SELECT COUNT(*)
+        #                         FROM account_move_line aml2
+        #                         WHERE aml2.move_id = amd.deferred_move_id
+        #                     )
+        #                 ELSE unposted_deferred_move_amounts.deferred_move_id
+        #             END
+        #         ) as unposted_deferred_moves,
+        #         abs(
+        #             sum(
+        #                 CASE
+        #                     WHEN aml.deferred_account_id IS NULL THEN
+        #                         (
+        #                             SELECT SUM(abs(aml2.credit))
+        #                             FROM account_move_line aml2
+        #                             WHERE aml2.move_id = amd.deferred_move_id
+        #                         )
+        #                     ELSE deferred_move_amounts.debit_total
+        #                 END
+        #             )
+        #         ) as deferred_move_amount_total,
+        #         {exp_account_name} as exp_account_name,
+        #         exp_account.id as exp_account
+        #     FROM account_move_deferred_rel AS amd
+        #     LEFT JOIN account_move move on move.id=amd.original_move_id
+        #     LEFT JOIN account_move_line aml ON aml.move_id = move.id
+        #     LEFT JOIN account_account AS account ON aml.deferred_account_id = account.id
+        #     LEFT JOIN account_analytic_account as project_sites on aml.project_site_id = project_sites.id
+        #     LEFT JOIN account_analytic_account as cc on aml.analytic_account_id = cc.id
+        #     LEFT JOIN res_currency as currency on move.currency_id = currency.id
+        #     LEFT JOIN account_account AS exp_account ON aml.account_id = exp_account.id
+        #     LEFT JOIN (
+        #         SELECT
+        #             amd.deferred_move_id
+        #         FROM account_move_deferred_rel amd
+        #         JOIN account_move am ON amd.deferred_move_id = am.id
+        #         WHERE am.state = 'posted'
+        #
+        #     ) AS posted_deferred_moves ON amd.deferred_move_id = posted_deferred_moves.deferred_move_id
+        #     LEFT JOIN (
+        #         SELECT
+        #             amd.deferred_move_id
+        #         FROM account_move_deferred_rel amd
+        #         JOIN account_move am ON amd.deferred_move_id = am.id
+        #         WHERE am.state in ('draft', 'to_approve', 'cancel')
+        #     ) AS unposted_deferred_moves ON amd.deferred_move_id = unposted_deferred_moves.deferred_move_id
+        #     LEFT JOIN (
+        #         SELECT
+        #             amd.deferred_move_id,
+        #             SUM(abs(aml.credit)) as debit_total
+        #         FROM account_move_deferred_rel amd
+        #         JOIN account_move am ON amd.deferred_move_id = am.id
+        #         JOIN account_move_line aml ON aml.move_id = am.id
+        #         WHERE am.state = 'posted' AND aml.credit!=0
+        #         AND aml.account_id = (
+        #             SELECT original_aml.deferred_account_id
+        #             FROM account_move_line original_aml
+        #             JOIN account_move original_am ON original_aml.move_id = original_am.id
+        #             JOIN account_move_deferred_rel original_amd ON original_am.id = original_amd.original_move_id
+        #             WHERE original_amd.deferred_move_id = amd.deferred_move_id
+        #             LIMIT 1
+        #         )
+        #         GROUP BY amd.deferred_move_id
+        #     ) AS posted_deferred_move_amounts ON amd.deferred_move_id = posted_deferred_move_amounts.deferred_move_id
+        #     LEFT JOIN (
+        #         SELECT
+        #             amd.deferred_move_id,
+        #             SUM(abs(aml.credit)) as debit_total
+        #         FROM account_move_deferred_rel amd
+        #         JOIN account_move am ON amd.deferred_move_id = am.id
+        #         JOIN account_move_line aml ON aml.move_id = am.id
+        #         WHERE am.state != 'posted' AND aml.credit!=0
+        #         AND aml.account_id = (
+        #             SELECT original_aml.deferred_account_id
+        #             FROM account_move_line original_aml
+        #             JOIN account_move original_am ON original_aml.move_id = original_am.id
+        #             JOIN account_move_deferred_rel original_amd ON original_am.id = original_amd.original_move_id
+        #             WHERE original_amd.deferred_move_id = amd.deferred_move_id
+        #             LIMIT 1
+        #         )
+        #         GROUP BY amd.deferred_move_id
+        #     ) AS unposted_deferred_move_amounts ON amd.deferred_move_id = unposted_deferred_move_amounts.deferred_move_id
+        #     LEFT JOIN (
+        #         SELECT
+        #             amd.deferred_move_id,
+        #             SUM(abs(aml.credit)) as debit_total
+        #         FROM account_move_deferred_rel amd
+        #         JOIN account_move am ON amd.deferred_move_id = am.id
+        #         JOIN account_move_line aml ON aml.move_id = am.id AND aml.credit!=0
+        #         WHERE aml.account_id = (
+        #             SELECT original_aml.deferred_account_id
+        #             FROM account_move_line original_aml
+        #             JOIN account_move original_am ON original_aml.move_id = original_am.id
+        #             JOIN account_move_deferred_rel original_amd ON original_am.id = original_amd.original_move_id
+        #             WHERE original_amd.deferred_move_id = amd.deferred_move_id
+        #             LIMIT 1
+        #         )
+        #         GROUP BY amd.deferred_move_id
+        #     ) AS deferred_move_amounts ON amd.deferred_move_id = deferred_move_amounts.deferred_move_id
+        #     WHERE aml.debit != 0
+        #     AND aml.tax_line_id is NULL
+        #     AND aml.deferred_account_id IS NOT NULL
+        #     AND move.company_id in %(company_ids)s
+        #     AND (
+        #         (move.date <= %(date_to)s AND move.date >= %(date_from)s)
+        #         OR (
+        #             amd.original_move_id in (
+        #                 SELECT amdr.original_move_id
+        #                 FROM account_move amv
+        #                 JOIN account_move_deferred_rel amdr ON amdr.deferred_move_id = amv.id
+        #                 WHERE amv.date <= %(date_to)s AND amv.date >= %(date_from)s
+        #             )
+        #         )
+        #     )
+        #     {prefix_query}
+        #     GROUP BY account.id, move.id, aml.id, project_sites.id, cc.id, currency.id, exp_account.id
+        #     ORDER BY account.code;
+        # """
 
         sql = f"""
-                SELECT  
-                move.date as move_date,
-                move.amount_untaxed as amount_untaxed,
-                {account_name} as account_name,
-                account.id AS account_id,
-                move.name as move_name,
-                move.id as move_id,
-                aml.name as deferral_name,
-                aml.deferred_start_date as start_date,
-                aml.deferred_end_date as end_date,
-                {project_site_name} as project_site,
-                {cc_name} as cost_center,
-                currency.name as currency,
-                currency.id as currency_id,
-                count(
-                    CASE
-                        WHEN aml.deferred_account_id IS NULL THEN
-                            (
-                                SELECT COUNT(*)
-                                FROM account_move_line aml2
-                                inner join account_move m on aml2.move_id = m.id
-                                WHERE aml2.move_id = amd.deferred_move_id and m.state='posted'
-                            )
-                        ELSE posted_deferred_moves.deferred_move_id
-                    END
-                ) as posted_deferred_moves,
-                abs(
-                    sum(
-                        CASE
-                            WHEN aml.deferred_account_id IS NULL THEN
-                                (
-                                    SELECT SUM(abs(aml2.credit))
-                                    FROM account_move_line aml2
-                                    inner join account_move m on aml2.move_id = m.id
-                                    WHERE aml2.move_id = amd.deferred_move_id and m.state='posted'
-                                )
-                            ELSE posted_deferred_move_amounts.debit_total
-                        END
+                SELECT 
+                    {account_name} AS account_name,
+                    account.id as account_id,
+                    move.name AS move_name, 
+                    move.id AS move_id,
+                    line.name AS deferral_name,
+                    line.deferred_start_date,
+                    line.deferred_end_date,
+                    {project_site_name} as project_site,
+                    {cc_name} as cost_center,
+                    currency.name as currency,
+                    currency.id as currency_id,
+                    {exp_account_name} AS expense_account,
+                    SUM(CASE WHEN mv.state = 'posted' THEN ml.credit ELSE 0 END) AS posted_credits,
+                    SUM(CASE WHEN mv.state != 'posted' THEN ml.credit ELSE 0 END) AS unposted_credits,
+                    SUM(ml.credit) AS total_credits,
+                    COUNT(DISTINCT CASE WHEN mv.state = 'posted' THEN mv.id END) AS posted_count,
+                    COUNT(DISTINCT CASE WHEN mv.state != 'posted' THEN mv.id END) AS unposted_count,
+                    COUNT(DISTINCT mv.id) AS total_count
+                FROM 
+                    account_move_deferred_rel amdr 
+                LEFT JOIN 
+                    account_move move ON move.id = amdr.original_move_id 
+                LEFT JOIN 
+                    account_move mv ON mv.id = amdr.deferred_move_id 
+                LEFT JOIN 
+                    account_move_line line ON line.move_id = move.id 
+                LEFT JOIN 
+                    account_move_line ml ON ml.move_id = mv.id 
+                LEFT JOIN 
+                    account_account account ON line.deferred_account_id = account.id
+                LEFT JOIN account_analytic_account as project_site on 
+                    line.project_site_id = project_site.id  
+                LEFT JOIN account_analytic_account as cc on 
+                    line.analytic_account_id = cc.id  
+                LEFT JOIN res_currency as currency on 
+                    move.currency_id = currency.id  
+                LEFT JOIN 
+                    account_account AS ae ON EXISTS (
+                        SELECT 1 
+                        FROM account_move_line l 
+                        INNER JOIN account_move m ON m.id = l.move_id
+                        WHERE m.id = mv.id AND l.account_id = ae.id AND l.debit !=0
                     )
-                ) as posted_deferred_move_amount_total,
-                count(
-                    CASE
-                        WHEN aml.deferred_account_id IS NULL THEN
-                            (
-                                SELECT COUNT(*)
-                                FROM account_move_line aml2
-                                WHERE aml2.move_id = amd.deferred_move_id
-                            )
-                        ELSE unposted_deferred_moves.deferred_move_id
-                    END
-                ) as unposted_deferred_moves,
-                abs(
-                    sum(
-                        CASE
-                            WHEN aml.deferred_account_id IS NULL THEN
-                                (
-                                    SELECT SUM(abs(aml2.credit))
-                                    FROM account_move_line aml2
-                                    WHERE aml2.move_id = amd.deferred_move_id
-                                )
-                            ELSE deferred_move_amounts.debit_total
-                        END
-                    )
-                ) as deferred_move_amount_total,
-                {exp_account_name} as exp_account_name,
-                exp_account.id as exp_account
-            FROM account_move_deferred_rel AS amd
-            LEFT JOIN account_move move on move.id=amd.original_move_id
-            LEFT JOIN account_move_line aml ON aml.move_id = move.id
-            LEFT JOIN account_account AS account ON aml.deferred_account_id = account.id
-            LEFT JOIN account_analytic_account as project_sites on aml.project_site_id = project_sites.id  
-            LEFT JOIN account_analytic_account as cc on aml.analytic_account_id = cc.id  
-            LEFT JOIN res_currency as currency on move.currency_id = currency.id  
-            LEFT JOIN account_account AS exp_account ON aml.account_id = exp_account.id
-            LEFT JOIN (
-                SELECT
-                    amd.deferred_move_id
-                FROM account_move_deferred_rel amd
-                JOIN account_move am ON amd.deferred_move_id = am.id
-                WHERE am.state = 'posted' and am.date != (
-                    SELECT original_am.date 
-                    FROM account_move original_am 
-                    JOIN account_move_deferred_rel original_amd 
-                    ON original_amd.original_move_id = original_am.id 
-                    WHERE original_amd.deferred_move_id = am.id
-                )
-            ) AS posted_deferred_moves ON amd.deferred_move_id = posted_deferred_moves.deferred_move_id
-            LEFT JOIN (
-                SELECT
-                    amd.deferred_move_id
-                FROM account_move_deferred_rel amd
-                JOIN account_move am ON amd.deferred_move_id = am.id
-                WHERE am.state in ('draft', 'to_approve', 'cancel')
-                and am.date != (
-                    SELECT original_am.date 
-                    FROM account_move original_am 
-                    JOIN account_move_deferred_rel original_amd 
-                    ON original_amd.original_move_id = original_am.id 
-                    WHERE original_amd.deferred_move_id = am.id
-                )
-            ) AS unposted_deferred_moves ON amd.deferred_move_id = unposted_deferred_moves.deferred_move_id
-            LEFT JOIN (
-                SELECT
-                    amd.deferred_move_id,
-                    SUM(abs(aml.credit)) as debit_total
-                FROM account_move_deferred_rel amd
-                JOIN account_move am ON amd.deferred_move_id = am.id
-                JOIN account_move_line aml ON aml.move_id = am.id
-                WHERE am.state = 'posted'
-                AND aml.account_id = (
-                    SELECT original_aml.deferred_account_id
-                    FROM account_move_line original_aml
-                    JOIN account_move original_am ON original_aml.move_id = original_am.id
-                    JOIN account_move_deferred_rel original_amd ON original_am.id = original_amd.original_move_id
-                    WHERE original_amd.deferred_move_id = amd.deferred_move_id
-                    LIMIT 1
-                )
-                GROUP BY amd.deferred_move_id
-            ) AS posted_deferred_move_amounts ON amd.deferred_move_id = posted_deferred_move_amounts.deferred_move_id
-            LEFT JOIN (
-                SELECT
-                    amd.deferred_move_id,
-                    SUM(abs(aml.credit)) as debit_total
-                FROM account_move_deferred_rel amd
-                JOIN account_move am ON amd.deferred_move_id = am.id
-                JOIN account_move_line aml ON aml.move_id = am.id
-                WHERE aml.account_id = (
-                    SELECT original_aml.deferred_account_id
-                    FROM account_move_line original_aml
-                    JOIN account_move original_am ON original_aml.move_id = original_am.id
-                    JOIN account_move_deferred_rel original_amd ON original_am.id = original_amd.original_move_id
-                    WHERE original_amd.deferred_move_id = amd.deferred_move_id
-                    LIMIT 1
-                )
-                GROUP BY amd.deferred_move_id
-            ) AS deferred_move_amounts ON amd.deferred_move_id = deferred_move_amounts.deferred_move_id
-            WHERE aml.debit != 0
-            AND aml.tax_line_id is NULL
-            AND move.company_id in %(company_ids)s
-            AND (
-                (move.date <= %(date_to)s AND move.date >= %(date_from)s)
-                OR (
-                    amd.original_move_id in (
-                        SELECT amdr.original_move_id
-                        FROM account_move amv
-                        JOIN account_move_deferred_rel amdr ON amdr.deferred_move_id = amv.id
-                        WHERE amv.date <= %(date_to)s AND amv.date >= %(date_from)s
-                    )
-                )
-            )
-            {prefix_query}
-            GROUP BY account.id, move.id, aml.id, project_sites.id, cc.id, currency.id, exp_account.id
-            ORDER BY account.code;      
+                WHERE 
+                    line.deferred_account_id = ml.account_id 
+                    AND ml.credit != 0 AND move.company_id in %(company_ids)s 
+                    AND move.date <= %(date_to)s AND move.date >= %(date_from)s
+                GROUP BY 
+                    account.id,
+                    move.id,
+                    line.id,
+                     project_site.id,
+                     cc.id,
+                     currency.id,
+                     ae.id
         """
         self._cr.execute(sql, query_params)
         results = self._cr.dictfetchall()

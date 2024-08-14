@@ -13,8 +13,10 @@
 
     'data':
         [
+            'security/ir.model.access.csv',
             'views/account_move_views.xml',
-            'report/tasc_deferred_expense_report.xml',
+            'wizard/deferred_expense_wizard_view.xml',
+            # 'report/tasc_deferred_expense_report.xml',
         ],
 
 }
