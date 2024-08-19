@@ -65,6 +65,7 @@ class AccountMoveBudgetConf(models.Model):
 
         self.mapped('line_ids').remove_move_reconcile()
         self.write({'state': 'draft', 'is_move_sent': False})
+        self.purchase_approval_cycle_ids = [(5, 0, 0)]
         self.request_approve_bool = False
         self.show_approve_button = False
 
