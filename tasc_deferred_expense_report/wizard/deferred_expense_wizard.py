@@ -30,7 +30,8 @@ class DeferredExpenseWizard(models.Model):
     def print_report_xlsx(self):
         """ Method for print Cash Burn xlsx report"""
         journal = self.env['account.journal'].search(
-            [('name', '=', 'Deferred Expense')], limit=1)
+            [('name', 'ilike', 'Deferred Expense')]
+        )
         report_data = self.get_report_data(journal)
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
@@ -124,7 +125,7 @@ class DeferredExpenseWizard(models.Model):
 
         if report_data:
             self.add_xlsx_sheet(report_data, workbook, STYLE_LINE_Data,
-                                header_format, STYLE_LINE_HEADER, journal)
+                                header_format, STYLE_LINE_HEADER, journal,date_format)
 
         self.excel_sheet_name = 'Deferred Expense Report'
         workbook.close()
@@ -158,7 +159,9 @@ class DeferredExpenseWizard(models.Model):
             cc.name AS cost_center_name,
             cc.code AS cost_center_code,
             ps.name AS project_site_name,
-            ps.code AS project_site_code
+            ps.code AS project_site_code,
+            MIN(l.date) AS first_date,
+            MAX(l.date) AS last_date
         FROM 
             account_move_line l
             INNER JOIN account_account ac ON ac.id = l.account_id
@@ -168,19 +171,18 @@ class DeferredExpenseWizard(models.Model):
             LEFT JOIN account_analytic_account cc ON cc.id = l.analytic_account_id
             LEFT JOIN account_analytic_account ps ON ps.id = l.project_site_id
         WHERE 
-            l.journal_id =  %(journal_id)s 
+            l.journal_id in  %(journal_id)s 
             AND l.credit != 0
             AND ac.code LIKE %(ac_code_pattern)s
             AND  l.date<= %(end_date)s  and l.date >= %(start_date)s and l.company_id = %(company_id)s
         GROUP BY 
             ac.id, l.name, debit_ac.name, debit_ac.code, r.name, cc.id,ps.id
         order by ac.id,l.name
-
         """
 
         self._cr.execute(qry, {'start_date': self.start_date,
                                'end_date': self.end_date,
-                               'journal_id': journal.id,
+                               'journal_id': tuple(journal.ids),
                                'company_id': self.company_id.id,
                                'ac_code_pattern': '113%',
                                })
@@ -189,7 +191,7 @@ class DeferredExpenseWizard(models.Model):
 
     def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data,
                        header_format,
-                       STYLE_LINE_HEADER, journal):
+                       STYLE_LINE_HEADER, journal,date_format):
         """ Method to add datas to the Tasc Cash Burn xlsx report"""
         self.ensure_one()
 
@@ -206,7 +208,7 @@ class DeferredExpenseWizard(models.Model):
                 account_move_line l
                 INNER JOIN account_account ac ON ac.id = l.account_id
             WHERE 
-                 l.journal_id =  %(journal_id)s 
+                 l.journal_id in  %(journal_id)s 
                  AND l.credit != 0
                  AND ac.code LIKE %(ac_code_pattern)s
                  AND  l.date<= %(end_date)s  and l.date >= %(start_date)s and l.company_id = %(company_id)s
@@ -216,7 +218,7 @@ class DeferredExpenseWizard(models.Model):
         """
         self._cr.execute(qry, {'start_date': self.start_date,
                                'end_date': self.end_date,
-                               'journal_id': journal.id,
+                               'journal_id': tuple(journal.ids),
                                'company_id': self.company_id.id,
                                'ac_code_pattern': '113%',
                                })
@@ -271,7 +273,7 @@ class DeferredExpenseWizard(models.Model):
 
         row = 0
         col = 0
-        worksheet.merge_range(row, row, col, col + 11,
+        worksheet.merge_range(row, row, col, col + 13,
                               _('Tasc Deferred Expense Report'),
                               STYLE_LINE_HEADER)
         row += 1
@@ -287,6 +289,10 @@ class DeferredExpenseWizard(models.Model):
         worksheet.write(row, col, _('Project Site'), header_format)
         col += 1
         worksheet.write(row, col, _('Expense Account'), header_format)
+        col += 1
+        worksheet.write(row, col, _('Start Date'), header_format)
+        col += 1
+        worksheet.write(row, col, _('End Date'), header_format)
         col += 1
         worksheet.write(row, col, _('Total Amount' + "(" + str(
             self.company_id.currency_id.symbol) + ")"), header_format)
@@ -378,6 +384,12 @@ class DeferredExpenseWizard(models.Model):
             else:
                 worksheet.write(row, col,
                                 "", STYLE_LINE_Data)
+            col += 1
+            worksheet.write(row, col,
+                            line["first_date"], date_format)
+            col += 1
+            worksheet.write(row, col,
+                            line["last_date"], date_format)
             col += 1
             worksheet.write(row, col,
                             line["total_credits"], STYLE_LINE_Data)
