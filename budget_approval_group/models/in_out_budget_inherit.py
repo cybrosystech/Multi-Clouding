@@ -53,16 +53,28 @@ class BudgetInOutLinesInvoicesInherit(models.Model):
 class AccountMoveCustom(models.Model):
     _inherit = 'account.move'
 
-    is_reset_to_draft_show = fields.Boolean(compute='compute_is_reset_to_draft_show'
-    )
+    is_reset_to_draft_show = fields.Boolean(
+        compute='compute_is_reset_to_draft_show'
+        )
 
     @api.depends('state', 'payment_state', 'deferred_move_ids', 'asset_ids')
     def compute_is_reset_to_draft_show(self):
         for rec in self:
             if self.env.user.user_has_groups(
                     'budget_approval_group.group_budget_check_approver') and rec.state in [
-                'posted', 'to_approve'] and rec.payment_state in ['not_paid'
-                                                                  ] and not rec.deferred_move_ids and not rec.asset_ids:
-                rec.is_reset_to_draft_show = True
+                'posted',
+                'to_approve'] and not rec.deferred_move_ids and not rec.asset_ids:
+                if rec.move_type == 'entry':
+                    rec.is_reset_to_draft_show = True
+                elif rec.payment_state in ['not_paid']:
+                    rec.is_reset_to_draft_show = True
+                else:
+                    rec.is_reset_to_draft_show = False
+
             else:
-                rec.is_reset_to_draft_show = False
+                if rec.move_type == 'entry':
+                    rec.is_reset_to_draft_show = True
+                elif rec.payment_state in ['not_paid']:
+                    rec.is_reset_to_draft_show = True
+                else:
+                    rec.is_reset_to_draft_show = False
