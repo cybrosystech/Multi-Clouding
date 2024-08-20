@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="action_debit_note_template_report" model="ir.actions.report">
-        <field name="name">Tasc Debit Note</field>
+        <field name="name">TTH Debit Note</field>
         <field name="model">account.move</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">tasc_invoice_report_general.debit_note_report</field>
@@ -197,6 +197,39 @@
                              alt="Stamp"/>
                     </div>
                 </div>
+                                <div class="row" style="margin-top: 6rem;">
+                    <div class="col-12">
+                        <span>
+                            <span style="text-decoration:underline;font-weight:bold">
+                                BANK DETAILS :
+                            </span>
+                            <br/>
+                            Transfer the amount to the business account
+                            below.
+                            <br/>
+                            Please remit payment by electronic transfer to
+                            the following account, quoting the invoice
+                            number as the reference:
+                            <br/>
+                            Bank Name :
+                            <t t-esc="doc.company_id.bank_name"/>
+                            <br/>
+                            Bank Account Name :
+                            <t t-esc="doc.company_id.bank_account_name"/>
+                            <br/>
+                            IBAN :
+                            <t t-esc="doc.company_id.iban"/>
+                            <br/>
+                            Bank Account Number :
+                            <t t-esc="doc.company_id.short_code"/>
+                            <br/>
+                            SWIFT:
+                            <t t-esc="doc.company_id.swift"/>
+                            <br/>
+                        </span>
+                    </div>
+                </div>
+
                 <div class="row" style="position:fixed;top:1000px;line-break:avoid;width:1000px;">
                     <div class="col-lg">
                         <span style="font-weight:bold;">This is an

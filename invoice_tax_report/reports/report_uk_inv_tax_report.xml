@@ -3,7 +3,7 @@
     <record id="action_uk_inv_tax_template_report" model="ir.actions.report">
         <field name="paperformat_id"
                ref="invoice_tax_report.paperformat_inv_tax_template_report"/>
-        <field name="name">TASC Invoice Tax Report</field>
+        <field name="name">TTH Invoice Tax Report</field>
         <field name="model">account.move</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">invoice_tax_report.uk_inv_tax_report</field>
@@ -234,7 +234,7 @@
                             IBAN :
                             <t t-esc="doc.company_id.iban"/>
                             <br/>
-                            Short Code :
+                            Bank Account Number :
                             <t t-esc="doc.company_id.short_code"/>
                             <br/>
                             SWIFT:

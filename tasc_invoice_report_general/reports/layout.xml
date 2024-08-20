@@ -45,6 +45,21 @@
             </div>
             <t t-raw="0"/>
         </div>
+                <div t-attf-class="footer">
+            <div class="col-12" style="border-bottom: 1px solid black;"/>
+            <div class="text-center">
+                <span style="text-align:center">TASC Towers Holding Limited is registered as a private holding
+                    limited company in Dubai International Financial Center
+                </span>
+                <br/>
+                <span>(Registration Number CL3459,VAT Number 100524962600003)</span>
+                <br/>
+                <span style="text-align:center">email: accounts@tasctowers.com</span>
+                <br/>
+            </div>
+
+        </div>
+
     </template>
     <template id="external_layout_uk_inv_tax_template">
         <!-- Multicompany -->
