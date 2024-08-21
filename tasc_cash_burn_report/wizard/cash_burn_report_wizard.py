@@ -443,14 +443,20 @@ class CashBurnReportWizard(models.Model):
                     col = 0
                     if mv.journal_id.type in ['sale',
                                               'purchase'] and not mv.payment_id and mv.move_type != 'entry':
+
                         credit_amount = 0
                         debit_amount = 0
                         s = mv.invoice_payments_widget
 
                         if s:
-                            amount = next(
-                                (item['amount'] for item in s['content'] if
-                                 item['ref'] == line.name), 0)
+                            if len(mv.invoice_payments_widget['content']) == 1:
+                                amount = next(
+                                    (item['amount'] for item in s['content'] if
+                                     item['amount']), 0)
+                            else:
+                                amount = next(
+                                    (item['amount'] for item in s['content'] if
+                                     item['ref'] == line.name), 0)
 
                             amt = 0
                             if self.env.company.currency_id.id == mv.currency_id.id:
