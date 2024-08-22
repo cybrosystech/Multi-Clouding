@@ -1,0 +1,467 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+    <t t-name="DashboardControllerBits" owl="1">
+        <div class="o_action" t-ref="el">
+            <div class="o_content">
+                <div class="container_bits container-fluid px-0">
+                    <div class="header_container_bits container-fluid">
+                        <div class="row py-3 align-items-center">
+                            <div class="col-12 col-sm-12 col-md-9 col-lg-6 col-xl-6 d-flex cnt-left align-items-center"> 
+                                <div style="position: relative;">
+                                    <button class="btn btn-primary me-1" title="All Dashboard" t-on-click="this?.onClickHome">
+                                        <i class="fa fa-home"/>
+                                    </button>
+                                </div>
+                                <div style="position: relative;">
+                                    <button t-on-click="this?.toggleDropdownClass" t-if="state?.dashboard_data?.has_group_admin_bits" class="o_dropdown_toggler_btn btn btn-primary me-1" data-toggle="dropdown" aria-expanded="false">
+                                        <span class="fa fa-gears fa-1x" style="pointer-events: none;"/> 
+                                    </button>
+                                    <div t-if="state?.dashboard_data?.has_group_admin_bits" id="dashboard_edit_actions_bits" class="dropdown-menu dashboard_edit_actions_bits dropdown-max-height pb-0" role="menu" t-att-data-dashboard_id="state?.dashboard_id">
+                                        <a t-on-click="this?.onClickEditDasboard" t-attf-class="dropdown-item px-3 edit_dasboard_bits" >
+                                            <i class="p-2 fa fa-pencil"/><span>Edit Dashboard</span>
+                                        </a>
+                                        <a t-on-click="this?.onClickAddDasboardFilter" t-attf-class="dropdown-item px-3 add_dasboard_filter_bits">
+                                            <i class="p-2 fa fa-filter"/><span>Add Filter</span>
+                                        </a>
+                                        <a t-on-click="this?.onClickEditDasboard" t-attf-class="dropdown-item px-3 edit_dasboard_bits">
+                                            <i class="p-2 fa fa-filter"/><span>Remove Filters</span>
+                                        </a>
+                                        <a t-on-click="this?.onClickAddDasboardTheme" t-attf-class="dropdown-item px-3 add_dasboard_theme_bits">
+                                            <i class="p-2 fa fa-paint-brush"/><span>Add Theme</span>
+                                        </a>
+                                        <a t-on-click="this?.onClickDupDasboard" t-attf-class="dropdown-item px-3 make_duplicate_bits">
+                                            <i class="p-2 fa fa-copy"/><span>Duplicate Dashboard</span>
+                                        </a>
+                                        <!-- <a t-on-click="this?." t-attf-class="dropdown-item px-3 import_dashboard_bits">
+                                            <i class="p-2 fa fa-file-excel-o"/><span>Import Dashboard</span>
+                                        </a> -->
+                                        <a t-on-click="this?.onClickExpDasboard" t-attf-class="dropdown-item px-3 export_dashboard_bits">
+                                            <i class="p-2 fa fa-file-excel-o"/><span>Export Dashboard</span>
+                                        </a>
+                                        <a t-on-click="this?.onClickImpItemDasboard" t-attf-class="dropdown-item px-3 import_dashboard_item_bits">
+                                            <i class="p-2 fa fa-file-excel-o"/><span>Import Dashboard Item</span>
+                                        </a>
+                                        <a t-on-click="this?.onClickRemoveDasboard" t-attf-class="dropdown-item px-3 remove_dashboard_bits">
+                                            <i class="p-2 fa fa-remove"/><span>Remove Dashboard</span>
+                                        </a> 
+                                    </div>
+                                </div>
+                                <div t-if="state?.dashboard_data?.has_group_admin_bits" class="bf_edit_controls">
+                                    <button class="btn btn-primary add_item_type_button_bits me-1" t-on-click="this.AddItemButton">
+                                        <lable>Create Item</lable>
+                                        <span class="fa fa-plus ps-1" title="Create Item"/>
+                                    </button>
+                                    <button id="dashboard_layout_edit_bits" class="btn btn-primary dashboard_edit_layout_bits" t-on-click="this.onEditGridLayout">
+                                        <lable>Edit Layout</lable>
+                                        <span class="fa fa-pencil ps-1" title="Edit Layout"/>
+                                    </button>
+                                </div>
+                                <div t-if="state?.dashboard_data?.has_group_admin_bits" class="af_edit_controls d-none">
+                                    <button class="btn btn-primary save_layout_button_bits me-1" title="Save Changes" t-on-click="this.onSaveGridLayout">
+                                        <lable>Save Changes</lable>
+                                        <span class="fa fa-save"></span>
+                                    </button>
+                                    <button class="btn btn-secondary discart_layout_button_bits" title="Discart Changes" t-on-click="this.onDiscartGridLayout">
+                                        <lable>Discard Changes</lable>
+                                        <span class="fa fa-remove"></span>
+                                    </button>
+                                </div>
+                                <div class="px-4">
+                                    <h2 class="ms-2 mb-0">
+                                        <t t-esc="state?.dashboard_data?.name"/>
+                                    </h2>
+                                </div>
+                            </div>
+                            <div class="col-12 col-sm-12 col-md-3 filter_dropdown">
+                                <button class="btn btn-secondary bg-200 btn-toggle-sidebar" t-on-click="this.onClickToggleSidebar">
+                                    <i class="fa fa-filter"></i>
+                                </button>
+                                <div style="border: 1px solid #C9CCD2;" class="mob_filter_bits filter_sidebar_container d-hidden"> 
+                                    <div class="filter_container"> 
+                                        <div role="search" aria-autocomplete="list" class="o_searchview d-flex justify-content-between"> 
+                                                <!-- <i title="Save As Default" role="img" aria-label="Search?.?.?." class="o_searchview_icon fa fa-star">Save</i> -->
+                                                <div class="o_searchview_input_container">
+                                                    <t t-foreach="state?.applied_filters" t-as="filter" t-key="filter?.uid">
+                                                        <div tabindex="0" role="img" aria-label="search" class="o_searchview_facet"> 
+                                                            <div class="o_facet_values bg-200 border-0 d-flex align-items-center"> 
+                                                                <span class="o_facet_value"><t t-esc="filter?.filter_name"/></span>
+                                                            </div>
+                                                            <i t-on-click="this?.onClickFacetRemove" role="img" aria-label="Remove" title="Remove" class="fa fa-sm fa-remove o_facet_remove" t-att-data-uid="filter?.uid"></i>
+                                                        </div>
+                                                    </t>
+                                                    <!-- <input type="text" autofocus="" role="searchbox" title="Search for records" class="o_searchview_input" disabled="1"/> -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div t-attf-class="filters_btn_container f-main-container #{state?.dashboard_data?.filters?.length ?'justify-content-between':'justify-content-between'} mt-1 #{ state?.dashboard_data?.filters &amp;&amp; !state?.dashboard_data?.filters?.length ?'float-right':''}">   
+                                            <t t-if="state?.dashboard_data?.filters?.length">
+                                                <div class="sub-main-container align-items-center filter-items bg-primary mr-2">  
+                                                    <i class="fa fa-filter px-2 mr-0 d-none d-sm-block filter_v1" style="color: white;"/> 
+                                                    <t t-foreach="state?.dashboard_data?.filters" t-as="ft" t-key="ft?.filter_id"> 
+                                                        <div class="filter-bits">
+                                                            <input type="text" t-att-placeholder="ft?.target_field_name" class="o_dropdown_toggler_btn btn btn-secondary dropdown-toggle c_filter_bits" data-toggle="dropdown" aria-expanded="false" 
+                                                                t-on-focus="this?.onClickCustomfilter"
+                                                                t-on-input="this?.onClickCustomfilterInput"
+                                                                t-att-data-target_model="ft?.target_field_model" t-att-data-filter_id="ft?.filter_id" 
+                                                                t-att-data-ttype="ft?.field_type" t-att-data-field="ft?.target_field_tname"
+                                                                t-on-click="this?.toggleDropdownClass"
+                                                                style="text-align: left;"> 
+                                                            </input>
+                                                            <div class="dropdown-menu py-0 text-center c_filters_container_bits dropdown-max-height" role="menu"> 
+                                                            <t t-if="state.is_filter">
+                                                                <t  t-if="state?.filter_data[ft?.filter_id]?.length &gt; 0">
+                                                                    <t t-foreach="state.filter_data[ft?.filter_id]" t-as="fi" t-key="fi_index">
+                                                                        <t t-if="fi.length">
+                                                                            <a t-on-click="this.onClickFilterValue" t-attf-class="text-left filter_value" t-att-data-sid="fi[0]" t-att-data-value="fi[1]" data-ttype="selection">
+                                                                                <t t-esc="fi[1]"/>
+                                                                            </a>
+                                                                        </t>
+                                                                        <t t-else="">
+                                                                            <a t-on-click="this.onClickFilterValue" t-attf-class="text-left filter_value" t-att-data-rid="fi.id" t-att-data-value="fi.name? fi.name:fi.display_name" data-ttype="relational">
+                                                                                <t t-if="fi.name">
+                                                                                    <t t-esc="fi.name"/>    
+                                                                                </t> 
+                                                                                <t t-else="">
+                                                                                    <t t-esc="fi.display_name"/>
+                                                                                </t> 
+                                                                            </a>
+                                                                        </t>
+                                                                        <br/>
+                                                                    </t> 
+                                                                </t>
+                                                            </t>
+                                                            <t t-else="">
+                                                                <i class="fa fa-spin fa-spinner"/>
+                                                            </t>
+                                                            </div>
+                                                        </div>  
+                                                    </t>  
+                                                </div> 
+                                            </t>
+                                            <div class="sub-main-container">
+                                                <div t-if="state?.dashboard_data?.filters" class="filter-bits sub-main-container px-1">
+                                                    <div style="position: relative;">
+                                                        <button t-on-click="this?.toggleDropdownClass" t-if="state?.fav_filters?.length || state?.dashboard_data?.filters?.length" class="o_dropdown_toggler_btn btn btn-secondary dropdown-toggle h-100 p-2 d-flex w-100 align-items-center"  data-toggle="dropdown" aria-expanded="false" title="Favorites"><i class="fa fa-star"/><b style="pointer-events: none;">Favorite</b></button>  
+                                                        <div t-if="state?.fav_filters?.length || state?.dashboard_data?.filters?.length" id="save_fav_filter_bits" class="dropdown-menu p-0 bg-100" role="menu"> 
+                                                            <div t-if="state?.fav_filters">
+                                                                <t t-foreach="state?.fav_filters" t-as="filter" t-key="filter?.id"> 
+                                                                    <a t-on-click="this?.onClickFavoriteApply" t-attf-class="#{filter?.is_active?'active':''} dropdown-item fv_filter_bits d-flex justify-content-between align-items-center bg-100 ps-4 pe-2" t-att-data-filter_id="filter?.id" > 
+                                                                        <span> <t t-esc="filter?.name"/></span>
+                                                                        <i class="fa fa-remove btn fv_filter_rm_bits" t-att-data-fvid="filter?.id" t-on-click="this?.onClickFavoriteRemove"/>
+                                                                    </a>    
+                                                                </t> 
+                                                            </div> 
+                                                            <div class="dropdown-item py-3 px-3 bg-white " style="cursor: default;"> 
+                                                                <h6 class="p-2 bg-200">Save Current Search</h6>
+                                                                <input type="text" class="o_input input-filter-bits p-2 w-100" value="Favorite" t-on-click="ev => ev.stopPropagation()"/>
+                                                                <div class="py-2">
+                                                                    <input type="checkbox" class="fome-input user-default-bits" t-on-click="ev => ev.stopPropagation()"/>
+                                                                    Use by default 
+                                                                </div>
+                                                                <button class="btn btn-primary save_fav_filter_bits" t-att-data-curr-mode="state?.time_frame" t-on-click="this?.onClickFavoriteFilterSave">Save</button> 
+                                                            </div> 
+                                                        </div>
+                                                    </div>
+                                                </div> 
+                                                <div class="time_range_filter container-bits px-1">
+                                                    <div t-attf-class="d-flex d-container date_picker_container #{state?.time_frame != 'custom' ? 'd-hidden':''}">
+                                                        <div class="date_picker_bits d-flex border-primary">
+                                                            <div class="o_datepicker o_field_date o_field_this?.state o_quick_editable" aria-atomic="true" id="datepicker738" data-target-input="nearest">
+                                                                <DateTimeInput value="state.from_date" onChange="this?.onStartDatechanged.bind(this)" type="'date'" placeholder="'Date from'"/>                                                            
+                                                                <span class="o_datepicker_button"/>
+                                                            </div>
+                                                            <div class="o_datepicker o_field_date o_field_this?.state o_quick_editable " aria-atomic="true"
+                                                                id="datepicker144">
+                                                                <DateTimeInput value="state.to_date" onChange="this?.onEndDatechanged.bind(this)" type="'date'" placeholder="'Date to'"/>
+                                                                <span class="o_datepicker_button"/>
+                                                            </div>
+                                                        </div>
+                                                        <button class="btn btn-primary btn_apply_date" t-on-click="this?.onClickDatesApply">Apply</button>
+                                                    </div> 
+                                                    <div style="position: relative;">
+                                                        <button t-on-click="this?.toggleDropdownClass" class="o_dropdown_toggler_btn btn btn-secondary dropdown-toggle date_filter_dropdown_bits p-2" data-toggle="dropdown" aria-expanded="false" title="Date Filters">
+                                                            <span class="fa fa-sm fa-calendar" style="pointer-events: none;"/>
+                                                            <lable id="date_filter_selection_bits" t-att-data-current="state?.time_frame" style="pointer-events: none;">
+                                                                <t t-esc="state?.all_time_frames[state?.time_frame]"/>
+                                                            </lable>
+                                                        </button>
+                                                        <div id="date_selector_container_bits"
+                                                            class="dropdown-menu date_filters_menu_drop_down_bits date_filters_menu_bits dropdown-max-height pb-0"
+                                                            role="menu">
+                                                            <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'default' ? 'active':''}" data-date-format="default" t-on-click="this?.onSelectTimeframe">Default</a>
+                                                            <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'today' ? 'active':''}" data-date-format="today" t-on-click="this?.onSelectTimeframe">Today</a>
+                                                            <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'next_day' ? 'active':''}" data-date-format="next_day" t-on-click="this?.onSelectTimeframe">Next day</a>
+                                                            <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'next_week' ? 'active':''}" data-date-format="next_week" t-on-click="this?.onSelectTimeframe">Next Week</a>
+                                                            <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'next_month' ? 'active':''}" data-date-format="next_month" t-on-click="this?.onSelectTimeframe">Next Month</a>
+                                                            <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'next_year' ? 'active':''}" data-date-format="next_year" t-on-click="this?.onSelectTimeframe">Next Year</a>
+                                                            <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'this_week' ? 'active':''}" data-date-format="this_week" t-on-click="this?.onSelectTimeframe">This Week</a>
+                                                            <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'this_month' ? 'active':''}" data-date-format="this_month" t-on-click="this?.onSelectTimeframe">This Month</a>
+                                                            <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'this_year' ? 'active':''}" data-date-format="this_year" t-on-click="this?.onSelectTimeframe">This Year</a>
+                                                            <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'yesterday' ? 'active':''}" data-date-format="yesterday" t-on-click="this?.onSelectTimeframe">Yesterday</a>
+                                                            <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'last_week' ? 'active':''}" data-date-format="last_week" t-on-click="this?.onSelectTimeframe">Last Week</a>
+                                                            <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'last_month' ? 'active':''}" data-date-format="last_month" t-on-click="this?.onSelectTimeframe">Last Month</a>
+                                                            <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'last_two_months' ? 'active':''}" data-date-format="last_two_months" t-on-click="this?.onSelectTimeframe">Last 2 Months</a>
+                                                            <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'last_three_months' ? 'active':''}" data-date-format="last_three_months" t-on-click="this?.onSelectTimeframe">Last 3 Months </a>
+                                                            <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'last_year' ? 'active':''}" data-date-format="last_year" t-on-click="this?.onSelectTimeframe">Last Year</a>
+                                                            <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'last_24_hr' ? 'active':''}" data-date-format="last_24_hr" t-on-click="this?.onSelectTimeframe">Last 24 hours</a>
+                                                            <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'last_10' ? 'active':''}" data-date-format="last_10" t-on-click="this?.onSelectTimeframe">Last 10 Days</a>
+                                                            <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'last_30' ? 'active':''}" data-date-format="last_30" t-on-click="this?.onSelectTimeframe">Last 30 Days</a>
+                                                            <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'last_60' ? 'active':''}" data-date-format="last_60" t-on-click="this?.onSelectTimeframe">Last 60 Days</a>
+                                                            <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'last_90' ? 'active':''}" data-date-format="last_90" t-on-click="this?.onSelectTimeframe">Last 90 Days</a>
+                                                            <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'last_365' ? 'active':''}" data-date-format="last_365" t-on-click="this?.onSelectTimeframe">Last 365 Days</a>
+                                                            <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'custom' ? 'active':''}" data-date-format="custom" t-on-click="this?.onSelectTimeframe">Custom Range</a>
+                                                            <button style="white-space: nowrap;" t-if="state?.dashboard_data?.has_group_admin_bits" class="btn btn-primary default_time_frame_bits w-100" t-att-data-curr-mode="state?.time_frame" t-on-click="this?.onDefaultTimeFrame">Make current as default </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="color_theme_bits container-bits px-1" style="position: relative;">
+                                                    <button t-on-click="this?.toggleDropdownClass" class="o_dropdown_toggler_btn btn btn-secondary dropdown-toggle color_theme_dropdown_bits h-100"
+                                                            data-toggle="dropdown" aria-expanded="false" title="Color Themes">
+                                                        <span class="fa fa-sm fa-paint-brush" style="pointer-events: none;"/>
+                                                        <lable id="color_theme_selection_bits" t-att-data-current="state?.color_theme" style="pointer-events: none;">
+                                                            <t t-esc="state?.all_color_themes[state?.color_theme]"/>
+                                                        </lable>
+                                                    </button>
+                                                    <div id="color_theme_container_bits" class="dropdown-menu color_theme_menu_drop_down_bits color_theme_menu_bits dropdown-max-height pb-0" role="menu">
+                                                        <t t-foreach="state?.all_color_themes" t-as="color_theme" t-key="color_theme">
+                                                            <a t-attf-class="dropdown-item color_theme_bits #{state?.color_theme == color_theme ? 'active':''}" t-att-data-color-theme="color_theme" t-on-click="this?.onSelectColorTheme">
+                                                                <t t-esc="state?.all_color_themes[color_theme]"/>
+                                                            </a>
+                                                        </t>
+                                                        <button style="white-space: nowrap;" t-if="state?.dashboard_data?.has_group_admin_bits" class="btn btn-primary default_color_theme_bits w-100" t-att-data-curr-mode="state?.color_theme" t-on-click="this?.onDefaultColorTheme">Make current as default </button>
+                                                    </div>
+                                                </div>
+                                                <div class="view_mode_switch px-1" style="position: relative;">
+                                                    <button t-on-click="this?.toggleDropdownClass" class="o_dropdown_toggler_btn btn btn-secondary dropdown-toggle view_mode_dropdown_bits h-100" data-toggle="dropdown" aria-expanded="false" title="View Mode">
+                                                        <lable id="view_mode_selection_bits" t-att-data-current="state?.view_mode" style="pointer-events: none;"> 
+                                                            View Mode
+                                                        </lable> 
+                                                    </button>
+                                                    <div class="py-0 dropdown-menu view_mode_container_bits dropdown-max-height" role="menu" style="right: 0;">
+                                                        <a t-attf-class="dropdown-item view_mode_bits #{state?.view_mode == 'light' ? 'active':''}" data-view-mode="light" t-on-click="this?.onSelectViewMode">Light</a>
+                                                        <a t-attf-class="dropdown-item view_mode_bits #{state?.view_mode == 'dark' ? 'active':''}" data-view-mode="dark" t-on-click="this?.onSelectViewMode">Dark</a>
+                                                        <button t-if="state?.dashboard_data?.has_group_admin_bits" class="btn btn-primary default_view_mode_bits" t-att-data-curr-mode="state?.view_mode" t-on-click="this?.saveViewMode">Make
+                                                            <t t-esc="state?.view_mode"/> as default
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div class="media_option_container ps-2" style="position: relative;">
+                                                    <button t-on-click="this?.toggleDropdownClass" class="o_dropdown_toggler_btn btn btn-primary media_dropdown_bits" data-toggle="dropdown" aria-expanded="false">
+                                                        <i class="fa fa-th-list" style="pointer-events: none;"/>
+                                                    </button>
+                                                    <div style="top: 35px;" class="py-0 dropdown-menu view_mode_container_bits dropdown-max-height" role="menu">
+                                                        <a t-attf-class="py-2 dropdown-item capture_dash_bits" t-on-click="this?.onCaptureDashboard">Capture Dashboard</a>
+                                                        <a t-if="state?.dashboard_data?.is_public" t-attf-class="py-2 dropdown-item share_bits" t-on-click="this?.onGenerateShareLink">Share Dashboard Link</a>
+                                                        <a t-if="state?.dashboard_data?.is_public" t-attf-class="py-2 dropdown-item embade_bits" t-on-click="this?.onEmbadeDashboard">Embed Dashboard Link</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-sm-12 col-md-3 col-lg-6 col-xl-6 cnt-right text-right filter_main">
+                                <div class="filter_container" t-if="state?.applied_filters?.length">
+                                    <div role="search" aria-autocomplete="list" class="o_searchview d-flex justify-content-between"> 
+                                        <!-- <i title="Save As Default" role="img" aria-label="Search?.?.?." class="o_searchview_icon fa fa-star">Save</i> -->
+                                        <div class="o_searchview_input_container">
+                                            <t t-if="state?.applied_filters?.length" t-foreach="state?.applied_filters" t-as="filter" t-key="filter?.uid">
+                                                <div tabindex="0" role="img" aria-label="search" class="o_searchview_facet ps-1"> 
+                                                    <div class="o_facet_values bg-200 border-0 d-flex align-items-center my-1 px-1 rounded-2">
+                                                        <span class="o_facet_value"><t t-esc="filter?.filter_name"/></span>
+                                                        <i t-on-click="this?.onClickFacetRemove" role="img" aria-label="Remove" title="Remove" class="fa fa-sm fa-remove o_facet_remove" t-att-data-uid="filter?.uid"></i>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                            <!-- <input type="text" autofocus="" role="searchbox" title="Search for records" class="o_searchview_input" disabled="1"/> -->
+                                        </div>
+                                    </div>
+                                </div>
+                                <div t-attf-class="filters_btn_container f-main-container #{state?.dashboard_data?.filters?.length ?'justify-content-between':'justify-content-end'} mt-1 #{ state?.dashboard_data?.filters &amp;&amp; !state?.dashboard_data?.filters?.length ?'float-right':''}">   
+                                    <t t-if="state?.dashboard_data?.filters?.length">
+                                        <div class="sub-main-container align-items-center filter-items bg-primary mr-2">  
+                                            <i class="fa fa-filter px-2 mr-0 d-none d-sm-block" style="color: white;"/> 
+                                            <t t-foreach="state?.dashboard_data?.filters" t-as="ft" t-key="ft?.filter_id"> 
+                                                <div class="filter-bits">
+                                                    <input type="text" t-att-placeholder="ft?.target_field_name" class="o_dropdown_toggler_btn btn btn-secondary dropdown-toggle c_filter_bits" data-toggle="dropdown" aria-expanded="false" 
+                                                        t-on-focus="this?.onClickCustomfilter"
+                                                        t-on-input="this?.onClickCustomfilterInput"
+                                                        t-att-data-target_model="ft?.target_field_model" t-att-data-filter_id="ft?.filter_id" 
+                                                        t-att-data-ttype="ft?.field_type" t-att-data-field="ft?.target_field_tname"
+                                                        t-on-click="this?.onClickCustomfilter" t-att-title="ft?.target_field_name"> 
+                                                    </input>
+                                                    <div class="dropdown-menu py-0 text-center c_filters_container_bits dropdown-max-height" role="menu"> 
+                                                    <t t-if="state.is_filter">
+                                                        <t  t-if="state?.filter_data[ft?.filter_id]?.length &gt; 0">
+                                                            <t t-foreach="state.filter_data[ft?.filter_id]" t-as="fi" t-key="fi_index">
+                                                                <t t-if="fi.length">
+                                                                    <a t-on-click="this.onClickFilterValue" t-attf-class="text-left filter_value" t-att-data-sid="fi[0]" t-att-data-value="fi[1]" data-ttype="selection">
+                                                                        <t t-esc="fi[1]"/>
+                                                                    </a>
+                                                                </t>
+                                                                <t t-else="">
+                                                                    <a t-on-click="this.onClickFilterValue" t-attf-class="text-left filter_value" t-att-data-rid="fi.id" t-att-data-value="fi.name? fi.name:fi.display_name" data-ttype="relational">
+                                                                        <t t-if="fi.name">
+                                                                            <t t-esc="fi.name"/>    
+                                                                        </t> 
+                                                                        <t t-else="">
+                                                                            <t t-esc="fi.display_name"/>
+                                                                        </t> 
+                                                                    </a>
+                                                                </t>
+                                                            </t> 
+                                                        </t>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <i class="fa fa-spin fa-spinner"/>
+                                                    </t>
+                                                    </div>
+                                                </div>  
+                                            </t>  
+                                        </div> 
+                                    </t>
+                                    <div class="sub-main-container">
+                                        <div t-if="state?.dashboard_data?.filters" class="filter-bits sub-main-container px-1">
+                                            <div style="position: relative;">
+                                                <button t-on-click="this?.toggleDropdownClass" t-if="state?.fav_filters?.length || state?.dashboard_data?.filters?.length" class="o_dropdown_toggler_btn btn btn-secondary dropdown-toggle h-100 p-2 d-flex w-100 justify-content-center align-items-center"  data-toggle="dropdown" aria-expanded="false" title="Favorites"><i class="fa fa-star"/><b style="pointer-events: none;">Favorite</b></button>  
+                                                <div t-if="state?.fav_filters?.length || state?.dashboard_data?.filters?.length" id="save_fav_filter_bits" class="dropdown-menu p-0 bg-100" role="menu"> 
+                                                    <div t-if="state?.fav_filters">
+                                                        <t t-foreach="state?.fav_filters" t-as="filter" t-key="filter?.id"> 
+                                                            <a t-on-click="this?.onClickFavoriteApply" t-attf-class="#{filter?.is_active?'active':''} dropdown-item fv_filter_bits d-flex justify-content-between align-items-center bg-100 ps-4 pe-2" t-att-data-filter_id="filter?.id" > 
+                                                                <span> <t t-esc="filter?.name"/></span>
+                                                                <i class="fa fa-remove btn fv_filter_rm_bits" t-att-data-fvid="filter?.id" t-on-click="this?.onClickFavoriteRemove"/>
+                                                            </a>    
+                                                        </t> 
+                                                    </div> 
+                                                    <div class="dropdown-item py-3 px-3 bg-white " style="cursor: default;"> 
+                                                        <h6 class="p-2 bg-200">Save Current Search</h6>
+                                                        <input type="text" class="o_input input-filter-bits p-2 w-100" value="Favorite" t-on-click="ev => ev.stopPropagation()"/>
+                                                        <div class="py-2">
+                                                            <input type="checkbox" class="fome-input user-default-bits" t-on-click="ev => ev.stopPropagation()"/>
+                                                            Use by default 
+                                                        </div>
+                                                        <button class="btn btn-primary save_fav_filter_bits" t-att-data-curr-mode="state?.time_frame" t-on-click="this?.onClickFavoriteFilterSave">Save</button> 
+                                                    </div> 
+                                                </div>
+                                            </div>
+                                        </div> 
+                                        <div class="time_range_filter container-bits px-1"> 
+                                            <div t-attf-class="d-flex d-container date_picker_container #{state?.time_frame != 'custom' ? 'd-hidden':''}">
+                                                <div class="date_picker_bits d-flex border-primary">
+                                                    <div class="o_datepicker o_field_date o_field_this?.state o_quick_editable" aria-atomic="true" id="datepicker738" data-target-input="nearest">
+                                                        <DateTimeInput value="state.from_date" onChange="this?.onStartDatechanged.bind(this)" type="'date'" placeholder="'Date from'"/>
+                                                        <span class="o_datepicker_button"/>
+                                                    </div>
+                                                    <div class="o_datepicker o_field_date o_field_this?.state o_quick_editable " aria-atomic="true"
+                                                        id="datepicker144">
+                                                        <DateTimeInput value="state.to_date" onChange="this?.onEndDatechanged.bind(this)" type="'date'" placeholder="'Date to'"/>
+                                                        <span class="o_datepicker_button"/>
+                                                    </div>
+                                                </div>
+                                                <button class="btn btn-primary btn_apply_date" t-on-click="this?.onClickDatesApply">Apply</button>
+                                            </div>
+                                            <div style="position: relative;">
+                                                <button t-on-click="this?.toggleDropdownClass" class="o_dropdown_toggler_btn btn btn-secondary dropdown-toggle date_filter_dropdown_bits p-2" data-toggle="dropdown" aria-expanded="false" title="Date Filters">
+                                                    <span class="fa fa-sm fa-calendar" style="pointer-events: none;"/> 
+                                                    <t t-if="state?.time_frame" t-esc="state?.time_frame.replaceAll('_',' ')"/>
+                                                </button>
+                                                <div id="date_selector_container_bits" class="dropdown-menu date_filters_menu_drop_down_bits date_filters_menu_bits dropdown-max-height pb-0" role="menu">
+                                                    <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'default' ? 'active':''}" data-date-format="default" t-on-click="this?.onSelectTimeframe">Default</a>
+                                                    <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'today' ? 'active':''}" data-date-format="today" t-on-click="this?.onSelectTimeframe">Today</a>
+                                                    <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'next_day' ? 'active':''}" data-date-format="next_day" t-on-click="this?.onSelectTimeframe">Next day</a>
+                                                    <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'next_week' ? 'active':''}" data-date-format="next_week" t-on-click="this?.onSelectTimeframe">Next Week</a>
+                                                    <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'next_month' ? 'active':''}" data-date-format="next_month" t-on-click="this?.onSelectTimeframe">Next Month</a>
+                                                    <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'next_year' ? 'active':''}" data-date-format="next_year" t-on-click="this?.onSelectTimeframe">Next Year</a>
+                                                    <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'this_week' ? 'active':''}" data-date-format="this_week" t-on-click="this?.onSelectTimeframe">This Week</a>
+                                                    <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'this_month' ? 'active':''}" data-date-format="this_month" t-on-click="this?.onSelectTimeframe">This Month</a>
+                                                    <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'this_year' ? 'active':''}" data-date-format="this_year" t-on-click="this?.onSelectTimeframe">This Year</a>
+                                                    <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'yesterday' ? 'active':''}" data-date-format="yesterday" t-on-click="this?.onSelectTimeframe">Yesterday</a>
+                                                    <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'last_week' ? 'active':''}" data-date-format="last_week" t-on-click="this?.onSelectTimeframe">Last Week</a>
+                                                    <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'last_month' ? 'active':''}" data-date-format="last_month" t-on-click="this?.onSelectTimeframe">Last Month</a>
+                                                    <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'last_two_months' ? 'active':''}" data-date-format="last_two_months" t-on-click="this?.onSelectTimeframe">Last 2 Months</a>
+                                                    <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'last_three_months' ? 'active':''}" data-date-format="last_three_months" t-on-click="this?.onSelectTimeframe">Last 3 Months </a>
+                                                    <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'last_year' ? 'active':''}" data-date-format="last_year" t-on-click="this?.onSelectTimeframe">Last Year</a>
+                                                    <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'last_24_hr' ? 'active':''}" data-date-format="last_24_hr" t-on-click="this?.onSelectTimeframe">Last 24 hours</a>
+                                                    <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'last_10' ? 'active':''}" data-date-format="last_10" t-on-click="this?.onSelectTimeframe">Last 10 Days</a>
+                                                    <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'last_30' ? 'active':''}" data-date-format="last_30" t-on-click="this?.onSelectTimeframe">Last 30 Days</a>
+                                                    <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'last_60' ? 'active':''}" data-date-format="last_60" t-on-click="this?.onSelectTimeframe">Last 60 Days</a>
+                                                    <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'last_90' ? 'active':''}" data-date-format="last_90" t-on-click="this?.onSelectTimeframe">Last 90 Days</a>
+                                                    <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'last_365' ? 'active':''}" data-date-format="last_365" t-on-click="this?.onSelectTimeframe">Last 365 Days</a>
+                                                    <a t-attf-class="dropdown-item date_formate_bits #{state?.time_frame == 'custom' ? 'active':''}" data-date-format="custom" t-on-click="this?.onSelectTimeframe">Custom Range</a>
+                                                    <button style="white-space: nowrap;" t-if="state?.dashboard_data?.has_group_admin_bits" class="btn btn-primary default_time_frame_bits w-100" t-att-data-curr-mode="state?.time_frame" t-on-click="this?.onDefaultTimeFrame">Make current as default </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="color_theme_bits container-bits px-1" style="position: relative;">
+                                            <button t-on-click="this?.toggleDropdownClass" class="o_dropdown_toggler_btn btn btn-secondary dropdown-toggle color_theme_dropdown_bits h-100"
+                                                    data-toggle="dropdown" aria-expanded="false" title="Color Themes">
+                                                <span class="fa fa-sm fa-paint-brush" style="pointer-events: none;"/> 
+                                            </button>
+                                            <div id="color_theme_container_bits" class="dropdown-menu color_theme_menu_drop_down_bits color_theme_menu_bits dropdown-max-height pb-0" role="menu">
+                                                <t t-foreach="state?.all_color_themes" t-as="color_theme" t-key="color_theme">
+                                                    <a t-attf-class="dropdown-item color_theme_bits #{state?.color_theme == color_theme ? 'active':''}" t-att-data-color-theme="color_theme" t-on-click="this?.onSelectColorTheme">
+                                                        <t t-esc="state?.all_color_themes[color_theme]"/>
+                                                    </a>
+                                                </t>
+                                                <button style="white-space: nowrap;" t-if="state?.dashboard_data?.has_group_admin_bits" class="btn btn-primary default_color_theme_bits w-100" t-att-data-curr-mode="state?.color_theme" t-on-click="this?.onDefaultColorTheme">Make current as default </button>
+                                            </div>
+                                        </div>
+                                        <div class="view_mode_switch px-1" style="position: relative;">
+                                            <button t-on-click="this?.toggleDropdownClass" class="o_dropdown_toggler_btn btn btn-secondary dropdown-toggle view_mode_dropdown_bits h-100" data-toggle="dropdown" aria-expanded="false" title="View Mode">
+                                                <span class="fa fa-sm fa-eye" style="pointer-events: none;"/>
+                                            </button>
+                                            <div class="py-0 dropdown-menu view_mode_container_bits dropdown-max-height" role="menu" style="right: 0;">
+                                                <a t-attf-class="dropdown-item view_mode_bits #{state?.view_mode == 'light' ? 'active':''}" data-view-mode="light" t-on-click="this?.onSelectViewMode">Light</a>
+                                                <a t-attf-class="dropdown-item view_mode_bits #{state?.view_mode == 'dark' ? 'active':''}" data-view-mode="dark" t-on-click="this?.onSelectViewMode">Dark</a>
+                                                <button t-if="state?.dashboard_data?.has_group_admin_bits" class="btn btn-primary default_view_mode_bits" t-att-data-curr-mode="state?.view_mode" t-on-click="this?.saveViewMode">Make
+                                                    <t t-esc="state?.view_mode"/> as default
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="media_option_container ps-2" style="position: relative;">
+                                            <button t-on-click="this?.toggleDropdownClass" class="o_dropdown_toggler_btn btn btn-primary media_dropdown_bits" data-toggle="dropdown" aria-expanded="false">
+                                                <i class="fa fa-th-list" style="pointer-events: none;"/>
+                                            </button>
+                                            <div style="left: -127px; top: 35px;" class="py-0 dropdown-menu view_mode_container_bits dropdown-max-height" role="menu">
+                                                <a t-attf-class="py-2 dropdown-item capture_dash_bits" t-on-click="this?.onCaptureDashboard">Capture Dashboard</a>
+                                                <a t-if="state?.dashboard_data?.is_public" t-attf-class="py-2 dropdown-item share_bits" t-on-click="this?.onGenerateShareLink">Share Dashboard Link</a>
+                                                <a t-if="state?.dashboard_data?.is_public" t-attf-class="py-2 dropdown-item embade_bits" t-on-click="this?.onEmbadeDashboard">Embed Dashboard Link</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="body_container_bits" class="body_container_bits">
+                        <div class="grid-items-container-bits" t-ref="grid">
+                            <div t-attf-class="grid-stack grid-stack-bits "/>
+                        </div>
+                    </div>
+                    <div id="default_view" style="display:none;">
+                        <t t-foreach="state.viewData" t-as="viewData" t-key="viewData.node.id">
+                            <div class='grid-stack-item' t-att-data-stack-id="viewData.node.id">
+                                <div class="card grid-stack-item-content shadow">
+                                    <div t-attf-data-id="action_#{viewData.node.action_id}_#{viewData.node.id}" class="oe_action overflow-auto" style="z-index: 1;height: 100%;">
+                                        <h2 t-attf-class="oe_header #{viewData.node.name? 'px-3 pt-3 pb-2 sticky-top bg-light': ''}" t-attf-style="#{viewData.node.name? 'left: 0;margin: 0;': 'margin: 0;'}">
+                                            <span class="oe_header_txt"> <t t-esc="viewData.node.name"/> </span>
+                                            <t t-if="!name"></t>
+                                            <span class='oe_icon oe_close'></span>
+                                        </h2>
+                                        <div class="oe_content">
+                                            <t t-if="viewData.value">
+                                                <View t-props="viewData.value"/>
+                                            </t>
+                                            <t t-else="">
+                                                <h2 class="error-text text-center" style="margin-top: 20px">Action not found.</h2>
+                                            </t>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

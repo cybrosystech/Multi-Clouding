@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="dashboard_item_view_form_bits" model="ir.ui.view">
+        <field name="name">dashboard.item.bits.view.form</field>
+        <field name="model">dashboard.item.bits</field>
+        <field name="groups_id" eval="[(4, ref('analytix_dashboard_bits.dashboard_builder_manager_bits'))]"/>
+        <field name="arch" type="xml">
+            <form>
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-12 col-md-12 col-lg-7 order-2 order-md-1 clearfix position-relative o_form_sheet shadow border">
+                            <group>
+                                <group name="basic_info" string="Basic Info">
+                                    <field name="name" required="item_type == 'statistics'"/>
+                                    <field name="default_time_frame" invisible="1"/>
+                                    <field name="bits_dashboard_id" required="1"
+                                           options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+                                </group>
+                                <group name="data_operation" string="Data Operation"
+                                invisible="item_type in ['default_base_view','embade_iframe']">
+                                    <field name="is_query"/>
+                                    <field name="model_id"
+                                        invisible="is_query == True"
+                                        required="(is_query == False) and (item_type not in ['default_base_view','embade_iframe'])"
+                                        options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+                                    <field name="model_name" invisible="1"/>
+                                </group>
+                            </group>
+
+                            <group>
+                                <group string="Item Selection">
+                                    <field name="item_type" required="1"/>
+                                    <!-- <field name="item_title" string="Item Title" attrs="{'invisible':[('item_type', '=', 'statistics')]}" /> -->
+                                    <field name="item_title" string="Item Title" invisible="1"/>
+                                    <!--                                    <field name="is_query" attrs="{'invisible': [('statistics_with_trend', '=', True)]}"/>-->
+                                    <field name="onclick_action" options="{'no_open': True, 'no_create': True}"
+                                        invisible="item_type != 'statistics' or statistics_with_trend == True"/>
+                                    <field name="action_id"
+                                            invisible="onclick_action != True"
+                                            required="onclick_action == True"/>
+                                </group>
+                                <group invisible="item_type != 'embade_iframe'">
+                                    <field name="embade_code" invisible="item_type != 'embade_iframe'" required="item_type == 'embade_iframe'"/>
+                                </group>
+                                <group string="Statistics View Style"
+                                        invisible="item_type != 'statistics'">
+                                    <field name="statistics_with_trend"/>
+                                </group>
+
+                                <group string="KPI View Style" invisible="item_type != 'kpi'">
+                                    <field name="kpi_target"/>
+                                </group>
+
+                                <group string="Line Chart Style" invisible="item_type != 'line'">
+                                    <field name="is_smooth_line"/>
+                                    <field name="is_area_style"/>
+                                </group>
+
+                                <group string="Bar Chart Style" invisible="item_type != 'bar'">
+                                    <field name="horizontal_chart"/>
+                                    <field name="is_background"/>
+                                    <field name="bar_stack"/>
+                                    <field name="is_polar"/>
+                                    <field name="circular_chart" invisible="is_polar == False"/>
+                                </group>
+
+                                <group string="Radar Chart Style" invisible="item_type != 'radar'">
+                                    <field name="circular_chart"/>
+                                </group>
+
+                                <group string="Pie Chart Style" invisible="item_type != 'pie'">
+                                    <field name="half_pie"/>
+                                    <field name="doughnut_chart"/>
+                                </group>
+
+                                <group name="list_view" string="List View Style"
+                                invisible="item_type != 'list_view'">
+                                    <field name="list_view_style"/>
+                                </group>
+                            </group>
+
+                            <notebook invisible="item_type == False or item_type in ['default_base_view','embade_iframe']">
+                                
+                                <page name="list_view" string="List Configuration"
+                                    invisible="item_type != 'list_view'">
+                                    <group>
+                                        <group>
+                                            <field name="list_view_field_ids" widget="many2many_tags"
+                                                   invisible="is_query == True"
+                                                   options="{&quot;no_open&quot;: True, &quot;no_create&quot;: True}"/>
+                                            <!-- <field name="show_record_edit_button"/> -->
+                                            <field name="v_records_per_page"
+                                                required="item_type == 'list_view'"/>
+                                            <field name="display_order"
+                                            invisible="is_query == True"/>
+                                        </group>
+                                    </group>
+                                </page>
+
+                                <page name="statistics" string="Statistics Configuration" invisible="item_type != 'statistics'">
+                                    <group>
+                                        <group>
+                                            <field name="statistics_item_title" invisible="1"/>
+                                            <field name="display_data_type"
+                                                    invisible="is_query == True"/>
+                                            <field name="statistics_field"
+                                                   options="{'no_open': True, 'no_create': True}"
+                                                   invisible="(is_query == True) or (display_data_type == 'count')"
+                                                   required="(is_query == False) and (item_type == 'statistics') and (display_data_type != 'count')"/>
+                                            <field name="show_currency" invisible="display_data_type != 'sum'"/>
+                                            <field name="media_option" invisible="display_style == 'style_9'"/>
+                                            <field name="icon_image" widget="image" class="oe_avatar image_bits"
+                                            invisible="media_option == 'fontawesome_bits'"/>
+                                            <field name="icon_bits" widget="icon_picker_bits" class="icon_pick"
+                                                   invisible="(media_option == 'image_bits') or (display_style == 'style_9')"/>
+                                        </group>
+
+                                        <group invisible="statistics_with_trend != True">
+                                            <field name="trend_display_style" required="(item_type == 'statistics') and (statistics_with_trend == True)"/>
+                                            <field name="trend_primary_color" widget="color"/>
+                                        </group>
+
+                                        <group invisible="statistics_with_trend == True">
+                                            <field name="display_style" required="(item_type == 'statistics') and (not statistics_with_trend)"/>
+                                            <field name="background_color" widget="color"/>
+                                            <field name="font_color" widget="color" />
+                                            <field name="icon_background" widget="color" invisible="display_style not in ['style_6','style_3']"/> 
+                                            <field name="icon_color" widget="color" invisible="(display_style == 'style_9') "/>
+                                            <field name="is_border" string="Display Border"/>
+                                            <field name="border_position" invisible="is_border == False"/>
+                                            <field name="border_color" widget="color" invisible="is_border == False"/>
+                                        </group>
+                                    </group>
+                                </page>
+
+                                <page name="kpi" string="KPI Configuration"
+                                      invisible="item_type != 'kpi'">
+                                    <group>
+                                        <group>
+                                            <field name="display_data_type"
+                                                invisible="is_query == True"/>
+                                            <field name="statistics_field"
+                                                   options="{'no_open': True, 'no_create': True}"
+                                                   invisible="(is_query == True) or (display_data_type == 'count')"
+                                                   required="(is_query == False) and (display_data_type != 'count') and (item_type == 'kpi')"/>
+                                            <field name="show_currency" invisible="display_data_type != 'sum'"/>
+                                        </group>
+                                        <group>
+                                            <field name="kpi_display_style" required="item_type == 'kpi'"/>
+                                            <field name="font_color" widget="color"/>
+                                            <field name="kpi_primary_color" widget="color"/>
+                                            <field name="apply_background"/>
+                                        </group>
+                                    </group>
+                                </page>
+
+                                <page name="chart_config" string="Chart Configuration"
+                                      invisible="(is_query == True) or (item_type in ('list_view', 'statistics', 'kpi')) and (statistics_with_trend == False)">
+                                    <group>
+                                        <field name="display_data_type" invisible="statistics_with_trend == True"/>
+                                        <field name="chart_measure_field_ids" widget="many2many_tags"
+                                               options="{'no_open': True, 'no_create': True}" nolabel="0"
+                                               required="item_type not in ['statistics', 'kpi', 'list_view','embade_iframe', 'default_base_view'] and display_data_type == 'sum' and not is_query"
+                                               invisible="display_data_type == 'count'"/>
+                                        <field name="chart_groupby_field"
+                                               options="{'no_open': True, 'no_create': True}"/>
+                                        <field name="chart_sub_groupby_field"
+                                               invisible="chart_groupby_field == False"
+                                               options="{'no_open': True, 'no_create': True}"/>
+                                        <field name="bar_line_field_id"
+                                                invisible="is_bar_line == False"
+                                               options="{'no_open': True, 'no_create': True}"/>
+                                        <field name="is_bar_line" invisible="1"/>
+                                        <field name="is_smooth_line"
+                                               invisible="statistics_with_trend == False"/> 
+                                    </group>
+                                    <group name="formating" string="Lable configuration" invisible="item_type not in ['line', 'bar', 'pie']">
+                                        <field name="lable_format" string="Measure Label Format" invisible="item_type not in ['line', 'bar']"/>
+                                        
+                                        <field name="show_lable"/>
+                                        <field name="lable_position" invisible="show_lable == False" required="show_lable == True"/>
+                                    </group>
+                                    <group name="formating" string="Chart Groups configuration" invisible="item_type not in ['pie']">
+                                        <field name="show_legend"/>
+                                        <field name="legend_position" invisible="show_legend == False" required="show_legend == True"/>
+                                    </group>
+                                </page>
+
+                                <page name="trend_bottom_configuration" string="Trend Bottom Configuration"
+                                      invisible="(is_query == True) or (trend_display_style != 'style_1') or (item_type != 'statistics') or (statistics_with_trend == False)">
+                                    <group>
+                                        <field name="b_trend_field_id" options="{'no_open': True, 'no_create': True}"/>
+                                        <field name="b_measure_type"/>
+                                        <field name="b_measure_field_id"
+                                            invisible="b_measure_type == 'count'"
+                                            required="b_measure_type != 'count' and trend_display_style == 'style_1'"
+                                            options="{'no_open': True, 'no_create': True}"/>
+                                        <field name="b_show_val" widget="custom_dropdown_dynamic"/>
+                                    </group>
+                                </page>
+                                <page name="query" string="SQL Query" invisible="is_query == False">
+                                    <field name="query"
+                                           required="is_query == True and item_type != 'default_base_view'"/>
+                                    <field name="res_query_bits" invisible="1"/>
+
+                                    <separator/>
+                                    <group invisible="is_query != True and item_type != 'default_base_view'">
+                                        <group>
+                                            <field name="stats_value_by_qry" string="Statistics Value"
+                                                   widget="x_axis_bits"/>
+                                        </group>
+                                    </group>
+
+                                    <group string="Bottom Value"
+                                           invisible="((item_type == 'statistics') and (statistics_with_trend == False)) or ((trend_display_style != 'style_1') or (item_type != 'statistics'))">
+                                        <group>
+                                            <field name="stats_chart_x_by_qry" string="Trend Bottom Measure"
+                                                   widget="x_axis_bits"/>
+                                            <field name="stats_chart_y_by_qry" string="Trend Bottom Group"
+                                                   widget="x_axis_bits"/>
+                                        </group>
+                                    </group>
+
+                                    <group invisible="item_type != 'kpi'">
+                                        <group>
+                                            <field name="stats_value_by_qry" string="KPI Value" widget="x_axis_bits"/>
+                                        </group>
+                                    </group>
+
+                                    <group invisible="item_type != 'list_view'">
+                                        <group>
+                                            <field name="y_axis" widget="y_axis_bits" string="Columns"/>
+                                        </group>
+                                    </group>
+
+                                    <group string="Chart Configration"
+                                           invisible="(item_type in ('kpi', 'list_view')) or ((item_type == 'statistics') and (statistics_with_trend == False))">
+                                        <group>
+                                            <field name="y_axis" widget="y_axis_bits" string="Measure"/>
+                                            <field name="x_axis" widget="x_axis_bits" string="Group By"/>
+                                            <field name="bar_line_measure" string="Bar/line Measure"
+                                                   widget="x_axis_bits"
+                                                   invisible="item_type != 'bar'"/>
+                                        </group>
+
+                                    </group>
+                                    <group name="formating" string="Label Configuration">
+                                        <field name="lable_format"/> 
+                                        <field name="show_lable"/>
+                                        <field name="lable_position" invisible="show_lable == False" required="show_lable == True"/> 
+                                    </group>
+                                    <group name="formating" string="Legends configuration" invisible="item_type != 'pie'"> 
+                                        <field name="show_legend"/>
+                                        <field name="legend_position" invisible="show_legend == False" required="show_legend == True"/> 
+                                    </group>
+
+                                    <p role="alert"
+                                       class="fa fa-info-circle alert alert-info alert-dismissible rounded-0 fade show d-print-none css_editable_mode_hidden"
+                                       style="font-size: 15px;letter-spacing: 1px;">EX
+                                        <br/>
+                                        SELECT SUM(amount_total) AS amount, partner_id FROM sale_order GROUP BY
+                                        partner_id
+                                    </p>
+                                </page>
+                                <page name="filter" string="Filter" invisible="is_query == True">
+                                    <group>
+                                        <field name="item_domain" widget="terabits_domain"
+                                               options="{'model': 'model_name', 'in_dialog': True}"/>
+                                        <field name="is_limit_record"/>
+                                        <field name="record_limit"
+                                            invisible="is_limit_record == False"/>
+                                    </group>
+                                </page>
+                            </notebook>
+                        </div>
+                        <div class="col-12 col-md-12 col-lg-5 order-1 order-md-2 justify-content-center d-flex">
+                            <field name="chart_preview_data" widget="chart_preview_bits" class="chart_preview"/>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="dashboard_item_bits_view_tree" model="ir.ui.view">
+        <field name="name">dashboard.item.bits.view.tree</field>
+        <field name="model">dashboard.item.bits</field>
+        <field name="groups_id" eval="[(4, ref('analytix_dashboard_bits.dashboard_builder_manager_bits'))]"/>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="model_id"/>
+                <field name="display_data_type"/>
+                <field name="bits_dashboard_id"/>
+                <field name="item_type"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="dashboard_item_bits_view_search" model="ir.ui.view">
+        <field name="name">dashboard.item.bits.view.search</field>
+        <field name="model">dashboard.item.bits</field>
+        <field name="arch" type="xml">
+            <search>
+            <field name="name"></field>
+                <group expand="1" string="Group By Dashboard">
+                    <filter name="group_by_dashboard" string="Group By Dashboard"
+                            context="{'group_by': 'bits_dashboard_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_dashboard_item_bits" model="ir.actions.act_window">
+        <field name="name">Dashboard Item</field>
+        <field name="res_model">dashboard.item.bits</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+    </record>
+
+    <menuitem id="menu_dashboard_items" name="Dashboard Items"
+              groups="analytix_dashboard_bits.dashboard_builder_manager_bits"
+              parent="analytix_dashboard_bits.menu_dashboard_config"
+              action="action_dashboard_item_bits" sequence="10"/>
+</odoo>

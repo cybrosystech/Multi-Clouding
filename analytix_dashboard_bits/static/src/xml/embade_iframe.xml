@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+    <t t-name="EmbadeIframe">
+        <div class="grid-stack-item embade_iframe" t-att-data-stack-id="item.id"> 
+            <div class="grid-stack-item-content shadow">  
+                <div class="iframe-content">
+                    <div class="iframe-header"></div>
+                    <div class="iframe-body h-100 w-100">
+                        <div class="p-2 item_title justify-content-between d-flex">
+                            <h2 class="m-0"><t t-esc="item.name"/></h2>
+                        </div>
+                    </div> 
+                </div> 
+            </div>
+        </div>
+    </t>
+</templates>

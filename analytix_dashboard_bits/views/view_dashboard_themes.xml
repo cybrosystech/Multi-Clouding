@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_dashboard_theme_form" model="ir.ui.view">
+        <field name="name">dashboard.themes.view.form</field>
+        <field name="model">dashboard.themes</field>
+        <field name="groups_id" eval="[(4, ref('analytix_dashboard_bits.dashboard_builder_manager_bits'))]"/>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="d-flex justify-content-center">
+                        <div style="flex-grow: 1;">
+                            <div class="oe_title mb24" style="max-width: 100vw;">
+                                <h1>
+                                    <field class="text-break" name="name" default_focus="1"
+                                        placeholder="e.g. Classic"/>
+                                </h1>
+                            </div>
+                                <field name="is_default"/>
+                                <label for="is_default"  string="Use this theme as default theme">
+                                </label>
+                            <group>
+                                <group>
+                                    <field name="color_1" widget="color"/>
+                                    <field name="color_2" widget="color"/>
+                                    <field name="color_3" widget="color"/>
+                                    <field name="color_4" widget="color"/>
+                                </group>
+                                <group>
+                                    <field name="color_5" widget="color"/>
+                                    <field name="color_6" widget="color"/>
+                                    <field name="color_7" widget="color"/>
+                                    <field name="color_8" widget="color"/>
+                                </group>
+                            </group>
+                        </div>
+                        <div>
+                            <p style="font-weight: 500;color: #091124;font-size: 1.08333333rem;line-height: 1.5;">Add logo to automatically select theme based on the image</p>
+                            <div style="max-width: 250px">
+                                <field string="" name="logo" widget="image"></field>
+                            </div>
+                        </div>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_dashboard_theme_tree" model="ir.ui.view">
+        <field name="name">dashboard.themes.view.tree</field>
+        <field name="model">dashboard.themes</field>
+        <field name="groups_id" eval="[(4, ref('analytix_dashboard_bits.dashboard_builder_manager_bits'))]"/>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_dashboard_theme_act_window" model="ir.actions.act_window">
+        <field name="name">Dashboard Themes</field>
+        <field name="res_model">dashboard.themes</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_dashboard_themes" name="Dashboard Themes"
+              parent="analytix_dashboard_bits.menu_dashboard_config"
+              groups="analytix_dashboard_bits.dashboard_builder_manager_bits"
+              action="action_dashboard_theme_act_window"/>
+</odoo>

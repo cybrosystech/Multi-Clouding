@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+        <record id="dashboard_bits_view_form" model="ir.ui.view">
+            <field name="name">dashboard.bits.view.form</field>
+            <field name="model">dashboard.bits</field>
+            <field name="groups_id" eval="[(4, ref('analytix_dashboard_bits.dashboard_builder_manager_bits'))]"/>
+            <field name="arch" type="xml">
+                <form string="">
+                    <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button"
+                                name="open_form_view"
+                                type="object"
+                                style="text-align: center;"
+                                >
+                            <div class="o_stat_info o_form_field">
+                                <span style="font-weight: bold;" class="text-success">Open dashboard</span>
+                            </div>
+                        </button>
+                    </div>
+                        <group>
+                            <group> 
+                                <field name="name" required="1"/>
+                                <field name="menu_name" required="1"/>
+                                <field name="dashboard_menu_id" invisible="1" force_save="1"/>
+                                <field name="client_action_id" invisible="1" force_save="1"/> 
+                                <field name="parent_menu_id" options='{"no_create": True}' invisible="is_main_menu == True" required="is_main_menu == False" force_save="1" />
+                                <field name="menu_sequence"/>
+                                <field name="company_id"/>
+                            </group>
+                            <group> 
+                                <field name="d_icon_bits" widget="mid_icon_picker_bits" class="icon_pick" />
+                                <field name="active"/> 
+                                <field name="is_main_menu"/>
+                                <field invisible="is_main_menu == False" name="dashboard_icon" widget="image" class="oe_avatar"/>
+                            </group>
+                        </group> 
+                        <group>
+                            <group>
+                                <field name="grid_config_id"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page name="filter" string="Filter">
+                                <field name="filter_ids" force_save="1"/>
+                            </page> 
+                            <page name="security" string="security">
+                                <group>
+                                    <group>
+                                        <field name="group_ids" widget="many2many_tags" force_save="1"/>
+                                    </group>
+                                </group>
+                            </page>
+                            <page name="general" string="General Settings">
+                                <group>
+                                    <group>
+                                        <field name="default_time_frame"/>
+                                        <field name="default_color_theme"/>
+                                        <field name="default_view_mode"/>
+                                        <field name="is_public"/>
+                                    </group>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="dashboard_bits_view_tree" model="ir.ui.view">
+            <field name="name">dashboard.bits.view.tree</field>
+            <field name="model">dashboard.bits</field>
+            <field name="groups_id" eval="[(4, ref('analytix_dashboard_bits.dashboard_builder_manager_bits'))]"/>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="menu_name"/>
+                    <field name="parent_menu_id"/>
+                    <field name="active"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="dashboard_bits_view_search" model="ir.ui.view">
+            <field name="name">dashboard.bits.view.search</field>
+            <field name="model">dashboard.bits</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"></field>
+                    <separator/>
+                        <filter string="All" name="all" domain="['|', ('active', '=', False), ('active', '=', True)]"/>
+                    <separator/>
+                </search>
+            </field>
+        </record>
+
+        <record id="action_dashboards_bits" model="ir.actions.act_window">
+            <field name="name">New Dashboard</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">dashboard.bits</field>
+            <field name="view_mode">form,tree</field>
+            <field name="domain" eval="False"/>
+            <field name="view_id" ref="dashboard_bits_view_tree"/>
+            <field name="context">{'search_default_all': 1}</field>
+        </record>
+
+        <menuitem id="menu_dashboards_bits" name="Dashboards" groups="analytix_dashboard_bits.dashboard_builder_manager_bits" parent="analytix_dashboard_bits.menu_dashboard_config"
+                  action="action_dashboards_bits" sequence="10"/>
+</odoo>

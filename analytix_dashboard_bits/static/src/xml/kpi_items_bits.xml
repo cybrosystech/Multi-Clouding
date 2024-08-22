@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+    <t t-name="KpiItemsBits">
+        <t t-if="kpi_config &amp;&amp; item">
+            <div t-attf-class="grid-stack-item kpi_progress_bits #{kpi_config.kpi_display_style} gsi_#{item.id}"
+                 t-att-data-stack-id="item.id">
+                <t t-if="kpi_config.kpi_display_style == 'style_1'">
+                    <div t-attf-class="grid-stack-item-content shadow" t-att-style="'border-bottom:2px solid;
+                        background:linear-gradient(280deg, #ffffff 25%, '+(kpi_config.apply_background ? kpi_config.kpi_primary_color:'#fff')+ ' 100%);'">
+                        <div class="container-fluid">
+                            <div class="row px-0 mx-0">
+                                <div class="col-6 progress_stats text-left">
+                                    <div class="s_container" t-attf-style="color:#{kpi_config.font_color} !important;">
+                                        <span>
+                                            <t t-if="kpi_config.kpi_field" t-esc="kpi_config.kpi_field"/>
+                                        </span>
+                                        <h1 class="m-0">
+                                            <t t-if="kpi_config.kpi_value" t-esc="kpi_config.kpi_value"/>
+                                        </h1>
+                                        <p>Goal
+                                            <t t-esc="kpi_config.kpi_target"/>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div t-attf-class="progress_line #{item.item_type} grid_center"
+                                         t-attf-id="#{item.id}_#{item.item_type}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+                <t t-if="kpi_config.kpi_display_style == 'style_2'">
+                    <div t-attf-class="grid-stack-item-content kpi_progress_bits_2 shadow" t-att-style="'border-bottom:2px solid;
+                        background:linear-gradient(180deg, #ffffff 25%, '+(kpi_config.apply_background ? kpi_config.kpi_primary_color:'#fff')+ ' 100%);'">
+                        <div class="container-fluid">
+                            <div class="row px-0 mx-0 justify-content-center">
+                                <div class="col-12">
+                                    <div t-attf-class="progress_line #{item.item_type} grid_center"
+                                         t-attf-id="#{item.id}_#{item.item_type}">
+                                    </div>
+                                </div>
+                                <div class="col-12 progress_stats">
+                                    <div class="s_container" t-attf-style="color:#{kpi_config.font_color} !important;">
+                                        <span>
+                                            <t t-if="kpi_config.kpi_field" t-esc="kpi_config.kpi_field"/>
+                                        </span>
+                                        <h1 class="m-0">
+                                            <t t-if="kpi_config.kpi_value" t-esc="kpi_config.kpi_value"/>
+                                        </h1>
+                                        <p>Goal
+                                            <t t-esc="kpi_config.kpi_target"/>
+                                        </p>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </t>
+                <t t-if="kpi_config.kpi_display_style == 'style_3'">
+                    <div t-attf-class="grid-stack-item-content shadow" t-att-style="'border-bottom:2px solid;
+                        background:linear-gradient(180deg, #ffffff 25%, '+(kpi_config.apply_background ? kpi_config.kpi_primary_color:'#fff')+ ' 100%);'">
+                        <div class="container-fluid h-100">
+                            <div class="row px-0 mx-0 justify-content-center h-100 align-items-center x_progress">
+                                <div class="col-12 progress_stats">
+                                    <div class="s_container" t-attf-style="color:#{kpi_config.font_color} !important;">
+                                        <div>
+                                            <span>
+                                                <t t-if="kpi_config.kpi_field" t-esc="kpi_config.kpi_field"/>
+                                            </span>
+                                            <h1 class="m-0">
+                                                <t t-if="kpi_config.kpi_value" t-esc="kpi_config.kpi_value"/>
+                                            </h1>
+                                            <p>Goal
+                                                <t t-esc="kpi_config.kpi_target"/>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 text-left">
+                                    <div t-attf-class="progress_line #{item.item_type} grid_center" t-attf-id="#{item.id}_#{item.item_type}">
+                                        <div class="progress-bar"> 
+                                            <div class="progress-per" t-att-per="kpi_config.progres_recentage" t-att-style="'background-color: '+(kpi_config.kpi_primary_color ? kpi_config.kpi_primary_color:'#eee')+';'">            
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </div>
+        </t> 
+    </t>
+</templates>

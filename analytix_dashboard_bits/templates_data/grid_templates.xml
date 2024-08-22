@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="rec_config_template_1_bits" model="dashboard.gird.config">
+            <field name="name">Configuration 1</field>
+            <field name="grid_config_bits">
+                [{"data":{"x":0,"y":0,"w":3,"h":2,"minH":2,"maxH":4,"minW":2,"maxW":3},
+                 "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_stats1_bits"},
+                {"data":{"x":0,"y":2,"w":3,"h":2,"minH":2,"maxH":4,"minW":2,"maxW":3},
+                 "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_stats2_bits"},
+                {"data":{"x":9,"y":0,"w":3,"h":2,"minH":2,"maxH":4,"minW":2,"maxW":3},
+                 "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_stats7_bits"},
+                {"data":{"x":9,"y":2,"w":3,"h":2,"minH":2,"maxH":4,"minW":2,"maxW":3},
+                 "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_stats8_bits"},
+                {"data":{"x":3,"y":0,"w":6,"h":4,"minH":3,"maxH":8,"minW":3,"maxW":12},
+                 "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_line_area_bits"},
+                {"data":{"x":0,"y":4,"w":2,"h":3,"minH":3,"maxH":5,"minW":2,"maxW":5},
+                 "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_kpi2_bits"},
+                {"data":{"x":10,"y":4,"w":2,"h":3,"minH":3,"maxH":5,"minW":2,"maxW":5},
+                 "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_kpi2_bits"},
+                {"data":{"x":2,"y":4,"w":4,"h":3,"minH":3,"maxH":3,"minW":2,"maxW":6},
+                 "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_stats_trend1_bits"},
+                {"data":{"x":6,"y":4,"w":4,"h":3,"minH":3,"maxH":8,"minW":2,"maxW":6},
+                 "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_stats_trend1_bits"},
+                {"data":{"x":0,"y":7,"w":4,"h":4,"minH":3,"maxH":8,"minW":3,"maxW":12},
+                 "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_doughnut_bits"},
+                {"data":{"x":4,"y":7,"w":4,"h":4,"minH":3,"maxH":8,"minW":3,"maxW":12},
+                 "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_hor_bar_bits"},
+                {"data":{"x":8,"y":7,"w":4,"h":4,"minH":3,"maxH":8,"minW":3,"maxW":12},
+                 "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_pie_bits"},
+                {"data":{"x":0,"y":11,"w":6,"h":4,"minH":3,"maxH":8,"minW":3,"maxW":12},
+                 "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_list_view1_bits"},
+                {"data":{"x":6,"y":11,"w":6,"h":4,"minH":3,"maxH":8,"minW":3,"maxW":12},
+                 "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_list_view2_bits"}]
+            </field>
+        </record>
+        <record id="rec_config_template_2_bits" model="dashboard.gird.config">
+            <field name="name">Configuration 2</field>
+            <field name="grid_config_bits"> 
+                [{"data":{"x":0,"y":0,"h":2,"w":2,"minH":2,"maxH":3,"maxW":3,"minW":2},
+                "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_stats7_bits"},
+                {"data":{"x":2,"y":0,"h":2,"w":2,"minH":2,"maxH":3,"maxW":3,"minW":2},
+                "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_stats7_bits"},
+                {"data":{"x":4,"y":0,"h":2,"w":2,"minH":2,"maxH":3,"maxW":3,"minW":2},
+                "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_stats8_bits"},
+                {"data":{"x":6,"y":0,"h":2,"w":2,"minH":2,"maxH":3,"maxW":3,"minW":2},
+                "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_stats8_bits"},
+                {"data":{"x":8,"y":0,"h":4,"w":4,"minH":3,"maxH":8,"maxW":12,"minW":3},
+                "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_pie_bits"},
+                {"data":{"x":0,"y":2,"h":3,"w":6,"minH":3,"maxH":3,"maxW":6,"minW":2},
+                "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_stats_trend3_bits"},
+                {"data":{"x":6,"y":2,"h":3,"w":2,"minH":2,"maxH":3,"maxW":3,"minW":2},
+                "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_stats5_bits"},
+                {"data":{"x":0,"y":5,"h":4,"w":4,"minH":3,"maxH":8,"maxW":12,"minW":3},
+                "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_doughnut_bits"},
+                {"data":{"x":4,"y":5,"h":4,"w":4,"minH":3,"maxH":8,"maxW":12,"minW":3},
+                "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_line_chart_bits"},
+                {"data":{"x":8,"y":4,"h":5,"w":4,"minH":3,"maxH":8,"maxW":12,"minW":3},
+                "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_hor_bar_bits"},
+                {"data":{"x":0,"y":9,"h":5,"w":5,"minH":3,"maxH":8,"maxW":12,"minW":3},
+                "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_list_view2_bits"},
+                {"data":{"x":5,"y":9,"h":5,"w":7,"minH":3,"maxH":8,"maxW":12,"minW":3},
+                "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_polar_area_bits"}]
+            </field>
+        </record>
+        <record id="rec_config_template_3_bits" model="dashboard.gird.config">
+            <field name="name">Configuration 3</field>
+            <field name="grid_config_bits"> 
+                [{"data":{"x":0,"y":0,"h":2,"w":3,"minH":2,"maxH":3,"maxW":3,"minW":2},
+                "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_stats7_bits"},
+                {"data":{"x":3,"y":0,"h":4,"w":5,"minH":3,"maxH":8,"minW":3,"maxW":12},
+                "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_bar_chart_bits"},
+                {"data":{"x":8,"y":0,"h":2,"w":2,"minH":2,"maxH":3,"maxW":3,"minW":2},
+                "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_stats4_bits"},
+                {"data":{"x":10,"y":0,"h":2,"w":2,"minH":2,"maxH":3,"maxW":3,"minW":2},
+                "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_stats5_bits"},
+                {"data":{"x":0,"y":2,"h":2,"w":3,"minH":2,"maxH":4,"maxW":3,"minW":2},
+                "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_stats4_bits"},
+                {"data":{"x":8,"y":2,"h":2,"w":2,"minH":2,"maxH":3,"maxW":3,"minW":2},
+                "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_stats4_bits"},
+                {"data":{"x":10,"y":2,"h":2,"w":2,"minH":2,"maxH":3,"maxW":3,"minW":2},
+                "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_stats4_bits"},
+                {"data":{"x":0,"y":4,"h":4,"w":6,"minH":3,"maxH":8,"maxW":12,"minW":3},
+                "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_hor_bar_bits"},
+                {"data":{"x":6,"y":4,"h":4,"w":6,"minH":3,"maxH":8,"minW":3,"maxW":12},
+                "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_line_area_bits"},
+                {"data":{"x":0,"y":8,"h":4,"w":4,"minH":3,"maxH":8,"minW":3,"maxW":12},
+                "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_radar_bits"},
+                {"data":{"x":4,"y":8,"h":4,"w":4,"minH":3,"maxH":8,"maxW":12,"minW":3},
+                "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_pie_bits"},
+                {"data":{"x":8,"y":8,"h":4,"w":4,"minH":3,"maxH":8,"maxW":12,"minW":3},
+                "d_item_id":"analytix_dashboard_bits.rec_dashboard_item_doughnut_bits"}]
+            </field>
+        </record>
+        <record id="rec_dashboard_item_line_chart_bits" model="dashboard.item.bits">
+            <field name="name">Line Chart</field>
+            <field name="display_data_type" >sum</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">line</field>
+            <field name="is_smooth_line">True</field>
+            <field name="lable_format">{value}</field>
+            <field name="is_limit_record">True</field>
+            <field name="record_limit">50</field>
+            <field name="chart_measure_field_ids" eval="[(6, 0, [ref('base.field_res_country__phone_code')])]"/>
+            <field name="chart_groupby_field" eval="ref('base.field_res_country__currency_id')"/>
+        </record>
+        <record id="rec_dashboard_item_line_area_bits" model="dashboard.item.bits">
+            <field name="name">Line Chart</field>
+            <field name="display_data_type" >sum</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">line</field>
+            <field name="is_area_style">True</field>
+            <field name="lable_format">{value}</field>
+            <field name="is_limit_record">True</field>
+            <field name="record_limit">50</field>
+            <field name="chart_measure_field_ids" eval="[(6, 0, [ref('base.field_res_country__phone_code')])]"/>
+            <field name="chart_groupby_field" eval="ref('base.field_res_country__currency_id')"/>
+        </record>
+        <record id="rec_dashboard_item_bar_chart_bits" model="dashboard.item.bits">
+            <field name="name">Bar Chart</field>
+            <field name="display_data_type" >sum</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">bar</field>
+            <field name="lable_format">{value}</field>
+            <field name="is_limit_record">True</field>
+            <field name="record_limit">25</field>
+            <field name="chart_measure_field_ids" eval="[(6, 0, [ref('base.field_res_country__phone_code')])]"/>
+            <field name="chart_groupby_field" eval="ref('base.field_res_country__currency_id')"/>
+        </record>
+        <record id="rec_dashboard_item_hor_bar_bits" model="dashboard.item.bits">
+            <field name="name">Horizontal Bar Chart</field>
+            <field name="display_data_type" >sum</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">bar</field>
+            <field name="horizontal_chart">True</field>
+            <field name="is_background">True</field>
+            <field name="lable_format">{value}</field>
+            <field name="is_limit_record">True</field>
+            <field name="record_limit">25</field>
+            <field name="chart_measure_field_ids" eval="[(6, 0, [ref('base.field_res_country__phone_code')])]"/>
+            <field name="chart_groupby_field" eval="ref('base.field_res_country__currency_id')"/>
+        </record>
+        <record id="rec_dashboard_item_polar_area_bits" model="dashboard.item.bits">
+            <field name="name">Polar Area Chart</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">bar</field>
+            <field name="is_polar">True</field>
+            <field name="is_background">True</field>
+            <field name="lable_format">{value}</field>
+            <field name="is_limit_record">True</field>
+            <field name="record_limit">25</field>
+            <field name="display_data_type" >sum</field>
+            <field name="chart_measure_field_ids" eval="[(6, 0, [ref('base.field_res_country__phone_code')])]"/>
+            <field name="chart_groupby_field" eval="ref('base.field_res_country__currency_id')"/>
+        </record>
+        <record id="rec_dashboard_item_pie_bits" model="dashboard.item.bits">
+            <field name="name">Pie Chart</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">pie</field>
+            <field name="lable_format">{value}</field>
+            <field name="is_limit_record">True</field>
+            <field name="record_limit">25</field>
+            <field name="display_data_type" >sum</field>
+            <field name="chart_measure_field_ids" eval="[(6, 0, [ref('base.field_res_country__phone_code')])]"/>
+            <field name="chart_groupby_field" eval="ref('base.field_res_country__currency_id')"/>
+        </record>
+        <record id="rec_dashboard_item_halfpie_bits" model="dashboard.item.bits">
+            <field name="name">Half Pie Chart</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">pie</field>
+            <field name="half_pie">True</field>
+            <field name="lable_format">{value}</field>
+            <field name="is_limit_record">True</field>
+            <field name="record_limit">25</field>
+            <field name="display_data_type" >sum</field>
+            <field name="chart_measure_field_ids" eval="[(6, 0, [ref('base.field_res_country__phone_code')])]"/>
+            <field name="chart_groupby_field" eval="ref('base.field_res_country__currency_id')"/>
+        </record>
+        <record id="rec_dashboard_item_doughnut_bits" model="dashboard.item.bits">
+            <field name="name">Doughnut Chart</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">pie</field>
+            <field name="doughnut_chart">True</field>
+            <field name="lable_format">{value}</field>
+            <field name="is_limit_record">True</field>
+            <field name="record_limit">25</field>
+            <field name="display_data_type" >sum</field>
+            <field name="chart_measure_field_ids" eval="[(6, 0, [ref('base.field_res_country__phone_code')])]"/>
+            <field name="chart_groupby_field" eval="ref('base.field_res_country__currency_id')"/>
+        </record>
+        <record id="rec_dashboard_item_radar_bits" model="dashboard.item.bits">
+            <field name="name">Radar Chart</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">radar</field>
+            <field name="lable_format">{value}</field>
+            <field name="is_limit_record">True</field>
+            <field name="record_limit">25</field>
+            <field name="display_data_type" >sum</field>
+            <field name="chart_measure_field_ids" eval="[(6, 0, [ref('base.field_res_country__phone_code')])]"/>
+            <field name="chart_groupby_field" eval="ref('base.field_res_country__currency_id')"/>
+        </record>
+        <!-- KPI items -->
+        <record id="rec_dashboard_item_kpi1_bits" model="dashboard.item.bits">
+            <field name="name">KPI Progress</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">kpi</field>
+            <field name="record_limit">25</field>
+            <field name="kpi_display_style">style_1</field>
+            <field name="kpi_target">500000</field>
+            <field name="font_color">#969696</field>
+            <field name="kpi_primary_color">#969696</field>
+            <field name="display_data_type" >sum</field>
+            <field name="statistics_field" eval="ref('base.field_res_country__currency_id')"/>
+        </record>
+        <record id="rec_dashboard_item_kpi2_bits" model="dashboard.item.bits">
+            <field name="name">KPI Progress</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">kpi</field>
+            <field name="record_limit">25</field>
+            <field name="kpi_display_style">style_2</field>
+            <field name="kpi_target">500000</field>
+            <field name="font_color">#969696</field>
+            <field name="kpi_primary_color">#969696</field>
+            <field name="display_data_type" >sum</field>
+            <field name="statistics_field" eval="ref('base.field_res_country__currency_id')"/>
+        </record>
+        <record id="rec_dashboard_item_kpi3_bits" model="dashboard.item.bits">
+            <field name="name">KPI Progress</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">kpi</field>
+            <field name="record_limit">25</field>
+            <field name="kpi_display_style">style_3</field>
+            <field name="kpi_target">500000</field>
+            <field name="font_color">#969696</field>
+            <field name="kpi_primary_color">#969696</field>
+            <field name="display_data_type" >sum</field>
+            <field name="statistics_field" eval="ref('base.field_res_country__currency_id')"/>
+        </record>
+        <!-- stats items -->
+        <record id="rec_dashboard_item_stats1_bits" model="dashboard.item.bits">
+            <field name="name">Statistics Style-1</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">statistics</field>
+            <field name="display_style">style_1</field>
+            <field name="icon_bits">fa-codepen</field>
+            <field name="background_color">#fff</field>
+            <field name="font_color">#575757</field>
+            <field name="icon_color">#757575</field>
+            <field name="display_data_type" >count</field>
+        </record>
+        <record id="rec_dashboard_item_stats2_bits" model="dashboard.item.bits">
+            <field name="name">Statistics Style 2</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">statistics</field>
+            <field name="display_style">style_2</field>
+            <field name="icon_bits">fa-codepen</field>
+            <field name="background_color">#fff</field>
+            <field name="font_color">#3B3B3B</field>
+            <field name="icon_color">#3B3B3B</field>
+            <field name="display_data_type" >count</field>
+        </record>
+        <record id="rec_dashboard_item_stats3_bits" model="dashboard.item.bits">
+            <field name="name">Statistics Style 3</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">statistics</field>
+            <field name="display_style">style_3</field>
+            <field name="icon_bits">fa-codepen</field>
+            <field name="background_color">#fff</field>
+            <field name="font_color">#3B3B3B</field>
+            <field name="icon_color">#3B3B3B</field>
+            <field name="display_data_type" >count</field>
+        </record>
+        <record id="rec_dashboard_item_stats4_bits" model="dashboard.item.bits">
+            <field name="name">Statistics Style-4</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">statistics</field>
+            <field name="display_style">style_4</field>
+            <field name="icon_bits">fa-codepen</field>
+            <field name="background_color">#fff</field>
+            <field name="font_color">#3B3B3B</field>
+            <field name="icon_color">#3B3B3B</field>
+            <field name="display_data_type" >count</field>
+        </record>
+        <record id="rec_dashboard_item_stats5_bits" model="dashboard.item.bits">
+            <field name="name">Statistics Style 5</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">statistics</field>
+            <field name="icon_bits">fa-codepen</field>
+            <field name="display_style">style_5</field>
+            <field name="background_color">#fff</field>
+            <field name="font_color">#3B3B3B</field>
+            <field name="icon_color">#3B3B3B</field>
+            <field name="display_data_type" >count</field>
+        </record>
+        <record id="rec_dashboard_item_stats6_bits" model="dashboard.item.bits">
+            <field name="name">Statistics Style 6</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">statistics</field>
+            <field name="record_limit">25</field>
+            <field name="icon_bits">fa-codepen</field>
+            <field name="display_style">style_6</field>
+            <field name="background_color">#fff</field>
+            <field name="icon_color">#3B3B3B</field>
+            <field name="display_data_type" >count</field>
+        </record>
+        <record id="rec_dashboard_item_stats7_bits" model="dashboard.item.bits">
+            <field name="name">Statistics Style 7</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">statistics</field>
+            <field name="icon_bits">fa-codepen</field>
+            <field name="record_limit">25</field>
+            <field name="display_style">style_7</field>
+            <field name="background_color">#fff</field>
+            <field name="font_color">#575757</field>
+            <field name="icon_color">#757575</field>
+            <field name="display_data_type" >count</field>
+        </record>
+        <record id="rec_dashboard_item_stats8_bits" model="dashboard.item.bits">
+            <field name="name">Statistics Style 8</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">statistics</field>
+            <field name="icon_bits">fa-codepen</field>
+            <field name="record_limit">25</field>
+            <field name="display_style">style_8</field>
+            <field name="background_color">#fff</field>
+            <field name="font_color">#3B3B3B</field>
+            <field name="icon_color">#3B3B3B</field>
+            <field name="display_data_type" >count</field>
+        </record>
+        <record id="rec_dashboard_item_stats9_bits" model="dashboard.item.bits">
+            <field name="name">Statistics Style 9</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">statistics</field>
+            <field name="record_limit">25</field>
+            <field name="display_style">style_9</field>
+            <field name="background_color">#DEDEDE</field>
+            <field name="font_color">#3B3B3B</field>
+            <field name="display_data_type" >count</field>
+        </record>
+        <!-- stats with trend -->
+        <record id="rec_dashboard_item_stats_trend1_bits" model="dashboard.item.bits">
+            <field name="name">Statistics With Trend 1</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">statistics</field>
+            <field name="statistics_with_trend">True</field>
+            <field name="display_data_type" >count</field>
+            <field name="chart_groupby_field" eval="ref('base.field_res_country__currency_id')" />
+            <field name="b_trend_field_id" eval="ref('base.field_res_country__currency_id')" />
+            <field name="b_measure_type">count</field>
+            <field name="b_show_val">""</field>
+            <field name="chart_measure_field_ids" eval="[(6, 0, [ref('base.field_res_country__phone_code')])]"/>
+            <field name="trend_display_style">style_1</field>
+            <field name="trend_primary_color">#3B3B3B</field>
+        </record>
+        <record id="rec_dashboard_item_stats_trend2_bits" model="dashboard.item.bits">
+            <field name="name">Statistics With Trend 2</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">statistics</field>
+            <field name="statistics_with_trend">True</field>
+            <field name="display_data_type" >count</field>
+            <field name="chart_groupby_field" eval="ref('base.field_res_country__currency_id')" />
+            <field name="b_trend_field_id" eval="ref('base.field_res_country__currency_id')" />
+            <field name="b_measure_type">count</field>
+            <field name="b_show_val">""</field>
+            <field name="chart_measure_field_ids" eval="[(6, 0, [ref('base.field_res_country__phone_code')])]"/>
+            <field name="trend_display_style">style_2</field>
+            <field name="trend_primary_color">#3B3B3B</field>
+        </record>
+        <record id="rec_dashboard_item_stats_trend3_bits" model="dashboard.item.bits">
+            <field name="name">Statistics With Trend 3</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">statistics</field>
+            <field name="statistics_with_trend">True</field>
+            <field name="display_data_type" >count</field>
+            <field name="chart_groupby_field" eval="ref('base.field_res_country__currency_id')" />
+            <field name="chart_measure_field_ids" eval="[(6, 0, [ref('base.field_res_country__phone_code')])]"/>
+            <field name="trend_display_style">style_3</field>
+            <field name="trend_primary_color">#3B3B3B</field>
+        </record>
+        <record id="rec_dashboard_item_list_view1_bits" model="dashboard.item.bits">
+            <field name="name">List View</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">list_view</field>
+            <field name="list_view_style">style_1</field>
+            <field name="v_records_per_page" >10</field>
+            <field name="list_view_field_ids" eval="[(6, 0, [ref('base.field_res_country__phone_code'),ref('base.field_res_country__name'),ref('base.field_res_country__currency_id')])]"/>
+        </record>
+        <record id="rec_dashboard_item_list_view1_bits2" model="dashboard.item.bits">
+            <field name="name">List View</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">list_view</field>
+            <field name="list_view_style">style_2</field>
+            <field name="v_records_per_page" >10</field>
+            <field name="list_view_field_ids" eval="[(6, 0, [ref('base.field_res_country__phone_code'),ref('base.field_res_country__name'),ref('base.field_res_country__currency_id')])]"/>
+        </record>
+        <record id="rec_dashboard_item_list_view2_bits" model="dashboard.item.bits">
+            <field name="name">List View</field>
+            <field name="model_id" eval="ref('base.model_res_country')"></field>
+            <field name="item_type">list_view</field>
+            <field name="list_view_style">style_3</field>
+            <field name="v_records_per_page" >10</field>
+            <field name="list_view_field_ids" eval="[(6, 0, [ref('base.field_res_country__phone_code'),ref('base.field_res_country__name'),ref('base.field_res_country__currency_id')])]"/>
+        </record>
+    </data>
+</odoo>

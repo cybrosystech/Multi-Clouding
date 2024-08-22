@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="AddToBoardBits" owl="1">
+        <Dropdown class="o_add_to_board">
+            <t t-set-slot="toggler">Attach in dashboard</t>
+            <div class="px-3 py-2">
+                <div class="o_input">Dashboard</div>
+                <div class="pt-2 px-2">
+                    <t t-if="state.dashboards.length > 0" t-foreach="state.dashboards" t-as="dashboard" t-key="dashboard.id">
+                        <label t-att-for="dashboard.id" class="d-flex align-items-center">
+                            <input class="me-2" t-att-id="dashboard.id" type="checkbox" t-att-checked="dashboard.isSelected? 'checked': undefined" t-on-change="ev => this.toggleSelected(dashboard.id)" />
+                            <t t-esc="dashboard.name"/>
+                        </label>
+                    </t>
+                </div>
+            </div>
+            <div class="px-3 py-2">
+                <input id="dash_name" type="text" class="o_input" t-ref="autofocus" t-model.trim="state.name" t-on-keydown="onInputKeydown" />
+            </div>
+            <div class="px-3 py-2">
+                <button type="button" class="btn btn-primary" t-on-click="addToBoardMenuBits">Add</button>
+            </div>
+        </Dropdown>
+    </t>
+
+</templates>

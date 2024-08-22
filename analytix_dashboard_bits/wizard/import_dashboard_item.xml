@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="dashboard_builder_import_dashbord_item_view" model="ir.ui.view">
+            <field name="name">dashboard.builder.import.dashbord.item.view</field>
+            <field name="model">import.dashboard.item</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="name" invisible='1'/>
+                            <field name="import_dashboard_item_doc" filename="name"/>
+                        </group>
+                    </sheet>
+                    <footer>
+                        <button string="import" class="oe_highlight" type="object" name="import_dashboard_item_action"/>
+                        <button string="Discard" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="dashboard_builder_import_dashbord_item_action" model="ir.actions.act_window">
+            <field name="name">dashboard.builder.import.dashbord.item.view</field>
+            <field name="res_model">import.dashboard.item</field>
+            <field name="view_mode">form</field>
+        </record>
+
+    </data>
+</odoo>

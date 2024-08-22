@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+    <t t-name="StatisticsItemBits">
+        <div t-attf-class="statistics-bits grid-stack-item #{item.statistics_data.item_type} #{item.statistics_data.action_id ? 'is_action':''} gsi_#{item.id}"
+             t-att-data-stack-id="item.item_data.id" t-att-data-action="item.statistics_data.action_id">
+            <div t-attf-class="grid-stack-item-content shadow #{item.statistics_data.display_style}"
+                 t-attf-style="background:#{item.statistics_data.background_color} !important;border:solid #{item.statistics_data.border_color};"
+                 t-att-id="item.statistics_data.is_border ? 'border_'+ item.statistics_data.border_position : ''">
+                <t t-if="item.statistics_data.display_style == 'style_1'">
+                    <div t-attf-class="statistics-container container-fluid no-gutters #{item.statistics_data.display_style}"
+                         t-att-data-dstyle="item.display_style">
+                        <div class="row justify-content-center">
+                            <div class="col-6 text-center">
+                                <div class="style_1 icon">
+                                    <t t-if="item.statistics_data.media_option == 'fontawesome_bits'">
+                                        <span t-attf-class="fa #{item.statistics_data.icon_bits} fa-2x"
+                                           t-attf-style="color:#{item.statistics_data.icon_color}"></span>
+                                    </t>
+                                    <t t-if="item.statistics_data.media_option == 'image_bits'">
+                                        <img t-att-src="item.statistics_data.icon_image_url"
+                                            class="img img-fluid st_img_bits"></img>
+                                    </t>
+                                </div>
+                            </div>
+                            <div class="col-6 text-right">
+                                <h2 t-attf-style="color:#{item.statistics_data.font_color};">
+                                    <t t-esc="item.statistics_data.statistics"></t>
+                                </h2>
+                                <h4 t-attf-style="color:#{item.statistics_data.font_color};">
+                                    <t t-if="item.statistics_data.statistics_item_title" t-esc="item.statistics_data.statistics_item_title"></t>
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+                <t t-if="item.statistics_data.display_style == 'style_2'">
+                    <div t-attf-class="statistics-container container-fluid no-gutters #{item.statistics_data.display_style}"
+                         t-att-data-dstyle="item.statistics_data.display_style">
+                        <div class="row justify-content-center py-2">
+                            <div class="col-6 text-left">
+                                <h4 t-attf-style="color:#{item.statistics_data.font_color};">
+                                    <t t-if="item.statistics_data.statistics_item_title" t-esc="item.statistics_data.statistics_item_title"/>
+                                </h4>
+                                <h2 t-attf-style="color:#{item.statistics_data.font_color};">
+                                    <t t-esc="item.statistics_data.statistics"/>
+                                </h2>
+                            </div>
+                            <div class="col-6 text-center">
+                                <div class="style_2 icon">
+                                    <t t-if="item.statistics_data.media_option == 'fontawesome_bits'">
+                                        <span t-attf-class="fa #{item.statistics_data.icon_bits} fa-2x"
+                                           t-attf-style="color:#{item.statistics_data.icon_color}"/>
+                                    </t>
+                                    <t t-if="item.statistics_data.media_option == 'image_bits'">
+                                        <img t-att-src="item.statistics_data.icon_image_url"
+                                             class="img img-fluid st_img_bits"/>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+                <t t-if="item.statistics_data.display_style == 'style_3'">
+                    <div t-attf-class="statistics-container container-fluid no-gutters #{item.statistics_data.display_style}"
+                        t-att-data-dstyle="item.statistics_data.display_style">
+                        <div class="row justify-content-center">
+                            <div class="col-6 text-center">
+                                <div class="style_3 icon d-flex justify-content-center">
+                                    <div class="icon-container" t-attf-style="background-color:#{item.statistics_data.icon_background}">
+                                        <t t-if="item.statistics_data.media_option == 'fontawesome_bits'">
+                                            <span t-attf-class="fa #{item.statistics_data.icon_bits} fa-2x" t-attf-style="color:#{item.statistics_data.icon_color}"/>
+                                        </t>
+                                        <t t-if="item.statistics_data.media_option == 'image_bits'">
+                                            <img t-att-src="item.statistics_data.icon_image_url"
+                                                 class="img img-fluid st_img_bits"/>
+                                        </t>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 text-right">
+                                <h2 t-attf-style="color:#{item.statistics_data.font_color};">
+                                    <t t-esc="item.statistics_data.statistics"/>
+                                </h2>
+                                <h4 t-attf-style="color:#{item.statistics_data.font_color};">
+                                    <t t-if="item.statistics_data.statistics_item_title" t-esc="item.statistics_data.statistics_item_title"/>
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+                <t t-if="item.statistics_data.display_style == 'style_4'">
+                    <div t-attf-class="statistics-container container-fluid no-gutters #{item.statistics_data.display_style}"
+                        t-att-data-dstyle="item.statistics_data.display_style">
+                        <div class="row justify-content-center style_4">
+                            <div class="col-12">
+                                <div class="row st4_top">
+                                    <div class="col-8 text-left">
+                                        <h4 t-attf-style="color:#{item.statistics_data.font_color};">
+                                            <t t-if="item.statistics_data.statistics_item_title" t-esc="item.statistics_data.statistics_item_title"/>
+                                        </h4>
+                                    </div>
+                                    <div class="col-4 text-end">
+                                        <t t-if="item.statistics_data.media_option == 'fontawesome_bits'">
+                                            <span t-attf-class="fa #{item.statistics_data.icon_bits} fa-2x"
+                                               t-attf-style="color:#{item.statistics_data.font_color};"/>
+                                        </t>
+                                        <t t-if="item.statistics_data.media_option == 'image_bits'">
+                                            <img t-att-src="item.statistics_data.icon_image_url"
+                                                 class="img img-fluid "/>
+                                        </t>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 text-left mt-2 d-block">
+                                <h2 t-attf-style="color:#{item.statistics_data.font_color};">
+                                    <t t-esc="item.statistics_data.statistics"/>
+                                </h2> 
+                                <p t-if="item.statistics_data.percentage_string"
+                                   t-attf-style="color:#{item.statistics_data.font_color};"
+                                   t-esc="item.statistics_data.percentage_string"/>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+                <t t-if="item.statistics_data.display_style == 'style_5'">
+                    <div t-attf-class="statistics-container container-fluid no-gutters #{item.statistics_data.display_style}"
+                         t-att-data-dstyle="item.display_style">
+                        <div class="row justify-content-center">
+                            <div class="col-12 text-center justify-content-center d-flex">
+                                <div class="style_5 icon">
+                                    <t t-if="item.statistics_data.media_option == 'fontawesome_bits'">
+                                        <span t-attf-class="fa #{item.statistics_data.icon_bits} "
+                                           t-attf-style="color:#{item.statistics_data.icon_color}"/>
+                                    </t>
+                                    <t t-if="item.statistics_data.media_option == 'image_bits'">
+                                        <img t-att-src="item.statistics_data.icon_image_url" class="img img-fluid st_img_bits"/>
+                                    </t>
+                                </div>
+                            </div>
+                            <div class="col-12 text-center">
+                                <h2 t-attf-style="color:#{item.statistics_data.font_color};">
+                                    <t t-esc="item.statistics_data.statistics"/>
+                                </h2>
+                                <h4 t-attf-style="color:#{item.statistics_data.font_color};">
+                                    <t t-if="item.statistics_data.statistics_item_title" t-esc="item.statistics_data.statistics_item_title"/>
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+                <t t-if="item.statistics_data.display_style == 'style_6'">
+                    <div t-attf-class="statistics-container no-gutters #{item.statistics_data.display_style}"
+                         t-att-data-dstyle="item.display_style">
+                        <div class="row align-item-center h-100">
+                            <div class="col-4 text-center align-items-center left-icon justify-content-center d-flex h-100"
+                                 t-attf-style="background-color:#{item.statistics_data.icon_background}">
+                                <div class="style_6 icon">
+                                    <t t-if="item.statistics_data.media_option == 'fontawesome_bits'">
+                                        <span t-attf-class="fa #{item.statistics_data.icon_bits}" t-attf-style="color:#{item.statistics_data.icon_color}"/>
+                                    </t>
+                                    <t t-if="item.statistics_data.media_option == 'image_bits'">
+                                        <img t-att-src="item.statistics_data.icon_image_url"
+                                            class="img img-fluid st_img_bits"/>
+                                    </t>
+                                </div>
+                            </div>
+                            <div class="col-8 text-center bg_stats">
+                                <h2 t-attf-style="color:#{item.statistics_data.font_color};">
+                                    <t t-esc="item.statistics_data.statistics"/>
+                                </h2>
+                                <h4 t-attf-style="color:#{item.statistics_data.font_color};">
+                                    <t t-if="item.statistics_data.statistics_item_title" t-esc="item.statistics_data.statistics_item_title"/>
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+                <t t-if="item.statistics_data.display_style == 'style_7'">
+                    <div t-attf-class="statistics-container container-fluid no-gutters #{item.statistics_data.display_style}"
+                        t-att-data-dstyle="item.display_style">
+                        <div class="row justify-content-center">
+                            <div class="col-4 text-center justify-content-center d-flex">
+                                <div class="style_7 icon">
+                                    <t t-if="item.statistics_data.media_option == 'fontawesome_bits'">
+                                        <span t-attf-class="fa #{item.statistics_data.icon_bits} "
+                                           t-attf-style="color:#{item.statistics_data.icon_color};"/>
+                                    </t>
+                                    <t t-if="item.statistics_data.media_option == 'image_bits'">
+                                        <img t-att-src="item.statistics_data.icon_image_url"
+                                            class="img img-fluid st_img_bits"/>
+                                    </t>
+                                </div>
+                            </div>
+                            <div class="col-8 text-left">
+                                <h2 t-attf-style="color:#{item.statistics_data.font_color};">
+                                    <t t-esc="item.statistics_data.statistics"/>
+                                </h2>
+                                <h4 t-attf-style="color:#{item.statistics_data.font_color};">
+                                    <t t-if="item.statistics_data.statistics_item_title" t-esc="item.statistics_data.statistics_item_title"/>
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+                <t t-if="item.statistics_data.display_style == 'style_8'">
+                    <div t-attf-class="statistics-container container-fluid no-gutters #{item.statistics_data.display_style}"
+                         t-att-style="'background:linear-gradient(92deg, #fff -100%, '+(item.statistics_data.background_color ? item.statistics_data.background_color:'#fff')+' 75%);'">
+                        <div class="row first h-100 justify-space-between">
+                            <div class="col-6">
+                                <div class="field_description" t-attf-style="color:#{item.statistics_data.font_color}">
+                                    <t t-if="item.statistics_data.statistics_item_title" t-esc="item.statistics_data.statistics_item_title"/>
+                                </div>
+                                <div class="field_value" t-attf-style="color:#{item.statistics_data.font_color}">
+                                    <t t-esc="item.statistics_data.statistics"/>
+                                </div>
+                            </div>
+                            <div class="col-6 justify-content-end d-flex">
+                                <div class="icon-container">
+                                    <t t-if="item.statistics_data.media_option == 'fontawesome_bits'">
+                                        <span t-attf-class="fa #{item.statistics_data.icon_bits}" t-attf-style="color:#{item.statistics_data.icon_color}"/>
+                                    </t>
+                                    <t t-if="item.statistics_data.media_option == 'image_bits'">
+                                        <img t-att-src="item.statistics_data.icon_image_url"
+                                            class="img img-fluid st_img_bits"/>
+                                    </t> 
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12 d-flex text-left mb-4 ">
+                                <p t-if="item.statistics_data.percentage_string" class="field_comparision mb-0"
+                                   t-attf-style="color:#{item.statistics_data.font_color}">
+                                    <span t-esc="item.statistics_data.percentage_string"/>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+                <t t-if="item.statistics_data.display_style == 'style_9'">
+                    <div t-attf-class="statistics-container container-fluid no-gutters #{item.statistics_data.display_style}" t-att-data-color="item.statistics_data.background_color ? item.statistics_data.background_color: ''"
+                        t-attf-style="background:radial-gradient(circle at right top, #{item.statistics_data.background_color ? item.statistics_data.background_color:'#fff'} 0%, #ffffff 20%, #ffffff 100%) !important;">
+                        <div class="row first h-100 justify-space-between">
+                            <div class="col-6">
+                                <h4 class="field_description" t-attf-style="color:#{item.statistics_data.font_color}">
+                                    <t t-if="item.statistics_data.statistics_item_title" t-esc="item.statistics_data.statistics_item_title"/>
+                                </h4>
+                            </div>
+                            <div class="col-6 justify-content-end d-flex">
+                            </div>
+                            <div class="col-12 text-left">
+                                <h2 class="field_value" t-attf-style="color:#{item.statistics_data.font_color}">
+                                    <t t-esc="item.statistics_data.statistics"/>
+                                </h2>
+                                <p t-if="item.statistics_data.percentage_string" class="field_comparision mb-0"
+                                   t-attf-style="color:#{item.statistics_data.font_color}">
+                                    <h5 t-esc="item.statistics_data.percentage_string"/>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </div>
+        </div>
+    </t>
+    <t t-name="StatisticsItem_WithTrendbits">
+        <div t-attf-class="grid-stack-item trend_statistics_bits gsi_#{item.id}" t-att-data-stack-id="item.id">
+            <div t-attf-class="grid-stack-item-content #{trend_display_style} shadow">
+                <t t-if="trend_display_style == 'style_1'">
+                    <div class="pb-0 grid_top">
+                        <span class="text-c-purple font-weight-bold" t-attf-style="color:#{trend_primary_color};"> 
+                            <t t-if="statistics_data.statistics_item_title" t-esc="statistics_data.statistics_item_title"/>
+                            <t t-else="" t-esc="statistics_data.field_description"/>
+                        </span>
+                        <h1 class="m-0" t-attf-style="color:#{trend_primary_color};">
+                            <t t-esc="statistics_data.statistics"/>
+                        </h1>
+                    </div>
+                    <div t-attf-class="trend_line #{item.item_type} grid_center"
+                         t-attf-id="#{item.id}_#{item.item_type}">
+                    </div>
+                    <div class="grid_bottom container-fluid" t-attf-style="background:#{trend_primary_color};">
+                        <div class="statistics_values py-3 h-100">
+                            <t t-if="botton_vals">
+                                <t t-foreach="botton_vals" t-as="value" t-key="key">
+                                    <div class="col-4 count_bits">
+                                        <h1>
+                                            <t t-esc="value.value"/>
+                                        </h1>
+                                        <span>
+                                            <t t-esc="value.lable"/>
+                                        </span>
+                                    </div>
+                                </t>
+                            </t>
+                            <t t-if="!botton_vals.length">
+                                <div class="d-flex align-items-center text-center w-100 justify-content-center">
+                                    <span>
+                                        No data found
+                                    </span>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                </t>
+                <t t-if="trend_display_style == 'style_2'">
+                    <div t-attf-class="container-fluid px-0"
+                         t-attf-style="background:#{apply_background ? trend_primary_color+'30': 'fff'};">
+                        <div class="row px-0 mx-0">
+                            <div class="col-12 d-flex pt-4 stats_head" style="height: 85px;">
+                                <div class="col-6 px-0 text-left">
+                                    <div class="stats_val_bits" t-attf-style="color:#{trend_primary_color} !important;">
+                                        <div class="field_string"> 
+                                            <t t-if="statistics_data.statistics_item_title" t-esc="statistics_data.statistics_item_title"/>
+                                            <t t-else="" t-esc="statistics_data.field_description"/>
+                                        </div>
+                                        <div class="field_value">
+                                            <t t-esc="statistics_data.statistics"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6 px-0 text-right">
+                                    <div t-if="statistics_data.percentage_string" class="growth_comparision"
+                                         t-attf-style="color:#{trend_primary_color} !important;text-shadow: 5px 5px 20px #{trend_primary_color};">
+                                        <t t-esc="statistics_data.percentage_string"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div t-attf-class="col-12 px-0 trend_line #{item.item_type} grid_center"
+                                 t-attf-id="#{item.id}_#{item.item_type}" style="height: 195px;"/>
+                        </div>
+                    </div>
+                </t>
+                <t t-if="trend_display_style == 'style_3'">
+                    <div t-attf-class="container-fluid px-0 h-100"
+                         t-attf-style="background:#{apply_background ? trend_primary_color+'30': 'fff'};">
+                        <div class="row px-0 mx-0 align-items-center h-100">
+                            <div class="col-4">
+                                <div class="stats_val_bits" t-attf-style="color:#{trend_primary_color} !important;">
+                                    <div class="field_value">
+                                        <t t-esc="statistics_data.statistics"/>
+                                    </div>
+                                    <div class="field_string">
+                                        <t t-if="statistics_data.statistics_item_title" t-esc="statistics_data.statistics_item_title"/>
+                                        <t t-else="" t-esc="statistics_data.field_description"/>
+                                    </div> 
+                                </div>
+                            </div>
+                            <div t-attf-class="col-8">
+                                <div t-attf-class="trend_line #{item.item_type} grid_center" t-attf-id="#{item.id}_#{item.item_type}" style="height: 175px;"/> 
+                                <div class="growth_comparision text-center mt-4" t-attf-style="color:#{trend_primary_color} !important;text-shadow: 5px 5px 20px #{trend_primary_color};">
+                                    <t t-if="statistics_data.percentage_string" t-esc="statistics_data.percentage_string"/>
+                                </div>  
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </div>
+        </div>
+    </t>
+</templates>

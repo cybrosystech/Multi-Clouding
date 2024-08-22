@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="dashboard_theme_default" model="dashboard.themes">
+        <field name="name">Default</field>
+        <field name="color_1">#35979C</field>
+        <field name="color_2">#383E45</field>
+        <field name="color_3">#685563</field>
+        <field name="color_4">#F6F6F6</field>
+        <field name="color_5">#5B4877</field>
+        <field name="color_6">#35519A</field>
+        <field name="color_7">#0FE7C0</field>
+        <field name="color_8">#9CACD3</field>
+    </record>
+
+    <record id="dashboard_theme_ripe_harvest" model="dashboard.themes">
+        <field name="name">Ripe Harvest</field>
+        <field name="color_1">#FF5C4D</field>
+        <field name="color_2">#FF9636</field>
+        <field name="color_3">#FFCD58</field>
+        <field name="color_4">#FFCD58</field>
+        <field name="color_5">#FC2E20</field>
+        <field name="color_6">#FDB750</field>
+        <field name="color_7">#FD7F20</field>
+        <field name="color_8">#BACC81</field>
+    </record>
+
+    <record id="dashboard_theme_scooping_ice_cream" model="dashboard.themes">
+        <field name="name">Scooping Ice Cream</field>
+        <field name="color_1">#523A28</field>
+        <field name="color_2">#A47551</field>
+        <field name="color_3">#D0B49F</field>
+        <field name="color_4">#E4D4C8</field>
+        <field name="color_5">#A47786</field>
+        <field name="color_6">#533440</field>
+        <field name="color_7">#5C4E4E</field>
+        <field name="color_8">#988686</field>
+    </record>
+
+    <record id="dashboard_theme_cloud_city" model="dashboard.themes">
+        <field name="name">Cloud City</field>
+        <field name="color_1">#3A6A59</field>
+        <field name="color_2">#A7A88A</field>
+        <field name="color_3">#D6C18A</field>
+        <field name="color_4">#B9C8BC</field>
+        <field name="color_5">#8F3B21</field>
+        <field name="color_6">#8F916B</field>
+        <field name="color_7">#DD9927</field>
+        <field name="color_8">#CCCDC7</field>
+    </record>
+
+    <record id="dashboard_theme_vintage_village" model="dashboard.themes">
+        <field name="name">Vintage Village</field>
+        <field name="color_1">#7C9CAB</field>
+        <field name="color_2">#E8CBB1</field>
+        <field name="color_3">#FEECC3</field>
+        <field name="color_4">#333A44</field>
+        <field name="color_5">#B45F4B</field>
+        <field name="color_6">#F88379</field> 
+    </record>
+
+    <record id="dashboard_theme_mermaid_lagoon" model="dashboard.themes">
+        <field name="name">Mermaid Lagoon</field>
+        <field name="color_1">#145DA0</field>
+        <field name="color_2">#0C2D48</field>
+        <field name="color_3">#2E8BC0</field>
+        <field name="color_4">#B1D4E0</field>
+        <field name="color_5">#274472</field>
+        <field name="color_6">#75E6DA</field>
+    </record>
+
+    <record id="dashboard_theme_healthy_leaves" model="dashboard.themes">
+        <field name="name">Healthy Leaves</field>
+        <field name="color_1">#3D550C</field>
+        <field name="color_2">#81B622</field>
+        <field name="color_3">#ECF87F</field>
+        <field name="color_4">#59981A</field>
+        <field name="color_5">#4B5A20</field>
+        <field name="color_6">#787D12</field>
+    </record>
+
+    <record id="dashboard_theme_grey_horizon" model="dashboard.themes">
+        <field name="name">Grey Horizon</field>
+        <field name="color_1">#636059</field>
+        <field name="color_2">#A39D92</field>
+        <field name="color_3">#C0C9CC</field>
+        <field name="color_4">#F2F1F0</field>
+        <field name="color_5">#8A9EA0</field>
+        <field name="color_6">#B5B2B0</field>
+        <field name="color_7">#484848</field>
+    </record>
+
+    <record id="dashboard_theme_the_deep_blue" model="dashboard.themes">
+        <field name="name">The Deep Blue</field>
+        <field name="color_1">#0000FF</field>
+        <field name="color_2">#050A30</field>
+        <field name="color_3">#7EC8E3</field>
+        <field name="color_4">#000C66</field>
+        <field name="color_5">#003060</field>
+        <field name="color_6">#055C9D</field>
+        <field name="color_7">#326A7B</field>
+        <field name="color_8">#68BBE3</field>
+    </record>
+
+    <record id="dashboard_theme_green_blaze" model="dashboard.themes">
+        <field name="name">Green Blaze</field>
+        <field name="color_1">#76B947</field>
+        <field name="color_2">#B1D8B7</field>
+        <field name="color_3">#2F5233</field>
+        <field name="color_4">#94C973</field>
+        <field name="color_5">#3D550C</field>
+        <field name="color_6">#4B0000</field>
+        <field name="color_7">#59981A</field>
+        <field name="color_8">#787D12</field>
+    </record>
+
+    <record id="dashboard_theme_fancy_cycle" model="dashboard.themes">
+        <field name="name">Fancy Cycle</field>
+        <field name="color_1">#9A76A5</field>
+        <field name="color_2">#B19FF9</field>
+        <field name="color_3">#C89DD8</field>
+        <field name="color_4">#E6DED3</field>
+        <field name="color_5">#613659</field>
+        <field name="color_6">#211522</field>
+    </record>
+
+    <record id="dashboard_theme_seastorm_gloom" model="dashboard.themes">
+        <field name="name">Seastorm Gloom</field>
+        <field name="color_1">#333F63</field>
+        <field name="color_2">#715C8C</field>
+        <field name="color_3">#D7D4DD</field>
+        <field name="color_4">#838BC2</field>
+        <field name="color_5">#A16AE8</field>
+        <field name="color_6">#4120A9</field>
+        <field name="color_7">#F6D4D2</field>
+    </record>
+
+    <record id="dashboard_theme_teal_green" model="dashboard.themes">
+        <field name="name">Teal Green</field>
+        <field name="color_1">#16796F</field>
+        <field name="color_2">#6CB0A8</field>
+        <field name="color_3">#ADC9C5</field>
+        <field name="color_4">#10564F</field>
+        <field name="color_5">#189AB4</field>
+        <field name="color_6">#75E6DA</field>
+        <field name="color_7">#D4F1F4</field>
+    </record>
+
+    <record id="dashboard_theme_khaki_yellow" model="dashboard.themes">
+        <field name="name">Khaki Yellow</field>
+        <field name="color_1">#56453E</field>
+        <field name="color_2">#211C1D</field>
+        <field name="color_3">#E0D7C7</field>
+        <field name="color_4">#F1E2AD</field>
+        <field name="color_5">#B0864B</field>
+        <field name="color_6">#DA9345</field>
+        <field name="color_7">#B36357</field>
+    </record>
+
+    <record id="dashboard_theme_dusty_rose_cream" model="dashboard.themes">
+        <field name="name">Dusty Rose Cream</field>
+        <field name="color_1">#CB857C</field>
+        <field name="color_2">#F6CBB7</field>
+        <field name="color_3">#FAF7F4</field>
+        <field name="color_4">#9C2D41</field>
+        <field name="color_5">#CB857C</field>
+        <field name="color_6">#9C6879</field>
+        <field name="color_7">#AE5666</field>
+    </record>
+
+</odoo>

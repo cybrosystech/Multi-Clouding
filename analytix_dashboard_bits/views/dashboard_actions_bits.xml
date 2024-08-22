@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="action_dashboards_view_bits" model="ir.actions.client">
+        <field name="name">All Dashboard</field>
+        <field name="tag">bits_all_dashboard_action</field>
+    </record>
+
+    <menuitem name="My Dashboards" id="menu_all_dashboard_bits"
+              action="analytix_dashboard_bits.action_dashboards_view_bits"
+              web_icon="analytix_dashboard_bits,static/description/icon.png"/>
+
+    <menuitem id="menu_dashboard_config" name="Configuration" parent="analytix_dashboard_bits.menu_all_dashboard_bits"
+              sequence="99"/>
+
+</odoo> 

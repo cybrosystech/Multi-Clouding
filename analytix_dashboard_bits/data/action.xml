@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="action_export_dashboard" model="ir.actions.server">
+            <field name="name">Export Dashboard File</field>
+            <field name="model_id" ref="analytix_dashboard_bits.model_dashboard_bits"/>
+            <field name="binding_model_id" ref="analytix_dashboard_bits.model_dashboard_bits"/>
+            <field name="state">code</field>
+            <field name="code">
+                action = records.export_dashboard_action(records)
+            </field>
+        </record>
+        <record id="action_export_dashboard_item" model="ir.actions.server">
+            <field name="name">Export Item File</field>
+            <field name="model_id" ref="analytix_dashboard_bits.model_dashboard_item_bits"/>
+            <field name="binding_model_id" ref="analytix_dashboard_bits.model_dashboard_item_bits"/>
+            <field name="state">code</field>
+            <field name="code">
+                action = records.export_xlsx_item_data(records)
+            </field>
+        </record> 
+    </data>
+
+</odoo>
