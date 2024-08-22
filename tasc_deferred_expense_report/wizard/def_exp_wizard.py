@@ -6,9 +6,9 @@ from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
 
-class DeferredExpenseWizard(models.Model):
+class DefeExpWizard(models.Model):
     """ Class for Deferred Expense Report xlsx """
-    _name = 'deferred.expense.wizard'
+    _name = 'def.exp.wizard'
     _description = 'Deferred Expense Report Wizard'
 
     start_date = fields.Date(string="From Date",
@@ -208,10 +208,9 @@ class DeferredExpenseWizard(models.Model):
             LEFT JOIN account_analytic_account cc ON cc.id = l.analytic_account_id
             LEFT JOIN account_analytic_account ps ON ps.id = l.project_site_id
         WHERE 
-            l.journal_id in %(journal_id)s
-            AND l.credit != 0
-            AND ac.code LIKE %(ac_code_pattern)s
+            ac.code LIKE %(ac_code_pattern)s
             and l.company_id =  %(company_id)s
+            and ac.id != debit_ac.id
         GROUP BY 
             ac.id, l.name, debit_ac.name, debit_ac.code, r.name, cc.id,ps.id
         order by ac.id,l.name"""
@@ -220,7 +219,7 @@ class DeferredExpenseWizard(models.Model):
                                'end_date': self.end_date,
                                'journal_id': tuple(journal.ids),
                                'company_id': self.company_id.id,
-                               'ac_code_pattern': '113%',
+                               'ac_code_pattern': '1132%',
                                })
         results = self._cr.dictfetchall()
         return results
@@ -266,9 +265,7 @@ class DeferredExpenseWizard(models.Model):
                 account_move_line l
                 INNER JOIN account_account ac ON ac.id = l.account_id
             WHERE 
-                 l.journal_id in   %(journal_id)s
-                 AND l.credit != 0
-                 AND ac.code LIKE %(ac_code_pattern)s
+                 ac.code LIKE %(ac_code_pattern)s
                   and l.company_id =  %(company_id)s
             GROUP BY 
                 ac.id
@@ -278,7 +275,7 @@ class DeferredExpenseWizard(models.Model):
                                'end_date': self.end_date,
                                'journal_id': tuple(journal.ids),
                                'company_id': self.company_id.id,
-                               'ac_code_pattern': '113%',
+                               'ac_code_pattern': '1132%',
                                })
         res = self._cr.dictfetchall()
         row = 0
