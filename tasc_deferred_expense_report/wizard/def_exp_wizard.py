@@ -6,9 +6,9 @@ from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
 
-class DeferredExpenseWizard(models.Model):
+class DefeExpWizard(models.Model):
     """ Class for Deferred Expense Report xlsx """
-    _name = 'deferred.expense.wizard'
+    _name = 'def.exp.wizard'
     _description = 'Deferred Expense Report Wizard'
 
     start_date = fields.Date(string="From Date",
@@ -184,9 +184,27 @@ class DeferredExpenseWizard(models.Model):
             ac.name AS account_name,
             ac.code AS account_code,
             l.name AS line_name,
-            SUM(CASE WHEN l.parent_state not in ('cancel') AND l.date<= %(end_date)s THEN abs(l.debit) ELSE 0 END)-SUM(CASE WHEN l.parent_state not in ('cancel') AND l.date<= %(end_date)s THEN abs(l.credit) ELSE 0 END)  AS sum_posted_credits,
-            SUM(CASE WHEN l.parent_state not in ('cancel') AND l.date > %(end_date)s THEN abs(l.debit) ELSE 0 END)-SUM(CASE WHEN l.parent_state not in ('cancel') AND l.date > %(end_date)s THEN abs(l.credit) ELSE 0 END)  AS sum_unposted_credits,
-            SUM(CASE WHEN l.parent_state not in ('cancel') THEN abs(l.debit) ELSE 0 END)-SUM(CASE WHEN l.parent_state not in ('cancel') THEN abs(l.credit) ELSE 0 END)  AS total_credits,
+            (SUM(
+                CASE WHEN l.parent_state not in ('cancel') AND l.date<= %(end_date)s 
+                THEN abs(l.debit) 
+                ELSE 0 END)-SUM(
+                CASE WHEN l.parent_state not in ('cancel') AND l.date<= %(end_date)s 
+                THEN abs(l.credit)
+                 ELSE 0 END) ) AS sum_posted_credits,
+            (SUM(
+                CASE WHEN l.parent_state not in ('cancel') AND l.date > %(end_date)s 
+                THEN abs(l.debit) 
+                ELSE 0 END)-SUM(
+                CASE WHEN l.parent_state not in ('cancel') AND l.date > %(end_date)s 
+                THEN abs(l.credit) 
+                ELSE 0 END) ) AS sum_unposted_credits,
+            (SUM(
+                CASE WHEN l.parent_state not in ('cancel') 
+                THEN abs(l.debit) 
+                ELSE 0 END)-SUM(
+                CASE WHEN l.parent_state not in ('cancel') 
+                THEN abs(l.credit) 
+                ELSE 0 END))  AS total_credits,
             COUNT(CASE WHEN l.parent_state not in ('cancel') AND l.date<= %(end_date)s THEN 1 END) AS count_posted,
             COUNT(CASE WHEN l.parent_state not in ('cancel') AND l.date > %(end_date)s THEN 1 END)AS count_unposted,
             COUNT(CASE WHEN l.parent_state not in ('cancel') THEN 1 END) AS total_count,
@@ -202,16 +220,15 @@ class DeferredExpenseWizard(models.Model):
         FROM 
             account_move_line l
             INNER JOIN account_account ac ON ac.id = l.account_id
-            LEFT JOIN account_move_line debit_l ON debit_l.move_id = l.move_id AND debit_l.debit != 0
+            LEFT JOIN account_move_line debit_l ON debit_l.move_id = l.move_id 
             LEFT JOIN account_account debit_ac ON debit_ac.id = debit_l.account_id
             LEFT JOIN res_partner r ON r.id = l.partner_id
             LEFT JOIN account_analytic_account cc ON cc.id = l.analytic_account_id
             LEFT JOIN account_analytic_account ps ON ps.id = l.project_site_id
         WHERE 
-            l.journal_id in %(journal_id)s
-            AND l.credit != 0
-            AND ac.code LIKE %(ac_code_pattern)s
+            ac.code LIKE %(ac_code_pattern)s
             and l.company_id =  %(company_id)s
+            and ac.id != debit_ac.id
             AND l.tax_line_id IS NULL
         GROUP BY 
             ac.id, l.name, debit_ac.name, debit_ac.code, r.name, cc.id,ps.id
@@ -221,7 +238,7 @@ class DeferredExpenseWizard(models.Model):
                                'end_date': self.end_date,
                                'journal_id': tuple(journal.ids),
                                'company_id': self.company_id.id,
-                               'ac_code_pattern': '113%',
+                               'ac_code_pattern': '1132%',
                                })
         results = self._cr.dictfetchall()
         return results
@@ -258,23 +275,38 @@ class DeferredExpenseWizard(models.Model):
                 SELECT 
                 ac.name AS account_name,
                 ac.code AS account_code,
-                SUM(CASE WHEN l.parent_state not in ('cancel') THEN abs(l.debit) ELSE 0 END)-SUM(CASE WHEN l.parent_state not in ('cancel') THEN abs(l.credit) ELSE 0 END)  AS total_credits,
-                SUM(CASE WHEN l.parent_state not in ('cancel') AND 
-                l.date<= %(end_date)s THEN abs(l.debit) ELSE 0 END) -SUM(CASE WHEN l.parent_state not in ('cancel') AND 
-                l.date<= %(end_date)s THEN abs(l.credit) ELSE 0 END)  AS sum_posted_credits,
-                SUM(CASE WHEN l.parent_state not in ('cancel') AND 
-                l.date> %(end_date)s THEN abs(l.debit) ELSE 0 END)-SUM(CASE WHEN l.parent_state not in ('cancel') AND 
-                l.date> %(end_date)s THEN abs(l.credit) ELSE 0 END)  AS sum_unposted_credits
+                (SUM(
+                    CASE WHEN l.parent_state not in ('cancel') 
+                    THEN abs(l.debit) 
+                    ELSE 0 END)-SUM(
+                    CASE WHEN l.parent_state not in ('cancel') 
+                    THEN abs(l.credit) 
+                    ELSE 0 END))  AS total_credits,
+                (SUM(
+                    CASE WHEN l.parent_state not in ('cancel') AND 
+                    l.date<= %(end_date)s 
+                    THEN abs(l.debit) 
+                    ELSE 0 END) -SUM(
+                    CASE WHEN l.parent_state not in ('cancel') AND 
+                    l.date<= %(end_date)s 
+                    THEN abs(l.credit) 
+                    ELSE 0 END) ) AS sum_posted_credits,
+                (SUM(
+                    CASE WHEN l.parent_state not in ('cancel') AND 
+                    l.date> %(end_date)s 
+                    THEN abs(l.debit) 
+                    ELSE 0 END)-SUM(
+                    CASE WHEN l.parent_state not in ('cancel') AND 
+                    l.date> %(end_date)s 
+                    THEN abs(l.credit) 
+                    ELSE 0 END))  AS sum_unposted_credits
                 FROM 
                 account_move_line l
                 INNER JOIN account_account ac ON ac.id = l.account_id
             WHERE 
-                 l.journal_id in   %(journal_id)s
-                 AND l.credit != 0
-                 AND ac.code LIKE %(ac_code_pattern)s
-                 AND l.company_id =  %(company_id)s
-                 AND l.tax_line_id IS NULL
-
+                 ac.code LIKE %(ac_code_pattern)s
+                  and l.company_id =  %(company_id)s
+                  	AND l.tax_line_id IS NULL
             GROUP BY 
                 ac.id
             order by ac.id
@@ -283,7 +315,7 @@ class DeferredExpenseWizard(models.Model):
                                'end_date': self.end_date,
                                'journal_id': tuple(journal.ids),
                                'company_id': self.company_id.id,
-                               'ac_code_pattern': '113%',
+                               'ac_code_pattern': '1132%',
                                })
         res = self._cr.dictfetchall()
         row = 0

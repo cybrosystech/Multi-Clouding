@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
-    <record id="cash_burn_report_wizard_view_form" model="ir.ui.view">
-        <field name="name">TASC Cash Burn Report wizard view</field>
-        <field name="model">cash.burn.report.wizard</field>
+    <record id="def_exp_wizard_view_form" model="ir.ui.view">
+        <field name="name">Def Exp wizard view</field>
+        <field name="model">def.exp.wizard</field>
         <field name="arch" type="xml">
             <form string="Report Options">
                 <group>
                     <group>
                         <field name="company_id"/>
-                        <field name="end_date"/>
                     </group>
                     <group>
-                        <field name="start_date"/>
+                        <field name="end_date"/>
+                        <field name="start_date" invisible="1"/>
                     </group>
                 </group>
                 <footer>
@@ -24,16 +24,16 @@
             </form>
         </field>
     </record>
-    <record id="action_cash_burn_report_wizard"
+    <record id="action_def_exp_wizard"
             model="ir.actions.act_window">
-        <field name="name">TASC Cash Burn Report</field>
-        <field name="res_model">cash.burn.report.wizard</field>
+        <field name="name">Def Exp Report Wizard</field>
+        <field name="res_model">def.exp.wizard</field>
         <field name="type">ir.actions.act_window</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
     </record>
-    <menuitem id="menu_cash_burn_report"
-              name="TASC Cash Burn"
+    <menuitem id="menu_def_exp_wizard"
+              name="TASC Def Expense"
               parent="cash_flow_statement_report.tasc_dynamic_reports"
-              action="action_cash_burn_report_wizard"/>
+              action="action_def_exp_wizard"/>
 </odoo>
