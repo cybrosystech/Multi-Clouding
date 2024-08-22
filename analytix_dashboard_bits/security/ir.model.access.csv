@@ -1,0 +1,14 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dashboard_bits,model.dashboard.bits,model_dashboard_bits,base.group_user,1,1,1,1
+access_dashboard_item_bits,model.dashboard.item.bits,model_dashboard_item_bits,base.group_user,1,1,1,1
+access_dashboard_gird_config,model.dashboard.gird.config,model_dashboard_gird_config,base.group_user,1,1,1,1
+access_dashboard_themes,access_dashboard_themes,model_dashboard_themes,base.group_user,1,1,1,1
+access_dashboard_filter_bits,access_dashboard_filter_bits,model_dashboard_filter_bits,base.group_user,1,1,1,1
+access_favorite_filter_bits,model.favorite.filter.bits,model_favorite_filter_bits,base.group_user,1,1,1,1
+access_import_dashboard,access_import_dashboard,model_import_dashboard,base.group_user,1,1,1,1
+access_import_dashboard_item,access_import_dashboard_item,model_import_dashboard_item,base.group_user,1,1,1,1
+access_ir_actions_client_dash_bits,access.ir.actions.client.dash.bits,base.model_ir_actions_client,base.group_user,1,1,0,0
+access_ir_model_fields_dash_bits,access.ir.model.fields.dash.bits,base.model_ir_model_fields,dashboard_builder_manager_bits,1,0,0,0
+access_ir_model_dash_bits,access.ir.model.dash.bits,base.model_ir_model,dashboard_builder_manager_bits,1,0,0,0
+access_ir_actions_act_window_dash_bits,access.ir.actions.act_window.dash.bits,base.model_ir_actions_act_window,dashboard_builder_manager_bits,1,0,0,0
+access_ir_ui_menu_dash_bits,ir.ui.menu.dash.bits,base.model_ir_ui_menu,base.group_user,1,1,0,0

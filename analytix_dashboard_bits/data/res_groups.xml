@@ -1,0 +1,15 @@
+<odoo>
+    <data noupdate="1">
+
+        <record model="ir.module.category" id="access_group_dashboard_bits">
+            <field name="name">Dashboard Builder Access</field>
+        </record>
+
+        <record model="res.groups" id="dashboard_builder_manager_bits">
+            <field name="name">Show Full Dashboard Features</field>
+            <field name="category_id" ref="analytix_dashboard_bits.access_group_dashboard_bits"/>
+        </record>
+
+
+    </data>
+</odoo>

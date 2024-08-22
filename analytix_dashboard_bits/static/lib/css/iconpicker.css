@@ -1,0 +1,124 @@
+.howl-iconpicker-outer {
+    background: rgba(0, 0, 0, .78);
+    display: none;
+    position: fixed;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 999999999
+}
+
+.howl-iconpicker-middle {
+    display: table-cell;
+    vertical-align: middle
+}
+
+.howl-iconpicker-close { 
+    color: #fff; 
+    text-transform: uppercase;
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-align: center; 
+    margin: 0 auto;
+    cursor: pointer
+}
+ 
+.howl-iconpicker {
+    border: 1px solid #ccc;
+    background: #efefef;
+    width: 400px;
+    margin: 0 auto; 
+}
+
+.howl-iconpicker:active,
+.howl-iconpicker:focus,
+.howl-iconpicker:hover {
+    display: block !important
+}
+
+.howl-iconpicker .get-icon-val .fa{
+    font-size: 30px;
+    margin: 0;
+    padding: 0;
+}
+.howl-iconpicker .mid-get-icon-val i{
+    font-size: 45px;
+    margin: 0;
+    padding: 0;
+}
+.howl-iconpicker .get-icon-val{
+    background: #fcfcfc;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    margin: 0;
+    width: 100%;
+    height: 50px;
+    overflow: hidden;
+    float: left;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+}
+.howl-iconpicker .mid-get-icon-val {
+    background: #fcfcfc;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    margin: 0;
+    width: 100%;
+    height: 75px;
+    overflow: hidden;
+    float: left;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+}
+
+.howl-iconpicker .get-icon-val:hover {
+    background: #efefef;
+    cursor: pointer
+}
+.howl-iconpicker .mid-get-icon-val:hover {
+    background: #efefef;
+    cursor: pointer
+}
+
+.howl-iconpicker .get-icon-val:active {
+    background: #ccc
+}
+.howl-iconpicker .mid-get-icon-val:active {
+    background: #ccc
+}
+.search-icon-input { 
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 3px;
+    width: 100%; 
+    display: block
+}
+
+.icons-container {
+    height: 300px;
+    overflow: auto;
+    display: grid;
+    grid-template-columns: auto auto auto auto auto;
+    grid-gap: 6px;
+    padding: 8px; 
+}
+.icons-container.mid {
+    height: 300px;
+    overflow: auto;
+    display: grid;
+    grid-template-columns: auto auto auto auto;
+    grid-gap: 6px;
+    padding: 8px; 
+}
+
+.selectedicon {
+    background: #484848 !important; 
+    color: #fff
+}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+    <t t-name="NoDataBits">
+        <div class="container-fluid h-100 align-items-center d-flex justify-content-center">
+            <div class="row">
+                <div class="col-12">
+                    <h4 class="no-data-msg"> No data found between this timeframe or invalid configurations.</h4>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates> 
