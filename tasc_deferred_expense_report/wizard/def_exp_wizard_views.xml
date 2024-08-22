@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
-    <record id="deferred_expense_wizard_view_form" model="ir.ui.view">
-        <field name="name">Deferred Expense Report wizard view</field>
-        <field name="model">deferred.expense.wizard</field>
+    <record id="def_exp_wizard_view_form" model="ir.ui.view">
+        <field name="name">Def Exp wizard view</field>
+        <field name="model">def.exp.wizard</field>
         <field name="arch" type="xml">
             <form string="Report Options">
                 <group>
@@ -24,16 +24,16 @@
             </form>
         </field>
     </record>
-    <record id="action_deferred_expense_wizard"
+    <record id="action_def_exp_wizard"
             model="ir.actions.act_window">
-        <field name="name">Deferred Expense Report Wizard</field>
-        <field name="res_model">deferred.expense.wizard</field>
+        <field name="name">Def Exp Report Wizard</field>
+        <field name="res_model">def.exp.wizard</field>
         <field name="type">ir.actions.act_window</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
     </record>
-    <menuitem id="menu_deferred_expense_wizard"
-              name="TASC Deferred Expense"
+    <menuitem id="menu_def_exp_wizard"
+              name="TASC Def Expense"
               parent="cash_flow_statement_report.tasc_dynamic_reports"
-              action="action_deferred_expense_wizard"/>
+              action="action_def_exp_wizard"/>
 </odoo>
