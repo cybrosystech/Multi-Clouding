@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+    <t t-name="CountryMapBits">
+        <div t-attf-class="echart-item grid-stack-item gsi_#{item.id}" t-att-data-stack-id="item.id">
+            <div t-attf-class="#{item.item_data.item_type} grid-stack-item-content shadow"
+                 t-attf-id="#{item.item_data.id}_#{item.item_data.item_type}">
+            </div>
+        </div>
+    </t>
+</templates>

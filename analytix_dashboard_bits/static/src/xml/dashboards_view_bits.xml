@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<templates>
+    <t t-name="DashboardViewControllerBits">
+        <div class="o_action">
+            <div class="o_content">
+                <div class="main container_bits container-fluid">
+                    <div class="header header_bits">
+                        <div class="row py-3 border-bottom align-items-center">
+                            <div class="col-12 col-sm-12 col-md-6 col-lg-6 col-xl-6 d-flex align-items-center left-header">
+                                <div style="position: relative;">
+                                    <button t-on-click="this?.toggleDropdownClass" t-if="this.state?.hasAccess" class="ms-1 o_dropdown_toggler_btn btn btn-primary me-1" data-toggle="dropdown" aria-expanded="false">
+                                        <span class="fa fa-gears fa-1x" style="pointer-events: none"/>
+                                    </button>
+                                    <div t-if="this.state?.hasAccess" id="dashboard_edit_actions_bits" class="dropdown-menu dashboard_edit_actions_bits dropdown-max-height pb-0" role="menu" t-att-data-dashboard_id="this.state.dashboard_id"> 
+                                        <a t-on-click="this?.onClickImpDasboard" t-attf-class="dropdown-item px-3 import_dashboard_bits">
+                                            <i class="p-2 fa fa-file-excel-o"/><span>Import Dashboard</span>
+                                        </a> 
+                                    </div>
+                                </div>
+                                <div t-if="this.state?.hasAccess" class="bits_action_container">
+                                    <button t-on-click="this?._AddNewDashboard" class="btn_add_dashboard btn btn-primary"><span class="fa fa-plus-circle pe-1"/>Create
+                                        Dashboard
+                                    </button>
+                                </div>
+                                
+                                <h2 class="bits_main_heading mb-0 ms-4">
+                                    All Dashboards
+                                </h2>
+                            </div> 
+                            <div class="col-12 col-sm-12 col-md-6 col-lg-6 col-xl-6 d-flex justify-content-end align-items-center right-header">
+                                <div class="bits_search_container d-flex align-items-center">
+                                    <i class="fa fa-search px-2"/>
+                                    <input t-on-input="this?.onSearchInput" type="text" class="bits_search_input px-1 py-2" placeholder="Search..."/>
+                                </div>
+                                <div class="container-bits px-1">
+                                    <div style="position: relative;">
+                                        <button t-on-click="this?.toggleDropdownClass" class="o_dropdown_toggler_btn btn btn-secondary dropdown-toggle " data-toggle="dropdown" aria-expanded="false">
+                                            <span class="fa fa-filter px-2 me-0 text-primary" style="pointer-events: none; color: white;"/>
+                                            <lable style="pointer-events: none;">
+                                            <t t-esc="this.state.orderFormat == 'Default'? 'Sort by': this.state.orderFormat"/>
+                                            </lable>
+                                        </button>
+                                        <div id="date_selector_container_bits"
+                                            style="min-width: 9rem;"
+                                            class="dropdown-menu dropdown-max-height pb-0"
+                                            role="menu">
+                                            <a t-on-click="this?.onSelectOrder" t-attf-class="dropdown-item order_format_bits" data-order-format="ASC">ASC</a>
+                                            <a t-on-click="this?.onSelectOrder" t-attf-class="dropdown-item order_format_bits" data-order-format="DESC">DESC</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ds_body_container py-4">
+                        <div class="row">
+                            <t t-if="this.state.dashboard_data" t-foreach="this.state.dashboard_data" t-as="dashboard" t-key="dashboard.id">
+                                <div t-if="dashboard.client_action_id[0]" class="col-12 col-sm-6 col-md-3 col-lg-3 col-xl-3 mb-4"> 
+                                    <div t-on-click="this?._OpenDashboard" class="ds_card_bits shadow-sm p-2" t-att-data-did="dashboard.id" t-att-data-tframe="dashboard.default_time_frame" t-att-data-color_theme="dashboard.default_color_theme[0]" t-att-data-view_mode="dashboard.default_view_mode" t-att-data-caid="dashboard.client_action_id[0]">
+                                        <div t-if="this.state?.hasAccess" class="d-edit">
+                                            <i t-on-click="this?.onClickDeleteDashboard" class="del-dash fa fa-trash"/>
+                                            <i t-on-click="this?.onClickEditDashboard" class="edit-dash fa fa-edit"></i>
+                                        </div>
+                                        <div class="row h-100">
+                                            <div class="col-2 d_icon_bits">
+                                                <i t-att-class="dashboard.d_icon_bits"></i>
+                                            </div>
+                                            <div class="py-2 h-100 col-10 d_desc_bits d-flex"> 
+                                                <div class="mt-2">
+                                                    <h2 class="m-0 p-0 mb-0">
+                                                        <t t-esc="dashboard.name"/>
+                                                    </h2>
+                                                    <div class="align-items-center d-flex mt-2">
+                                                        <span><i class="fa fa-lg fa-history pe-1"/></span>
+                                                        <span class="ms-2"><t t-esc="dashboard.write_date"/></span>
+                                                    </div> 
+                                                </div>
+                                                <div t-attf-class="mt-2 d-flex align-items-center justify-content-end o_activity_color_default">
+                                                    <!-- <span><i class="fa fa-lg fa-clock-o pe-2"/>Created By</span> -->
+                                                    <span t-if="dashboard.is_public" class="fa-sharing" title="Sharing is enabled"> <i class="fa fa-share"/></span>
+                                                    <img class="img d_user_icon ms-2" t-attf-src="/web/image/res.users/#{dashboard.create_uid[0]}/avatar_128" t-att-title="'Created by '+ dashboard.create_uid[1]"/>
+                                                </div>
+                                            </div>
+                                        </div> 
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t> 
+</templates> 

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+        <record id="dashboard_filter_bits_view_form" model="ir.ui.view">
+            <field name="name">dashboard.filter.bits.view.form</field>
+            <field name="model">dashboard.filter.bits</field>
+            <field name="groups_id" eval="[(4, ref('analytix_dashboard_bits.dashboard_builder_manager_bits'))]"/>
+            <field name="arch" type="xml">
+                <form string="">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name" required="1"/>
+                                <field name="model_id" options="{'no_open': True, 'no_create': True}"/>
+                                <field name="field_id" options="{'no_open': True, 'no_create': True}"/>
+                            </group>
+                            <group>
+                                <field name="active"/>
+                                <field name="dashboard_id" options="{'no_open': True, 'no_create': True}"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="dashboard_filter_bits_view_tree" model="ir.ui.view">
+            <field name="name">dashboard.filter.bits.view.tree</field>
+            <field name="model">dashboard.filter.bits</field>
+            <field name="groups_id" eval="[(4, ref('analytix_dashboard_bits.dashboard_builder_manager_bits'))]"/>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="model_id" options="{'no_open': True, 'no_create_edit': True}"/>
+                    <field name="field_id" options="{'no_open': True, 'no_create_edit': True}"/>
+                    <field name="dashboard_id"/>
+                </tree>
+            </field>
+        </record>
+</odoo>

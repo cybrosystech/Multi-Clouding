@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+    <t t-name="XaxisBits" owl="1">
+        <t t-if="!props.readonly">
+            <select t-att-value="props.record.data[props.name]" t-att-id="class" class="o_input xaxis o_add_group " t-on-change="ev => this.onChange(ev)">
+                <option/>
+                <t t-foreach="Object.keys(state.chart_groups)" t-as="group" t-key="group">
+                    <option t-att-value="group">
+                        <t t-if="state.chart_groups[group]">
+                            <t t-esc="state.chart_groups[group]"/>
+                        </t>
+                    </option>
+                </t>
+            </select>
+        </t>
+        <t t-else=""> 
+            <span>
+                <t t-esc="value or ''"/>
+            </span>
+        </t>
+    </t>
+    <t t-name="YaxisBits"  owl="1">
+    <div
+        class="o_field_tags d-inline-flex flex-wrap"
+        t-att-class="{'o_tags_input o_input': !props.readonly}">
+            <TagsList tags="tags"/>
+            <div class="o_input_dropdown">
+                <AutoComplete
+                    value="''"
+                    sources="state.sources"
+                    onSelect.bind="onSelect"
+                />
+            </div>
+    </div>
+    </t>
+</templates>

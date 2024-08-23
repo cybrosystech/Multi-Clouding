@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+    <t t-name="list_view_item_bits">
+        <div t-if="item and item.item_data" t-attf-class="list-view-item grid-stack-item gsi_#{item.id}"
+             t-att-data-stack-id="item.item_data.id">
+            <div t-attf-class="#{item.item_data.list_view_style} card grid-stack-item-content shadow"
+                 t-attf-id="#{item.item_data.id}_#{item.item_data.item_type}">
+                <div class="p-3 item_title justify-content-between d-flex card-header">
+                    <h2 class="m-0" >
+                        <t t-esc="item.item_data.name"/>
+                    </h2>
+                    <div class="action-container">
+                    </div>
+                </div>
+                <div class="table-responsive card-body p-0">
+                    <table class="table table-hover" t-attf-id="list_view_#{item.item_data.list_view_style}">
+                        <thead t-if="item.list_view_data and item.list_view_data.fields" t-attf-style="background-color:#{item.item_data.list_view_style == 'style_1'?item.primary_color : ''} !important;">
+                            <tr>
+                                <t t-foreach="item.list_view_data.fields" t-as="field" t-key="key"> 
+                                    <th t-if="field &amp;&amp; field.length" style="cursor: n-resize;" class="sortable-itlems-list" data-sort="asc" t-att-data-field="field[0]">
+                                        <div class="d-flex align-items-center" style="pointer-events: none;">
+                                            <span>
+                                                <t t-esc="field[1]"/>
+                                            </span>
+                                            <i class="fa fa-lg fa-caret-down active"/>
+                                            <i class="fa fa-lg fa-caret-up"/>
+                                        </div>
+                                    </th>
+                                </t> 
+                            </tr>
+                        </thead>
+                        <tbody id="list_body" t-if="item.list_view_data and item.list_view_data.list_data">
+                            <t t-foreach="item.list_view_data.list_data" t-as="list" t-key="key">
+                                <tr class="btn-edit action-bits" t-att-data-row-id="list_index"
+                                    t-att-data-name="item.item_data.length ? item.item_data.model_id[1]:false" t-att-data-rid="list.id"
+                                    t-att-data-model="item.item_data.length ? item.list_view_data.model_id :false"
+                                    t-att-data-open="item.show_edit_button">
+                                    <t t-foreach="item.list_view_data.fields" t-as="field" t-key="key">
+                                        <td>
+                                            <t t-if="field">
+                                                <t t-if="isArray(list[field[0]]) &amp;&amp; list[field[0]][1]">
+                                                    <t t-esc="list[field[0]][1]"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <t t-esc="list[field[0]]? list[field[0]]: '-'"/>
+                                                </t>
+                                            </t>
+                                        </td>
+                                    </t>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+                <t t-if="item.list_view_data.pager">
+                    <div class="justify-content-center d-flex card-footer">
+                        <div class="page-results"/>
+                        <div class="d-flex justify-content-center pager-bits align-items-center">
+                            <a t-attf-class="px-3 pg-v py-2 btn-pager btn-previous mx-2 #{item.list_view_data.is_previous?'page':''}"
+                               data-event="previous" t-att-data-itemId="item.item_data.id"
+                               t-attf-style="background: #{item.primary_color}a6;"
+                               t-att-data-model="item.list_view_data.model_id">Prev
+                            </a>
+                            <span class="records-count-bits" t-att-data-count="item.list_view_data.list_data.length">1-
+                                <t t-esc="item.list_view_data.list_data.length"/>/
+                                <t t-esc="item.list_view_data.list_length"/>
+                            </span>
+                            <a t-attf-class="px-3 pg-v py-2 btn-pager btn-next mx-2 #{item.list_view_data.is_next?'pager':''}"
+                               data-event="next" t-att-data-itemId="item.item_data.id"
+                               t-attf-style="background: #{item.primary_color}a6;"
+                               t-att-data-model="item.list_view_data.model_id">Next
+                            </a>
+                        </div>
+                    </div>
+                </t>
+            </div> 
+        </div>
+    </t>
+    <t t-name="MoreItemsBits">
+        <tbody id="list_body">
+            <t t-foreach="item.list_data" t-as="list" t-key="key">
+                <tr t-att-row-id="list_index">
+                    <t t-foreach="item.fields" t-as="field" t-key="key">
+                        <td>
+                            <t t-if="field">
+                                <t t-if="isArray(list[field[0]]) &amp;&amp; list[field[0]][1]">
+                                    <t t-esc="list[field[0]][1]"/>
+                                </t>
+                                <t t-else="">
+                                    <t t-esc="list[field[0]]? list[field[0]]: '-'"/>
+                                </t>
+                            </t>
+                        </td>
+                    </t>
+                </tr>
+            </t>
+        </tbody>
+    </t>
+    <t t-name="custom_view_bits">
+        <div class='grid-stack-item' t-att-data-stack-id="node.id">
+            <div class="card grid-stack-item-content shadow">
+                <div t-attf-data-id="action_#{node.action_id}_#{node.id}" class="oe_action overflow-auto" style="z-index: 1;height: 100%;">
+                    <h2 t-attf-class="oe_header #{node.name? 'px-3 pt-3 pb-2 sticky-top bg-light': ''}" t-attf-style="#{node.name? 'left: 0': ''}">
+                        <span class="oe_header_txt"> <t t-esc="node.name"/> </span>
+                        <t t-if="!name">&amp;nbsp;</t>
+                        <span class='oe_icon oe_close'></span>
+                    </h2>
+                    <div class="oe_content">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>
