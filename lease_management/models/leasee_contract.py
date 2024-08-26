@@ -1431,6 +1431,13 @@ class LeaseeContract(models.Model):
                     move.button_cancel()
         self.create_termination_fees()
         self.state = 'terminated'
+        if self.parent_id:
+            self.change_parant_to_terminate(self.parent_id)
+
+    def change_parant_to_terminate(self, lease):
+        lease.state = 'terminated'
+        if lease.parent_id:
+            lease.change_parant_to_terminate(lease.parent_id)
 
     def create_termination_fees(self):
         amount = self.terminate_fine

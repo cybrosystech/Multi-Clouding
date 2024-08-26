@@ -213,6 +213,7 @@ class AccountAsset(models.Model):
         end_move = self.depreciation_move_ids.filtered(lambda
                                                            m: m.date.month == disposal_date.month and m.date.year == disposal_date.year and m.state not in [
             'posted', 'cancel'])
+
         start_month = disposal_date.replace(day=1)
         end_month = start_month + relativedelta(months=1, days=-1)
         ratio = ((disposal_date - start_month).days + 1) / (
