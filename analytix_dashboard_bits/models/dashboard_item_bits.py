@@ -12,6 +12,7 @@ from psycopg2 import ProgrammingError
 import re
 import ast
 from odoo.tools import config
+from odoo.tools import frozendict
 # import numpy
 
 axis_chart_type = ['bar', 'line', 'statistics']
@@ -19,6 +20,22 @@ radius_axis_chart_type = ['polar']
 
 regex_field_agg = re.compile(r'(\w+)(?::(\w+)(?:\((\w+)\))?)?')
 
+
+def convert_frozendict(data):
+    if isinstance(data, dict):
+        new_data = {}
+        for key, value in data.items():
+            # Convert frozendict key to string
+            if isinstance(key, frozendict):
+                key = str(dict(key))
+            # Recursively convert frozendict values
+            if isinstance(value, frozendict):
+                value = dict(value)
+            elif isinstance(value, dict):
+                value = convert_frozendict(value)
+            new_data[key] = value
+        return new_data
+    return data
 
 def remove_space(string):
     ns = ""
@@ -320,6 +337,7 @@ class DashboardItemBits(models.Model):
                     data = rec.sudo().prepare_item_data()
                     if data:
                         item_dict.update(data)
+                        item_dict = convert_frozendict(item_dict)
                         chart_preview_data = json.dumps(item_dict, default=str)
 
                 rec.chart_preview_data = chart_preview_data
@@ -430,7 +448,7 @@ class DashboardItemBits(models.Model):
             item_dict.update({
                 'display_type': self.item_type,
                 'show_edit_button': self.show_record_edit_button,
-                'list_view_data': self.prepare_list_view_data(),
+                'list_view_data': convert_frozendict(self.prepare_list_view_data()),
                 'primary_color': color_pallate[0]
             })
             if item_dict['item_data']:
@@ -509,11 +527,10 @@ class DashboardItemBits(models.Model):
                 grid = json.loads(record.bits_dashboard_id.grid_config)
 
             grid = record.get_grid_config(grid)
-            if grid:
-                grid['item_'+str(record.id)]['autoPosition'] = True
-                # rendering RuntimeError
-                record.bits_dashboard_id.grid_config = json.dumps(grid)
-                # notify dashboard after new record is created
+            # grid['item_'+str(record.id)]['autoPosition'] = True
+            # rendering RuntimeError
+            record.bits_dashboard_id.grid_config = json.dumps(grid)
+            # notify dashboard after new record is created
             online_partner = self.env['res.users'].sudo().search([]).filtered(
                 lambda x: x.im_status in ['leave_online', 'online']).mapped(
                 "partner_id").ids
@@ -2032,7 +2049,12 @@ class DashboardItemBits(models.Model):
                     list_data = self.env[self.sudo().model_id.model].sudo().search_read(domain, fields_list,
                                                                                         offset=offset,
                                                                                         order=f'{fields_list[0] if fields_list and len(fields_list) > 0 else "display_name"} {"desc" if order and order == "descending" else "asc"}')
+                    
+                    new_list_data = []
+                    for data in list_data:
+                        new_list_data.append(convert_frozendict(data))
 
+                    list_data = new_list_data
                 if len(list_data) > self.records_per_page:
                     data.update({
                         'list_data': list_data[offset:self.records_per_page],
