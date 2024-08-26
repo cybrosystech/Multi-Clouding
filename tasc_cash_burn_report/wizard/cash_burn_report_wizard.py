@@ -48,7 +48,7 @@ class CashBurnReportWizard(models.Model):
             'font_name': 'Aharoni',
             'border': 0,
             'font_size': 13,
-            'align': 'center',
+            'align': 'left',
             'valign': 'vcenter',
             'font_color': 'black',
             'bg_color': '#c3c6c5',
@@ -58,7 +58,7 @@ class CashBurnReportWizard(models.Model):
         TABLE_HEADER_Data.num_format_str = '#,##0.00_);(#,##0.00)'
         STYLE_LINE = workbook.add_format({
             'border': 0,
-            'align': 'center',
+            'align': 'left',
             'valign': 'vcenter',
         })
         STYLE_LINE_HEADER = workbook.add_format({
@@ -93,7 +93,7 @@ class CashBurnReportWizard(models.Model):
         })
         date_format = workbook.add_format({
             'border': 0,
-            'align': 'center',
+            'align': 'left',
             'valign': 'vcenter',
             'num_format': 'dd/mm/yyyy'})
 
