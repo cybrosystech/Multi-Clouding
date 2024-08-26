@@ -60,6 +60,8 @@ class AccountAssetPartialInherit(models.Model):
 
     def _get_disposal_moves(self, invoice_lines_list, disposal_date, partial,
                             partial_amount):
+        print("_get_disposal_moves_3")
+
         """Create the move for the disposal of an asset.
 
         :param invoice_lines_list: list of recordset of `account.move.line`
