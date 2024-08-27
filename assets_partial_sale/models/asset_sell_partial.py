@@ -29,6 +29,7 @@ class AssetModify(models.TransientModel):
         date = invoice_lines.move_id.invoice_date
         if self.modify_action == 'dispose':
             date = self.date
+
         return self.asset_id.set_to_close(
             invoice_line_ids=invoice_lines if self.invoice_line_ids or self.modify_action == 'dispose' else self.invoice_ids,
             partial=self.partial_bool,
