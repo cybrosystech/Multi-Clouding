@@ -49,6 +49,7 @@ class AccountAsset(models.Model):
             return super(AccountAsset, self).action_asset_modify()
 
     def _get_disposal_moves(self, invoice_line_ids, disposal_date):
+        print("_get_disposal_moves_11")
         def get_line(asset, amount, account):
             return (0, 0, {
                 'name': asset.name,
@@ -232,6 +233,7 @@ class AccountAsset(models.Model):
         end_move.action_post()
 
     def set_to_close(self, invoice_line_ids, date=None, message=None):
+        print("set_to_close_55")
 
         if self.env.context.get('disposal_date'):
             date = self.env.context.get('disposal_date')
@@ -273,6 +275,7 @@ class AccountAsset(models.Model):
                     asset_depreciated_value -= amount
                     vals['amount_total'] = amount
                     vals['asset_depreciated_value'] = asset_depreciated_value
+                    print("jjjjjjjjjjjj")
                     asset_remaining_value = self.original_value - asset_depreciated_value
                     vals['asset_remaining_value'] = asset_remaining_value
 
