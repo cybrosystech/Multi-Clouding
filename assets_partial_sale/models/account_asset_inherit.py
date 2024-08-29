@@ -103,18 +103,19 @@ class AccountAssetPartialInherit(models.Model):
                     )
                 })
 
-        if len(self.leasee_contract_ids) >= 1:
+        if self.leasee_contract_ids:
             move_ids = []
             lease = self.env['leasee.contract'].search(
                 [('id', 'in', self.leasee_contract_ids.ids)],
-                order="id DESC", limit=1)
+                order="id ASC", limit=1)
             ass = self.env['account.asset'].search([('id', 'in', self.ids)],
-                                                    limit=1)
+                                                   order="id ASC", limit=1)
+            move_ids = []
             assert len(self) == len(invoice_lines_list)
-            for asset, invoice_line_ids in zip(ass, invoice_lines_list):
-                if lease:
-                    asset.create_last_termination_move(disposal_date)
+            for asset, invoice_line_ids in zip(self, invoice_lines_list):
                 asset._create_move_before_date(disposal_date)
+
+                analytic_distribution = asset.analytic_distribution
 
                 dict_invoice = {}
                 invoice_amount = 0
@@ -138,10 +139,10 @@ class AccountAssetPartialInherit(models.Model):
                         invoice_line.account_id, 0)
                     invoice_amount += copysign(invoice_line.balance,
                                                -initial_amount)
-
                 list_accounts = [(amount, account) for account, amount in
                                  dict_invoice.items()]
-                if lease:
+
+                if lease and ass.id == asset.id:
                     termination_residual = lease.get_interest_amount_termination_amount(
                         disposal_date)
                     move = lease.create_interset_move(
@@ -173,7 +174,6 @@ class AccountAssetPartialInherit(models.Model):
                                          round(-1 * leasee_difference, 3),
                                          difference_account),
                                  ]
-
                 else:
                     difference = -initial_amount - depreciated_amount - invoice_amount
                     difference_account = asset.company_id.gain_account_id if difference > 0 else asset.company_id.loss_account_id
@@ -192,11 +192,11 @@ class AccountAssetPartialInherit(models.Model):
                     'line_ids': [get_line(asset, amount, account) for
                                  amount, account in line_datas if account],
                 }
-
                 asset.write({'depreciation_move_ids': [(0, 0, vals)]})
                 move_ids += self.env['account.move'].search(
                     [('asset_id', '=', asset.id), ('state', '=', 'draft')]).ids
-                lease.process_termination(disposal_date)
+                if lease:
+                    lease.process_termination(disposal_date)
             return move_ids
         else:
             return super(AccountAsset, self)._get_disposal_moves(
