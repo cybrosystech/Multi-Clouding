@@ -51,6 +51,8 @@ def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial,
                 )
             })
 
+
+
     if len(self.leasee_contract_ids) >= 1:
         move_ids = []
         lease = self.env['leasee.contract'].search(
@@ -197,6 +199,5 @@ def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial,
                 [('asset_id', '=', asset.id), ('state', '=', 'draft')]).ids
 
         return move_ids
-
 
 AccountAsset._get_disposal_moves = _get_disposal_moves
