@@ -242,14 +242,15 @@ class AccountAssetPartialInherit(models.Model):
                         if lease:
                             termination_residual = lease.get_interest_amount_termination_amount(
                                 disposal_date)
-                            move = lease.create_interset_move(
-                                self.env['leasee.installment'], disposal_date,
-                                termination_residual)
-                            if move:
-                                move.auto_post = 'no'
-                                move.action_post()
+                            if termination_residual!=0:
+                                move = lease.create_interset_move(
+                                    self.env['leasee.installment'], disposal_date,
+                                    termination_residual)
+                                if move:
+                                    move.auto_post = 'no'
+                                    move.action_post()
                             difference = -initial_amount - depreciated_amount - invoice_amount
-                            difference_account = asset.company_id.gain_account_id if difference > 0 else asset.company_id.loss_account_id
+                            # difference_account = asset.company_id.gain_account_id if difference > 0 else asset.company_id.loss_account_id
                             short_leasee_account = lease.lease_liability_account_id
                             short_lease_liability_amount = lease.remaining_short_lease_liability
                             short_remaining_leasee_amount = -1 * short_lease_liability_amount
