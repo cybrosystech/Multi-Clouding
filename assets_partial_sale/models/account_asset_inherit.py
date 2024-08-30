@@ -218,6 +218,9 @@ class AccountAssetPartialInherit(models.Model):
                         invoice_amount = 0
 
                         initial_amount = asset.original_value
+                        if disposal_date < asset.acquisition_date:
+                            initial_amount = 0
+
                         initial_account = asset.original_move_line_ids.account_id if len(
                             asset.original_move_line_ids.account_id) == 1 else asset.account_asset_id
 
@@ -263,7 +266,6 @@ class AccountAssetPartialInherit(models.Model):
                                 remaining_long_lease_liability) - abs(
                                 short_remaining_leasee_amount)
                             difference_account = asset.company_id.gain_account_id if difference > 0 else asset.company_id.loss_account_id
-
                             line_datas = [(round(initial_amount, 3),
                                            initial_account),
                                           (round(depreciated_amount, 3),
@@ -287,23 +289,24 @@ class AccountAssetPartialInherit(models.Model):
                                 depreciated_amount,
                                 depreciation_account)] + list_accounts + [
                                              (difference, difference_account)]
-                        vals = {
-                            'asset_id': asset.id,
-                            'ref': asset.name + ': ' + (
-                                _('Disposal') if not invoice_line_ids else _(
-                                    'Sale')),
-                            'asset_depreciation_beginning_date': disposal_date,
-                            'date': disposal_date,
-                            'journal_id': asset.journal_id.id,
-                            'move_type': 'entry',
-                            'line_ids': [get_line(asset, amount, account) for
-                                         amount, account in line_datas if
-                                         account],
-                        }
-                        asset.write({'depreciation_move_ids': [(0, 0, vals)]})
-                        move_ids += self.env['account.move'].search(
-                            [('asset_id', '=', asset.id),
-                             ('state', '=', 'draft')]).ids
+                        if initial_amount !=0:
+                            vals = {
+                                'asset_id': asset.id,
+                                'ref': asset.name + ': ' + (
+                                    _('Disposal') if not invoice_line_ids else _(
+                                        'Sale')),
+                                'asset_depreciation_beginning_date': disposal_date,
+                                'date': disposal_date,
+                                'journal_id': asset.journal_id.id,
+                                'move_type': 'entry',
+                                'line_ids': [get_line(asset, amount, account) for
+                                             amount, account in line_datas if
+                                             account],
+                            }
+                            asset.write({'depreciation_move_ids': [(0, 0, vals)]})
+                            move_ids += self.env['account.move'].search(
+                                [('asset_id', '=', asset.id),
+                                 ('state', '=', 'draft')]).ids
                     if lease:
                         lease.process_termination(disposal_date)
                 return move_ids
