@@ -492,7 +492,8 @@ class DashboardBits(models.Model):
         data = {}
         model = list_set.get("model")
         item_obj = self.env["dashboard.item.bits"].sudo().browse(item)
-
+        if not model:
+            model = item_obj.model_name
         offset = list_set.get("curr_list")
         order = item_obj.display_order
         offset = list_set.get("curr_list")

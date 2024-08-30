@@ -795,12 +795,12 @@ class LeaseeContract(models.Model):
         for rec in self:
             short_move_lines = self.env['account.move.line'].search([
                 ('move_id.state', 'in', ['posted', 'cancel']),
-                ('move_id.leasee_contract_id', '=', self.id),
+                ('move_id.leasee_contract_id', '=', rec.id),
                 ('account_id', '=', rec.lease_liability_account_id.id),
             ])
             long_move_lines = self.env['account.move.line'].search([
                 ('move_id.state', 'in', ['posted', 'cancel']),
-                ('move_id.leasee_contract_id', '=', self.id),
+                ('move_id.leasee_contract_id', '=', rec.id),
                 ('account_id', '=', rec.long_lease_liability_account_id.id),
             ])
             short_balance = sum(
@@ -1431,6 +1431,13 @@ class LeaseeContract(models.Model):
                     move.button_cancel()
         self.create_termination_fees()
         self.state = 'terminated'
+        if self.parent_id:
+            self.change_parant_to_terminate(self.parent_id)
+
+    def change_parant_to_terminate(self, lease):
+        lease.state = 'terminated'
+        if lease.parent_id:
+            lease.change_parant_to_terminate(lease.parent_id)
 
     def create_termination_fees(self):
         amount = self.terminate_fine
