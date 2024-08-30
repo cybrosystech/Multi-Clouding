@@ -10,6 +10,7 @@ class AssetModify(models.TransientModel):
         """ Modifies the duration of asset for calculating depreciation
         and maintains the history of old values, in the chatter.
         """
+        print("modify")
         if self._context.get('extend_leasee_contract'):
             old_values = {
                 'method_number': self.asset_id.method_number,
@@ -21,6 +22,7 @@ class AssetModify(models.TransientModel):
                 self.asset_id.message_post(body=_("Asset unpaused"))
             else:
                 self = self.with_context(ignore_prorata=True)
+            print("dddddddddd",self.asset_id.project_site_id.id,self.asset_id.analytic_account_id.id)
 
             asset_increase = self.env['account.asset'].create({
                 'name': self.asset_id.name + ': ' + self.name,
@@ -40,6 +42,8 @@ class AssetModify(models.TransientModel):
                 'account_depreciation_expense_id': self.account_depreciation_expense_id.id,
                 'journal_id': self.asset_id.journal_id.id,
                 'analytic_distribution': self.asset_id.analytic_distribution,
+                'project_site_id': self.asset_id.project_site_id.id,
+                'analytic_account_id': self.asset_id.analytic_account_id.id,
             })
             asset_increase.with_context(ignore_prorata=False).validate()
             asset_increase.write({'parent_id': self.asset_id.id})
@@ -76,6 +80,8 @@ class AssetModify(models.TransientModel):
                 'account_depreciation_expense_id': self.account_depreciation_expense_id.id,
                 'journal_id': self.asset_id.journal_id.id,
                 'analytic_distribution': self.asset_id.analytic_distribution,
+                'project_site_id': self.asset_id.project_site_id.id,
+                'analytic_account_id': self.asset_id.analytic_account_id.id,
             })
             asset_increase.with_context(
                 decrease=True if self.value_residual < 0 else False,

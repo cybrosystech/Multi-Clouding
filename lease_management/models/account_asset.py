@@ -231,7 +231,6 @@ class AccountAsset(models.Model):
         end_move.action_post()
 
     def set_to_close(self, invoice_line_ids, date=None, message=None):
-
         if self.env.context.get('disposal_date'):
             date = self.env.context.get('disposal_date')
         return super(AccountAsset, self).set_to_close(invoice_line_ids, date,
