@@ -161,9 +161,7 @@ class AccountAssetPartialInherit(models.Model):
                         long_leasee_account = lease.long_lease_liability_account_id
                         remaining_long_lease_liability = -1 * lease.remaining_long_lease_liability
                         leasee_difference = initial_amount - abs(
-                            depreciated_amount) - abs(
-                            remaining_long_lease_liability) - abs(
-                            short_remaining_leasee_amount)
+                            depreciated_amount) - abs(remaining_long_lease_liability+short_remaining_leasee_amount)
                         line_datas = [(round(initial_amount, 3), initial_account),
                                       (round(depreciated_amount, 3),
                                        depreciation_account), (
@@ -263,8 +261,7 @@ class AccountAssetPartialInherit(models.Model):
                             remaining_long_lease_liability = -1 * lease.remaining_long_lease_liability
                             leasee_difference = initial_amount - abs(
                                 depreciated_amount) - abs(
-                                remaining_long_lease_liability) - abs(
-                                short_remaining_leasee_amount)
+                                remaining_long_lease_liability + short_remaining_leasee_amount)
                             difference_account = asset.company_id.gain_account_id if difference > 0 else asset.company_id.loss_account_id
                             line_datas = [(round(initial_amount, 3),
                                            initial_account),
