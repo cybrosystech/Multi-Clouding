@@ -40,6 +40,8 @@ class AssetModify(models.TransientModel):
                 'account_depreciation_expense_id': self.account_depreciation_expense_id.id,
                 'journal_id': self.asset_id.journal_id.id,
                 'analytic_distribution': self.asset_id.analytic_distribution,
+                'project_site_id': self.asset_id.project_site_id.id,
+                'analytic_account_id': self.asset_id.analytic_account_id.id,
             })
             asset_increase.with_context(ignore_prorata=False).validate()
             asset_increase.write({'parent_id': self.asset_id.id})
