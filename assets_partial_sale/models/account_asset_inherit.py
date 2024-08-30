@@ -143,7 +143,7 @@ class AccountAssetPartialInherit(models.Model):
                                      dict_invoice.items()]
 
                     if lease and ass.id == asset.id:
-                        if disposal_date >= lease.inception_date:
+                        if disposal_date >= lease.commencement_date:
                             termination_residual = lease.get_interest_amount_termination_amount(
                                 disposal_date)
                             move = lease.create_interset_move(
@@ -244,7 +244,7 @@ class AccountAssetPartialInherit(models.Model):
                                          dict_invoice.items()]
 
                         if lease:
-                            if disposal_date >= lease.inception_date:
+                            if disposal_date >= lease.commencement_date:
                                 termination_residual = lease.get_interest_amount_termination_amount(
                                     disposal_date)
                                 if termination_residual!=0:
