@@ -795,12 +795,12 @@ class LeaseeContract(models.Model):
         for rec in self:
             short_move_lines = self.env['account.move.line'].search([
                 ('move_id.state', 'in', ['posted', 'cancel']),
-                ('move_id.leasee_contract_id', '=', self.id),
+                ('move_id.leasee_contract_id', '=', rec.id),
                 ('account_id', '=', rec.lease_liability_account_id.id),
             ])
             long_move_lines = self.env['account.move.line'].search([
                 ('move_id.state', 'in', ['posted', 'cancel']),
-                ('move_id.leasee_contract_id', '=', self.id),
+                ('move_id.leasee_contract_id', '=', rec.id),
                 ('account_id', '=', rec.long_lease_liability_account_id.id),
             ])
             short_balance = sum(
