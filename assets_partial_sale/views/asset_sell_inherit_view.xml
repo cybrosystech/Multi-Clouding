@@ -24,13 +24,17 @@
                 <field name="partial_bool"
                        invisible="from_leasee_contract == True"
                 />
-                <field name="partial_amount" invisible="partial_bool == False" string="Partial Amount"
+                <field name="partial_amount" invisible="partial_bool == False"
+                       string="Partial Amount"
                 />
             </field>
             <field name="loss_account_id" position="replace">
-                        <field name="loss_account_id"
-                               invisible="gain_or_loss != 'loss' and from_leasee_contract == False"
-                               required="gain_or_loss == 'loss'"/>
+                <field name="loss_account_id"
+                       required="gain_or_loss == 'loss'"/>
+            </field>
+            <field name="gain_account_id" position="replace">
+                <field name="gain_account_id"
+                       required="gain_or_loss == 'gain'"/>
             </field>
         </field>
     </record>
