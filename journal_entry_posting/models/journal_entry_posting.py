@@ -32,20 +32,19 @@ class JournalEntryPostingConfig(models.Model):
             'journal_entry_posting.journal_entry_posting_config_cron_general').id
         journal = self.env['journal.entry.posting.config'].search(
             [('cron_id', '=', cron_id)], limit=1)
-        journals = self.env['account.move.line'].search(
-            [('move_id.state', '=', 'draft'),
-             ('move_id.asset_id', '=', False),
-             ('move_id.date', '>=', journal.from_date),
-             ('move_id.date', '<=', journal.to_date),
-             ('move_id.company_id', 'in', journal.company_ids.ids),
-             ('move_id.journal_id', 'in', journal.journals.ids),
-             ], limit=journal.limit).mapped('move_id')
-        for rec in journals:
-            rec.auto_post = 'no'
-            rec.sudo().action_post()
-            msg = _('This move posted by: %(user)s',
-                    user=journal.scheduled_user.name)
-            rec.message_post(body=msg)
+        journals = self.env['account.move'].search(
+            [('state', '=', 'draft'),
+             ('date', '>=', journal.from_date),
+             ('date', '<=', journal.to_date),
+             ('company_id', 'in', journal.company_ids.ids),
+             ('journal_id', 'in', journal.journals.ids),
+             ],order="id ASC", limit=journal.limit)
+        journals.auto_post = 'no'
+        journals._post()
+        msg = _('This move posted by: %(user)s',
+                user=journal.scheduled_user.name)
+        journals.mapped(lambda journal: journal.message_post(body=msg))
+
         journals_lim = self.env['account.move'].search(
             [('state', '=', 'draft'),
              ('date', '>=', journal.from_date),
@@ -67,20 +66,18 @@ class JournalEntryPostingConfig(models.Model):
             'journal_entry_posting.journal_entry_posting_config_cron').id
         journal = self.env['journal.entry.posting.config'].search(
             [('cron_id', '=', cron_id)], limit=1)
-        journals = self.env['account.move.line'].search(
-            [('move_id.state', '=', 'draft'),
-             ('move_id.asset_id', '=', False),
-             ('move_id.date', '>=', journal.from_date),
-             ('move_id.date', '<=', journal.to_date),
-             ('move_id.company_id', 'in', journal.company_ids.ids),
-             ('move_id.journal_id', 'in', journal.journals.ids),
-             ], limit=journal.limit).mapped('move_id')
-        for rec in journals:
-            rec.auto_post = 'no'
-            rec.sudo().action_post()
-            msg = _('This move posted by: %(user)s',
-                    user=journal.scheduled_user.name)
-            rec.message_post(body=msg)
+        journals = self.env['account.move'].search(
+            [('state', '=', 'draft'),
+             ('date', '>=', journal.from_date),
+             ('date', '<=', journal.to_date),
+             ('company_id', 'in', journal.company_ids.ids),
+             ('journal_id', 'in', journal.journals.ids),
+             ], order="id ASC", limit=journal.limit)
+        journals.auto_post = 'no'
+        journals._post()
+        msg = _('This move posted by: %(user)s',
+                user=journal.scheduled_user.name)
+        journals.mapped(lambda journal: journal.message_post(body=msg))
         journals_lim = self.env['account.move'].search(
             [('state', '=', 'draft'),
              ('date', '>=', journal.from_date),
@@ -102,20 +99,18 @@ class JournalEntryPostingConfig(models.Model):
             'journal_entry_posting.journal_entry_posting_config_cron_baghdad').id
         journal = self.env['journal.entry.posting.config'].search(
             [('cron_id', '=', cron_id)], limit=1)
-        journals = self.env['account.move.line'].search(
-            [('move_id.state', '=', 'draft'),
-             ('move_id.asset_id', '=', False),
-             ('move_id.date', '>=', journal.from_date),
-             ('move_id.date', '<=', journal.to_date),
-             ('move_id.company_id', 'in', journal.company_ids.ids),
-             ('move_id.journal_id', 'in', journal.journals.ids),
-             ], limit=journal.limit).mapped('move_id')
-        for rec in journals:
-            rec.auto_post = 'no'
-            rec.sudo().action_post()
-            msg = _('This move posted by: %(user)s',
-                    user=journal.scheduled_user.name)
-            rec.message_post(body=msg)
+        journals = self.env['account.move'].search(
+            [('state', '=', 'draft'),
+             ('date', '>=', journal.from_date),
+             ('date', '<=', journal.to_date),
+             ('company_id', 'in', journal.company_ids.ids),
+             ('journal_id', 'in', journal.journals.ids),
+             ], order="id ASC", limit=journal.limit)
+        journals.auto_post = 'no'
+        journals._post()
+        msg = _('This move posted by: %(user)s',
+                user=journal.scheduled_user.name)
+        journals.mapped(lambda journal: journal.message_post(body=msg))
         journals_lim = self.env['account.move'].search(
             [('state', '=', 'draft'),
              ('date', '>=', journal.from_date),
@@ -136,20 +131,18 @@ class JournalEntryPostingConfig(models.Model):
             'journal_entry_posting.journal_entry_posting_config_cron_erbill').id
         journal = self.env['journal.entry.posting.config'].search(
             [('cron_id', '=', cron_id)], limit=1)
-        journals = self.env['account.move.line'].search(
-            [('move_id.state', '=', 'draft'),
-             ('move_id.asset_id', '=', False),
-             ('move_id.date', '>=', journal.from_date),
-             ('move_id.date', '<=', journal.to_date),
-             ('move_id.company_id', 'in', journal.company_ids.ids),
-             ('move_id.journal_id', 'in', journal.journals.ids),
-             ], limit=journal.limit).mapped('move_id')
-        for rec in journals:
-            rec.auto_post = 'no'
-            rec.sudo().action_post()
-            msg = _('This move posted by: %(user)s',
-                    user=journal.scheduled_user.name)
-            rec.message_post(body=msg)
+        journals = self.env['account.move'].search(
+            [('state', '=', 'draft'),
+             ('date', '>=', journal.from_date),
+             ('date', '<=', journal.to_date),
+             ('company_id', 'in', journal.company_ids.ids),
+             ('journal_id', 'in', journal.journals.ids),
+             ], order="id ASC", limit=journal.limit)
+        journals.auto_post = 'no'
+        journals._post()
+        msg = _('This move posted by: %(user)s',
+                user=journal.scheduled_user.name)
+        journals.mapped(lambda journal: journal.message_post(body=msg))
         journals_lim = self.env['account.move'].search(
             [('state', '=', 'draft'),
              ('date', '>=', journal.from_date),
@@ -171,7 +164,6 @@ class JournalEntryPostingConfig(models.Model):
             'journal_entry_posting.journal_entry_posting_config_cron_general')
         if schedule.active:
             date = fields.Datetime.now()
-
             schedule.update({
                 'nextcall': date + timedelta(seconds=15)
             })
@@ -182,7 +174,6 @@ class JournalEntryPostingConfig(models.Model):
         if schedule.active:
             # LOGGER.info(str(limits) + ' Entries activated')
             date = fields.Datetime.now()
-
             schedule.update({
                 'nextcall': date + timedelta(seconds=15)
             })
@@ -192,7 +183,6 @@ class JournalEntryPostingConfig(models.Model):
             'journal_entry_posting.journal_entry_posting_config_cron_baghdad')
         if schedule.active:
             date = fields.Datetime.now()
-
             schedule.update({
                 'nextcall': date + timedelta(seconds=15)
             })
@@ -202,7 +192,6 @@ class JournalEntryPostingConfig(models.Model):
             'journal_entry_posting.journal_entry_posting_config_cron_erbill')
         if schedule.active:
             date = fields.Datetime.now()
-
             schedule.update({
                 'nextcall': date + timedelta(seconds=15)
             })
@@ -218,3 +207,31 @@ class JournalEntryPostingConfig(models.Model):
         else:
             raise ValidationError(
                 _('Please make the cron job active'))
+
+    def split_list(self, lst, limit):
+        return [lst[i:i + limit] for i in range(0, len(lst), limit)]
+
+    def action_post_journal_entries(self):
+        journals = self.env['account.move'].search(
+            [('state', '=', 'draft'),
+             ('date', '>=', self.from_date),
+             ('date', '<=', self.to_date),
+             ('company_id', 'in', self.company_ids.ids),
+             ('journal_id', 'in', self.journals.ids),
+             ])
+        sublists = self.split_list(journals, self.limit)
+        self.create_jobs(sublists)
+
+    def create_jobs(self, sublist):
+        for i in sublist:
+            self.with_delay(priority=5)._process_job(i)
+
+    def _process_job(self, iteration):
+        # Process the job
+        # Perform your task here
+        moves = iteration
+        moves.auto_post = 'no'
+        moves._post(False)
+        msg = _('This move posted by: %(user)s',
+            user=self.scheduled_user.name)
+        moves.mapped(lambda journal: journal.message_post(body=msg))
