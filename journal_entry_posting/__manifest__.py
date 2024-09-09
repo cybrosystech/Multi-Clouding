@@ -6,7 +6,7 @@
     'website': "",
     'category': 'Accounting',
     'version': '17.0.1.0.0',
-    'depends': ['account'],
+    'depends': ['account','queue_job','queue_job_cron_jobrunner'],
     'data':
         [
             'security/ir.model.access.csv',

@@ -9,8 +9,11 @@
                 <header>
                     <field name="state" widget="statusbar"
                            statusbar_visible=""/>
-                    <button name="schedule_journal_action"
-                            string="Schedule Journal Action"
+<!--                    <button name="schedule_journal_action"-->
+<!--                            string="Schedule Journal Action"-->
+<!--                            type="object"/>-->
+                    <button name="action_post_journal_entries"
+                            string="Post Entries"
                             type="object"/>
                 </header>
                 <group>
