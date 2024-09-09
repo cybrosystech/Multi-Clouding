@@ -10,6 +10,7 @@
                         <group>
                             <field name="company_id"/>
                             <field name="analytic_account_types"/>
+                            <field name="project_site_id"/>
                             <field name="from_value"/>
                             <field name="to_value"/>
                         </group>

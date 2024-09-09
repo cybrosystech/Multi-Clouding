@@ -59,7 +59,9 @@ class AccountAsset(models.Model):
         b = a.strip(",")
         analytic_dist.update({b: 100})
         self.analytic_distribution = analytic_dist
-
-
-
-
+        if self.depreciation_move_ids:
+            for mv in self.depreciation_move_ids:
+                if mv.state !='posted':
+                    for line in  mv.line_ids:
+                        line.project_site_id = self.project_site_id.id
+                        line.analytic_account_id = self.analytic_account_id
