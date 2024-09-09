@@ -10,7 +10,6 @@ class AssetModify(models.TransientModel):
         """ Modifies the duration of asset for calculating depreciation
         and maintains the history of old values, in the chatter.
         """
-        print("modify")
         if self._context.get('extend_leasee_contract'):
             old_values = {
                 'method_number': self.asset_id.method_number,
@@ -22,7 +21,6 @@ class AssetModify(models.TransientModel):
                 self.asset_id.message_post(body=_("Asset unpaused"))
             else:
                 self = self.with_context(ignore_prorata=True)
-            print("dddddddddd",self.asset_id.project_site_id.id,self.asset_id.analytic_account_id.id)
 
             asset_increase = self.env['account.asset'].create({
                 'name': self.asset_id.name + ': ' + self.name,
