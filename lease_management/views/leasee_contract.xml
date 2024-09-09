@@ -99,6 +99,7 @@
                                        readonly="state != 'draft'"/>
                                 <field name="initial_payment_value"/>
                                 <field name="estimated_ending_date"/>
+                                <field name="end_date"/>
                                 <field name="rou_value"/>
                                 <!--                                <field name="registered_paymen" />-->
                                 <field name="estimated_cost_dismantling"
@@ -139,6 +140,7 @@
                                                readonly="state != 'draft'"/>
                                         <field name="lease_contract_period_type"
                                                readonly="state != 'draft'"/>
+                                        <field name="total_lease_period"/>
                                         <field name="terminate_month_number"
                                                readonly="state != 'draft'"/>
                                         <!--                                        <field name="terminate_month_number" />-->
@@ -273,8 +275,10 @@
                     <field name="name"/>
                     <field name="create_date"/>
                     <field name="commencement_date"/>
+                    <field name="end_date"/>
                     <field name="vendor_id"/>
                     <field name="lease_contract_period"/>
+                    <field name="total_lease_period"/>
                     <field name="lease_contract_period_type"/>
                     <field name="external_reference_number"/>
                     <field name="project_site_id"/>

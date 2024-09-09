@@ -32,8 +32,7 @@ class LeaseePeriodExtend(models.TransientModel):
     installment_amount = fields.Float(string="", default=0.0, required=False, )
     increasement_rate = fields.Float(default=0, required=False, )
     increasement_frequency = fields.Integer(default=1, required=False, )
-    inception_date = fields.Date(default=lambda self: fields.Datetime.now(),
-                                 required=False, )
+    inception_date = fields.Date(required=False, )
     security_amount = fields.Float(string="Security Amount",
                                    help="Security Amount")
     interest_rate = fields.Float(string="Interest Rate %", default=0.0,

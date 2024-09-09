@@ -9,7 +9,6 @@
     "data": [
         'security/ir.model.access.csv',
         'data/data.xml',
-        'views/leasee_interest_rate_views.xml',
         'wizard/account_asset_sell.xml',
         'wizard/leassee_contract_reassessment.xml',
         'wizard/leassee_period_extend.xml',
@@ -17,6 +16,8 @@
         'wizard/advance_leasee_wizard.xml',
         'views/res_config_settings.xml',
         'views/leasee_contract.xml',
+        'views/leasee_interest_rate_views.xml',
+
         'views/leasee_contract_template.xml',
         'views/account_payment.xml',
         'views/leasor_contract.xml',

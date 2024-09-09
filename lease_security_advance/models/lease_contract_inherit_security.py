@@ -219,12 +219,18 @@ class LeaseeContractInheritAdvance(models.Model):
             'deferred_start_date': instalment.date,
             'deferred_end_date': deferred_end_date,
         })]
+        if self.payment_frequency_type == 'years':
+            end_date = instalment.date + dateutil.relativedelta.relativedelta(
+                years=self.payment_frequency) - dateutil.relativedelta.relativedelta(days=1)
+        else:
+            end_date = instalment.date + dateutil.relativedelta.relativedelta(
+                months=self.payment_frequency) - dateutil.relativedelta.relativedelta(days=1)
         invoice = self.env['account.move'].create({
             'partner_id': partner.id,
             'move_type': 'in_invoice',
             'currency_id': self.leasee_currency_id.id,
             'ref': self.name + '- SD - ' + instalment.date.strftime(
-                '%d/%m/%Y'),
+                '%d/%m/%Y')+ ' - '+ end_date.strftime('%d/%m/%Y'),
             'invoice_date': invoice_date if invoice_date and self.sd_date_same_as_lease == 'no' else instalment.date,
             'invoice_date_due': instalment.date,
             'invoice_payment_term_id': self.env.ref(

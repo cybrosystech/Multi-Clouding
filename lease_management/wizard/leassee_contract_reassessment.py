@@ -143,7 +143,6 @@ class Reassessment(models.TransientModel):
                 test_amount_c.amount_currency = test_amount_c.amount_currency * -1
 
     def update_asset_value(self, new_value):
-        print("update_asset_value")
         asset = self.leasee_contract_id.asset_id
         self.env['asset.modify'].create({
             'name': "Reassessment Leasee Contract",
