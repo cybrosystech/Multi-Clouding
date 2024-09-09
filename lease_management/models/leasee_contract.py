@@ -206,6 +206,64 @@ class LeaseeContract(models.Model):
         required=True, default='constant_periods',
     )
     analytic_distribution = fields.Json()
+    total_lease_period = fields.Integer(string="Total Period",
+                                        help="Total period including extended "
+                                             "lease period.",
+                                        compute='compute_total_period',
+                                        )
+    end_date = fields.Date(string="Ending Date",compute='compute_contract_end_date')
+
+    def get_lease_ending_date(self):
+        """
+        Recursively calculate the ending date lease period for all child leases.
+        """
+        if self.child_ids:
+            ending_date = False
+            for ch in self.child_ids:
+                ending_date = ch.get_lease_ending_date()
+        else:
+            ending_date = self.estimated_ending_date
+        return ending_date
+
+    @api.depends('child_ids.estimated_ending_date', 'estimated_ending_date')
+    def compute_contract_end_date(self):
+        for rec in self:
+            if rec.child_ids:
+                for ch in rec.child_ids:
+                    end_date = ch.get_lease_ending_date()
+                rec.end_date = end_date
+            else:
+                rec.end_date = rec.estimated_ending_date
+
+
+    def get_lease_period(self):
+        """
+        Recursively calculate the total lease period for all child leases.
+        """
+        if self.child_ids:
+            total_period = 0
+            for ch in self.child_ids:
+                total_period += ch.get_lease_period()
+            total_period += self.lease_contract_period
+        else:
+            total_period = self.lease_contract_period
+
+        return total_period
+
+    @api.depends('child_ids.lease_contract_period', 'lease_contract_period')
+    def compute_total_period(self):
+        """
+        Compute the total lease period by adding the child lease periods to the parent lease period.
+        """
+        for rec in self:
+            if rec.child_ids:
+                total_period = rec.lease_contract_period
+                for ch in rec.child_ids:
+                    total_period += ch.get_lease_period()
+                rec.total_lease_period = total_period
+            else:
+                rec.total_lease_period = rec.lease_contract_period
+
 
     @api.onchange('lease_contract_period', 'company_id')
     def onchange_lease_contract_period(self):
@@ -1599,11 +1657,15 @@ class LeaseeContract(models.Model):
                                                      amount)
 
     def create_installment_bill(self, contract, install, partner, amount):
+        if contract.payment_frequency_type == 'years':
+            end_date = install.date+ relativedelta(years=contract.payment_frequency) -relativedelta(days=1)
+        else:
+            end_date = install.date+ relativedelta(months=contract.payment_frequency) -relativedelta(days=1)
         invoice = self.env['account.move'].create({
             'partner_id': partner.id,
             'move_type': 'in_invoice',
             'currency_id': contract.leasee_currency_id.id,
-            'ref': contract.name + ' - ' + install.date.strftime('%d/%m/%Y'),
+            'ref': contract.name + ' - ' + install.date.strftime('%d/%m/%Y')+ ' - '+ end_date.strftime('%d/%m/%Y'),
             'invoice_date': install.date,
             'invoice_date_due': install.date,
             'invoice_payment_term_id': self.env.ref(

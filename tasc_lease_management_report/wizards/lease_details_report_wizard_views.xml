@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="lease_details_report_wizard_view_form" model="ir.ui.view">
+        <field name="name">Lease Details Report View Form</field>
+        <field name="model">lease.details.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Report Options">
+                <group>
+                    <group>
+                    <field name="start_date"/>
+                    <field name="state"/>
+                </group>
+                <group>
+                    <field name="end_date"/>
+                </group>
+                </group>
+
+                <footer>
+                    <button name="print_report_xlsx" string="PRINT" type="object"
+                            default_focus="1" class="oe_highlight"/>
+                    <button string="Cancel" class="btn btn-default" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_lease_details_report_wizard" model="ir.actions.act_window">
+        <field name="name">Lease Details Report</field>
+        <field name="res_model">lease.details.report.wizard</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+    <menuitem id="menu_lease_details_report" name="TASC Lease Details"
+              parent="lease_management.menuitem_lease_contract_categ"
+              action="action_lease_details_report_wizard"/>
+</odoo>
