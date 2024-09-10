@@ -10,7 +10,8 @@
     'category': 'Accounting',
     'version': '17.0.1.0.0',
     'depends': ['account_reports'],
-
     'data':
-        []
+        [
+            'wizard/account_multicurrency_revaluation_wizard_views.xml',
+        ]
 }
