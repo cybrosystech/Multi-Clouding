@@ -195,7 +195,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                                               'date_to'])
 
         options['custom_columns_subheaders'] = [
-            {"name": _("Characteristics"), "colspan": 14},
+            {"name": _("Characteristics"), "colspan": 15},
             {"name": _("Assets"), "colspan": 4},
             {"name": _("Depreciation"), "colspan": 4},
             {"name": _("Book Value"), "colspan": 1}
@@ -350,7 +350,6 @@ class AssetsReportCustomHandler(models.AbstractModel):
                 status = 'To Approve'
             else:
                 status = ''
-
             # Format the data
             columns_by_expr_label = {
                 "acquisition_date": al[
@@ -384,6 +383,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                 "currency": al["currency_name"],
                 "serial_no": al["serial_no"],
                 "additional_info": al["additional_info"],
+                "last_depreciation_date": al["last_depreciation_date"]
             }
 
             lines.append(
@@ -557,7 +557,12 @@ class AssetsReportCustomHandler(models.AbstractModel):
                                   SUM(move.depreciation_value) FILTER (
                                     WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.state = 'posted'
                                   ), 0
-                                ) AS asset_disposal_value 
+                                ) AS asset_disposal_value ,
+                                (
+                                SELECT MAX(move_sub.date)
+                                FROM account_move move_sub
+                                WHERE move_sub.asset_id = asset.id
+                              ) AS last_depreciation_date
                               FROM 
                                 account_asset asset 
                                 LEFT JOIN account_account account ON asset.account_asset_id = account.id 
@@ -627,7 +632,12 @@ class AssetsReportCustomHandler(models.AbstractModel):
                         SUM(move.depreciation_value) FILTER (
                           WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.state = 'posted'
                         ), 0
-                      ) AS asset_disposal_value 
+                      ) AS asset_disposal_value ,
+                      	  (
+		SELECT MAX(move_sub.date)
+		FROM account_move move_sub
+		WHERE move_sub.asset_id = asset.id
+	  ) AS last_depreciation_date
                     FROM 
                       account_asset asset 
                       LEFT JOIN account_account account ON asset.account_asset_id = account.id 
@@ -1180,7 +1190,6 @@ class AccountReport(models.Model):
         }
 
     def _inject_report_into_xlsx_sheet(self, options, workbook, sheet):
-        print("_inject_report_into_xlsx_sheetjjjjjjjjjjjjj")
         if options["available_variants"][0][
             "name"] == 'Tasc Depreciation Schedule':
             def write_with_colspan(sheet, x, y, value, colspan, style):
