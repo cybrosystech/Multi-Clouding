@@ -22,4 +22,19 @@ class AccountMove(models.Model):
             move.posting_date = fields.Date.today()
         return to_post
 
+    def _unlink_or_reverse(self):
+        if not self:
+            return
+        to_reverse = self.env['account.move']
+        to_unlink = self.env['account.move']
+        lock_date = self.company_id._get_user_fiscal_lock_date()
+        for move in self:
+            if move.inalterable_hash or move.date <= lock_date:
+                to_reverse += move
+            else:
+                to_unlink += move
+        to_reverse._reverse_moves(cancel=True)
+        to_unlink.filtered(lambda m: m.state in ('posted', 'cancel')).button_draft()
+        to_unlink.filtered(lambda m: m.state == 'draft').sudo().unlink()
+
 

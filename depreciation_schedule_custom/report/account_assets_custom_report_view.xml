@@ -71,6 +71,12 @@
                     <field name="expression_label">first_depreciation</field>
                     <field name="figure_type">date</field>
                 </record>
+                <record id="depreciation_schedule_last_depreciation"
+                        model="account.report.column">
+                    <field name="name">Last Depreciation</field>
+                    <field name="expression_label">last_depreciation_date</field>
+                    <field name="figure_type">date</field>
+                </record>
                 <record id="depreciation_schedule_first_method"
                         model="account.report.column">
                     <field name="name">Method</field>
