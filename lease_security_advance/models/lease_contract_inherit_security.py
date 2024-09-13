@@ -11,13 +11,17 @@ class LeaseeContractInheritAdvance(models.Model):
 
     security_amount = fields.Monetary(currency_field='leasee_currency_id')
     security_prepaid_account = fields.Many2one('account.account',
-                                               string="Security Expenses")
+                                               string="Security Expenses",
+                                               related='leasee_template_id.security_prepaid_account',
+                                               readonly=False)
     security_advance_bool = fields.Boolean(default=False, copy=False)
     security_button_bool = fields.Boolean(default=False, copy=False)
     security_advance_id = fields.Many2one('leasee.security.advance', copy=False)
     security_deferred_account = fields.Many2one('account.account',
                                                 string="Security Deferred"
-                                                       " Account")
+                                                       " Account",
+                                                related='leasee_template_id.security_deferred_account',
+                                                readonly=False)
     sd_date_same_as_lease = fields.Selection(string="SD Date same as Lease",
                                              selection=[('yes', 'Yes'),
                                                         ('no', 'No')],
@@ -80,6 +84,7 @@ class LeaseeContractInheritAdvance(models.Model):
 
     @api.onchange('leasee_template_id')
     def onchange_leasee_template_id(self):
+        print("onchange_leasee_template_id")
         self.update({
             'lease_contract_period': self.leasee_template_id.lease_contract_period,
             'lease_contract_period_type': self.leasee_template_id.lease_contract_period_type,
@@ -152,7 +157,8 @@ class LeaseeContractInheritAdvance(models.Model):
                         if rec.sd_lessor_name_same_as_lease == 'no':
                             for leasor in rec.new_sd_leasor_ids:
                                 partner = leasor.partner_id
-                                leasor_amount = leasor.amount if leasor.type == 'amount' else (leasor.percentage/100 )* rec.security_amount
+                                leasor_amount = leasor.amount if leasor.type == 'amount' else (
+                                                                                                          leasor.percentage / 100) * rec.security_amount
                                 rec.create_security_moves(instalment,
                                                           advance_security_id,
                                                           leasor_amount,
@@ -221,16 +227,18 @@ class LeaseeContractInheritAdvance(models.Model):
         })]
         if self.payment_frequency_type == 'years':
             end_date = instalment.date + dateutil.relativedelta.relativedelta(
-                years=self.payment_frequency) - dateutil.relativedelta.relativedelta(days=1)
+                years=self.payment_frequency) - dateutil.relativedelta.relativedelta(
+                days=1)
         else:
             end_date = instalment.date + dateutil.relativedelta.relativedelta(
-                months=self.payment_frequency) - dateutil.relativedelta.relativedelta(days=1)
+                months=self.payment_frequency) - dateutil.relativedelta.relativedelta(
+                days=1)
         invoice = self.env['account.move'].create({
             'partner_id': partner.id,
             'move_type': 'in_invoice',
             'currency_id': self.leasee_currency_id.id,
             'ref': self.name + '- SD - ' + instalment.date.strftime(
-                '%d/%m/%Y')+ ' - '+ end_date.strftime('%d/%m/%Y'),
+                '%d/%m/%Y') + ' - ' + end_date.strftime('%d/%m/%Y'),
             'invoice_date': invoice_date if invoice_date and self.sd_date_same_as_lease == 'no' else instalment.date,
             'invoice_date_due': instalment.date,
             'invoice_payment_term_id': self.env.ref(

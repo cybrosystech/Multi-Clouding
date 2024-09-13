@@ -58,16 +58,16 @@ class AccountMove(models.Model):
                 _("Please set the deferred journal in the accounting settings."))
 
         for line in self.line_ids.filtered(
-                lambda l: l.deferred_start_date and l.deferred_end_date):
+                lambda l: l.deferred_start_date and l.deferred_end_date and not l.tax_line_id):
             if is_deferred_expense:
-                if not line.deferred_account_id:
+                if not line.deferred_account_id and not line.tax_line_id:
                     raise UserError(
                         _("Deferred account cannot be empty if deferred start "
                           "date and deferred end date is set."))
                 else:
                     deferred_account = line.deferred_account_id if line.deferred_account_id else False
             else:
-                if not line.deferred_account_id:
+                if not line.deferred_account_id and not line.tax_line_id:
                     raise UserError(
                         _("Deferred account cannot be empty if deferred start "
                           "date and deferred end date is set."))
