@@ -9,8 +9,8 @@
               <attribute name="string">Invoice No./Pay Ref</attribute>
             </xpath>
             <xpath expr="//field[@name='payment_reference']" position="after">
-                <field name="project_site_id"/>
-                <field name="analytic_account_id"/>
+                <field name="project_site_id"  optional="hide" />
+                <field name="analytic_account_id"  optional="hide"/>
             </xpath>
         </field>
     </record>
