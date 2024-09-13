@@ -1,7 +1,10 @@
+import re
 import base64
 import io
 import datetime
 import xlsxwriter
+from html2text import element_style
+
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
@@ -20,6 +23,9 @@ class CashBurnReportWizard(models.Model):
                                  required=True)
     excel_sheet = fields.Binary('Download Report')
     excel_sheet_name = fields.Char(string='Name', size=64)
+
+    def clean_ref(self,ref):
+        return re.sub(r'\s*\(.*?\)\s*', '', ref).strip()
 
     @api.constrains('end_date')
     def onsave_end_date(self):
@@ -128,7 +134,7 @@ class CashBurnReportWizard(models.Model):
 
     def add_row(self, worksheet, date_format, STYLE_LINE_Data, col, row, line,
                 move, move_line, debit_amount, credit_amount, ob, payment_id,
-                invoice_amount):
+                invoice_amount,bank_line_id):
         if line.date:
             worksheet.write(row, col, line.date,
                             date_format)
@@ -236,6 +242,13 @@ class CashBurnReportWizard(models.Model):
                 else:
                     worksheet.write(row, col, '', STYLE_LINE_Data)
             col += 1
+            if bank_line_id and bank_line_id.account_id:
+                worksheet.write(row, col,
+                                str(bank_line_id.account_id.code) + " " + bank_line_id.account_id.name,
+                                STYLE_LINE_Data)
+            else:
+                worksheet.write(row, col, '', STYLE_LINE_Data)
+            col += 1
         else:
             if move_line and move_line.name:
                 worksheet.write(row, col, move_line.name,
@@ -322,6 +335,13 @@ class CashBurnReportWizard(models.Model):
                 else:
                     worksheet.write(row, col, '', STYLE_LINE_Data)
             col += 1
+            if bank_line_id and bank_line_id.account_id:
+                worksheet.write(row, col,
+                                str(bank_line_id.account_id.code) + " " + bank_line_id.account_id.name,
+                                STYLE_LINE_Data)
+            else:
+                worksheet.write(row, col, '', STYLE_LINE_Data)
+            col += 1
         if move and move.partner_id:
             worksheet.write(row, col,
                             move.partner_id.name,
@@ -368,7 +388,7 @@ class CashBurnReportWizard(models.Model):
                         STYLE_LINE_Data)
         col += 1
         worksheet.write(row, col,
-                        abs(credit_amount) + abs(debit_amount),
+                        abs(credit_amount)-abs(debit_amount),
                         STYLE_LINE_Data)
 
     def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data,
@@ -382,7 +402,7 @@ class CashBurnReportWizard(models.Model):
 
         row = 0
         col = 0
-        worksheet.merge_range(row, row, col, col + 14,
+        worksheet.merge_range(row, row, col, col + 15,
                               _('Tasc Cash Burn Report'),
                               STYLE_LINE_HEADER)
         row += 1
@@ -405,20 +425,25 @@ class CashBurnReportWizard(models.Model):
         col += 1
         worksheet.write(row, col, _('Invoice lines/Account'), header_format)
         col += 1
+        worksheet.write(row, col, _('Bank Account'), header_format)
+        col += 1
         worksheet.write(row, col, _('Partner'), header_format)
         col += 1
         worksheet.write(row, col, _('Payment Currency'), header_format)
         col += 1
         worksheet.write(row, col, _('Invoice Amount'), header_format)
         col += 1
-        worksheet.write(row, col, _('Invoice lines/Credit'), header_format)
-        col += 1
         worksheet.write(row, col, _('Invoice lines/Debit'), header_format)
+        col += 1
+        worksheet.write(row, col, _('Invoice lines/Credit'), header_format)
         col += 1
         worksheet.write(row, col, _('Net'), header_format)
         col += 1
         row += 1
         for line in report_data:
+            exchange_moves = []
+            bank_line_id = line.line_ids.filtered(
+                lambda x: x.account_id.account_type == 'asset_cash')
             open_balance_line_ids = self.env['account.move.line'].search(
                 [('id', 'in', line.line_ids.ids),
                  '|', ('name', 'ilike', 'Open balance'),
@@ -438,244 +463,327 @@ class CashBurnReportWizard(models.Model):
                     col = 0
                     if mv.journal_id.type in ['sale',
                                               'purchase'] and not mv.payment_id and mv.move_type != 'entry':
-
                         credit_amount = 0
                         debit_amount = 0
                         s = mv.invoice_payments_widget
-                        if mv.payment_state == 'partial':
-                            if s:
-                                if len(mv.invoice_payments_widget['content']) == 1:
-                                    amount = next(
-                                        (item['amount'] for item in s['content'] if
-                                         item['amount']), 0)
-                                else:
-                                    amount = next(
-                                        (item['amount'] for item in s['content'] if
-                                         item['ref'] == line.name), 0)
+                        move_line = self.env[
+                            'account.move.line'].search(
+                            [('id','in', mv.invoice_line_ids.ids)],
+                            order='id ASC')
+                        total = sum(move_line.mapped('price_total'))
+                        amount = next(
+                            (item['amount'] for item in s['content'] if
+                             item['amount'] and self.clean_ref(item['ref']) == self.clean_ref(line.name)), 0)
+                        for ml in move_line:
+                            proportion = ml.price_total / total
+                            line_payment = amount * proportion
+                            if ml.credit != 0:
+                                exchange_rate = abs(
+                                    ml.credit) / abs(
+                                    ml.amount_currency)
+                            else:
+                                exchange_rate = abs(
+                                    ml.debit) / abs(
+                                    ml.amount_currency)
+                            final_amount = self.env.company.currency_id.round(
+                                exchange_rate * line_payment)
+                            col = 0
+                            if bank_line_id.credit:
+                                invoice_amount = line_payment
+                                credit_amount = final_amount
+                            else:
+                                invoice_amount = line_payment
+                                debit_amount = final_amount
+                            self.add_row(worksheet, date_format,
+                                         STYLE_LINE_Data, col, row, line,
+                                         mv,
+                                         ml,
+                                         debit_amount, credit_amount, False,
+                                         False, invoice_amount,bank_line_id)
+                            row += 1
+                        if s:
+                            exchange_entries = [item for
+                                                item in
+                                                s["content"]
+                                                if item[
+                                                    'is_exchange']]
+                            if exchange_entries:
+                                for exch in exchange_entries:
+                                    col = 0
+                                    move_id = self.env[
+                                        'account.move'].browse(
+                                        exch["move_id"])
+                                    if move_id.id not in exchange_moves:
+                                        exchange_moves.append((move_id.id))
+                                        if bank_line_id.debit:
+                                            db_line = self.env[
+                                                'account.move.line'].search(
+                                                [('move_id', '=',
+                                                  exch["move_id"]),
+                                                 ('debit', '!=', 0)])
 
-                                amt = 0
-                                if self.env.company.currency_id.id == mv.currency_id.id:
-                                    amt = amount
-                                    invoice_amount = amount
-                                else:
-                                    amt = mv.currency_id._convert(
-                                        amount,
-                                        self.env.company.currency_id,
-                                        self.env.company,
-                                        line.date)
-                                    invoice_amount = amount
+                                            debit_amount = exch["amount"]
+                                            credit_amount = 0
+                                        else:
+                                            db_line = self.env[
+                                                'account.move.line'].search(
+                                                [('move_id', '=',
+                                                  exch["move_id"]),
+                                                 ('credit', '!=', 0)])
 
-                                move_line = self.env['account.move.line'].search(
-                                    [('id', 'in', mv.invoice_line_ids.ids)],
-                                    order='id ASC',
-                                    limit=1)
-
-                                if move_line.credit:
-                                    credit_amount = amt
-                                else:
-                                    debit_amount = amt
-
-                                self.add_row(worksheet, date_format,
-                                             STYLE_LINE_Data, col, row, line, mv,
-                                             move_line,
-                                             debit_amount, credit_amount, False,
-                                             False, invoice_amount)
-                                row += 1
-                        else:
-                            move_line = self.env[
-                                'account.move.line'].search(
-                                [('move_id','=',mv.id),'|',('id','in', mv.invoice_line_ids.ids),('tax_line_id','!=',False)],
-                                order='id ASC')
-                            for ml in move_line:
-                                col = 0
-                                if ml.credit:
-                                    invoice_amount = ml.amount_currency
-                                    credit_amount = ml.credit
-                                else:
-                                    invoice_amount = ml.amount_currency
-                                    debit_amount = ml.debit
-
-                                self.add_row(worksheet, date_format,
-                                             STYLE_LINE_Data, col, row, line,
-                                             mv,
-                                             ml,
-                                             debit_amount, credit_amount, False,
-                                             False, invoice_amount)
-                                row += 1
+                                            debit_amount = 0
+                                            credit_amount = exch["amount"]
+                                        self.add_row(worksheet,
+                                                     date_format,
+                                                     STYLE_LINE_Data,
+                                                     col,
+                                                     row,
+                                                     line, move_id,
+                                                     db_line,
+                                                     debit_amount,
+                                                     credit_amount,
+                                                     False,
+                                                     False,
+                                                     False,
+                                                     bank_line_id)
+                                        row += 1
                     else:
                         if mv.payment_id:
                             if mv.payment_id.reconciled_bill_ids or mv.payment_id.reconciled_invoice_ids:
                                 if mv.payment_id.reconciled_bill_ids:
                                     for m in mv.payment_id.reconciled_bill_ids:
-                                        if m.payment_state == 'partial':
+                                        s = m.invoice_payments_widget
+                                        col = 0
+                                        credit_amount = 0
+                                        debit_amount = 0
+                                        move_line = self.env[
+                                            'account.move.line'].search(
+                                            [('id', 'in',
+                                              m.invoice_line_ids.ids)],
+                                            order='id ASC',
+                                            )
+                                        total = sum(
+                                            move_line.mapped('price_total'))
+                                        amount = next(
+                                            (item['amount'] for item in
+                                             s['content']
+                                             if item['amount'] and
+                                             self.clean_ref(item['ref']) == self.clean_ref(mv.payment_id.name)),
+                                            0
+                                        )
+                                        for ml in move_line:
+                                            proportion = ml.price_total / total
+                                            line_payment = amount * proportion
+                                            if ml.credit != 0:
+                                                exchange_rate = abs(
+                                                    ml.credit) / abs(
+                                                    ml.amount_currency)
+                                            else:
+                                                exchange_rate = abs(
+                                                    ml.debit) / abs(
+                                                    ml.amount_currency)
+                                            final_amount = self.env.company.currency_id.round(exchange_rate*line_payment)
                                             col = 0
-                                            credit_amount = 0
-                                            debit_amount = 0
-                                            s = m.invoice_payments_widget
-                                            if s:
-                                                amount = next(
-                                                    (item['amount'] for item in
-                                                     s['content'] if
-                                                     item[
-                                                         'account_payment_id'] == mv.payment_id.id),
-                                                    0)
+                                            if bank_line_id.credit:
+                                                invoice_amount = line_payment
+                                                credit_amount = final_amount
+                                            else:
+                                                invoice_amount = line_payment
+                                                debit_amount = final_amount
 
-                                                invoice_amount = amount
+                                            self.add_row(worksheet,
+                                                         date_format,
+                                                         STYLE_LINE_Data,
+                                                         col,
+                                                         row,
+                                                         line, m, ml,
+                                                         debit_amount,
+                                                         credit_amount,
+                                                         False,
+                                                         mv.payment_id,
+                                                         invoice_amount,
+                                                         bank_line_id)
+                                            row += 1
+                                        if s:
+                                            exchange_entries = [item for
+                                                                item in
+                                                                s["content"]
+                                                                if item[
+                                                                    'is_exchange']
+                                                                ]
+                                            if exchange_entries:
+                                                for exch in exchange_entries:
+                                                    col =0
+                                                    move_id = self.env['account.move'].browse(exch["move_id"])
+                                                    if move_id.id not in exchange_moves:
+                                                        exchange_moves.append(
+                                                            (move_id.id))
+                                                        if bank_line_id.credit:
+                                                            db_line = self.env[
+                                                                'account.move.line'].search(
+                                                                [(
+                                                                    'move_id',
+                                                                    '=',
+                                                                    exch[
+                                                                        "move_id"]),
+                                                                    ('credit',
+                                                                     '!=',
+                                                                     0)])
+                                                            debit_amount = 0
+                                                            credit_amount = \
+                                                            exch[
+                                                                "amount"]
+                                                        else:
+                                                            db_line = self.env[
+                                                                'account.move.line'].search(
+                                                                [(
+                                                                 'move_id', '=',
+                                                                 exch[
+                                                                     "move_id"]),
+                                                                 ('debit', '!=',
+                                                                  0)])
+                                                            debit_amount = exch[
+                                                                "amount"]
+                                                            credit_amount = 0
 
-                                                if self.env.company.currency_id.id == m.currency_id.id:
-                                                    amt = amount
-                                                else:
-                                                    amt = m.currency_id._convert(
-                                                        amount,
-                                                        self.env.company.currency_id,
-                                                        self.env.company,
-                                                        mv.date)
-
-                                                move_line = self.env[
-                                                    'account.move.line'].search(
-                                                    [('id', 'in',
-                                                      m.invoice_line_ids.ids)],
-                                                    order='id ASC',
-                                                    limit=1)
-
-                                                if move_line.credit:
-                                                    credit_amount = amt
-                                                else:
-                                                    debit_amount = amt
-
-                                                self.add_row(worksheet, date_format,
-                                                             STYLE_LINE_Data, col,
-                                                             row,
-                                                             line, m, move_line,
-                                                             debit_amount,
-                                                             credit_amount, False,
-                                                             mv.payment_id,
-                                                             invoice_amount)
-                                                row += 1
-                                        else:
-                                            col = 0
-                                            credit_amount = 0
-                                            debit_amount = 0
-                                            move_line = self.env[
-                                                'account.move.line'].search(
-                                                [('id', 'in',
-                                                  m.invoice_line_ids.ids)],
-                                                order='id ASC',
-                                                )
-
-                                            for ml in  move_line:
-                                                col = 0
-                                                if ml.credit:
-                                                    credit_amount = ml.credit
-                                                    invoice_amount = ml.amount_currency
-                                                else:
-                                                    debit_amount = ml.debit
-                                                    invoice_amount = ml.amount_currency
-
-                                                self.add_row(worksheet,
-                                                             date_format,
-                                                             STYLE_LINE_Data,
-                                                             col,
-                                                             row,
-                                                             line, m, ml,
-                                                             debit_amount,
-                                                             credit_amount,
-                                                             False,
-                                                             mv.payment_id,
-                                                             invoice_amount)
-                                                row += 1
-
+                                                        self.add_row(worksheet,
+                                                                     date_format,
+                                                                     STYLE_LINE_Data,
+                                                                     col,
+                                                                     row,
+                                                                     line, move_id,
+                                                                     db_line,
+                                                                     debit_amount,
+                                                                     credit_amount,
+                                                                     False,
+                                                                     False,
+                                                                     False,
+                                                                     bank_line_id)
+                                                        row += 1
                                 else:
                                     for m in mv.payment_id.reconciled_invoice_ids:
-                                        if m.payment_state == 'partial':
+                                        s = m.invoice_payments_widget
+                                        col = 0
+                                        credit_amount = 0
+                                        debit_amount = 0
+                                        move_line = self.env[
+                                            'account.move.line'].search(
+                                            [('id', 'in',
+                                              m.invoice_line_ids.ids)],
+                                            order='id ASC',
+                                            )
+                                        total = sum(
+                                            move_line.mapped('price_total'))
+                                        amount = next(
+                                            (item['amount'] for item in
+                                             s['content']
+                                             if item['amount'] and
+                                             self.clean_ref(item['ref']) == self.clean_ref(mv.payment_id.name)),
+                                            0
+                                        )
+                                        for ml in move_line:
+                                            proportion = ml.price_total / total
+                                            line_payment = amount * proportion
+                                            if ml.credit != 0:
+                                                exchange_rate = abs(
+                                                    ml.credit) / abs(
+                                                    ml.amount_currency)
+                                            else:
+                                                exchange_rate = abs(
+                                                    ml.debit) / abs(
+                                                    ml.amount_currency)
+                                            final_amount = self.env.company.currency_id.round(
+                                                exchange_rate * line_payment)
                                             col = 0
-                                            credit_amount = 0
-                                            debit_amount = 0
-                                            s = m.invoice_payments_widget
-                                            if s:
-                                                amount = next(
-                                                    (item['amount'] for item in
-                                                     s['content'] if
-                                                     item[
-                                                         'account_payment_id'] == mv.payment_id.id),
-                                                    0)
-
-                                                if self.env.company.currency_id.id == m.currency_id.id:
-                                                    amt = amount
-                                                else:
-                                                    amt = m.currency_id._convert(
-                                                        amount,
-                                                        self.env.company.currency_id,
-                                                        self.env.company,
-                                                        mv.date)
-
-                                                invoice_amount = amount
-
-                                                move_line = self.env[
-                                                    'account.move.line'].search(
-                                                    [('id', 'in',
-                                                      m.invoice_line_ids.ids)],
-                                                    order='id ASC',
-                                                    limit=1)
-                                                if move_line.credit:
-                                                    credit_amount = amt
-                                                else:
-                                                    debit_amount = amt
-
-                                                self.add_row(worksheet, date_format,
-                                                             STYLE_LINE_Data, col,
-                                                             row,
-                                                             line, m, move_line,
-                                                             debit_amount,
-                                                             credit_amount, False,
-                                                             mv.payment_id,
-                                                             invoice_amount)
-                                                row += 1
-                                        else:
-                                            col = 0
-                                            credit_amount = 0
-                                            debit_amount = 0
-                                            move_line = self.env[
-                                                'account.move.line'].search(
-                                                [('id', 'in',
-                                                  m.invoice_line_ids.ids)],
-                                                order='id ASC',
-                                                )
-
-                                            for ml in move_line:
-                                                col = 0
-                                                if ml.credit:
-                                                    credit_amount = ml.credit
-                                                    invoice_amount = ml.amount_currency
-                                                else:
-                                                    debit_amount = ml.debit
-                                                    invoice_amount = ml.amount_currency
-
-                                                self.add_row(worksheet,
-                                                             date_format,
-                                                             STYLE_LINE_Data,
-                                                             col,
-                                                             row,
-                                                             line, m, ml,
-                                                             debit_amount,
-                                                             credit_amount,
-                                                             False,
-                                                             mv.payment_id,
-                                                             invoice_amount)
-                                                row += 1
+                                            if bank_line_id.credit:
+                                                invoice_amount = line_payment
+                                                credit_amount = final_amount
+                                            else:
+                                                invoice_amount = line_payment
+                                                debit_amount = final_amount
+                                            self.add_row(worksheet,
+                                                         date_format,
+                                                         STYLE_LINE_Data,
+                                                         col,
+                                                         row,
+                                                         line, m, ml,
+                                                         debit_amount,
+                                                         credit_amount,
+                                                         False,
+                                                         mv.payment_id,
+                                                         invoice_amount,
+                                                         bank_line_id)
+                                            row += 1
+                                        if s:
+                                            exchange_entries = [item for
+                                                                item in
+                                                                s["content"]
+                                                                if item[
+                                                                    'is_exchange']]
+                                            if exchange_entries:
+                                                for exch in exchange_entries:
+                                                    col =0
+                                                    move_id = self.env[
+                                                        'account.move'].browse(
+                                                        exch["move_id"])
+                                                    if move_id.id not in exchange_moves:
+                                                        exchange_moves.append(
+                                                            (move_id.id))
+                                                        if bank_line_id.credit:
+                                                            db_line = self.env[
+                                                                'account.move.line'].search(
+                                                                [(
+                                                                    'move_id',
+                                                                    '=',
+                                                                    exch[
+                                                                        "move_id"]),
+                                                                    ('credit',
+                                                                     '!=',
+                                                                     0)])
+                                                            debit_amount = 0
+                                                            credit_amount = \
+                                                            exch[
+                                                                "amount"]
+                                                        else:
+                                                            db_line = self.env[
+                                                                'account.move.line'].search(
+                                                                [(
+                                                                 'move_id', '=',
+                                                                 exch[
+                                                                     "move_id"]),
+                                                                 ('debit', '!=',
+                                                                  0)])
+                                                            debit_amount = exch[
+                                                                "amount"]
+                                                            credit_amount = 0
+                                                        self.add_row(worksheet,
+                                                                     date_format,
+                                                                     STYLE_LINE_Data,
+                                                                     col,
+                                                                     row,
+                                                                     line, move_id,
+                                                                     db_line,
+                                                                     debit_amount,
+                                                                     credit_amount,
+                                                                     False,
+                                                                     False,
+                                                                     False,
+                                                                     bank_line_id)
+                                                        row += 1
                             else:
                                 credit_amount = 0
                                 debit_amount = 0
                                 invoice_amount = abs(
                                     reconciled_line_id.amount_currency)
+                                amount = abs(
+                                        reconciled_line_id.credit) if reconciled_line_id.credit else abs(reconciled_line_id.debit)
 
-                                if reconciled_line_id.credit:
-                                    credit_amount = abs(
-                                        reconciled_line_id.credit)
+                                if bank_line_id.credit:
+                                    credit_amount = amount
                                     debit_amount = 0
                                 else:
                                     credit_amount = 0
-                                    debit_amount = abs(reconciled_line_id.debit)
+                                    debit_amount = amount
 
                                 self.add_row(worksheet, date_format,
                                              STYLE_LINE_Data, col,
@@ -683,32 +791,50 @@ class CashBurnReportWizard(models.Model):
                                              line, False, reconciled_line_id,
                                              debit_amount,
                                              credit_amount, False,
-                                             False, invoice_amount)
+                                             False, invoice_amount,
+                                             bank_line_id)
                                 row += 1
                         else:
-                            credit_amount = 0
-                            debit_amount = 0
-                            amt = 0
-                            lines = mv.line_ids.filtered(lambda x: x.debit != 0)
-                            amt = sum(lines.mapped('debit'))
+                            if mv.id not in exchange_moves:
+                                exchange_moves.append(
+                                    (mv.id))
+                                credit_amount = 0
+                                debit_amount = 0
+                                amt = 0
+                                lines = mv.line_ids.filtered(lambda x: x.debit != 0)
+                                amt = sum(lines.mapped('debit'))
 
-                            if reconciled_line_id.credit:
-                                credit_amount = amt
-                            else:
-                                debit_amount = amt
-                            invoice_amount = 0
-                            self.add_row(worksheet, date_format,
-                                         STYLE_LINE_Data, col, row,
-                                         line, mv, lines,
-                                         debit_amount,
-                                         credit_amount, False, False,
-                                         invoice_amount)
-                            row += 1
+                                if bank_line_id.credit !=0:
+                                    credit_amount = amt
+                                else:
+                                    debit_amount = amt
+                                invoice_amount = 0
+                                self.add_row(worksheet, date_format,
+                                             STYLE_LINE_Data, col, row,
+                                             line, mv, lines,
+                                             debit_amount,
+                                             credit_amount, False, False,
+                                             invoice_amount,
+                                             bank_line_id)
+                                row += 1
                 if open_balance_line_ids:
                     for ob in open_balance_line_ids:
                         col = 0
+                        amount = ob.credit if ob.credit else ob.debit
                         if ob.credit:
-                            credit_amount = ob.credit
+                            credit_amount = 0
+                            debit_amount = amount
+                            invoice_amount = 0
+
+                            self.add_row(worksheet, date_format,
+                                         STYLE_LINE_Data, col, row,
+                                         line, False, ob,
+                                         debit_amount,
+                                         credit_amount, ob, False,
+                                         invoice_amount,
+                                         bank_line_id)
+                        else:
+                            credit_amount = amount
                             debit_amount = 0
                             invoice_amount = 0
 
@@ -717,66 +843,29 @@ class CashBurnReportWizard(models.Model):
                                          line, False, ob,
                                          debit_amount,
                                          credit_amount, ob, False,
-                                         invoice_amount)
-                        else:
-                            credit_amount = 0
-                            debit_amount = ob.debit
-                            invoice_amount = 0
-
-                            self.add_row(worksheet, date_format,
-                                         STYLE_LINE_Data, col, row,
-                                         line, False, ob,
-                                         debit_amount,
-                                         credit_amount, ob, False,
-                                         invoice_amount)
+                                         invoice_amount,
+                                         bank_line_id)
 
                         row += 1
             else:
-                move_lines = line.line_ids.filtered(lambda x: x.debit !=0)
-                for l in move_lines:
+                invoice_amount = 0
+                gain_or_loss_line = line.line_ids.filtered(
+                    lambda x: x.account_id.account_type != 'asset_cash')
+                for l in gain_or_loss_line:
                     col = 0
-                    invoice_amount = 0
-                    if l.credit:
-                        credit_amount = l.credit
-                        debit_amount = 0
 
+                    amount = l.credit if l.credit else l.debit
+                    if bank_line_id.credit:
+                        credit_amount = amount
+                        debit_amount = 0
                     else:
                         credit_amount = 0
-                        debit_amount = l.debit
+                        debit_amount = amount
 
                     self.add_row(worksheet, date_format,
                                  STYLE_LINE_Data, col, row,
                                  line, False, l,
                                  debit_amount,
                                  credit_amount, False, False,
-                                 invoice_amount)
+                                 invoice_amount,bank_line_id)
                     row += 1
-
-
-
-
-            # if open_balance_line_ids:
-            #     for ob in open_balance_line_ids:
-            #         col = 0
-            #         if ob.credit:
-            #             credit_amount = ob.credit
-            #             debit_amount = 0
-            #             invoice_amount = 0
-            #
-            #             self.add_row(worksheet, date_format,
-            #                          STYLE_LINE_Data, col, row,
-            #                          line, False, ob,
-            #                          debit_amount,
-            #                          credit_amount, ob, False, invoice_amount)
-            #         else:
-            #             credit_amount = 0
-            #             debit_amount = ob.debit
-            #             invoice_amount = 0
-            #
-            #             self.add_row(worksheet, date_format,
-            #                          STYLE_LINE_Data, col, row,
-            #                          line, False, ob,
-            #                          debit_amount,
-            #                          credit_amount, ob, False, invoice_amount)
-            #
-            #         row += 1
