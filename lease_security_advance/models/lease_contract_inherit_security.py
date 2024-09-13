@@ -123,9 +123,9 @@ class LeaseeContractInheritAdvance(models.Model):
 
     def action_security_advance(self):
         for rec in self:
-            if not rec.security_prepaid_account or rec.security_amount <= 0:
+            if not rec.security_prepaid_account or rec.security_amount <= 0 or not rec.security_deferred_account:
                 raise ValidationError(
-                    _('Please choose the security prepaid account and security amount'))
+                    _('Please choose the security prepaid account, security expense account and security amount'))
             advance_security_id = rec.env['leasee.security.advance'].create({
                 'leasee_reference': rec.name,
                 'leasee_contract_id': rec.id
