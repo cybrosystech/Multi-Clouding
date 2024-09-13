@@ -863,7 +863,12 @@ class AccountReport(models.Model):
                                   SUM(move.depreciation_value) FILTER (
                                     WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.state = 'posted'
                                   ), 0
-                                ) AS asset_disposal_value 
+                                ) AS asset_disposal_value ,
+                                              (
+                            SELECT MAX(move_sub.date)
+                            FROM account_move move_sub
+                            WHERE move_sub.asset_id = asset.id
+                          ) AS last_depreciation_date                                
                               FROM 
                                 account_asset asset 
                                 LEFT JOIN account_account account ON asset.account_asset_id = account.id 
@@ -1111,6 +1116,12 @@ class AccountReport(models.Model):
                                     self.env, i["asset_date"]) or "",
                                 date_default_col1_style)
                     x_offset += 1
+                    sheet.write(y_offset, x_offset,
+                                i['last_depreciation_date'] and format_date(
+                                    self.env, i["last_depreciation_date"]) or "",
+                                date_default_col1_style)
+                    x_offset += 1
+
                     sheet.write(y_offset, x_offset,
                                 (i["asset_method"] == "linear" and _(
                                     "Linear")) or (
