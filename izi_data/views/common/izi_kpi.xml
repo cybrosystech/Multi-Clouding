@@ -31,35 +31,36 @@
                         <button name="action_calculate_value" type="object" string="Calculate" class="oe_highlight"/>
                     </header>
                     <sheet>
-                        <div name="title" class="oe_left">
-                            <label class="oe_edit_only" for="name" string="Name"/>
-                            <h1><field name="name" class="oe_title" placeholder="Name" height="20px"/></h1>
-                        </div>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                            </group>
+                        </group>
                         <group>
                             <group>
                                 <field name="sequence"/>
                                 <field name="parent_id"/>
-                                <field name="category_id" force_save="1" attrs="{'readonly': [('parent_id', '!=', False)]}"/>
+                                <field name="category_id" force_save="1" readonly="parent_id != False"/>
                                 <field name="child_ids" invisible="1"/>
                                 <field name="child_count" invisible="1"/>
-                                <field name="summarize_childs" attrs="{'invisible': [('child_count', '=', 0)]}"/>
-                                <field name="calculation_method" attrs="{'invisible': [('child_count', '&gt;', 0)]}" required="1"/>
+                                <field name="summarize_childs" invisible="child_count == 0"/>
+                                <field name="calculation_method" invisible="child_count &gt; 0" required="1"/>
                             </group>
                             <group>
-                                <field name="interval" force_save="1" attrs="{'readonly': [('parent_id', '!=', False)]}"/>
-                                <field name="period_ids" force_save="1" widget="many2many_tags" attrs="{'readonly': [('parent_id', '!=', False)]}"/>
-                                <field name="success_criteria" force_save="1" attrs="{'readonly': [('parent_id', '!=', False)]}"/>
+                                <field name="interval" force_save="1" readonly="parent_id != False"/>
+                                <field name="period_ids" force_save="1" widget="many2many_tags" readonly="parent_id != False"/>
+                                <field name="success_criteria" force_save="1" readonly="parent_id != False"/>
                             </group>
                             
-                            <group string="Calculation" attrs="{'invisible': ['|', ('calculation_method', '!=', 'model'), '&amp;', ('summarize_childs', '=', True), ('child_count', '&gt;', 0)]}">
-                                <field name="table_model_id" force_save="1" attrs="{'readonly': [('parent_id', '!=', False)]}" domain="[('is_query', '=', False), ('is_stored', '=', False), ('model_id', '!=', False)]"/>
-                                <field name="table_id" force_save="1" attrs="{'readonly': [('parent_id', '!=', False)]}" invisible="1"/>
-                                <field name="measurement_field_id" force_save="1" attrs="{'readonly': [('parent_id', '!=', False)]}" domain="[('table_id', '=', table_id)]"/>
-                                <field name="date_field_id" force_save="1" attrs="{'readonly': [('parent_id', '!=', False)]}" domain="[('field_type', '=', ['date', 'datetime']), ('table_id', '=', table_id)]"/>
+                            <group string="Calculation" invisible="calculation_method != 'model' or summarize_childs == True and child_count &gt; 0">
+                                <field name="table_model_id" force_save="1" readonly="parent_id != False" domain="[('is_query', '=', False), ('is_stored', '=', False), ('model_id', '!=', False)]"/>
+                                <field name="table_id" force_save="1" readonly="parent_id != False" invisible="1"/>
+                                <field name="measurement_field_id" force_save="1" readonly="parent_id != False" domain="[('table_id', '=', table_id)]"/>
+                                <field name="date_field_id" force_save="1" readonly="parent_id != False" domain="[('field_type', '=', ['date', 'datetime']), ('table_id', '=', table_id)]"/>
                             </group>
-                            <group string="Domain" attrs="{'invisible': ['|', ('calculation_method', '!=', 'model'), '&amp;', ('summarize_childs', '=', True), ('child_count', '&gt;', 0)]}">
-                                <field name="model_id" force_save="1" attrs="{'readonly': [('parent_id', '!=', False)]}" invisible="1"/>
-                                <field name="model_name" force_save="1" attrs="{'readonly': [('parent_id', '!=', False)]}" invisible="1"/>
+                            <group string="Domain" invisible="calculation_method != 'model' or summarize_childs == True and child_count &gt; 0">
+                                <field name="model_id" force_save="1" readonly="parent_id != False" invisible="1"/>
+                                <field name="model_name" force_save="1" readonly="parent_id != False" invisible="1"/>
                                 <field name="domain" widget="domain" options="{'model': 'model_name'}"/>
                             </group>
                         </group>
@@ -71,7 +72,7 @@
                                         <field name="period_id" readonly="1"/>
                                         <field name="date" readonly="1"/>
                                         <field name="target"/>
-                                        <field name="value" attrs="{'readonly': [('parent.calculation_method', '!=', 'manual')]}"/>
+                                        <field name="value" readonly="parent.calculation_method != 'manual'"/>
                                         <field name="achievement" readonly="1"/>
                                     </tree>
                                 </field>

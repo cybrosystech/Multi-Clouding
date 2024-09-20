@@ -31,3 +31,5 @@ class IZILabAPIKeyWizard(models.TransientModel):
             'url': izi_lab_url + '/web/login',
             'target': 'new',
         }
+
+    

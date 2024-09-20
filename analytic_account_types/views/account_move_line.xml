@@ -196,10 +196,10 @@
             <field name="inherit_id" ref="account.view_move_line_tree"/>
              <field name="arch" type="xml">
                  <field name="analytic_distribution" position="before">
-                     <field name="analytic_account_id" invisible="parent.is_admin == True" options="{'no_quick_create': True, 'no_create_edit': True}" />
-                     <field name="project_site_id"  invisible="parent.is_admin == True" options="{'no_quick_create': True, 'no_create_edit': True}"/>
-                      <field name="analytic_account_id"  invisible="parent.is_admin == False"/>
-                     <field name="project_site_id"  invisible="parent.is_admin == False" />
+                     <field name="analytic_account_id" invisible="move_id.is_admin == True" options="{'no_quick_create': True, 'no_create_edit': True}" />
+                     <field name="project_site_id"  invisible="move_id.is_admin == True" options="{'no_quick_create': True, 'no_create_edit': True}"/>
+                      <field name="analytic_account_id"  invisible="move_id.is_admin == False"/>
+                     <field name="project_site_id"  invisible="move_id.is_admin == False" />
                  </field>
              </field>
          </record>

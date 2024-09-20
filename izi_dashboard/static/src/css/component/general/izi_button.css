@@ -3,6 +3,7 @@
 .izi_view .form-control, .izi_view input, .izi_view select {
     border-radius: 6px;
     font-weight: 300;
+    font-size: 12px;
 }
 .izi_view .form-control:focus {
     border-color: #ced4da;
@@ -18,6 +19,9 @@
 }
 .izi_btn.progress{
     cursor: progress;
+}
+.izi_dropdown .dropdown-item:before {
+    display: none !important;
 }
 .izi_dropdown .dropdown-item {
     font-size: 13px;
@@ -46,6 +50,9 @@
     border-radius: 4px;
     max-height: 300px;
     overflow-y: auto;
+}
+.izi_dropdown .dropdown-menu .dropdown-item{
+    
 }
 .izi_divider {
     display: block;
@@ -121,7 +128,8 @@
 .izi_title {
     font-size: 15px;
     font-weight: 400;
-    color: black;
+    /* color: black; */
+    color: #374151;
     cursor: pointer;
     line-height: 1.2;
     padding-bottom: 0px;
@@ -131,26 +139,30 @@
 }
 .izi_title_bold {
     font-size: 15px;
-    font-weight: 600;
-    color: black;
+    font-weight: 400;
+    /* color: black; */
+    color: #374151;
     cursor: pointer;
 }
 .izi_title_light {
     font-size: 15px;
     font-weight: 300;
-    color: black;
+    /* color: black; */
+    color: #374151;
     cursor: pointer;
 }
 .izi_subtitle_bold {
     font-size: 12px;
     font-weight: 600;
-    color: black;
+    /* color: black; */
+    color: #374151;
     cursor: pointer;
 }
 .izi_subtitle {
     font-size: 12px !important;
     font-weight: 300 !important;
-    color: black;
+    /* color: black; */
+    color: #374151;
     cursor: pointer;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -158,8 +170,9 @@
 }
 .izi_subtitle_normal {
     font-size: 12px;
-    font-weight: 500;
-    color: black;
+    font-weight: 400;
+    /* color: black; */
+    color: #374151;
     cursor: pointer;
 }
 .izi_item{
@@ -212,7 +225,8 @@
     text-transform: initial;
     font-size: 14px;
     border-radius: 6px;
-    font-family: 'Roboto';
+    /* font-family: 'Roboto'; */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Ubuntu, "Noto Sans", Arial, "Odoo Unicode Support Noto", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     font-weight: bold;
     border: 2px solid #AAA;
     display: inline-block;
@@ -523,6 +537,20 @@
     border-color: #fceef8;
     color: #7c5271;
 }
+/* wlg - White Light Grey*/
+.izi_btn.izi_btn_wlg {
+    background-color: white;
+    border-color: white;
+    color: #000;
+}
+.izi_btn.izi_btn_wlg:hover,
+.izi_btn.izi_btn_wlg:not(:disabled):not(.disabled):active, 
+.izi_btn.izi_btn_wlg:not(:disabled):not(.disabled).active, 
+.show > .izi_btn.izi_btn_wlg.dropdown-toggle {
+    background-color: #eee;
+    border-color: #eee;
+    color: #000;
+}
 
 .izi_select_theme.active{
     background-color: #e9ecef;
@@ -585,4 +613,37 @@
               transform: rotateZ(360deg);
     }
   }
+.drilldown_background .drilldown-fields-header {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Ubuntu, "Noto Sans", Arial, "Odoo Unicode Support Noto", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+.drilldown_background .drilldown-fields {
+    position: absolute;
+    background-color: white;
+    border: 1px solid #eee;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05);
+    z-index: 1000;
+    border-radius: 6px;
+    width: 150px;
+}
+.drilldown_background .drilldown-fields-menus{
+    width:100%;
+    max-height:500px;
+    overflow-y:scroll;
+}
+.drilldown_background .drilldown-fields-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Ubuntu, "Noto Sans", Arial, "Odoo Unicode Support Noto", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+.drilldown_background .drilldown-fields-item:hover {
+    background-color: #f0f0f0;
+}
+.drilldown_background {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    z-index: 99;
+}
   

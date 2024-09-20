@@ -55,6 +55,7 @@
                 <script type="text/javascript" src="/izi_dashboard/static/lib/gridstack/gridstack-h5.js"></script>
                 <script type="text/javascript" src="/izi_dashboard/static/lib/sweetalert/sweetalert.min.js"></script>
                 <script type="text/javascript" src="/izi_dashboard/static/lib/grid/gridjs.umd.js"></script>
+                <script type="text/javascript" src="/izi_dashboard/static/lib/jscolor/jscolor.min.js"></script>
 
                 <!-- Component -->
                 <script type="text/javascript" src="/izi_dashboard/static/src/js/component/chart/amcharts_theme.js"></script>
@@ -94,6 +95,7 @@
                 <script type="text/javascript" src="/izi_dashboard/static/src/js/izi_dashboard_renderer.js"></script>
                 <script type="text/javascript" src="/izi_dashboard/static/src/js/izi_dashboard_view.js"></script>
                 <script type="text/javascript" src="/izi_dashboard/static/src/js/izi_analysis_widget.js"></script>
+                <script type="text/javascript" src="/izi_dashboard/static/src/js/izi_slide.js"></script>
             </xpath>
         </template>
     </data>

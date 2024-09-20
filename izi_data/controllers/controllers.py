@@ -42,6 +42,8 @@ class ReportController(http.Controller):
         if kwargs.get('filters'):
             filters = json.loads(kwargs.get('filters'))
             data_kwargs['filters'] = filters
+        if kwargs.get('allowed_company_ids'):
+            data_kwargs['allowed_company_ids'] = json.loads(kwargs.get('allowed_company_ids'))
         result = analysis.get_analysis_data_dashboard(**data_kwargs)
         data = result.get('raw_data')
         fields = []

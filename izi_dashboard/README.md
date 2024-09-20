@@ -1,6 +1,6 @@
 ## IZI Dashboard
 - **Technical Name**: izi_dashboard
-- **Version**: 14.0.0.1.0
+- **Version**: 16.0.0.1.0
 - **Author**: IZI PT Solusi Usaha Mudah
 - **License**: OPL-1
 - **Application**: True

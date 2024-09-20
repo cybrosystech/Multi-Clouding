@@ -72,6 +72,11 @@
       <field name="source_type">db_odoo</field>
     </record>
     <record model="izi.table.field.mapping" id="izi_data.izi_table_field_mapping_db_odoo_15">
+      <field name="name">jsonb</field>
+      <field name="type_mapping">string</field>
+      <field name="source_type">db_odoo</field>
+    </record>
+    <record model="izi.table.field.mapping" id="izi_data.izi_table_field_mapping_db_odoo_16">
       <field name="name">float4</field>
       <field name="type_mapping">number</field>
       <field name="source_type">db_odoo</field>

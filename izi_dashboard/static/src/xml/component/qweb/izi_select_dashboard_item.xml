@@ -9,7 +9,7 @@
             <t t-esc="write_date"/>
         </div>
         <div class="izi_edit_dashboard_item izi_select_item_icon" title="Edit Dashboard">
-            <span class="material-icons">edit</span>
+            <span class="material-icons" t-esc="'edit'"/>
         </div>
     </div>
 </template>

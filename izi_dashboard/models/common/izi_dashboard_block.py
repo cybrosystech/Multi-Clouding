@@ -25,6 +25,24 @@ class IZIDashboardBlock(models.Model):
     min_gs_w = fields.Integer(string='Minimum Gridstack W', related='visual_type_id.min_gs_w')
     min_gs_h = fields.Integer(string='Minimum Gridstack H', related='visual_type_id.min_gs_h')
     
+    def copy(self, default=None):
+        max_block = self.search([('dashboard_id', '=', self.dashboard_id.id)], order='gs_y desc', limit=1)
+        max_gs_y = max_block.gs_y + max_block.gs_h
+        if not default or type(default) != dict:
+            default = {}
+        default.update({
+            'gs_x': 0,
+            'gs_y': max_gs_y,
+        })
+        res = super(IZIDashboardBlock, self).copy(default)
+        if self.analysis_id:
+            new_analysis = self.analysis_id.copy()
+            res.analysis_id = new_analysis.id
+        return res
+
+    def action_copy(self, default=None):
+        return self.with_context(action_copy=True).copy(default)
+    
     @api.model
     def create(self, vals):
         if 'analysis_id' in vals and 'dashboard_id' in vals:
