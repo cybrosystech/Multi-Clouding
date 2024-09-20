@@ -65,8 +65,8 @@ class AccountMoveCustom(models.Model):
                 'budget_approval_group.group_budget_check_approver')
             # Set default value for the field
             rec.is_reset_to_draft_show = False
-            if is_approver and rec.state == 'posted' and not rec.deferred_move_ids and not rec.asset_ids and not rec.asset_id and not rec.asset_id.state in [
-                'draft', 'cancelled']:
+            if is_approver and rec.state == 'posted' and (not rec.deferred_move_ids and not rec.asset_ids and not rec.asset_id and not rec.asset_id.state in [
+                'draft', 'cancelled']):
                 rec.is_reset_to_draft_show = True
             elif rec.move_type == 'entry' and not rec.deferred_move_ids and not rec.asset_ids and not rec.asset_id and not rec.asset_id.state in [
                 'draft', 'cancelled']:
@@ -74,3 +74,6 @@ class AccountMoveCustom(models.Model):
             elif rec.payment_state == 'not_paid' and not rec.deferred_move_ids and not rec.asset_ids and not rec.asset_id and not rec.asset_id.state in [
                 'draft', 'cancelled']:
                 rec.is_reset_to_draft_show = True
+
+
+

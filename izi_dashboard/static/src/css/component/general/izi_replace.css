@@ -28,6 +28,7 @@
 .grid-stack-item-content::-webkit-scrollbar,
 .izi_config_analysis::-webkit-scrollbar,
 .izi_dialog_content::-webkit-scrollbar,
+.izi_dropdown .dropdown-menu::-webkit-scrollbar,
 .dropdown-menu::-webkit-scrollbar,
 .gridjs-container::-webkit-scrollbar {
     width: 5px;
@@ -42,6 +43,7 @@
 .ace_scrollbar-v::-webkit-scrollbar-track,
 .izi_config_analysis::-webkit-scrollbar-track,
 .izi_dialog_content::-webkit-scrollbar-track,
+.izi_dropdown .dropdown-menu::-webkit-scrollbar-track,
 .dropdown-menu::-webkit-scrollbar-track,
 .gridjs-container::-webkit-scrollbar-track  {
     background: #f1f1f1; 
@@ -56,6 +58,7 @@
 .ace_scrollbar-v::-webkit-scrollbar-thumb,
 .izi_config_analysis::-webkit-scrollbar-thumb,
 .izi_dialog_content::-webkit-scrollbar-thumb,
+.izi_dropdown .dropdown-menu::-webkit-scrollbar-thumb,
 .dropdown-menu::-webkit-scrollbar-thumb,
 .gridjs-container::-webkit-scrollbar-thumb {
     background: #888; 
@@ -70,6 +73,7 @@
 .ace_scrollbar-v::-webkit-scrollbar-thumb:hover,
 .izi_config_analysis::-webkit-scrollbar-thumb:hover,
 .izi_dialog_content::-webkit-scrollbar-thumb:hover,
+.izi_dropdown .dropdown-menu::-webkit-scrollbar-thumb:hover,
 .dropdown-menu::-webkit-scrollbar-thumb:hover,
 .gridjs-container::-webkit-scrollbar-thumb:hover {
     background: #555; 
@@ -101,7 +105,7 @@ h2#swal2-title {
 .izi_replace_footer button.btn {
     border-radius: 4px;
     padding: 6px 12px;
-    font-size: 12px;
+    /* font-size: 12px; */
 }
 /* Material Icon Picker */
 .material-icon-picker {
@@ -180,4 +184,58 @@ div.material-icon-picker input[type="text"] {
     flex: 1;
     align-items: center;
     display: flex;
+}
+
+/* Modal */
+.o_form_sheet .izi_dashboard_block_content {
+    max-width: 500px;
+    height: 300px;
+    zoom: 0.8;
+}
+@media (min-width: 576px) {
+    .o_form_sheet .izi_dashboard_block_content {
+        width: 150px;
+    }
+}
+
+@media (min-width: 992px) {
+    .o_form_sheet .izi_dashboard_block_content,
+    .o_form_sheet .izi_dashboard_block_content {
+        width: 490px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .modal-xl.modal-dialog .izi_dashboard_block_content {
+        width: 570px;
+    }
+}
+
+/* Datepicker */
+.datepicker.datepicker-dropdown.dropdown-menu.datepicker-orient-left.datepicker-orient-bottom {
+    display: block !important;
+    font-size: 13px;
+}
+.izi_view input.izi_datepicker {
+    width: 50%;
+    border: none;
+    height: 32px;
+    background: transparent;
+    padding-left: 10px;
+    color: #875A7B;
+    font-size: 13px;
+    float: left;
+}
+.izi_datepicker::placeholder {
+    color: #875A7B;
+    opacity: 1;
+}
+
+.izi_dropdown .izi_dropdown_menu_top_right {
+    /* display: block; */
+    position: absolute;
+    transform: translate3d(-60%, 0px, 0px);
+    top: 10px;
+    left: -20px;
+    will-change: transform;
 }

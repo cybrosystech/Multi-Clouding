@@ -54,6 +54,9 @@
                 .izi_view_dashboard_grid .izi_dashboard_block_title.dropdown-toggle::after {
                     display: none;
                 }
+                *, *::before, *::after {
+                    box-sizing: border-box;
+                }
             </style>
             <!-- JS -->
             <!-- Library -->

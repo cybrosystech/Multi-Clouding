@@ -8,6 +8,8 @@ from psycopg2 import extensions
 from datetime import datetime, timedelta
 import psycopg2
 import math
+import random
+import pandas
 
 _logger = logging.getLogger(__name__)
 
@@ -23,12 +25,19 @@ class IZITools(models.TransientModel):
            'timedelta': timedelta,
            'psycopg2': psycopg2,
            'math': math,
+           'random': random,
+           'pandas': pandas,
         }
         if key not in lib:
             raise UserError('Library Not Found')
         return lib[key]
+
+    def check_su(self):
+        if not (self.user_has_groups('base.group_system') or self.env.su):
+            raise UserError('Access Restricted Only For Odoo Administrator!')
     
     def get_db_cursor(self, dbtype, kwargs):
+        self.check_su()
         if dbtype == 'psql':
             try:
                 conn = psycopg2.connect(**kwargs)
@@ -48,10 +57,12 @@ class IZITools(models.TransientModel):
 
     @api.model
     def literal_eval(self, data):
+        self.check_su()
         return ast.literal_eval(data)
     
     @api.model
     def query_insert(self, table_name, data, return_id=False):
+        self.check_su()
         if type(data) is not dict:
             raise UserError('Data must be in dictionary!')
         insert_query = 'INSERT INTO %s (%s) VALUES %s'
@@ -67,6 +78,7 @@ class IZITools(models.TransientModel):
     
     @api.model
     def query_check(self, query):
+        self.check_su()
         self.env.cr.execute(query)
         res = self.env.cr.dictfetchall()
         raise UserError('''
@@ -78,11 +90,17 @@ class IZITools(models.TransientModel):
     
     @api.model
     def query_fetch(self, query):
-        self.env.cr.execute(query)
+        self.check_su()
+        try:
+            self.env.cr.execute(query)
+        except Exception as e:
+            self.env.cr.rollback()
+            raise UserError(str(e))
         return self.env.cr.dictfetchall()
     
     @api.model
     def query_execute(self, query, check=False):
+        self.check_su()
         if 'UPDATE' in query.upper() or 'DELETE' in query.upper():
             if 'WHERE' not in query.upper():
                 raise UserError('YOUR QUERY DO NOT HAVE WHERE CLAUSE. IT IS VERY DANGEROUS!')

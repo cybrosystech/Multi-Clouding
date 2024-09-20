@@ -1,5 +1,78 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
+    <template id="external_layout_standard_created_by_and_printed_by_in_footer"
+              inherit_id="web.external_layout_standard">
+        <xpath expr="//div[contains(@t-attf-class, 'footer')]"
+               position="inside">
+            <span style="float: left;">Created By:
+                <span t-if="o" t-out="o.create_uid.name"/>
+                <span t-else="">N/A</span>
+            </span>
+            <span style="float: right;">Printed Out By:
+                <t t-esc="env.user.name"/>
+            </span>
+        </xpath>
+    </template>
+    <template id="external_layout_boxed_created_by_and_printed_by_in_footer"
+              inherit_id="web.external_layout_boxed">
+        <xpath expr="//div[contains(@t-attf-class, 'footer')]"
+               position="replace">
+
+            <div t-attf-class="footer o_boxed_footer o_company_#{company.id}_layout">
+                <div class="text-center">
+                    <div t-field="company.report_footer"></div>
+                    <div t-if="report_type == 'pdf'">
+                        Page:
+                        <span class="page"/>
+                        /
+                        <span class="topage"/>
+                    </div>
+                    <div t-if="report_type == 'pdf' and display_name_in_footer"
+                         class="text-muted">
+                        <span t-out="o.name">(document name)</span>
+                    </div>
+                </div>
+                <span style="float: left;">Created By:
+                    <span t-if="o" t-out="o.create_uid.name"/>
+                    <span t-else="">N/A</span>
+                </span>
+
+                <span style="float: right;">Printed Out By:
+                    <t t-esc="env.user.name"/>
+                </span>
+            </div>
+
+
+        </xpath>
+    </template>
+    <template id="external_layout_bold_created_by_and_printed_by_in_footer"
+              inherit_id="web.external_layout_bold">
+        <xpath expr="//div[contains(@t-attf-class, 'footer')]"
+               position="inside">
+            <span style="float: left;">Created By:
+                <span t-if="o" t-out="o.create_uid.name"/>
+                <span t-else="">N/A</span>
+            </span>
+            <span style="float: right;">Printed Out By:
+                <t t-esc="env.user.name"/>
+            </span>
+        </xpath>
+    </template>
+    <template id="eexternal_layout_stripedcreated_by_and_printed_by_in_footer"
+              inherit_id="web.external_layout_striped">
+        <xpath expr="//div[contains(@t-attf-class, 'footer')]"
+               position="inside">
+            <span style="float: left;">Created By:
+                <span t-if="o" t-out="o.create_uid.name"/>
+                <span t-else="">N/A</span>
+            </span>
+            <span style="float: right;">Printed Out By:
+                <t t-esc="env.user.name"/>
+            </span>
+        </xpath>
+    </template>
+
+
     <template id="template_journal_pdf_report">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
@@ -54,17 +127,31 @@
                             <tbody class="invoice_tbody">
                                 <t t-foreach="o.line_ids" t-as="line">
                                     <tr>
-                                        <td><t t-esc="str(line.account_id.code)+ ' ' + str(line.account_id.name)"/></td>
-                                        <td><t  t-esc="line.name"/></td>
-                                        <td><t  t-esc="line.analytic_account_id.name"/></td>
-                                        <td><t  t-esc="line.project_site_id.name"/></td>
+                                        <td>
+                                            <t t-esc="str(line.account_id.code)+ ' ' + str(line.account_id.name)"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="line.name"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="line.analytic_account_id.name"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="line.project_site_id.name"/>
+                                        </td>
                                         <td>
                                             <t t-if="line.amount_currency"
                                                t-esc="line.amount_currency"/>
                                         </td>
-                                        <td><t  t-esc="'{:20,.2f}'.format(line.debit)"/></td>
-                                        <td><t t-esc="'{:20,.2f}'.format(line.credit)"/></td>
-                                        <td><t  t-esc="', '.join(map(lambda x: (x.name), line.mapped('tax_ids')))"/></td>
+                                        <td>
+                                            <t t-esc="'{:20,.2f}'.format(line.debit)"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="'{:20,.2f}'.format(line.credit)"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="', '.join(map(lambda x: (x.name), line.mapped('tax_ids')))"/>
+                                        </td>
                                     </tr>
                                 </t>
                             </tbody>
@@ -128,7 +215,6 @@
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 </t>
             </t>

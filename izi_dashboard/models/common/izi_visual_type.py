@@ -25,7 +25,7 @@ class IZIVisualType(models.Model):
 
     def get_visual_config(self, visual_type, analysis_id=False):
         res = []
-        visual_type_ids = self.env['izi.visual.type'].search([('name', '=', visual_type)])
+        visual_type_ids = self.env['izi.visual.type'].search(['|', ('name', '=', visual_type), ('title', '=', visual_type)])
         analysis_id = self.env['izi.analysis'].browse(analysis_id)
         config_value_by_config_id = {}
         config_value_id_by_config_id = {}

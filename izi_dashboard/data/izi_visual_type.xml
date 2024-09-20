@@ -7,7 +7,7 @@
       <field name="default_gs_w">6</field>
       <field name="default_gs_h">4</field>
       <field name="min_gs_w">3</field>
-      <field name="min_gs_h">3</field>
+      <field name="min_gs_h">1</field>
       <field name="icon">table_view</field>
     </record>
     <record model="izi.visual.type" id="izi_dashboard.izi_visual_type_bar">
@@ -16,7 +16,7 @@
       <field name="default_gs_w">6</field>
       <field name="default_gs_h">4</field>
       <field name="min_gs_w">2</field>
-      <field name="min_gs_h">2</field>
+      <field name="min_gs_h">1</field>
       <field name="icon">bar_chart</field>
     </record>
     <record model="izi.visual.type" id="izi_dashboard.izi_visual_type_row">
@@ -25,7 +25,7 @@
       <field name="default_gs_w">6</field>
       <field name="default_gs_h">4</field>
       <field name="min_gs_w">2</field>
-      <field name="min_gs_h">2</field>
+      <field name="min_gs_h">1</field>
       <field name="icon">sort</field>
     </record>
     <record model="izi.visual.type" id="izi_dashboard.izi_visual_type_line">
@@ -34,7 +34,7 @@
       <field name="default_gs_w">6</field>
       <field name="default_gs_h">4</field>
       <field name="min_gs_w">2</field>
-      <field name="min_gs_h">2</field>
+      <field name="min_gs_h">1</field>
       <field name="icon">timeline</field>
     </record>
     <record model="izi.visual.type" id="izi_dashboard.izi_visual_type_bar_line">
@@ -43,7 +43,7 @@
       <field name="default_gs_w">6</field>
       <field name="default_gs_h">4</field>
       <field name="min_gs_w">2</field>
-      <field name="min_gs_h">2</field>
+      <field name="min_gs_h">1</field>
       <field name="icon">monitoring</field>
     </record>
     <record model="izi.visual.type" id="izi_dashboard.izi_visual_type_row_line">
@@ -52,7 +52,7 @@
       <field name="default_gs_w">6</field>
       <field name="default_gs_h">4</field>
       <field name="min_gs_w">2</field>
-      <field name="min_gs_h">2</field>
+      <field name="min_gs_h">1</field>
       <field name="icon">monitoring</field>
     </record>
     <record model="izi.visual.type" id="izi_dashboard.izi_visual_type_scrcard_basic">
@@ -88,7 +88,7 @@
       <field name="default_gs_w">6</field>
       <field name="default_gs_h">4</field>
       <field name="min_gs_w">2</field>
-      <field name="min_gs_h">2</field>
+      <field name="min_gs_h">1</field>
       <field name="icon">bar_chart</field>
     </record>
     <record model="izi.visual.type" id="izi_dashboard.izi_visual_type_bullet_row">
@@ -97,7 +97,7 @@
       <field name="default_gs_w">6</field>
       <field name="default_gs_h">4</field>
       <field name="min_gs_w">2</field>
-      <field name="min_gs_h">2</field>
+      <field name="min_gs_h">1</field>
       <field name="icon">sort</field>
     </record>
     <record model="izi.visual.type" id="izi_dashboard.izi_visual_type_pie">
@@ -106,7 +106,7 @@
       <field name="default_gs_w">6</field>
       <field name="default_gs_h">4</field>
       <field name="min_gs_w">2</field>
-      <field name="min_gs_h">2</field>
+      <field name="min_gs_h">1</field>
       <field name="icon">pie_chart</field>
     </record>
     <record model="izi.visual.type" id="izi_dashboard.izi_visual_type_radar">
@@ -115,7 +115,7 @@
       <field name="default_gs_w">6</field>
       <field name="default_gs_h">4</field>
       <field name="min_gs_w">2</field>
-      <field name="min_gs_h">2</field>
+      <field name="min_gs_h">1</field>
       <field name="icon">radar</field>
     </record>
     <record model="izi.visual.type" id="izi_dashboard.izi_visual_type_flower">
@@ -124,7 +124,7 @@
       <field name="default_gs_w">6</field>
       <field name="default_gs_h">4</field>
       <field name="min_gs_w">2</field>
-      <field name="min_gs_h">2</field>
+      <field name="min_gs_h">1</field>
       <field name="icon">hub</field>
     </record>
     <record model="izi.visual.type" id="izi_dashboard.izi_visual_type_radialBar">
@@ -133,7 +133,7 @@
       <field name="default_gs_w">6</field>
       <field name="default_gs_h">4</field>
       <field name="min_gs_w">2</field>
-      <field name="min_gs_h">2</field>
+      <field name="min_gs_h">1</field>
       <field name="icon">looks</field>
     </record>
     <record model="izi.visual.type" id="izi_dashboard.izi_visual_type_scatter">
@@ -142,7 +142,7 @@
       <field name="default_gs_w">6</field>
       <field name="default_gs_h">4</field>
       <field name="min_gs_w">2</field>
-      <field name="min_gs_h">2</field>
+      <field name="min_gs_h">1</field>
       <field name="icon">scatter_plot</field>
     </record>
     <record model="izi.visual.type" id="izi_dashboard.izi_visual_type_heatmap_geo">
@@ -151,8 +151,17 @@
       <field name="default_gs_w">6</field>
       <field name="default_gs_h">4</field>
       <field name="min_gs_w">2</field>
-      <field name="min_gs_h">2</field>
+      <field name="min_gs_h">1</field>
       <field name="icon">public</field>
+    </record>
+    <record model="izi.visual.type" id="izi_dashboard.izi_visual_type_iframe">
+      <field name="name">iframe</field>
+      <field name="title">Iframe</field>
+      <field name="default_gs_w">6</field>
+      <field name="default_gs_h">4</field>
+      <field name="min_gs_w">1</field>
+      <field name="min_gs_h">1</field>
+      <field name="icon">crop</field>
     </record>
     <record model="izi.visual.type" id="izi_dashboard.izi_visual_type_custom">
       <field name="name">custom</field>

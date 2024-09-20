@@ -92,11 +92,12 @@ svg [aria-hidden="true"], [aria-hidden="1"] {
     width: 100px;
 }
 .scorecard-title {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 300;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis; 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Ubuntu, "Noto Sans", Arial, "Odoo Unicode Support Noto", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 .scorecard-value {
     font-size: 20px;
@@ -156,7 +157,7 @@ svg [aria-hidden="true"], [aria-hidden="1"] {
     align-items: center !important;
     flex-wrap: wrap;
     border-left : 3px solid #2B9EFF;
-    border-radius: 8px;
+    /* border-radius: 8px; */
 }
 
 /* .scorecard-sm .flex-column {
@@ -241,5 +242,16 @@ svg [aria-hidden="true"], [aria-hidden="1"] {
     overflow-y: auto;
 }
 
+.izi_view span.spinner-border.spinner-border-small {
+    width: 1.5rem;
+    height: 1.5rem;
+    opacity: 0.3;
+}
 
+.izi_view span.spinner-border.spinner-border-large {
+    width: 4rem;
+    height: 4rem;
+    border-right-color: white;
+    border-width: 0.5em;
+}
 

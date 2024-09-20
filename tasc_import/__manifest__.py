@@ -17,6 +17,10 @@
     'depends': ['base_import'],
     'data': [
     ],
+    'assets': {
+        'web.assets_backend': [
+            'tasc_import/static/src/**/*.js',
+        ],},
     'license': 'AGPL-3',
     'installable': True,
     'auto_install': False,

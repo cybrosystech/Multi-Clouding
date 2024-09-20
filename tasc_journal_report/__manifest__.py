@@ -7,7 +7,7 @@
     'website': "https://www.cybrosys.com",
     'category': 'Accounting',
     'version': '17.0.1.0.0',
-    'depends': ['account', 'base'],
+    'depends': ['account', 'base','web'],
     'data':
         [
             'data/journals_report_action.xml',

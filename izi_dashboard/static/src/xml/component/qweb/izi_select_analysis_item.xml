@@ -15,8 +15,8 @@
             <span class="material-icons"><t t-esc="visual_type_icon"/></span>
         </div>
         <div t-if="category_name" class="izi_category" t-esc="category_name"></div>
-        <div class="izi_edit_analysis_item izi_select_item_icon" title="Edit Analysis">
-            <span class="material-icons">edit</span>
+        <div class="izi_edit_analysis_item izi_select_item_icon" title="Configuration">
+            <span class="material-icons" t-esc="'edit'"/>
         </div>
     </div>
 </template>

@@ -14,7 +14,7 @@
                     rp.street,
                     rp.city,
                     rcs.name AS state,
-                    rc.name AS country,
+                    rc.name->>'en_US' AS country,
                     rcp.name AS company,
                     rp.create_date AS create_date
                 FROM res_partner rp
@@ -79,7 +79,7 @@
         <!-- Create Dashboard -->
         <record model="izi.dashboard" id="izi_dashboard_template_partner">
             <field name="name">Example of Partner Dashboard</field>
-            <field name="theme_id" ref='izi_dashboard_theme_colorful'/>
+            <field name="theme_id" ref='izi_dashboard_theme_contrast'/>
         </record>
         <record model="izi.dashboard.block" id="izi_dashboard_block_template_partner_by_date">
             <field name="dashboard_id" ref='izi_dashboard_template_partner'/>

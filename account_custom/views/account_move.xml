@@ -11,6 +11,7 @@
             <xpath expr="//field[@name='payment_reference']" position="after">
                 <field name="project_site_id"  optional="hide" />
                 <field name="analytic_account_id"  optional="hide"/>
+                <field name="reference" optional="hide"/>
             </xpath>
         </field>
     </record>
