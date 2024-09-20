@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """ init object """
 import math
-
 from odoo import fields, models, api, _, SUPERUSER_ID
 from odoo.exceptions import ValidationError, UserError
 from datetime import datetime, date, timedelta
@@ -212,6 +211,25 @@ class LeaseeContract(models.Model):
                                         compute='compute_total_period',
                                         )
     end_date = fields.Date(string="Ending Date",compute='compute_contract_end_date')
+    is_admin = fields.Boolean(string="Is Admin", compute='compute_is_admin',default=lambda self: self.get_is_admin())
+
+    def get_is_admin(self):
+        if self.env.user.has_group(
+                'base.group_erp_manager') or self.env.user.has_group(
+            'base.group_system'):
+            is_admin = True
+        else:
+            is_admin = False
+        return is_admin
+
+    def compute_is_admin(self):
+        for rec in self:
+            if self.env.user.id == SUPERUSER_ID or self.env.user.has_group(
+                    'base.group_erp_manager') or self.env.user.has_group(
+                    'base.group_system'):
+                rec.is_admin = True
+            else:
+                rec.is_admin = False
 
     def get_lease_ending_date(self):
         """

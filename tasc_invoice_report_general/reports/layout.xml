@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+
+
+
     <template id="external_layout_inv_template">
         <!-- Multicompany -->
         <t t-if="not o and doc">
@@ -61,6 +64,59 @@
         </div>
 
     </template>
+        <template id="external_layout_inv_general_template">
+        <!-- Multicompany -->
+        <t t-if="not o and doc">
+            <t t-set="o" t-value="doc"/>
+        </t>
+        <t t-if="o and 'company_id' in o">
+            <t t-set="company" t-value="o.company_id"/>
+        </t>
+        <t t-if="not o or not 'company_id' in o">
+            <t t-set="company" t-value="res_company"/>
+        </t>
+        <div t-attf-class="header o_company_#{company.id}_layout" t-att-style="report_header_style">
+            <div class="o_boxed_header">
+                <div class="row mb8">
+                    <div class="col-7">
+                        <h4 class="mt0" t-field="company.report_header"/>
+                        <div name="company_address" >
+                            <span style="font-weight:bold" t-field="company.name"/>
+                        </div>
+                    </div>
+                    <div class="col-5">
+                        <div class="d-flex justify-content-end">
+                            <img t-if="company.logo"
+                                 style="max-width: 100%; height: 70px;"
+                                 t-att-src="image_data_uri(company.logo)"
+                                 alt="Logo"/>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="col-12">
+                <div style="border-bottom: 1px solid black;"/>
+            </div>
+        </div>
+        <div t-attf-class="article" t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id"
+             t-att-data-oe-lang="o and o.env.context.get('lang')">
+            <div class="pt-5">
+                <t t-call="web.address_layout"/>
+            </div>
+            <t t-raw="0"/>
+        </div>
+                <div t-attf-class="footer">
+<div class="col-12" style="border-bottom: 1px solid black;"/>
+            <div class="col-12 text-center" style="font-size: 12px;">
+                <span t-esc="company.footer_detail"/>
+<!--                <br/>-->
+<!--                E-mail :-->
+<!--                <span t-esc="company.email"/>-->
+            </div>
+        </div>
+    </template>
+
     <template id="external_layout_uk_inv_tax_template">
         <!-- Multicompany -->
         <t t-if="not o and doc">

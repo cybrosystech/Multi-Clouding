@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import json
-import re
-
-from odoo import api, fields, models, _
-from odoo.addons.base.models.decimal_precision import dp
+from odoo import api, fields, models, _, SUPERUSER_ID
 from odoo.exceptions import UserError
 from odoo.tools import float_compare, float_round
 from textwrap import shorten
@@ -42,6 +38,24 @@ class AccountMove(models.Model):
     state = fields.Selection(
         selection_add=[('to_approve', 'To Approve'), ('posted',), ],
         ondelete={'to_approve': 'set default', 'draft': 'set default', })
+    is_admin = fields.Boolean(string="Is Admin", compute='compute_is_admin',
+                              default=lambda self: self.get_is_admin())
+
+    def get_is_admin(self):
+        if self.env.user.has_group(
+                'base.group_erp_manager') or self.env.user.has_group(
+            'base.group_system'):
+            is_admin = True
+        else:
+            is_admin = False
+        return is_admin
+
+    def compute_is_admin(self):
+        for rec in self:
+            if self.env.user.id == SUPERUSER_ID or self.env.user.has_group('base.group_erp_manager') or self.env.user.has_group('base.group_system'):
+                rec.is_admin = True
+            else:
+                rec.is_admin = False
 
     @api.depends('line_ids.balance')
     def _compute_depreciation_value(self):
@@ -136,29 +150,6 @@ class AccountMove(models.Model):
         return name + (
             f" ({shorten(self.ref, width=50)})" if show_ref and self.ref else '')
 
-    # @api.depends()
-    # def check_show_confirm_and_post_buttons(self):
-    #     print("9")
-    #     for rec in self:
-    #         rec.show_post_button = False
-    #         rec.show_confirm_button = False
-    #         if rec.state not in ['draft',
-    #                              'to_approve'] or rec.auto_post or rec.move_type != 'entry':
-    #             if rec.is_from_purchase or rec.is_from_sales:
-    #                 rec.show_post_button = True
-    #             elif not rec.is_from_purchase and not rec.is_from_sales:
-    #                 if not rec.purchase_approval_cycle_ids:
-    #                     rec.show_post_button = True
-    #                 else:
-    #                     rec.show_post_button = False
-    #             else:
-    #                 rec.show_post_button = False
-    #         elif rec.state not in ['draft',
-    #                                'to_approve'] or rec.auto_post == True or rec.move_type == 'entry':
-    #             if rec.is_from_purchase or rec.is_from_sales:
-    #                 rec.show_confirm_button = True
-    #             else:
-    #                 rec.show_confirm_button = False
 
     @api.depends('state','auto_post','move_type','is_from_purchase','is_from_sales','purchase_approval_cycle_ids')
     def check_show_confirm_and_post_buttons(self):
@@ -202,35 +193,6 @@ class AccountMove(models.Model):
                 if sales:
                     rec.is_from_sales = True
 
-    # @api.depends()
-    # def check_show_approve_button(self):
-    #     print("12")
-    #     self.show_approve_button = False
-    #     current_approve = self.purchase_approval_cycle_ids.filtered(
-    #         lambda x: x.is_approved).mapped('approval_seq')
-    #
-    #     last_approval = max(current_approve) if current_approve else 0
-    #     a = self.purchase_approval_cycle_ids.mapped('approval_seq')
-    #     check_last_approval_is_approved = self.purchase_approval_cycle_ids.filtered(
-    #         lambda x: x.approval_seq == int(last_approval))
-    #
-    #     for rec in self.purchase_approval_cycle_ids:
-    #         if check_last_approval_is_approved:
-    #             if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids and check_last_approval_is_approved.is_approved:
-    #                 self.show_approve_button = True
-    #                 break
-    #         else:
-    #             if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids:
-    #                 self.show_approve_button = True
-    #                 break
-    #             break
-    #
-    #     if self.state != 'posted':
-    #         if self.purchase_approval_cycle_ids:
-    #             approve_list = self.purchase_approval_cycle_ids.mapped(
-    #                 'is_approved')
-    #             if all(approve_list):
-    #                 self.state = 'posted'
 
     @api.depends('purchase_approval_cycle_ids','state','purchase_approval_cycle_ids.is_approved','purchase_approval_cycle_ids.user_approve_ids')
     def check_show_approve_button(self):

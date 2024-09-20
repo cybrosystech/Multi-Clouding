@@ -18,6 +18,7 @@
         'reports/account_move_report_templates.xml',
         'reports/account_move_report.xml',
         'reports/credit_note_views.xml',
+        'reports/invoice_report_general_template.xml',
     ],
     'license': 'AGPL-3',
     'installable': True,
