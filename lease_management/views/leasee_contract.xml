@@ -190,10 +190,21 @@
                                                readonly="state != 'draft'"/>
                                         <field name="installment_journal_id"
                                                readonly="state != 'draft'"/>
+                                        <field name="is_admin" invisible="1"/>
                                         <field name="analytic_account_id"
-                                               readonly="state not in ['draft', 'active']"/>
+                                               readonly="state not in ['draft', 'active']"
+                                               invisible="is_admin == True"
+                                               options="{'no_quick_create': True, 'no_create_edit': True}"/>
                                         <field name="project_site_id"
-                                               readonly="state not in ['draft', 'active']"/>
+                                               readonly="state not in ['draft', 'active']"
+                                               invisible="is_admin == True"
+                                               options="{'no_quick_create': True, 'no_create_edit': True}"/>
+                                        <field name="analytic_account_id"
+                                               readonly="state not in ['draft', 'active']"
+                                               invisible="is_admin == False"/>
+                                        <field name="project_site_id"
+                                               readonly="state not in ['draft', 'active']"
+                                               invisible="is_admin == False"/>
                                         <field name="analytic_distribution"
                                                widget="analytic_distribution"/>
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from math import copysign
-from odoo import api, fields, models, _
+from odoo import api, fields, models, _,SUPERUSER_ID
 from odoo.exceptions import UserError
 import logging
 
@@ -23,6 +23,25 @@ class AccountAsset(models.Model):
              'cost_center')], )
     site_address = fields.Char(string='Site Address',
                                compute='compute_site_address')
+    is_admin = fields.Boolean(string="Is Admin", compute='compute_is_admin',default=lambda self: self.get_is_admin())
+
+    def get_is_admin(self):
+        if self.env.user.has_group(
+                'base.group_erp_manager') or self.env.user.has_group(
+            'base.group_system'):
+            is_admin = True
+        else:
+            is_admin = False
+        return is_admin
+
+    def compute_is_admin(self):
+        for rec in self:
+            if self.env.user.id == SUPERUSER_ID or self.env.user.has_group(
+                    'base.group_erp_manager') or self.env.user.has_group(
+                    'base.group_system'):
+                rec.is_admin = True
+            else:
+                rec.is_admin = False
 
     @api.depends('analytic_distribution')
     def compute_site_address(self):

@@ -14,6 +14,7 @@ class AccountMove(models.Model):
                                       compute='compute_project_site_cost_center',
                                       help=" Project Site",
                                       search='_search_cost_center_id')
+    reference = fields.Char(string="Tasc Reference")
 
     @api.depends('invoice_line_ids.project_site_id','invoice_line_ids.analytic_account_id')
     def compute_project_site_cost_center(self):
