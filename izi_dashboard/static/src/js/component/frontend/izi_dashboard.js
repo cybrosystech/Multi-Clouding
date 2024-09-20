@@ -99,9 +99,8 @@ function generateDashboard(data) {
                         <div class="izi_block_left izi_dropdown dropdown">
                             <h4 class="izi_dashboard_block_title dropdown-toggle" data-toggle="dropdown">${block.analysis_id[1]}</h4>
                             <div class="dropdown-menu">
-                                <a class="dropdown-item izi_action_open_analysis">Open Analysis</a>
-                                <a class="dropdown-item izi_action_quick_open_analysis">Quick Open Analysis</a>
-                                <a class="dropdown-item izi_action_edit_analysis">Edit Analysis</a>
+                                <a class="dropdown-item izi_action_quick_open_analysis">Open Analysis</a>
+                                <a class="dropdown-item izi_action_edit_analysis">Configuration</a>
                                 <a class="dropdown-item izi_action_open_list_view">View List</a>
                                 <a class="dropdown-item izi_action_export_excel" data-id="${block.id}">Export Excel</a>
                                 <a class="dropdown-item izi_action_delete_block" data-id="${block.id}">Remove Analysis</a>
@@ -184,6 +183,12 @@ function makeChart(block, result) {
         data: data,
         dimension: result.dimensions[0], // TODO: Only one dimension?
         metric: result.metrics,
+            
+        prefix_by_field: result.prefix_by_field,
+        suffix_by_field: result.suffix_by_field,
+        decimal_places_by_field: result.decimal_places_by_field,
+        is_metric_by_field: result.is_metric_by_field,
+        locale_code_by_field: result.locale_code_by_field,
 
         scorecardStyle: result.visual_config_values.scorecardStyle,
         scorecardIcon: result.visual_config_values.scorecardIcon,
@@ -213,6 +218,20 @@ function makeChart(block, result) {
                 eval(result.render_visual_script);
             } catch (error) {
                 new swal('Render Visual Script: JS Error', error.message, 'error')
+            }
+        }
+    }
+    else if (visual_type == 'iframe') {
+        if (result.visual_config_values.iframeHTMLTag || result.visual_config_values.iframeURL) {
+            console.log('Render Iframe', result.visual_config_values.iframeHTMLTag, result.visual_config_values.iframeURL);
+            try {
+                if (result.visual_config_values.iframeHTMLTag) {
+                    $(`#${idElm}`).append(result.visual_config_values.iframeHTMLTag);
+                } else if (result.visual_config_values.iframeURL) {
+                    $(`#${idElm}`).append(`<iframe src="${result.visual_config_values.iframeURL}" style="width:100%;height:100%;border:none;"></iframe>`);
+                }
+            } catch (error) {
+                new swal('Render Iframe: JS Error', error.message, 'error')
             }
         }
     }

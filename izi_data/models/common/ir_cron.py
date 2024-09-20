@@ -1,5 +1,6 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
+import pandas
 
 class IrCron(models.Model):
     _name = 'ir.cron'
@@ -16,8 +17,8 @@ class ServerAction(models.Model):
         if self.usage == 'ir_cron':
             cron = self.env['ir.cron'].search(['|', ('active', '=', True), ('active', '=', False), ('ir_actions_server_id', '=', self.id)], limit=1)
             eval_context['cron'] = cron
-        if self._context.get('izi_table'):
-            eval_context['izi_table'] = self._context.get('izi_table')
+            if cron.table_ids:
+                eval_context['izi_table'] = cron.table_ids[0]
         eval_context['self'] = self
         eval_context['izi'] = self.env['izi.tools']
         return eval_context
@@ -33,4 +34,23 @@ class ServerAction(models.Model):
         res = super(ServerAction, self)._run_action_code_multi(eval_context)
         if eval_context.get('response'):
             return eval_context.get('response')
+        # response = {
+        #   'dataframe':,
+        #   'data':,
+        # }
+        if 'res_dataframe' in eval_context and isinstance(eval_context.get('res_dataframe'), pandas.DataFrame):
+            return {
+                'dataframe': eval_context.get('res_dataframe'),
+            }
+        if 'res_data' in eval_context and isinstance(eval_context.get('res_data'), list):
+            if eval_context.get('res_data'):
+                first_record = eval_context.get('res_data')[0]
+                if isinstance(first_record, dict):
+                    try:
+                        dataframe = pandas.DataFrame(eval_context.get('res_data'))
+                        return {
+                            'dataframe': dataframe,
+                        }
+                    except:
+                        return res
         return res

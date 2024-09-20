@@ -6,11 +6,11 @@
         <span class="izi_text izi_block_left" t-att-title="name">
             <t t-esc="name"/>
         </span>
-        <span t-att-data-sort_id="sort_id" class="izi_remove_sort_item material-icons izi_btn_icon_right izi_hover_highlight">highlight_off</span>
+        <span t-att-data-sort_id="sort_id" class="izi_remove_sort_item material-icons izi_btn_icon_right izi_hover_highlight" t-esc="'highlight_off'"/>
         <!-- Sort -->
         <div t-att-class="'izi_block_right dropdown izi_dropdown izi_sort_'+sort">
             <div class="dropdown-toggle" id="dropdownSort" data-toggle="dropdown">
-                <span class="material-icons izi_btn_icon_right" t-att-title="sort == 'asc' ? 'Ascending' : 'Descending'">sort</span>
+                <span class="material-icons izi_btn_icon_right" t-att-title="sort == 'asc' ? 'Ascending' : 'Descending'" t-esc="'sort'"/>
             </div>
             <div class="dropdown-menu" aria-labelledby="dropdownSort">
                 <a class="dropdown-item izi_select_sort_direction" data-sort="asc" t-att-data-sort_id="sort_id">Asc</a>

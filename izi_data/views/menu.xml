@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
   <data noupdate="0">
-      <menuitem id="izi_dashboard_root" web_icon="izi_dashboard,static/description/icon.png" name="Analytic Dashboard" sequence="-2"/>
+      <menuitem id="izi_dashboard_root" web_icon="izi_dashboard,static/description/icon.png" name="Analytics" sequence="-2"/>
       
       <menuitem id="izi_data_menu" parent="izi_dashboard_root" name="Data Source" sequence="30"/>
       <menuitem id="izi_data_source_menu" parent="izi_data_menu" name="Data Source" sequence="10" action="izi_data.izi_data_source_action" />

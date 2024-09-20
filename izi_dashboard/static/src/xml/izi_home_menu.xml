@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+
+<t t-name="izi_dashboard.IZIHomeMenu" t-inherit="web_enterprise.HomeMenu" t-inherit-mode="extension">
+    <xpath expr="//div[hasclass('o_home_menu')]" position="after">
+        <div class="izi_view_dashboard_ask_container" id="ask_ai_container" style="display:none"/>
+        <div class="izi_home_menu" id="izi_home_menu">
+            <button class="btn btn-secondary home_button_ai" t-on-click="onClickOpenAI" id="izi_home_button_ai">
+                <span class="material-icons" t-esc="'magic_button'"/>
+            </button>
+        </div>
+    </xpath>
+</t>
+
+</templates>

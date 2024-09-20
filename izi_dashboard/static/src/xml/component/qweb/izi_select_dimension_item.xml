@@ -19,7 +19,7 @@
         <span class="izi_text izi_block_left" t-att-title="name">
             <t t-esc="name"/>
         </span>
-        <span t-att-data-id="id" t-att-data-dimension="dimension_id" class="izi_remove_dimension_item material-icons izi_btn_icon_right izi_hover_highlight">highlight_off</span>
+        <span t-att-data-id="id" t-att-data-dimension="dimension_id" class="izi_remove_dimension_item material-icons izi_btn_icon_right izi_hover_highlight" t-esc="'highlight_off'"/>
         <div style="clear:both"/>
     </div>
     <div t-name="IZISelectDimensionItem" class="izi_select_dimension_item izi_item izi_btn izi_btn_wlb izi_w100 izi_rd" t-att-data-id="id" t-att-data-name="name">

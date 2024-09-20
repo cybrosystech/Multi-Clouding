@@ -40,7 +40,8 @@
     color: #444;
 }
 .select2-results li {
-    font-family: 'Roboto';
+    /* font-family: 'Roboto'; */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Ubuntu, "Noto Sans", Arial, "Odoo Unicode Support Noto", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     font-weight: 300;
     font-size: 13px;
     padding: 4px 4px;
@@ -84,7 +85,8 @@
 }
 .izi_select2.select2-container-multi .select2-choices .select2-search-field input {
     text-align: left;
-    font-family: 'Roboto';
+    /* font-family: 'Roboto'; */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Ubuntu, "Noto Sans", Arial, "Odoo Unicode Support Noto", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     height: 28px;
     line-height: 28px;
     padding: 0px;

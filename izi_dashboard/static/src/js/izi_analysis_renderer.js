@@ -13,7 +13,7 @@ odoo.define('izi_dashboard.IZIAnalysisRenderer', function (require) {
             this._super.apply(this, arguments);
             // console.log("Init App Renderer", this, parent, state, params);
             self.parent = parent;
-            if (parent.actions) self.actions = parent.actions;
+            if (parent.props) self.props = parent.props;
         },
         start: function () {
             var self = this;
