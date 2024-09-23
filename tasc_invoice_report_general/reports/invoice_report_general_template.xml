@@ -31,7 +31,7 @@
                     </p>
                 </t>
                 <div class="row">
-                    <div class="col-6">
+                    <div class="col-9">
                         <div>
                             <span style="font-weight:bold">Invoice Date:
                             </span>
@@ -47,13 +47,9 @@
                             <span t-field="doc.partner_id"
                             />
                         </div>
-                        <!--                        <div>-->
-                        <!--                            -->
-                        <!--                        </div>-->
-
-
                     </div>
-                    <div class="col-6">
+
+                    <div class="col-3" style="text-align: left;">
                         <div>
                             <span style="font-weight:bold">Tax ID:</span>
                             <span t-field="doc.company_id.vat"/>
@@ -71,11 +67,6 @@
                                 <span t-field="doc.invoice_date_due"/>
                             </t>
                         </div>
-                        <!--                        <div>-->
-                        <!--                            <span style="font-weight:bold">Reference:-->
-                        <!--                            </span>-->
-                        <!--                            <span t-field="doc.payment_reference"/>-->
-                        <!--                        </div>-->
                     </div>
                 </div>
                 <style>
