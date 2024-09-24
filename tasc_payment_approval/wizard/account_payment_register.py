@@ -32,7 +32,11 @@ def _create_payment_vals_from_batch(self, batch_result):
     if batch_values['payment_type'] != payment_method_line.payment_type:
         payment_method_line = self.journal_id._get_available_payment_method_lines(
             batch_values['payment_type'])[:1]
-
+    tasc_ref = ''
+    if not batch_result.get("tasc_reference"):
+        move = batch_result["lines"].mapped('move_id')
+        tasc_ref = set(move.mapped('reference'))
+        tasc_ref = ', '.join(tasc_ref)
     payment_vals = {
         'date': self.payment_date,
         'amount': batch_values['source_amount_currency'],
@@ -48,7 +52,7 @@ def _create_payment_vals_from_batch(self, batch_result):
         'destination_account_id': batch_result['lines'][0].account_id.id,
         'write_off_line_vals': [],
         'purpose_code_id': self.purpose_code_id.id,
-        'tasc_reference': batch_result["tasc_reference"],
+        'tasc_reference': batch_result["tasc_reference"] if batch_result.get("tasc_reference") else tasc_ref,
     }
 
     total_amount, mode = self._get_total_amount_using_same_currency(
@@ -171,12 +175,21 @@ class AccountPaymentRegister(models.TransientModel):
 
     def _create_payment_vals_from_wizard(self, batch_result):
         vals = super()._create_payment_vals_from_wizard(batch_result)
+        move = batch_result["lines"].mapped('move_id')
+        tasc_ref = set(move.mapped('reference'))
+        tasc_ref = ', '.join(tasc_ref)
         vals.update({'purpose_code_id': self.purpose_code_id.id,
-                     'tasc_reference':batch_result["lines"][0].move_id.reference,})
+                     'tasc_reference':tasc_ref if tasc_ref else '',})
         return vals
 
     def _create_payment_vals_from_batch(self, batch_result):
         res = super()._create_payment_vals_from_batch(batch_result)
+        tasc_ref = ''
+        if not batch_result.get("tasc_reference"):
+            move = batch_result["lines"].mapped('move_id')
+            tasc_ref = set(move.mapped('reference'))
+            tasc_ref = ', '.join(tasc_ref)
+
         res.update({'purpose_code_id': self.purpose_code_id.id,
-                    'tasc_reference':batch_result["tasc_reference"],})
+                    'tasc_reference':batch_result["tasc_reference"] if batch_result.get("tasc_reference") else tasc_ref,})
         return res
