@@ -33,6 +33,7 @@ class AccountPayment(models.Model):
     purpose_code_id = fields.Many2one('purpose.code',
                                       domain="[('company_ids', 'in', company_id)]",
                                       default=_default_purpose_code_id)
+    tasc_reference = fields.Char(string="Tasc Reference")
 
     @api.depends('reconciled_bill_ids', 'reconciled_invoice_ids')
     def compute_invoice_number_and_amount(self):

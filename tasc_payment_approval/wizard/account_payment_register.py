@@ -48,6 +48,7 @@ def _create_payment_vals_from_batch(self, batch_result):
         'destination_account_id': batch_result['lines'][0].account_id.id,
         'write_off_line_vals': [],
         'purpose_code_id': self.purpose_code_id.id,
+        'tasc_reference': batch_result["tasc_reference"],
     }
 
     total_amount, mode = self._get_total_amount_using_same_currency(
@@ -130,6 +131,7 @@ def _create_payments(self):
                         },
                         'lines': line,
                         'move_id': line.move_id,
+                        'tasc_reference':line.move_id.reference,
                     })
             batches = new_batches
 
@@ -165,13 +167,16 @@ class AccountPaymentRegister(models.TransientModel):
 
     purpose_code_id = fields.Many2one('purpose.code', string="Purpose Code",
                                       default=_default_purpose_code_id)
+    tasc_reference =  fields. Char(string="Tasc Reference")
 
     def _create_payment_vals_from_wizard(self, batch_result):
         vals = super()._create_payment_vals_from_wizard(batch_result)
-        vals.update({'purpose_code_id': self.purpose_code_id.id})
+        vals.update({'purpose_code_id': self.purpose_code_id.id,
+                     'tasc_reference':batch_result["lines"][0].move_id.reference,})
         return vals
 
     def _create_payment_vals_from_batch(self, batch_result):
         res = super()._create_payment_vals_from_batch(batch_result)
-        res.update({'purpose_code_id': self.purpose_code_id.id})
+        res.update({'purpose_code_id': self.purpose_code_id.id,
+                    'tasc_reference':batch_result["tasc_reference"],})
         return res

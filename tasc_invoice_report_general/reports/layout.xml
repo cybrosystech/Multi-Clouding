@@ -81,13 +81,13 @@
                     <div class="col-7">
                         <h4 class="mt0" t-field="company.report_header"/>
                         <div name="company_address" >
-                            <span style="font-weight:bold" t-field="company.name"/>
+                            <span style="font-weight:bold;font-size:18px;" t-field="company.name"/>
                         </div>
                     </div>
                     <div class="col-5">
                         <div class="d-flex justify-content-end">
                             <img t-if="company.logo"
-                                 style="max-width: 100%; height: 70px;"
+                                 style="max-width: 200px; height: 50px;"
                                  t-att-src="image_data_uri(company.logo)"
                                  alt="Logo"/>
                         </div>
