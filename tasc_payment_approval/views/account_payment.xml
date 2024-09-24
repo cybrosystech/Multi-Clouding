@@ -27,6 +27,7 @@
             <field name="currency_id" position="after">
                 <field name="payment_approval_batch_id"/>
                 <field name="payment_approval_status"/>
+                <field name="tasc_reference"/>
             </field>
         </field>
     </record>

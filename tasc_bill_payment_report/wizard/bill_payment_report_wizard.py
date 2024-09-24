@@ -124,10 +124,8 @@ class CashBurnReportWizard(models.Model):
             [('state', '=', 'posted'),
              ('move_type', 'in', ['in_invoice', 'in_refund']),
              ('company_id', '=', self.env.company.id),
-             ('leasee_contract_id', '!=', False),
              ('date', '>=', self.start_date), ('date', '<=', self.end_date)],
-            order="leasee_contract_id ASC")
-
+            order="id ASC")
         return move_ids
 
     def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data,
@@ -141,7 +139,7 @@ class CashBurnReportWizard(models.Model):
 
         row = 0
         col = 0
-        worksheet.merge_range(row, row, col, col + 13,
+        worksheet.merge_range(row, row, col, col + 14,
                               _('Tasc Bill Payment Report'),
                               STYLE_LINE_HEADER)
         row += 1
@@ -173,6 +171,8 @@ class CashBurnReportWizard(models.Model):
         worksheet.write(row, col, _('Payment Number'), header_format)
         col += 1
         worksheet.write(row, col, _('Payment Date'), header_format)
+        col += 1
+        worksheet.write(row, col, _('Tasc Reference'), header_format)
         col += 1
         row += 1
         for line in report_data:
@@ -229,7 +229,17 @@ class CashBurnReportWizard(models.Model):
                                         line.leasee_contract_id.project_site_id.name,
                                         STYLE_LINE_Data)
                 else:
-                    worksheet.write(row, col, '', STYLE_LINE_Data)
+                    if line.lease_security_advance_id and line.lease_security_advance_id.leasee_contract_id.project_site_id:
+                        if line.lease_security_advance_id.leasee_contract_id.project_site_id and line.lease_security_advance_id.leasee_contract_id.project_site_id.code:
+                            worksheet.write(row, col,
+                                            line.lease_security_advance_id.leasee_contract_id.project_site_id.name + "-" + line.lease_security_advance_id.leasee_contract_id.project_site_id.code,
+                                            STYLE_LINE_Data)
+                        else:
+                            worksheet.write(row, col,
+                                            line.lease_security_advance_id.leasee_contract_id.project_site_id.name,
+                                            STYLE_LINE_Data)
+                    else:
+                        worksheet.write(row, col, '', STYLE_LINE_Data)
                 col += 1
 
                 if line.name:
@@ -252,7 +262,6 @@ class CashBurnReportWizard(models.Model):
                 else:
                     worksheet.write(row, col, '', STYLE_LINE_Data)
                 col += 1
-
                 if move_line and move_line.name:
                     worksheet.write(row, col, move_line.name,
                                     STYLE_LINE_Data)
@@ -264,7 +273,11 @@ class CashBurnReportWizard(models.Model):
                     worksheet.write(row, col, line.leasee_contract_id.name,
                                     STYLE_LINE_Data)
                 else:
-                    worksheet.write(row, col, '', STYLE_LINE_Data)
+                    if line.lease_security_advance_id.leasee_contract_id:
+                        worksheet.write(row, col, line.lease_security_advance_id.leasee_contract_id.name,
+                                        STYLE_LINE_Data)
+                    else:
+                        worksheet.write(row, col, '', STYLE_LINE_Data)
                 col += 1
 
                 if line.leasee_contract_id.commencement_date:
@@ -272,7 +285,12 @@ class CashBurnReportWizard(models.Model):
                                     line.leasee_contract_id.commencement_date,
                                     date_format)
                 else:
-                    worksheet.write(row, col, '', date_format)
+                    if line.lease_security_advance_id.leasee_contract_id.commencement_date:
+                        worksheet.write(row, col,
+                                        line.lease_security_advance_id.leasee_contract_id.commencement_date,
+                                        date_format)
+                    else:
+                        worksheet.write(row, col, '', date_format)
                 col += 1
 
                 if line.leasee_contract_id.lease_contract_period:
@@ -280,7 +298,12 @@ class CashBurnReportWizard(models.Model):
                                     line.leasee_contract_id.lease_contract_period,
                                     STYLE_LINE_Data)
                 else:
-                    worksheet.write(row, col, '', STYLE_LINE_Data)
+                    if line.lease_security_advance_id.leasee_contract_id.lease_contract_period:
+                        worksheet.write(row, col,
+                                        line.lease_security_advance_id.leasee_contract_id.lease_contract_period,
+                                        STYLE_LINE_Data)
+                    else:
+                        worksheet.write(row, col, '', STYLE_LINE_Data)
                 col += 1
 
                 if payment_state:
@@ -309,5 +332,11 @@ class CashBurnReportWizard(models.Model):
                                     date_format)
                 else:
                     worksheet.write(row, col, '', date_format)
+                col += 1
+                if line.reference:
+                    worksheet.write(row, col, line.reference,
+                                    STYLE_LINE_Data)
+                else:
+                    worksheet.write(row, col, '', STYLE_LINE_Data)
                 col += 1
                 row += 1
