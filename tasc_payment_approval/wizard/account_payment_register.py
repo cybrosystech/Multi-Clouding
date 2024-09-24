@@ -35,8 +35,11 @@ def _create_payment_vals_from_batch(self, batch_result):
     tasc_ref = ''
     if not batch_result.get("tasc_reference"):
         move = batch_result["lines"].mapped('move_id')
-        tasc_ref = set(move.mapped('reference'))
-        tasc_ref = ', '.join(tasc_ref)
+        tasc_ref = set(filter(None, move.mapped('reference')))
+        if tasc_ref:
+            tasc_ref = ', '.join(tasc_ref)
+        else:
+            tasc_ref = ''
     payment_vals = {
         'date': self.payment_date,
         'amount': batch_values['source_amount_currency'],
@@ -176,8 +179,11 @@ class AccountPaymentRegister(models.TransientModel):
     def _create_payment_vals_from_wizard(self, batch_result):
         vals = super()._create_payment_vals_from_wizard(batch_result)
         move = batch_result["lines"].mapped('move_id')
-        tasc_ref = set(move.mapped('reference'))
-        tasc_ref = ', '.join(tasc_ref)
+        tasc_ref = set(filter(None, move.mapped('reference')))
+        if tasc_ref:
+            tasc_ref = ', '.join(tasc_ref)
+        else:
+            tasc_ref = ''
         vals.update({'purpose_code_id': self.purpose_code_id.id,
                      'tasc_reference':tasc_ref if tasc_ref else '',})
         return vals
@@ -187,9 +193,11 @@ class AccountPaymentRegister(models.TransientModel):
         tasc_ref = ''
         if not batch_result.get("tasc_reference"):
             move = batch_result["lines"].mapped('move_id')
-            tasc_ref = set(move.mapped('reference'))
-            tasc_ref = ', '.join(tasc_ref)
-
+            tasc_ref = set(filter(None, move.mapped('reference')))
+            if tasc_ref:
+                tasc_ref = ', '.join(tasc_ref)
+            else:
+                tasc_ref = ''
         res.update({'purpose_code_id': self.purpose_code_id.id,
                     'tasc_reference':batch_result["tasc_reference"] if batch_result.get("tasc_reference") else tasc_ref,})
         return res

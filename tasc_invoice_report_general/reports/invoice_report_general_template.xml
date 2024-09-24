@@ -105,6 +105,8 @@
                 </style>
                 <br/>
                 <div>
+                    <t t-set="decimal_places" t-value="doc.currency_id.decimal_places"/>
+
                     <table class="custom_table_lines" width="100%">
                         <thead>
                             <tr>
@@ -150,10 +152,9 @@
                                     Sub Total
                                 </td>
                                 <td>
-                                    <t t-set="amount_untaxed"
-                                       t-value="'{:20,.2f}'.format(doc.amount_untaxed)"/>
+                                    <t t-set="rounded_amount_untaxed" t-value="round(doc.amount_untaxed, decimal_places)"/>
                                     <span style="font-weight:bold"
-                                          t-esc="'{:20,.2f}'.format(doc.amount_untaxed)"/>
+                                          t-esc="rounded_amount_untaxed"/>
                                 </td>
                             </tr>
                             <tr>
@@ -163,9 +164,9 @@
                                     </span>
                                 </td>
                                 <td>
+                                    <t t-set="rounded_amount_tax" t-value="round(doc.amount_tax, decimal_places)"/>
                                     <span style="font-weight:bold"
-                                          t-esc="'{:20,.2f}'.format(doc.amount_tax)"/>
-
+                                          t-esc="rounded_amount_tax"/>
                                 </td>
                             </tr>
                             <tr>
@@ -174,14 +175,15 @@
                                     Total Amount Due
                                 </td>
                                 <td>
+                                  <t t-set="rounded_amount_total" t-value="round(doc.amount_total, decimal_places)"/>
                                     <span style="font-weight:bold"
-                                          t-esc="'{:20,.2f}'.format(doc.amount_total)"/>
+                                          t-esc="rounded_amount_total"/>
                                 </td>
                             </tr>
                             <tr>
                                 <td colspan="5"
                                     style="font-weight:bold;text-align:center;">
-                                    <span t-out="doc.currency_id.with_context(lang='en_US').amount_to_text(doc.amount_total)"/>
+                                    <span t-out="doc.currency_id.with_context(lang='en_US').amount_to_text(rounded_amount_total)"/>
                                 </td>
                             </tr>
                         </tbody>
