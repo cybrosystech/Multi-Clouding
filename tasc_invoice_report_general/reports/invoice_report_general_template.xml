@@ -113,8 +113,10 @@
                                 <th>Qty</th>
                                 <th>Unit price
                                 </th>
-                                <th>Total Amount (<t
-                                        t-esc="doc.currency_id.name"/>)
+                                <th>Total Amount (
+                                    <t
+                                        t-esc="doc.currency_id.name"/>
+                                    )
                                 </th>
                             </tr>
                         </thead>
@@ -150,7 +152,6 @@
                                 <td>
                                     <t t-set="amount_untaxed"
                                        t-value="'{:20,.2f}'.format(doc.amount_untaxed)"/>
-                                    <span t-esc="doc.currency_id.symbol"/>
                                     <span style="font-weight:bold"
                                           t-esc="'{:20,.2f}'.format(doc.amount_untaxed)"/>
                                 </td>
@@ -162,7 +163,6 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <span t-esc="doc.currency_id.symbol"/>
                                     <span style="font-weight:bold"
                                           t-esc="'{:20,.2f}'.format(doc.amount_tax)"/>
 
@@ -174,7 +174,6 @@
                                     Total Amount Due
                                 </td>
                                 <td>
-                                    <span t-esc="doc.currency_id.symbol"/>
                                     <span style="font-weight:bold"
                                           t-esc="'{:20,.2f}'.format(doc.amount_total)"/>
                                 </td>

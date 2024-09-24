@@ -6,7 +6,7 @@
     'website': "",
     'category': 'Accounting',
     'version': '17.0.1.0.0',
-    'depends': ['account_accountant', 'lease_management'],
+    'depends': ['account_accountant', 'lease_management','account_custom'],
     'data':
         [
             'security/ir.model.access.csv',

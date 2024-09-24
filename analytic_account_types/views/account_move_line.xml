@@ -106,7 +106,6 @@
                                     context.get('default_move_type') in ('out_invoice', 'out_refund', 'out_receipt')
                                     and [('sale_ok', '=', True)]
                                     or [('purchase_ok', '=', True)]"
-                           required="not name and display_type not in ('line_note', 'line_section')"
                            invisible="parent.is_admin == False"
                            column_invisible="parent.is_admin == False"
 
@@ -119,7 +118,6 @@
                                     context.get('default_move_type') in ('out_invoice', 'out_refund', 'out_receipt')
                                     and [('sale_ok', '=', True)]
                                     or [('purchase_ok', '=', True)]"
-                           required="not name and display_type not in ('line_note', 'line_section')"
                            invisible="parent.is_admin == True"
                            column_invisible="parent.is_admin == True"
 
