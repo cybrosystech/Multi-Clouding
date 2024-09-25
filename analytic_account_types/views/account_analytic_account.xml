@@ -6,17 +6,22 @@
             <field name="inherit_id" ref="analytic.view_account_analytic_account_form"/>
             <field name="priority" eval="50"/>
             <field name="arch" type="xml">
-                 <xpath expr="//field[@name='plan_id']" position="after">
-                      <field name="analytic_type_filter_id"  invisible="analytic_account_type != 'project_site'"/>
-                    <field name="analytic_location_id" invisible="analytic_account_type != 'project_site'" />
+                <xpath expr="//field[@name='plan_id']" position="after">
+                    <field name="analytic_type_filter_id"
+                           invisible="analytic_account_type != 'project_site'"/>
+                    <field name="analytic_location_id"
+                           invisible="analytic_account_type != 'project_site'"/>
                     <field name="group_id"/>
-                 </xpath>
-                  <field name="currency_id" position="after">
-                <field name="site_address"/>
-            </field>
-               <xpath expr="//field[@name='partner_id']" position="after">
-                  <field name="analytic_account_type"/>
-              </xpath>
+                </xpath>
+                <field name="currency_id" position="after">
+                    <field name="site_address"/>
+                </field>
+                <xpath expr="//field[@name='partner_id']" position="after">
+                    <field name="analytic_account_type"/>
+                </xpath>
+                <xpath expr="//field[@name='code']" position="after">
+                    <field name="site_status"/>
+                </xpath>
             </field>
 
         </record>

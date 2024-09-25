@@ -26,3 +26,7 @@ class Acc(models.Model):
     group_id = fields.Selection([
         ('managed', 'Managed'),
         ('owned', 'Owned')], 'Group',)
+    site_status = fields.Selection(
+        [('active', 'ACTIVE'), ('inactive', 'INACTIVE'), ('rfi', 'RFI'),
+         ('in_progress', 'IN PROGRESS')],
+        string='Site Status', default='active')
