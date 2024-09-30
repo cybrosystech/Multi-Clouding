@@ -68,6 +68,10 @@ class AccountMoveBudgetConf(models.Model):
         self.purchase_approval_cycle_ids = [(5, 0, 0)]
         self.request_approve_bool = False
         self.show_approve_button = False
+        self.is_from_purchase = False
+        self.is_from_sales = False
+        self.show_request_approve_button = False
+        self.show_confirm_button = False
 
     def configure_budget_line(self):
         if self.line_ids:

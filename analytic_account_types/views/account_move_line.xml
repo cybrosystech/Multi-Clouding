@@ -59,16 +59,7 @@
                             type="object" groups="account.group_account_invoice"
                             invisible="is_from_purchase == False or state != 'draft' "
                     />
-                    <button name="action_post" string="Confirm"
-                            class="oe_highlight"
-                            type="object" groups="account.group_account_invoice"
-                            invisible="is_from_sales == False or state != 'draft'"
-                    />
-                    <button name="request_approval_button"
-                            string="Request Approval" type="object"
-                            class="btn-primary"
-                            invisible="show_request_approve_button == True or is_from_purchase == True or is_from_sales == True or state not in ['draft']"
-                    />
+                    
                     <button name="button_approve_purchase_cycle"
                             string="Approve" type="object" class="btn-primary"
                             invisible="show_approve_button == False or state=='draft' or state == 'cancel'"
