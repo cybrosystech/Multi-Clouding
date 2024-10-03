@@ -235,17 +235,17 @@ class AccountMove(models.Model):
 
     @api.onchange('invoice_line_ids')
     def get_budgets_in_out_budget_tab(self):
-        if not self.env.context.get('generate_analytic_distribution'):
-            if not self.is_from_purchase and not self.is_from_sales:
-                budgets = self.invoice_line_ids.mapped('budget_id')
-                self.budget_collect_ids = False
-                budget_lines = []
-                budgets = set(budgets)
-
+        if not self.is_from_purchase and not self.is_from_sales:
+            budgets = self.invoice_line_ids.mapped('budget_id')
+            self.budget_collect_ids = [(5, 0, 0)]
+            budget_lines = []
+            budgets = set(budgets)
+            if budgets:
+                budget_collects = self.budget_collect_ids.mapped('budget_id')
                 for bud in budgets:
-                    if bud not in self.budget_collect_ids.mapped('budget_id'):
+                    if bud not in budget_collects:
                         budget_lines.append((0, 0, {
-                            'budget_id': bud.id
+                            'budget_id': bud.id,
                         }))
                 self.write({'budget_collect_ids': budget_lines})
 
@@ -716,10 +716,10 @@ class AccountMoveLine(models.Model):
                                   string="Location", domain=[
             ('analytic_account_type', '=', 'location')], required=False, )
     budget_id = fields.Many2one(comodel_name="crossovered.budget",
-                                string="Budget", required=False, index=True)
+                                string="Budget", required=False, index=True, copy=False)
     budget_line_id = fields.Many2one(comodel_name="crossovered.budget.lines",
                                      string="Budget Line", required=False,
-                                     index=True)
+                                     index=True, copy=False)
 
     remaining_amount = fields.Float(string="Remaining Amount", required=False,
                                     compute='get_budget_remaining_amount',store=True
