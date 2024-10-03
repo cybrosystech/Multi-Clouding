@@ -16,7 +16,7 @@ class purchase_order(models.Model):
                                        string="Advance Payment", copy=False)
 
     def action_view_adv_payments(self):
-        action = self.env.ref('account.action_account_payments_payable').read()[
+        action = self.env.ref('account.action_account_payments_payable').sudo().read()[
             0]
         action['domain'] = [('id', 'in', self.adv_payment_ids.ids)]
         action['context'] = {'create': 0}
