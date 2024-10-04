@@ -13,7 +13,7 @@
     'depends': ['account', 'lease_management'],
 
     'data':
-        [
+        [   'views/product_view.xml',
             'views/account_move.xml',
             'views/account_move_line_views.xml',
         ],

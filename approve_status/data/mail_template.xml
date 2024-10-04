@@ -3,24 +3,24 @@
         <record id="email_template_budget_check_rejection" model="mail.template">
             <field name="name">Rejected: Send by email</field>
             <field name="model_id" ref="approve_status.model_account_move"/>
-            <field name="partner_to">${object.create_uid.partner_id.id}</field>
-            <field name="subject">Rejection (Ref ${object.name or 'n/a'})</field>
+            <field name="partner_to">{{object.create_uid.partner_id.id}}</field>
+            <field name="subject">Rejection (Ref {{object.name or 'n/a'}})</field>
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px;">
                     <p style="margin: 0px; padding: 0px; font-size: 13px;">
                         Dear
-                        ${object.create_uid.partner_id.name},
+                        <t t-out="object.create_uid.partner_id.name or ''"></t>,
                         <br/>
                         <br/>
-                        your
-                        <strong>${object.journal_id.name}</strong>
-                        Has been rejected due to the
+                        Your
+                        <strong><t t-out="object.name or ''"></t> </strong>
+                        has been rejected due to the
                         <br/>
                         <p>
-                            ${ctx['reason']}
+                            <t t-esc="ctx.get('reason', '')"> </t>
                         </p>
                         <br/>
-                        Rejected by ${object.env.user.partner_id.name}
+                        Rejected by <t t-out="object.env.user.partner_id.name or ''"></t>.
                     </p>
                 </div>
             </field>
@@ -30,24 +30,24 @@
         <record id="email_template_budget_check_rejection_purchase" model="mail.template">
             <field name="name">Rejected: Send by email</field>
             <field name="model_id" ref="approve_status.model_purchase_order"/>
-            <field name="partner_to">${object.create_uid.partner_id.id}</field>
-            <field name="subject">Rejection (Ref ${object.name or 'n/a'})</field>
+            <field name="partner_to">{{object.create_uid.partner_id.id}}</field>
+            <field name="subject">Rejection (Ref {{object.name or 'n/a'}})</field>
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px;">
                     <p style="margin: 0px; padding: 0px; font-size: 13px;">
                         Dear
-                        ${object.create_uid.partner_id.name},
+                        <t t-out="object.create_uid.partner_id.name or ''"></t>,
                         <br/>
                         <br/>
-                        your
-                        <strong>${object.name}</strong>
-                        Has been rejected due to the
+                        Your
+                        <strong><t t-out="object.name or ''"></t> </strong>
+                        has been rejected due to the
                         <br/>
                         <p>
-                            ${ctx['reason']}
+                            <t t-esc="ctx.get('reason', '')"> </t>
                         </p>
                         <br/>
-                        Rejected by ${object.env.user.partner_id.name}
+                        Rejected by <t t-out="object.env.user.partner_id.name or ''"></t>.
                     </p>
                 </div>
             </field>
@@ -57,24 +57,24 @@
         <record id="email_template_budget_check_rejection_sales" model="mail.template">
             <field name="name">Rejected: Send by email</field>
             <field name="model_id" ref="approve_status.model_sale_order"/>
-            <field name="partner_to">${object.create_uid.partner_id.id}</field>
-            <field name="subject">Rejection (Ref ${object.name or 'n/a'})</field>
+            <field name="partner_to">{{object.create_uid.partner_id.id}}</field>
+            <field name="subject">Rejection (Ref {{object.name or 'n/a'}})</field>
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px;">
                     <p style="margin: 0px; padding: 0px; font-size: 13px;">
                         Dear
-                        ${object.create_uid.partner_id.name},
+                        <t t-out="object.create_uid.partner_id.name or ''"></t>,
                         <br/>
                         <br/>
-                        your
-                        <strong>${object.name}</strong>
-                        Has been rejected due to the
+                        Your
+                        <strong><t t-out="object.name or ''"></t> </strong>
+                       has been rejected due to the
                         <br/>
                         <p>
-                            ${ctx['reason']}
+                            <t t-esc="ctx.get('reason', '')"> </t>
                         </p>
                         <br/>
-                        Rejected by ${object.env.user.partner_id.name}
+                        Rejected by <t t-out="object.env.user.partner_id.name or ''"></t>.
                     </p>
                 </div>
             </field>
@@ -84,24 +84,24 @@
         <record id="email_template_budget_check_rejection_asset" model="mail.template">
             <field name="name">Rejected: Send by email</field>
             <field name="model_id" ref="account_asset.model_account_asset"/>
-            <field name="partner_to">${object.create_uid.partner_id.id}</field>
-            <field name="subject">Rejection (Ref ${object.name or 'n/a'})</field>
+            <field name="partner_to">{{object.create_uid.partner_id.id}}</field>
+            <field name="subject">Rejection (Ref {{object.name or 'n/a'}})</field>
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px;">
                     <p style="margin: 0px; padding: 0px; font-size: 13px;">
                         Dear
-                        ${object.create_uid.partner_id.name},
+                        <t t-out="object.create_uid.partner_id.name or ''"></t>,
                         <br/>
                         <br/>
-                        your
-                        <strong>${object.name}</strong>
-                        Has been rejected due to the
+                        Your
+                        <strong><t t-out="object.name or ''"></t> </strong>
+                        has been rejected due to the
                         <br/>
                         <p>
-                            ${ctx['reason']}
+                            <t t-esc="ctx.get('reason', '')"> </t>
                         </p>
                         <br/>
-                        Rejected by ${object.env.user.partner_id.name}
+                        Rejected by <t t-out="object.env.user.partner_id.name or ''"></t>.
                     </p>
                 </div>
             </field>

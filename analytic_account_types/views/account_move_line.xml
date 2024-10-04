@@ -54,16 +54,6 @@
                     <field name="is_from_sales" invisible="1"/>
                     <field name="show_confirm_button" invisible="1"/>
                     <field name="show_post_button" invisible="1"/>
-                    <button name="action_post" string="Confirm"
-                            class="oe_highlight"
-                            type="object" groups="account.group_account_invoice"
-                            invisible="is_from_purchase == False or state != 'draft' "
-                    />
-                    <button name="action_post" string="Confirm"
-                            class="oe_highlight"
-                            type="object" groups="account.group_account_invoice"
-                            invisible="is_from_sales == False or state != 'draft'"
-                    />
                     <button name="request_approval_button"
                             string="Request Approval" type="object"
                             class="btn-primary"
@@ -194,12 +184,11 @@
             <field name="inherit_id" ref="account.view_move_line_tree"/>
              <field name="arch" type="xml">
                  <field name="analytic_distribution" position="before">
-                     <field name="analytic_account_id" invisible="move_id.is_admin == True" options="{'no_quick_create': True, 'no_create_edit': True}" />
-                     <field name="project_site_id"  invisible="move_id.is_admin == True" options="{'no_quick_create': True, 'no_create_edit': True}"/>
-                      <field name="analytic_account_id"  invisible="move_id.is_admin == False"/>
-                     <field name="project_site_id"  invisible="move_id.is_admin == False" />
+                      <field name="analytic_account_id"/>
+                     <field name="project_site_id"/>
                  </field>
              </field>
          </record>
     </data>
 </odoo>
+

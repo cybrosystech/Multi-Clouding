@@ -92,12 +92,14 @@ class SaleOrder(models.Model):
         budgets = self.order_line.mapped('budget_id')
         budget_lines = []
         budgets = set(budgets)
-        for bud in budgets:
-            if bud not in self.budget_collect_ids.mapped('budget_id'):
-                budget_lines.append((0, 0, {
-                    'budget_id': bud.id
-                }))
-        self.write({'budget_collect_ids': budget_lines})
+        if budgets:
+            budget_collects = self.budget_collect_ids.mapped('budget_id')
+            for bud in budgets:
+                if bud not in budget_collects:
+                    budget_lines.append((0, 0, {
+                        'budget_id': bud.id
+                    }))
+            self.write({'budget_collect_ids': budget_lines})
 
     def send_user_notification(self, user):
         for use in user:
