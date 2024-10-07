@@ -258,10 +258,10 @@
                                         <field name="type"/>
                                         <field name="amount"
                                                invisible="type != 'amount'"
-                                               required="type == 'amount'"/>
+                                               required="type == 'amount'" sum="Total"/>
                                         <field name="percentage"
                                                invisible="type != 'percentage'"
-                                               required="type == 'percentage'"/>
+                                               required="type == 'percentage'" sum="Total"/>
                                     </tree>
                                 </field>
                             </page>
