@@ -7,7 +7,7 @@ class AccountMoveLine(models.Model):
 
     deferred_account_id = fields.Many2one('account.account',
                                           string="Deferred Account",
-                                          domain="[('account_type','in',['asset_prepayments','asset_current'])]",
+                                          domain="[('account_type','in',['asset_prepayments','asset_current','liability_current'])]",
                                           copy=False)
 
     @api.model
