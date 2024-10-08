@@ -30,6 +30,7 @@
         'views/account_group.xml',
         'views/account_asset_views.xml',
         'views/account_move_line.xml',
+        'views/stock_move_views.xml',
 
     ],
     "license": 'AGPL-3',

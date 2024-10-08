@@ -34,14 +34,20 @@ class PurchaseOrder(models.Model):
             is_admin = False
         return is_admin
 
+    # def compute_is_admin(self):
+    #     for rec in self:
+    #         if self.env.user.id == SUPERUSER_ID or self.env.user.has_group(
+    #                 'base.group_erp_manager') or self.env.user.has_group(
+    #                 'base.group_system'):
+    #             rec.is_admin = True
+    #         else:
+    #             rec.is_admin = False
     def compute_is_admin(self):
-        for rec in self:
-            if self.env.user.id == SUPERUSER_ID or self.env.user.has_group(
-                    'base.group_erp_manager') or self.env.user.has_group(
-                    'base.group_system'):
-                rec.is_admin = True
-            else:
-                rec.is_admin = False
+        is_admin = self.env.user.id == SUPERUSER_ID or \
+                   self.env.user.has_group('base.group_erp_manager') or \
+                   self.env.user.has_group('base.group_system')
+        # Perform bulk write on all records at once
+        self.write({'is_admin': is_admin})
 
     def button_cancel(self):
         res = super(PurchaseOrder, self).button_cancel()
@@ -292,6 +298,12 @@ class PurchaseOrderLine(models.Model):
     remaining_amount = fields.Float(string="Remaining Amount", required=False,
                                     compute='get_budget_remaining_amount')
     local_subtotal = fields.Float(compute='compute_local_subtotal', store=True)
+    site_status = fields.Selection(
+        [('on_air', 'ON AIR'), ('off_air', 'OFF AIR'), ],
+        string='Site Status')
+    t_budget = fields.Selection(
+        [('capex', 'CAPEX'), ('opex', 'OPEX'), ],
+        string='T.Budget')
 
 
     @api.onchange('budget_id')
@@ -336,3 +348,39 @@ class PurchaseOrderLine(models.Model):
         res = super(PurchaseOrderLine, self)._prepare_account_move_line()
         res.update({'budget_id': self.budget_id.id, })
         return res
+
+    def _prepare_stock_move_vals(self, picking, price_unit, product_uom_qty, product_uom):
+        self.ensure_one()
+        self._check_orderpoint_picking_type()
+        product = self.product_id.with_context(lang=self.order_id.dest_address_id.lang or self.env.user.lang)
+        date_planned = self.date_planned or self.order_id.date_planned
+        return {
+            # truncate to 2000 to avoid triggering index limit error
+            # TODO: remove index in master?
+            'name': (self.product_id.display_name or '')[:2000],
+            'product_id': self.product_id.id,
+            'date': date_planned,
+            'date_deadline': date_planned,
+            'location_id': self.order_id.partner_id.property_stock_supplier.id,
+            'location_dest_id': (self.orderpoint_id and not (self.move_ids | self.move_dest_ids)) and self.orderpoint_id.location_id.id or self.order_id._get_destination_location(),
+            'picking_id': picking.id,
+            'partner_id': self.order_id.dest_address_id.id,
+            'move_dest_ids': [(4, x) for x in self.move_dest_ids.ids],
+            'state': 'draft',
+            'purchase_line_id': self.id,
+            'company_id': self.order_id.company_id.id,
+            'price_unit': price_unit,
+            'picking_type_id': self.order_id.picking_type_id.id,
+            'group_id': self.order_id.group_id.id,
+            'origin': self.order_id.name,
+            'description_picking': product.description_pickingin or self.name,
+            'propagate_cancel': self.propagate_cancel,
+            'warehouse_id': self.order_id.picking_type_id.warehouse_id.id,
+            'product_uom_qty': product_uom_qty,
+            'product_uom': product_uom.id,
+            'product_packaging_id': self.product_packaging_id.id,
+            'sequence': self.sequence,
+            'site_status':self.site_status,
+            't_budget':self.t_budget,
+        }
+
