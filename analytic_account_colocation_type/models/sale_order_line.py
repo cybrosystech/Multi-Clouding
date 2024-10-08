@@ -51,6 +51,8 @@ class SaleOrderLine(models.Model):
             'type_id': self.type_id.id,
             'location_id': self.location_id.id,
             'co_location_id': self.co_location_id.id,
+            'site_status': self.site_status,
+            't_budget': self.t_budget,
         })
         return res
 
