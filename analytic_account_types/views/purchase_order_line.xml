@@ -45,6 +45,8 @@
                     <field name="budget_line_id" optional="show" readonly="state not in ['draft']"/>
                     <field name="remaining_amount" optional="show" readonly="1"/>
                     <field name="local_subtotal" optional="hide" readonly="1" />
+                    <field name="t_budget" optional="hide"/>
+                    <field name="site_status" optional="hide"/>
                 </xpath>
                 <xpath expr="//notebook" position="inside">
                     <page string="Out Budget Amounts" name="budget_amounts">
