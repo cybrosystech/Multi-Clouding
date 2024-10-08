@@ -383,4 +383,3 @@ class PurchaseOrderLine(models.Model):
             'site_status':self.site_status,
             't_budget':self.t_budget,
         }
-

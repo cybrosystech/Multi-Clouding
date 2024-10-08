@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from odoo import api, fields, models, _, SUPERUSER_ID
+from odoo import api, fields, models, _, SUPERUSER_ID, tools
 from odoo.exceptions import UserError
 from odoo.tools import float_compare, float_round
 from textwrap import shorten
 from odoo.tools import (format_date)
 from markupsafe import escape
+from collections import defaultdict
+
 
 
 class AccountMove(models.Model):
@@ -50,12 +52,19 @@ class AccountMove(models.Model):
             is_admin = False
         return is_admin
 
+    # def compute_is_admin(self):
+    #     is_admin = self.env.user.id == SUPERUSER_ID or \
+    #                self.env.user.has_group('base.group_erp_manager') or \
+    #                self.env.user.has_group('base.group_system')
+    #     # Perform bulk write on all records at once
+    #     self.write({'is_admin': is_admin})
     def compute_is_admin(self):
-        for rec in self:
-            if self.env.user.id == SUPERUSER_ID or self.env.user.has_group('base.group_erp_manager') or self.env.user.has_group('base.group_system'):
-                rec.is_admin = True
-            else:
-                rec.is_admin = False
+        is_admin = self.env.user.id == SUPERUSER_ID or \
+                   self.env.user.has_group('base.group_erp_manager') or \
+                   self.env.user.has_group('base.group_system')
+        # Perform bulk write on all records at once
+        self.write({'is_admin': is_admin})
+
 
     @api.depends('line_ids.balance')
     def _compute_depreciation_value(self):
@@ -176,22 +185,47 @@ class AccountMove(models.Model):
 
     @api.depends('invoice_line_ids.purchase_line_id')
     def check_if_from_purchase(self):
+        grouped_invoice_lines = defaultdict(list)
+        # Precompute invoice lines and their respective move_ids in one pass
+        invoice_lines = self.mapped('invoice_line_ids').filtered(
+            lambda line: line.purchase_line_id)
+        for line in invoice_lines:
+            grouped_invoice_lines[line.move_id.id].append(line)
+        # Iterate over records without batch processing (avoid tools.split_every if not necessary)
         for rec in self:
-            if not rec.env.context.get('generate_analytic_distribution'):
-                rec.is_from_purchase = False
-                purchased = rec.invoice_line_ids.filtered(
-                    lambda x: x.purchase_line_id)
-                if purchased:
-                    rec.is_from_purchase = True
+            rec.is_from_purchase = bool(grouped_invoice_lines.get(rec.id))
+
+        # @api.depends('invoice_line_ids.purchase_line_id')
+        # def check_if_from_purchase(self):
+        # for rec in self:
+        #     rec.is_from_purchase = False
+        #     purchased = rec.invoice_line_ids.filtered(
+        #         lambda x: x.purchase_line_id)
+        #     if purchased:
+        #         rec.is_from_purchase = True
 
     @api.depends('invoice_line_ids.sale_line_ids')
     def check_if_from_sales(self):
+        grouped_invoice_lines = defaultdict(list)
+        # Precompute invoice lines and their respective move_ids in one pass
+        invoice_lines = self.mapped('invoice_line_ids').filtered(
+            lambda line: line.sale_line_ids)
+        for line in invoice_lines:
+            grouped_invoice_lines[line.move_id.id].append(line)
+        # Iterate over records without batch processing (avoid tools.split_every if not necessary)
         for rec in self:
-            if not rec.env.context.get('generate_analytic_distribution'):
-                rec.is_from_sales = False
-                sales = rec.invoice_line_ids.filtered(lambda x: x.sale_line_ids)
-                if sales:
-                    rec.is_from_sales = True
+            rec.is_from_sales = bool(grouped_invoice_lines.get(rec.id))
+
+
+    # @api.depends('invoice_line_ids.sale_line_ids')
+    # def check_if_from_sales(self):
+    #     print("check_if_from_sales")
+    #     for rec in self:
+    #         print("context2",rec.env.context)
+    #         rec.is_from_sales = False
+    #         sales = rec.invoice_line_ids.filtered(lambda x: x.sale_line_ids)
+    #         if sales:
+    #             rec.is_from_sales = True
 
 
     @api.depends('purchase_approval_cycle_ids','state','purchase_approval_cycle_ids.is_approved','purchase_approval_cycle_ids.user_approve_ids')
@@ -226,12 +260,11 @@ class AccountMove(models.Model):
     @api.depends('line_ids.budget_id', 'line_ids.remaining_amount')
     def check_out_budget(self):
         for rec in self:
-            if not rec.env.context.get('generate_analytic_distribution'):
-                rec.out_budget = False
-                lines = rec.line_ids.filtered(lambda x: not x.budget_id)
-                if lines.filtered(
-                        lambda x: x.remaining_amount < x.debit or x.remaining_amount < x.credit):
-                    rec.out_budget = True
+            rec.out_budget = False
+            lines = rec.line_ids.filtered(lambda x: not x.budget_id)
+            if lines.filtered(
+                    lambda x: x.remaining_amount < x.debit or x.remaining_amount < x.credit):
+                rec.out_budget = True
 
     @api.onchange('invoice_line_ids')
     def get_budgets_in_out_budget_tab(self):
@@ -386,102 +419,6 @@ class AccountMove(models.Model):
                 journal.message_post(body=message)
 
     # /////////// End of Approval Cycle According To In Budget or Out Budget in Po Configuration //////////////
-
-    # def _auto_create_asset(self):
-    #     create_list = []
-    #     invoice_list = []
-    #     auto_validate = []
-    #     for move in self:
-    #         if not move.move_type == 'entry':
-    #             if not move.is_invoice():
-    #                 continue
-    #
-    #             for move_line in move.line_ids:
-    #                 if (
-    #                         move_line.account_id
-    #                         and (move_line.account_id.can_create_asset)
-    #                         and move_line.account_id.create_asset != "no"
-    #                         and not (
-    #                         move_line.currency_id or move.currency_id).is_zero(
-    #                     move_line.price_total)
-    #                         and not move_line.asset_ids
-    #                         and not move_line.tax_line_id
-    #                         and move_line.price_total > 0
-    #                         and not (move.move_type in ('out_invoice',
-    #                                                     'out_refund') and move_line.account_id.internal_group == 'asset')
-    #                 ):
-    #                     if not move_line.name:
-    #                         raise UserError(
-    #                             _('Journal Items of {account} should have a label in order to generate an asset').format(
-    #                                 account=move_line.account_id.display_name))
-    #                     amount_total = amount_left = move_line.debit + move_line.credit
-    #                     unit_uom = self.env.ref('uom.product_uom_unit')
-    #
-    #                     if move_line.account_id.multiple_assets_per_line and ((
-    #                                                                                   move_line.product_uom_id and move_line.product_uom_id.category_id.id == unit_uom.category_id.id) or not move_line.product_uom_id):
-    #                         units_quantity = move_line.product_uom_id._compute_quantity(
-    #                             move_line.quantity, unit_uom, False)
-    #                     else:
-    #                         units_quantity = 1
-    #
-    #                     while units_quantity > 0:
-    #                         if units_quantity > 1:
-    #                             original_value = float_round(
-    #                                 amount_left / units_quantity,
-    #                                 precision_rounding=move_line.company_currency_id.rounding)
-    #                             amount_left = float_round(
-    #                                 amount_left - original_value,
-    #                                 precision_rounding=move_line.company_currency_id.rounding)
-    #                         else:
-    #                             original_value = amount_left
-    #                         vals = {
-    #                             'name': move_line.name,
-    #                             'company_id': move_line.company_id.id,
-    #                             'currency_id': move_line.company_currency_id.id,
-    #                             'analytic_distribution': move_line.analytic_distribution,
-    #                             'original_move_line_ids': [
-    #                                 (6, False, move_line.ids)],
-    #                             'state': 'draft',
-    #                             'acquisition_date': move.invoice_date if not move.reversed_entry_id else move.reversed_entry_id.invoice_date,
-    #                             'original_value': original_value,
-    #                         }
-    #                         model_id = move_line.account_id.asset_model
-    #                         if model_id:
-    #                             vals.update({
-    #                                 'model_id': model_id.id,
-    #                             })
-    #                         auto_validate.append(
-    #                             move_line.account_id.create_asset == 'validate')
-    #                         invoice_list.append(move)
-    #                         create_list.append(vals)
-    #                         units_quantity -= 1
-    #                     model_id = move_line.account_id.asset_model
-    #                     if model_id:
-    #                         vals.update({
-    #                             'model_id': model_id.id,
-    #                         })
-    #                     auto_validate.extend([
-    #                                              move_line.account_id.create_asset == 'validate'] * units_quantity)
-    #                     invoice_list.extend([move] * units_quantity)
-    #                     for i in range(1, units_quantity + 1):
-    #                         if units_quantity > 1:
-    #                             vals['name'] = move_line.name + _(" (%s of %s)",
-    #                                                               i,
-    #                                                               units_quantity)
-    #                         create_list.extend([vals.copy()])
-    #
-    #     assets = self.env['account.asset'].with_context({}).create(create_list)
-    #     for asset, vals, invoice, validate in zip(assets, create_list,
-    #                                               invoice_list, auto_validate):
-    #         if 'model_id' in vals:
-    #             asset._onchange_model_id()
-    #             if validate:
-    #                 asset.validate()
-    #         if invoice:
-    #             asset.message_post(body=escape(
-    #                 _('Asset created from invoice: %s')) % invoice._get_html_link())
-    #             asset._post_non_deductible_tax_value()
-    #     return assets
 
     def _auto_create_asset(self):
         create_list = []
@@ -701,7 +638,7 @@ class AccountMoveLine(models.Model):
     analytic_account_id = fields.Many2one(
         comodel_name="account.analytic.account", string='Cost Center', domain=[
             ('analytic_account_type', '=',
-             'cost_center')], )
+             'cost_center')])
     project_site_id = fields.Many2one(comodel_name="account.analytic.account",
                                       string="Project/Site",
                                       domain=[
@@ -716,15 +653,21 @@ class AccountMoveLine(models.Model):
                                   string="Location", domain=[
             ('analytic_account_type', '=', 'location')], required=False, )
     budget_id = fields.Many2one(comodel_name="crossovered.budget",
-                                string="Budget", required=False, index=True, copy=False)
+                                string="Budget", required=False, index=True,copy=False)
     budget_line_id = fields.Many2one(comodel_name="crossovered.budget.lines",
                                      string="Budget Line", required=False,
-                                     index=True, copy=False)
+                                     index=True,copy=False)
 
     remaining_amount = fields.Float(string="Remaining Amount", required=False,
                                     compute='get_budget_remaining_amount',store=True
                                     )
     local_subtotal = fields.Float(compute='compute_local_subtotal', store=True)
+    site_status = fields.Selection(
+        [('on_air', 'ON AIR'), ('off_air', 'OFF AIR'), ],
+        string='Site Status')
+    t_budget = fields.Selection(
+        [('capex', 'CAPEX'), ('opex', 'OPEX'), ],
+        string='T.Budget')
 
     @api.onchange('analytic_distribution')
     def _inverse_analytic_distribution(self):
