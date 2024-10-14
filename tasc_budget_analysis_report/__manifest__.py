@@ -18,7 +18,7 @@
             'views/account_report_views.xml',
             'views/account_report_actions.xml',
             'views/menuitems.xml',
-            # 'views/account_move_budget_conf_button_view.xml',
+            'wizard/budget_analysis_summary_views.xml'
         ],
     'assets': {
         'web.assets_backend': [

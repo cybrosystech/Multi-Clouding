@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from collections import defaultdict
 from odoo import api, fields, models, _
 
 
@@ -34,16 +35,16 @@ class CrossOveredBudgetLines(models.Model):
     @api.depends('planned_amount', 'practical_amount')
     def get_remaining_amount(self):
         for rec in self:
-            rec.remaining_amount = rec.planned_amount + rec.practical_amount
+            rec.remaining_amount = rec.planned_amount - rec.practical_amount
 
     @api.depends('planned_amount', 'practical_amount')
     def get_actual_percentage(self):
         for rec in self:
             if rec.planned_amount != 0:
-                rec.actual_percentage = (
-                                                abs(rec.practical_amount) * 100) / rec.planned_amount
+                rec.actual_percentage = (abs(rec.practical_amount) * 100) / rec.planned_amount
             else:
                 rec.actual_percentage = 0.0
+
 
     @api.depends("crossovered_budget_id", "general_budget_id",
                  "analytic_account_id")
@@ -64,100 +65,46 @@ class CrossOveredBudgetLines(models.Model):
             record.name = computed_name
 
     def _compute_practical_amount(self):
-        analytic_line_ids = []
         for line in self:
-            if 'default_move_type' not in list(self._context.keys()):
-                analytic_accounts = self.filtered(lambda
-                                                      x: x.general_budget_id.id == line.general_budget_id.id).mapped(
-                    'analytic_account_id').ids
-                acc_ids = line.general_budget_id.account_ids.ids
-                date_to = line.date_to
-                date_from = line.date_from
-                if acc_ids and line.analytic_account_id and line.project_site_id:
-                    analytic_line_obj = self.env['account.analytic.line']
-                    domain = [('id', 'not in', analytic_line_ids),
-                              ('account_id', '=', line.analytic_account_id.id),
-                              ('date', '>=', date_from),
-                              ('date', '<=', date_to),
-                              ('general_account_id', 'in', acc_ids)]
-                    where_query = analytic_line_obj._where_calc(domain)
-                    analytic_line_obj._apply_ir_rules(where_query, 'read')
-                    from_clause, where_clause, where_clause_params = where_query.get_sql()
-                    select = "SELECT id , amount from " + from_clause + " where " + where_clause
-                    self.env.cr.execute(select, where_clause_params)
-                    fetched_dict = self.env.cr.dictfetchall()
-                    if fetched_dict:
-                        total = sum(
-                            list(map(lambda x: x['amount'], fetched_dict)))
-                        analytic_line_ids += list(
-                            map(lambda x: x['id'], fetched_dict))
-                        line.practical_amount = total if total else 0
-                    else:
-                        line.practical_amount = 0
-                elif acc_ids and line.analytic_account_id:
-                    analytic_line_obj = self.env['account.analytic.line']
-                    domain = [('id', 'not in', analytic_line_ids),
-                              ('account_id', '=', line.analytic_account_id.id),
-                              ('date', '>=', date_from),
-                              ('date', '<=', date_to),
-                              ('general_account_id', 'in', acc_ids)]
-                    where_query = analytic_line_obj._where_calc(domain)
-                    analytic_line_obj._apply_ir_rules(where_query, 'read')
-                    from_clause, where_clause, where_clause_params = where_query.get_sql()
-                    select = "SELECT id ,amount from " + from_clause + " where " + where_clause
-                    self.env.cr.execute(select, where_clause_params)
-                    fetched_dict = self.env.cr.dictfetchall()
-                    if fetched_dict:
-                        total = sum(
-                            list(map(lambda x: x['amount'], fetched_dict)))
-                        analytic_line_ids += list(
-                            map(lambda x: x['id'], fetched_dict))
-                        line.practical_amount = total if total else 0
-                    else:
-                        line.practical_amount = 0
-                elif acc_ids and line.project_site_id:
-                    analytic_line_obj = self.env['account.analytic.line']
-                    domain = [('id', 'not in', analytic_line_ids),
-                              ('date', '>=', date_from),
-                              ('date', '<=', date_to),
-                              ('general_account_id', 'in', acc_ids),
-                              ]
-                    where_query = analytic_line_obj._where_calc(domain)
-                    analytic_line_obj._apply_ir_rules(where_query, 'read')
-                    from_clause, where_clause, where_clause_params = where_query.get_sql()
-                    select = "SELECT id, amount from " + from_clause + " where " + where_clause
-                    self.env.cr.execute(select, where_clause_params)
-                    fetched_dict = self.env.cr.dictfetchall()
-                    if fetched_dict:
-                        total = sum(
-                            list(map(lambda x: x['amount'], fetched_dict)))
-                        analytic_line_ids += list(
-                            map(lambda x: x['id'], fetched_dict))
-                        line.practical_amount = total if total else 0
-                    else:
-                        line.practical_amount = 0
-                else:
-                    analytic_line_obj = self.env['account.analytic.line']
-                    domain = [('id', 'not in', analytic_line_ids),
-                              ('account_id', 'not in', analytic_accounts),
-                              ('date', '>=', date_from),
-                              ('date', '<=', date_to),
-                              ('general_account_id', 'in', acc_ids)]
-                    where_query = analytic_line_obj._where_calc(domain)
-                    analytic_line_obj._apply_ir_rules(where_query, 'read')
-                    from_clause, where_clause, where_clause_params = where_query.get_sql()
-                    select = "SELECT id , amount from " + from_clause + " where " + where_clause
-                    self.env.cr.execute(select, where_clause_params)
-                    fetched_dict = self.env.cr.dictfetchall()
-                    if fetched_dict:
-                        total = sum(
-                            list(map(lambda x: x['amount'], fetched_dict)))
-                        analytic_line_ids += list(
-                            map(lambda x: x['id'], fetched_dict))
-                        line.practical_amount = total if total else 0
-                    else:
-                        line.practical_amount = 0
-                line.practical_demo = line.practical_amount
+            item_amount =0
+            amount = 0
+            if not line.analytic_account_id and not line.project_site_id:
+                lines = self.env['crossovered.budget.lines'].search(
+                    [('crossovered_budget_id', '=',
+                      line.crossovered_budget_id.id),
+                     ('general_budget_id', '=', line.general_budget_id.id),
+                     ('analytic_account_id', '!=', False),
+                     ('project_site_id', '!=', False), ('id', '!=', line.id),
+                     ('date_from', '=', line.date_from),
+                     ('date_to', '=', line.date_to)
+                     ])
+                amount = sum(lines.mapped('practical_amount'))
+                journal_items = self.env['account.move.line'].search([(
+                    'account_id',
+                    'in',
+                    line.general_budget_id.account_ids.ids),
+                    (
+                        'parent_state',
+                        '=',
+                        'posted'), ('date', '>=', line.date_from),
+                    ('date', '<=', line.date_to)])
+                item_amount = sum(journal_items.mapped('balance'))
+                line.practical_amount = item_amount - amount
+                line.practical_demo = item_amount - amount
+
+            elif line.analytic_account_id and line.project_site_id:
+                journal_items = self.env['account.move.line'].search([(
+                    'account_id',
+                    'in',
+                    line.general_budget_id.account_ids.ids),
+                    ('analytic_account_id', '=', line.analytic_account_id.id),
+                    ('project_site_id', '=', line.project_site_id.id),
+                    ('parent_state', '=', 'posted'),
+                    ('date', '>=', line.date_from),
+                    ('date', '<=', line.date_to)])
+                item_amount = sum(journal_items.mapped('balance'))
+                line.practical_amount = item_amount
+                line.practical_demo = item_amount
             else:
                 line.practical_amount = 0
                 line.practical_demo = 0
