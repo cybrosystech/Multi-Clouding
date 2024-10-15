@@ -163,6 +163,8 @@ class BudgetAnalysisSummaryReportWizard(models.Model):
             orderby='crossovered_budget_id,general_budget_id',
             lazy=False
         )
+        crossovered_budget_line_ids = self.env['crossovered.budget.lines'].search(domain)
+        crossovered_budget_line_ids._compute_practical_amount()
         return records
 
     def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data,
