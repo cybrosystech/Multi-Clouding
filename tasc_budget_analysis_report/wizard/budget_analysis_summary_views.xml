@@ -26,14 +26,14 @@
     </record>
     <record id="action_budget_analysis_summary"
             model="ir.actions.act_window">
-        <field name="name">Tasc Budget Analysis Summary Report</field>
+        <field name="name">TASC Budget Analysis Summary Report</field>
         <field name="res_model">budget.analysis.summary</field>
         <field name="type">ir.actions.act_window</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
     </record>
     <menuitem id="menu_budget_analysis_summary"
-              name="Tasc Budget Analysis Summary"
+              name="TASC Budget Analysis Summary"
               parent="cash_flow_statement_report.tasc_dynamic_reports"
               action="action_budget_analysis_summary"/>
 </odoo>
