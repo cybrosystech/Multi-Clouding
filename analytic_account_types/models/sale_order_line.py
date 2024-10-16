@@ -34,14 +34,20 @@ class SaleOrder(models.Model):
             is_admin = False
         return is_admin
 
+    # def compute_is_admin(self):
+    #     for rec in self:
+    #         if self.env.user.id == SUPERUSER_ID or self.env.user.has_group(
+    #                 'base.group_erp_manager') or self.env.user.has_group(
+    #                 'base.group_system'):
+    #             rec.is_admin = True
+    #         else:
+    #             rec.is_admin = False
     def compute_is_admin(self):
-        for rec in self:
-            if self.env.user.id == SUPERUSER_ID or self.env.user.has_group(
-                    'base.group_erp_manager') or self.env.user.has_group(
-                    'base.group_system'):
-                rec.is_admin = True
-            else:
-                rec.is_admin = False
+        is_admin = self.env.user.id == SUPERUSER_ID or \
+                   self.env.user.has_group('base.group_erp_manager') or \
+                   self.env.user.has_group('base.group_system')
+        # Perform bulk write on all records at once
+        self.write({'is_admin': is_admin})
 
     def _can_be_confirmed(self):
         self.ensure_one()
@@ -214,6 +220,12 @@ class SalesOrderLine(models.Model):
                               string="Type",
                               domain=[('analytic_account_type', '=',
                                        'type')], required=False, )
+    site_status = fields.Selection(
+        [('on_air', 'ON AIR'), ('off_air', 'OFF AIR'), ],
+        string='Site Status')
+    t_budget = fields.Selection(
+        [('capex', 'CAPEX'), ('opex', 'OPEX'), ],
+        string='T.Budget')
 
     @api.depends('price_subtotal')
     def compute_local_subtotal(self):

@@ -401,7 +401,7 @@ class TascCashFlowReportCustomHandler(models.AbstractModel):
                 budget_line = self.env['crossovered.budget.lines'].browse(
                     values['budget_line_id'])
                 remaining_amount = budget_line.remaining_amount
-                acutal_percentage = budget_line.actual_percentage
+                acutal_percentage = budget_line.percentage
 
                 for column in options['columns']:
                     if column.get('expression_label') == 'budget':
@@ -479,7 +479,7 @@ class TascCashFlowReportCustomHandler(models.AbstractModel):
                     budget_line = self.env['crossovered.budget.lines'].browse(
                         values['budget_line_id'])
                     remaining_amount = budget_line.remaining_amount
-                    acutal_percentage = budget_line.actual_percentage
+                    acutal_percentage = budget_line.percentage
 
                     for column in options['columns']:
                         # if column.get('expression_label') not in ['additional_col_1', 'additional_col_2']:
