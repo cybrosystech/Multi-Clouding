@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="tasc_trial_balance_detailed_report_wizard_view_form" model="ir.ui.view">
+        <field name="name">TASC Trial Balance Report Detailed Wizard View</field>
+        <field name="model">tasc.trial.balance.detail.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Report Options">
+                <group>
+                    <group>
+                        <field name="company_id" readonly="1"/>
+                        <field name="date_filter"/>
+                        <field name="start_date" invisible="date_filter != 'custom'"/>
+
+                    </group>
+                    <group>
+                        <field name="state" required="1"/>
+                        <field name="end_date" invisible="date_filter != 'custom'"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="print_report_xlsx" string="PRINT"
+                            type="object"
+                            default_focus="1" class="oe_highlight"/>
+                    <button string="Cancel" class="btn btn-default"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_tasc_trial_balance_detailed_report_wizard"
+            model="ir.actions.act_window">
+        <field name="name">TASC Trial Balance Detailed</field>
+        <field name="res_model">tasc.trial.balance.detail.report.wizard</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+    <menuitem id="menu_tasc_trial_balance_detailed_report"
+              name="TASC Trial Balance Detailed"
+              parent="cash_flow_statement_report.tasc_dynamic_reports"
+              action="action_tasc_trial_balance_detailed_report_wizard"/>
+</odoo>

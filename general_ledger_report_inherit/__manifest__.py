@@ -14,6 +14,7 @@
     'data':
         [
             'reports/general_ledger.xml',
+            'reports/partner_ledger.xml'
         ],
     'installable': True,
     'auto_install': False,
