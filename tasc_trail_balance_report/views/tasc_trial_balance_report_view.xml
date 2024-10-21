@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <odoo>
     <record id="tasc_trial_balance_report" model="account.report">
-        <field name="name">Tasc Trial Balance</field>
+        <field name="name">TASC Trial Balance</field>
         <field name="filter_period_comparison" eval="False"/>
         <field name="filter_hide_0_lines">never</field>
         <field name="default_opening_date_filter">this_month</field>
