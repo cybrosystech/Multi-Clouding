@@ -72,7 +72,8 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
                     journal.code                                                                     AS journal_code,
                     {journal_name}                                                                   AS journal_name,
                     %s                                                                               AS column_group_key,
-                    'directly_linked_aml'                                                            AS key
+                    'directly_linked_aml'                                                            AS key,
+                    0                                                                                AS partial_id
                 FROM {tables}
                 JOIN account_move ON account_move.id = account_move_line.move_id
                 LEFT JOIN {ct_query} ON currency_table.company_id = account_move_line.company_id
@@ -116,7 +117,8 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
                     journal.code                                                                        AS journal_code,
                     {journal_name}                                                                      AS journal_name,
                     %s                                                                                  AS column_group_key,
-                    'indirectly_linked_aml'                                                             AS key
+                    'indirectly_linked_aml'                                                             AS key,
+                    partial.id                                                                          AS partial_id
                 FROM {tables}
                     LEFT JOIN {ct_query} ON currency_table.company_id = account_move_line.company_id,
                     account_partial_reconcile partial,
@@ -167,5 +169,3 @@ class PartnerLedgerCustomHandler(models.AbstractModel):
                 rslt[aml_result['partner_id']].append(aml_result)
 
         return rslt
-
-
