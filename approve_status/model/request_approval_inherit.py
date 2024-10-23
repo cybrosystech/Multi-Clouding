@@ -4,7 +4,7 @@ from odoo import models, fields
 class PurchaseOrderInheritApproval(models.Model):
     _inherit = 'purchase.order'
 
-    request_approve_bool = fields.Boolean(default=False)
+    request_approve_bool = fields.Boolean(default=False,copy=False)
 
     def request_approval_button(self):
         self.get_budgets_in_out_budget_tab()
@@ -75,7 +75,7 @@ class PurchaseOrderInheritApproval(models.Model):
 class SaleOrderRequestApproval(models.Model):
     _inherit = 'sale.order'
 
-    request_approve_bool = fields.Boolean(default=False)
+    request_approve_bool = fields.Boolean(default=False,copy=False)
 
     def request_approval_button(self):
         self.get_budgets_in_out_budget_tab()

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from odoo import models, fields, api, _,SUPERUSER_ID
 from odoo.exceptions import ValidationError, UserError
 
@@ -19,7 +18,7 @@ class PurchaseOrder(models.Model):
                                          compute='check_show_approve_button',
                                          copy=False)
     show_request_approve_button = fields.Boolean(string="", copy=False)
-    show_button_confirm = fields.Boolean(string="", copy=False)
+    show_button_confirm = fields.Boolean(string="", copy=False,default=False)
     state = fields.Selection(
         selection_add=[('to_approve', 'To Approve'), ('sent',), ],
         ondelete={'to_approve': 'set default', 'draft': 'set default', })
@@ -167,23 +166,29 @@ class PurchaseOrder(models.Model):
             self.show_button_confirm = True
 
     def button_approve_purchase_cycle(self):
-        max_seq_approval = max(
-            self.purchase_approval_cycle_ids.mapped('approval_seq'))
-        approval_levels = len(self.purchase_approval_cycle_ids.ids)
-        last_approval = self.purchase_approval_cycle_ids.filtered(
-            lambda x: x.approval_seq == int(max_seq_approval))
-        last_approval_id = last_approval
-        for line in self.purchase_approval_cycle_ids:
-            if not line.is_approved:
-                line.is_approved = True
-                notification_to_user = self.purchase_approval_cycle_ids.filtered(
-                    lambda x: x.approval_seq == int(line.approval_seq + 1))
-                if notification_to_user:
-                    user = notification_to_user.user_approve_ids
-                    self.send_user_notification(user)
-                if line == last_approval_id:
-                    self.button_confirm()
-                break
+        for po in self:
+            if not po.purchase_approval_cycle_ids:
+                po.button_request_purchase_cycle()
+            if po.purchase_approval_cycle_ids:
+                min_seq_approval = min(
+                    po.purchase_approval_cycle_ids.filtered(
+                        lambda x: x.is_approved is not True).mapped(
+                        'approval_seq'))
+                last_approval = po.purchase_approval_cycle_ids.filtered(
+                    lambda x: x.approval_seq == int(min_seq_approval))
+                if po.env.user not in last_approval.user_approve_ids:
+                    raise UserError(
+                        'You cannot approve this record' + ' ' + str(
+                            po.name))
+                last_approval.is_approved = True
+                po.send_user_notification(last_approval.user_approve_ids)
+                if not po.purchase_approval_cycle_ids.filtered(
+                        lambda x: x.is_approved is False):
+                    po.button_confirm()
+                message = 'Level ' + str(
+                    last_approval.approval_seq) + ' Approved by :' + str(
+                    po.env.user.name)
+                po.message_post(body=message)
 
     def button_confirm(self):
         for order in self:
