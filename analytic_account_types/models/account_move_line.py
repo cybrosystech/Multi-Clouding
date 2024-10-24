@@ -52,12 +52,7 @@ class AccountMove(models.Model):
             is_admin = False
         return is_admin
 
-    # def compute_is_admin(self):
-    #     is_admin = self.env.user.id == SUPERUSER_ID or \
-    #                self.env.user.has_group('base.group_erp_manager') or \
-    #                self.env.user.has_group('base.group_system')
-    #     # Perform bulk write on all records at once
-    #     self.write({'is_admin': is_admin})
+
     def compute_is_admin(self):
         is_admin = self.env.user.id == SUPERUSER_ID or \
                    self.env.user.has_group('base.group_erp_manager') or \

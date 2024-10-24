@@ -7,6 +7,7 @@
         <field name="arch" type="xml">
             <xpath expr="//page[@name='invoicing']/group/group[1]"
                    position="inside">
+                <field name="company_ids" widget="many2many_tags"/>
                 <field name="asset_account_id"
                        groups="account.group_account_readonly"/>
                 <field name="cip_account_id"
@@ -16,6 +17,14 @@
                    position="inside">
                 <field name="inventory_account_id"
                        groups="account.group_account_readonly"/>
+            </xpath>
+            <xpath expr="//page[@name='general_information']/group/group[@name='group_standard_price']/field[@name='company_id']"
+                   position="after">
+                    <field name="company_ids" groups="base.group_multi_company"
+                                        options="{'no_create': True}" widget="many2many_tags"/>            </xpath>
+            <xpath expr="//page[@name='general_information']/group/group[@name='group_standard_price']/field[@name='company_id']"
+                   position="attributes">
+                   <attribute name="invisible">1</attribute>
             </xpath>
         </field>
     </record>

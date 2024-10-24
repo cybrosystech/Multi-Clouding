@@ -1,4 +1,4 @@
-from odoo import api, fields, models
+from odoo import api, fields, models,tools
 
 
 class AccountMove(models.Model):
@@ -16,18 +16,58 @@ class AccountMove(models.Model):
                                       search='_search_cost_center_id')
     reference = fields.Char(string="Tasc Reference")
 
-    @api.depends('invoice_line_ids.project_site_id','invoice_line_ids.analytic_account_id','invoice_line_ids.sequence')
+    # @api.depends('invoice_line_ids.project_site_id','invoice_line_ids.analytic_account_id','invoice_line_ids.sequence')
+    # def compute_project_site_cost_center(self):
+    #     for rec in self:
+    #         move_line_id = self.env['account.move.line'].search(
+    #             [('id', 'in', rec.invoice_line_ids.ids)], limit=1,
+    #             order="sequence,id ASC")
+    #         if move_line_id:
+    #             rec.project_site_id = move_line_id.project_site_id.id
+    #             rec.analytic_account_id = move_line_id.analytic_account_id.id
+    #         else:
+    #             rec.project_site_id = False
+    #             rec.analytic_account_id = False
+
+
+    @api.depends('invoice_line_ids.project_site_id',
+                 'invoice_line_ids.analytic_account_id',
+                 'invoice_line_ids.sequence')
     def compute_project_site_cost_center(self):
-        for rec in self:
-            move_line_id = self.env['account.move.line'].search(
-                [('id', 'in', rec.invoice_line_ids.ids)], limit=1,
-                order="sequence,id ASC")
-            if move_line_id:
-                rec.project_site_id = move_line_id.project_site_id.id
-                rec.analytic_account_id = move_line_id.analytic_account_id.id
-            else:
+        all_invoice_line_ids = self.mapped('invoice_line_ids').ids
+        if not all_invoice_line_ids:
+            for rec in self:
                 rec.project_site_id = False
                 rec.analytic_account_id = False
+            return
+
+        move_lines = self.env['account.move.line'].search_read(
+            [('id', 'in', all_invoice_line_ids)],
+            ['id', 'move_id', 'project_site_id', 'analytic_account_id'],
+            order="sequence,id ASC"
+        )
+        # Create a mapping of move_id to move line data
+        move_line_map = {}
+        for move_line in move_lines:
+            move_id = move_line['move_id']
+            if move_id not in move_line_map:  # Only take the first occurrence
+                move_line_map[move_id] = move_line
+
+        # Process records in smaller batches
+        for batch in tools.split_every(500, self):
+            for rec in batch:
+
+                move_id_key = (rec.id, rec.display_name)
+                # Look up the move line data based on the correct key
+                move_line_data = move_line_map.get(move_id_key,
+                                                   False)
+                if move_line_data:
+                    rec.project_site_id = move_line_data['project_site_id']
+                    rec.analytic_account_id = move_line_data[
+                        'analytic_account_id']
+                else:
+                    rec.project_site_id = False
+                    rec.analytic_account_id = False
 
     def _search_project_site_id(self, operator, value):
         move_ids = self.env['account.move'].search([])
