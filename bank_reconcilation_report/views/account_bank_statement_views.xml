@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="account.action_bank_statement_tree"
+            model="ir.actions.act_window">
+        <field name="name">Bank Statements</field>
+        <field name="res_model">account.bank.statement</field>
+        <field name="view_mode">tree,form,pivot,graph</field>
+        <field name="domain">['|', ('journal_id', '=', False),('journal_id.type', '=', 'bank')]</field>
+        <field name="context">{'journal_type':'bank'}</field>
+        <field name="search_view_id" ref="account.view_bank_statement_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Register a bank statement
+            </p>
+            <p>
+                A bank statement is a summary of all financial transactions
+                occurring over a given period of time on a bank account. You
+                should receive this periodically from your bank.
+            </p>
+            <p>
+                Odoo allows you to reconcile a statement line directly with
+                the related sale or purchase invoices.
+            </p>
+        </field>
+    </record>
+
+
+    <record id="account_accountant.view_bank_statement_tree" model="ir.ui.view">
+        <field name="name">account.bank.statement.tree</field>
+        <field name="model">account.bank.statement</field>
+        <field name="inherit_id" ref="account.view_bank_statement_tree"/>
+        <field name="arch" type="xml">
+            <field name="name" position="attributes">
+                <attribute name="widget">bank_rec_widget_open</attribute>
+            </field>
+            <field name="company_id" position="after">
+                <field name="total_lines"/>
+                <field name="total_lines_reconciled"/>
+                <field name="state"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="account_accountant.view_bank_statement_form_bank_rec_widget" model="ir.ui.view">
+        <field name="name">account.bank.statement.form.bank_rec_widget</field>
+        <field name="model">account.bank.statement</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <form string="Bank Statement">
+                <div class="alert alert-warning text-center" role="alert"
+                     invisible="is_valid and is_complete">
+                    <field name="problem_description"/>
+                </div>
+                <header>
+                    <field name="state" widget="statusbar" nolabel="1"/>
+                    <field name="request_approve_bool" invisible="1"
+                    />
+                    <field name="show_request_approve_button"
+                           invisible="1"/>
+                    <field name="show_approve_button" invisible="1"/>
+                                    <field name="total_lines" invisible="1"/>
+                <field name="total_lines_reconciled" invisible="1"/>
+
+                    <button string="Request Approval"
+                            name="request_approval_button"
+                            type="object" class="btn-secondary"
+                            invisible="(state in ['approved', 'selected','in_approval'] or request_approve_bool == True or show_request_approve_button == True or total_lines == 0) or (total_lines!=0 and total_lines!=total_lines_reconciled)"/>
+                    <button name="button_approve_payment_cycle" string="Approve"
+                            type="object" class="btn-primary"
+                            invisible="show_approve_button == False"
+                    />
+                    <button name="button_reject_payment_cycle" string="Reject"
+                            type="object" class="btn-primary"
+                            invisible="show_approve_button == False"
+                    />
+                </header>
+
+                <sheet>
+                    <group>
+                        <field name="create_date" invisible="1"/>
+                        <field name="is_valid" invisible="1"/>
+                        <field name="is_complete" invisible="1"/>
+                        <field name="currency_id" invisible="1"/>
+                        <field name="journal_id" invisible="1"/>
+                        <field name="name" required="1"/>
+                        <field name="balance_start"/>
+                        <field name="balance_end_real"/>
+                        <field name="attachment_ids" widget="many2many_binary"/>
+                    </group>
+                    <notebook>
+                        <page string="Approval Cycle" name="approval_cycle">
+                            <field name="approval_cycle_ids"
+                                   readonly="True">
+                                <tree>
+                                    <field name="approval_seq"/>
+                                    <field name="user_approve_ids"
+                                           widget="many2many_tags"/>
+                                    <field name="is_approved"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

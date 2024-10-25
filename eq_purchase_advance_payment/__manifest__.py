@@ -19,7 +19,7 @@
     payment | purchase payment | advance purchase payment | purchase order payment
      register payment from purchase order register payment from po advance payment 
      purchase Supplier Advance Payments""",
-    'depends': ['base', 'purchase'],
+    'depends': ['base', 'purchase','tasc_payment_approval'],
     'price': 10,
     'currency': 'EUR',
     'license': 'OPL-1',

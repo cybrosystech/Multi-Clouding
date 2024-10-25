@@ -72,6 +72,8 @@
                                 <field name="create_in_state_purchase"
                                        required="1"/>
                                 <field name="ref" string="Memo" invisible="1"/>
+                                <field name="purpose_code_id"/>
+
                             </group>
                             <group name="group2">
                                 <label for="amount"/>
@@ -88,9 +90,8 @@
                                 <field name="payment_method_line_id"
                                        invisible="1"/>
 
-                                <field name="partner_bank_id"
+                                <field name="partner_bank_id" string="Vendor Bank Account"
                                        context="{'default_partner_id': partner_id, 'display_account_trust': True}"
-                                       invisible="1"
                                 />
                                 <field name="destination_journal_id"
                                        context="{'default_partner_id': partner_id}"
