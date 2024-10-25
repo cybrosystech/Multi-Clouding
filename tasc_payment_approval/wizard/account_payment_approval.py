@@ -106,12 +106,25 @@ class PaymentApproval(models.Model):
              ('payment_type', '=', 'outbound')
              ])
         for line in payments:
+            bills = line.reconciled_bill_ids.filtered(lambda
+                                                                       inv: inv.move_type == 'in_invoice' and inv.state != 'cancel')
+            if bills:
+                purchase_orders = self.env['purchase.order'].search(
+                    [('name', 'in', bills.mapped('invoice_origin'))])
+            elif line.ref:
+                purchase_orders = self.env['purchase.order'].search(
+                    [('name', '=', line.ref)])
+            else:
+                purchase_orders = False
+
             usd_currency = self.env['res.currency'].search(
                 [('name', '=', 'USD')], limit=1)
             self.env['account.payment.approval.line'].create({
                 'payment_id': line.id,
                 'payment_approval_batch_id': self.id,
                 'usd_currency': usd_currency.id if usd_currency else False,
+                'purchase_ids': purchase_orders.ids if purchase_orders else False,
+                'invoice_ids': bills.ids if bills else False,
             })
 
     def request_approval_button(self):
@@ -172,7 +185,7 @@ class PaymentApprovalLine(models.Model):
     _description = 'Payment approval line'
 
     payment_id = fields.Many2one('account.payment',
-                                 domain="[('company_id','=',company_id)]")
+                                 domain="[('company_id','=',company_id)]",readonly=True)
     invoice_number = fields.Char("Invoice number",
                                  related='payment_id.invoice_number')
     partner_id = fields.Many2one('res.partner',
@@ -191,6 +204,9 @@ class PaymentApprovalLine(models.Model):
                                  compute='compute_amount_in_usd')
     usd_currency = fields.Many2one('res.currency', readonly=True)
     description = fields.Char(string="Description", help="Description")
+    purchase_ids = fields.Many2many('purchase.order',readonly=True)
+    invoice_ids = fields.Many2many('account.move',readonly=True)
+
 
     @api.model
     def create(self, vals):

@@ -1,5 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+            <template id="tax_groups_totals">
+            <t t-foreach="tax_totals['groups_by_subtotal'][subtotal_to_show]" t-as="amount_by_group">
+                <t t-set="display_tax_base" t-value="tax_totals['display_tax_base']"/>
+                <tr>
+                    <t t-if="tax_totals['display_tax_base']">
+                        <td>
+                         <span>Tax</span>
+                        </td>
+                        <td class="text-end ">
+                            <span class="text-nowrap" t-out="amount_by_group['formatted_tax_group_amount']">1.05</span>
+                        </td>
+                    </t>
+                    <t t-else="">
+                        <td>
+                            <span><strong>Tax</strong></span>
+                        </td>
+                        <td class="text-end ">
+                            <span class="text-nowrap" t-out="amount_by_group['formatted_tax_group_amount']">4.05</span>
+                        </td>
+                    </t>
+                </tr>
+            </t>
+        </template>
+
+            <template id="document_tax_totals_template">
+                <t t-if="discount!=0">
+                    <tr>
+                        <td>
+                            <strong>Discount</strong>
+                        </td>
+                        <td class="text-end">
+                            <span t-esc="o.currency_id.symbol"></span>
+                            <span t-esc="'{:,}'.format(round(discount, o.currency_id.decimal_places))"/>
+
+                        </td>
+                    </tr>
+                </t>
+
+            <t t-foreach="tax_totals.get('subtotals')" t-as="subtotal">
+                <tr class="border-black o_subtotal">
+                    <td><strong>Amount Before Tax</strong></td>
+                    <td class="text-end">
+                        <t t-set="untaxed_before_disc"
+                           t-value="o.amount_untaxed+discount"/>
+                        <span t-esc="o.currency_id.symbol"/> <span
+                                t-att-class="oe_subtotal_footer_separator"
+                                t-esc="'{:,}'.format(round(untaxed_before_disc, o.currency_id.decimal_places))">27.00</span>
+                    </td>
+                </tr>
+
+                <t t-set="subtotal_to_show" t-value="subtotal['name']"/>
+                <t t-call="tasc_purchase_reports.tax_groups_totals"/>
+            </t>
+
+            <tr t-if="'formatted_rounding_amount' in tax_totals and tax_totals.get('rounding_amount') != 0">
+                <td>Rounding</td>
+                <td class="text-end">
+                    <span t-out="tax_totals.get('formatted_rounding_amount')">0</span>
+                </td>
+            </tr>
+            <!--Total amount with all taxes-->
+            <tr class="border-black o_total">
+                <td><strong>Total</strong></td>
+                <td  class="text-end">
+                    <span t-out="tax_totals.get('formatted_amount_total')">31.05</span>
+                </td>
+            </tr>
+        </template>
+
     <template id="external_layout_striped">
         <div t-attf-class="o_company_#{company.id}_layout header"
              t-att-style="report_header_style">
@@ -650,7 +719,7 @@
                     </div>
 
                 </div>
-
+                <t t-set="discount" t-value="0"/>
                 <table class="table table-sm o_main_table table-borderless mt-4">
                     <thead style="display: table-row-group">
                         <tr>
@@ -678,6 +747,8 @@
                     <tbody>
                         <t t-set="current_subtotal" t-value="0"/>
                         <t t-foreach="o.order_line" t-as="line">
+                          <t t-set="discount" t-value="discount+((line.discount/100)*(line.price_unit*line.product_qty))"/>
+
                             <t t-set="current_subtotal"
                                t-value="current_subtotal + line.price_subtotal"/>
 
@@ -747,7 +818,7 @@
                     <div class="col-4">
                         <table class="table table-sm table-borderless">
                             <t t-set="tax_totals" t-value="o.tax_totals"/>
-                            <t t-call="purchase.document_tax_totals"/>
+                            <t t-call="tasc_purchase_reports.document_tax_totals_template"/>
                         </table>
                     </div>
                 </div>
@@ -818,10 +889,5 @@
             </t>
         </t>
     </template>
-
-    <!-- Allow edits (e.g. studio) without changing the often inherited base template -->
-    <template id="document_tax_totals"
-              inherit_id="account.document_tax_totals_template"
-              primary="True"></template>
 
 </odoo>
