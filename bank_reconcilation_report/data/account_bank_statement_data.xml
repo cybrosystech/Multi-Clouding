@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <record model="ir.cron" id="account_bank_statement_cron">
+            <field name="name">Bank Statement change state to approved and set total lines and lines reconciled</field>
+            <field name="model_id" ref="model_account_bank_statement"/>
+            <field name="state">code</field>
+            <field name="active">False</field>
+            <field name="code">model.action_bank_statement_change_state()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+        </record>
+
+         <record id="action_bulk_request_approval_statement" model="ir.actions.server">
+            <field name="name">Bulk Request</field>
+            <field name="type">ir.actions.server</field>
+            <field name="model_id" ref="account.model_account_bank_statement"/>
+            <field name="binding_model_id" ref="account.model_account_bank_statement"/>
+            <field name="state">code</field>
+            <field name="code">records.request_approval_button()</field>
+        </record>
+    </data>
+</odoo>
