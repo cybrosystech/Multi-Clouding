@@ -65,30 +65,56 @@
                                            options="{'currency_field': 'usd_currency'}"
                                     />
                                     <field name="company_id" invisible="1" column_invisible="1"/>
-                                    <field name="invoice_ids" readonly="1" widget="many2many_tags" optional="hide"/>
-                                    <field name="purchase_ids" readonly="1" widget="many2many_tags" optional="hide"/>
+                                    <field name="invoice_ids" readonly="1"
+                                           widget="many2many_tags"
+                                           optional="hide"/>
+                                    <field name="purchase_ids" readonly="1"
+                                           widget="many2many_tags"
+                                           optional="hide"/>
                                 </tree>
-                                                                <tree>
-                                    <field name="payment_id" invisible="1" column_invisible="1" optional="hide"/>
-                                    <field name="description"/>
-                                    <field name="invoice_number"
-                                           style="width:25px;" optional="hide"/>
-                                    <field name="partner_id"/>
-                                    <field name="usd_currency" invisible="1"
-                                           column_invisible="1"/>
-                                    <field name="currency_id"/>
-                                    <field name="payment_amount"
-                                           string="Payment Amount"
-                                           sum="Total Payment"/>
-                                    <field name="amount_in_usd"  optional="hide"
-                                           sum="Total Payment ($)"
-                                           widget="monetary"
-                                           options="{'currency_field': 'usd_currency'}"
-                                    />
-                                    <field name="company_id" invisible="1" column_invisible="1"/>
-                                    <field name="invoice_ids" readonly="1" widget="many2many_tags" optional="hide"/>
-                                    <field name="purchase_ids" readonly="1" widget="many2many_tags" optional="hide"/>
-                                </tree>
+                                <form>
+                                    <group>
+                                        <group>
+                                            <field name="payment_id"
+                                            />
+                                            <field name="description"/>
+                                            <field name="partner_id"/>
+                                            <field name="usd_currency"
+                                                   invisible="1"
+                                                   column_invisible="1"/>
+                                            <field name="invoice_number"
+                                            />
+                                        </group>
+                                        <group>
+                                            <field name="currency_id"/>
+                                            <field name="payment_amount"
+                                                   string="Payment Amount"
+                                                   sum="Total Payment"/>
+                                            <field name="amount_in_usd"
+                                                   optional="hide"
+                                                   sum="Total Payment ($)"
+                                                   widget="monetary"
+                                                   options="{'currency_field': 'usd_currency'}"
+                                            />
+                                            <field name="company_id"
+                                                   invisible="1"
+                                                   column_invisible="1"/>
+                                        </group>
+
+
+                                        <field name="invoice_ids"
+                                               readonly="1"
+
+                                        />
+                                        <field name="purchase_ids"
+                                               readonly="1"
+
+                                        />
+
+                                    </group>
+
+
+                                </form>
 
                             </field>
 

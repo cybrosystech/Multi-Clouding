@@ -1,5 +1,5 @@
 from odoo import api, models, fields
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 
 
 class PaymentApproval(models.Model):
@@ -103,7 +103,7 @@ class PaymentApproval(models.Model):
             [('payment_approval_batch_id', '=', False),
              ('date', '>=', self.from_date), ('date', '<=', self.to_date),
              ('company_id', '=', self.company_id.id),
-             ('payment_type', '=', 'outbound')
+             ('payment_type', '=', 'outbound'),('state','!=','cancel')
              ])
         for line in payments:
             bills = line.reconciled_bill_ids.filtered(lambda
@@ -185,7 +185,7 @@ class PaymentApprovalLine(models.Model):
     _description = 'Payment approval line'
 
     payment_id = fields.Many2one('account.payment',
-                                 domain="[('company_id','=',company_id)]",readonly=True)
+                                 domain="[('company_id','=',company_id)]")
     invoice_number = fields.Char("Invoice number",
                                  related='payment_id.invoice_number')
     partner_id = fields.Many2one('res.partner',
@@ -204,25 +204,48 @@ class PaymentApprovalLine(models.Model):
                                  compute='compute_amount_in_usd')
     usd_currency = fields.Many2one('res.currency', readonly=True)
     description = fields.Char(string="Description", help="Description")
-    purchase_ids = fields.Many2many('purchase.order',readonly=True)
-    invoice_ids = fields.Many2many('account.move',readonly=True)
+    purchase_ids = fields.Many2many('purchase.order',compute='compute_purchase_and_invoices',store=True)
+    invoice_ids = fields.Many2many('account.move',compute='compute_purchase_and_invoices',store=True)
 
+    _sql_constraints = [
+        ('unique_payment_per_payment_approval_batch', 'UNIQUE(payment_approval_batch_id, payment_id)',
+         'Each payment must be unique within an Payment approval.')
+    ]
 
-    @api.model
-    def create(self, vals):
-        res = super(PaymentApprovalLine, self).create(vals)
-        payment = self.env['account.payment'].browse(vals.get("payment_id"))
-        if payment:
-            payment.payment_approval_batch_id = vals.get(
-                "payment_approval_batch_id")
+    @api.depends('payment_id')
+    def compute_purchase_and_invoices(self):
+        for rec in self:
+            if rec.payment_id:
+                bills = rec.payment_id.reconciled_bill_ids.filtered(lambda
+                                                                         inv: inv.move_type == 'in_invoice' and inv.state != 'cancel')
+                if bills:
+                    purchase_orders = self.env['purchase.order'].search(
+                        [('name', 'in', bills.mapped('invoice_origin'))])
+                elif rec.payment_id.ref:
+                    purchase_orders = self.env['purchase.order'].search(
+                        [('name', '=', rec.payment_id.ref)])
+                else:
+                    purchase_orders = False
 
-            if payment.reconciled_bill_ids:
-                bill_ids = payment.reconciled_bill_ids
+                if bills:
+                    rec.invoice_ids = bills.ids
+                else:
+                    rec.invoice_ids = False
+
+                if purchase_orders:
+                    rec.purchase_ids = purchase_orders.ids
+                else:
+                    rec.purchase_ids = False
+
+    @api.onchange('payment_id')
+    def onchange_payment_id(self):
+        if self.payment_id:
+            if self.payment_id.reconciled_bill_ids:
+                bill_ids = self.payment_id.reconciled_bill_ids
                 bill = bill_ids[0]
                 if bill.invoice_line_ids:
                     first_line = bill.invoice_line_ids[0]
-                    res.description = first_line.name
-        return res
+                    self.description = first_line.name
 
     def unlink(self):
         for record in self:
