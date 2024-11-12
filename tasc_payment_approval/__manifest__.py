@@ -1,17 +1,14 @@
 {
     'name': 'Payment Approval',
     'summary': """Payment Approval""",
-
     'description': """
     1.Payment approval by batches..
     """,
-
     'author': "Aswathi",
     'website': "",
     'category': 'Accounting',
     'version': '17.0.1.0.0',
     'depends': ['account', 'analytic_account_types'],
-
     'data':
         [
             'data/mail_template.xml',
