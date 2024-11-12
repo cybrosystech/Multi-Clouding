@@ -125,6 +125,7 @@ class PaymentApproval(models.Model):
                 'usd_currency': usd_currency.id if usd_currency else False,
                 'purchase_ids': purchase_orders.ids if purchase_orders else False,
                 'invoice_ids': bills.ids if bills else False,
+                'description': line.ref,
             })
 
     def request_approval_button(self):
