@@ -76,7 +76,7 @@ class PaymentApproval(models.Model):
                 rec.env.user.name)
             rec.message_post(body=message)
 
-    @api.depends()
+    @api.depends('payment_approval_cycle_ids','payment_approval_cycle_ids.is_approved')
     def check_show_approve_button(self):
         self.show_approve_button = False
         current_approve = self.payment_approval_cycle_ids.filtered(

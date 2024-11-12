@@ -20,14 +20,12 @@ class PaymentApprovalCheck(models.Model):
     def check_lines(self):
         for rec in self:
             count_map = {}
-            latest_to = 0
             for line in rec.payment_approval_line_ids:
                 count = count_map.get(line.approval_seq, 0)
                 if count != 0:
                     raise ValidationError(
                         _('Cannot add the same sequence more than once, a sequence of  %s is repeated') % line.name)
                 count_map[line.approval_seq] = 1
-                latest_to = line.to_amount
 
 
 class PaymentApprovalCheckLine(models.Model):
