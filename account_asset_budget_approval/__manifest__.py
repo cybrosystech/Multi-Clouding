@@ -1,9 +1,7 @@
 {
     'name': 'Account Asset Budget Check',
-    'summary': """""",
-
-    'description': """""",
-
+    'summary': """The module contains asset approval""",
+    'description': """The module contains asset approval""",
     'author': "",
     'website': "",
     'category': 'Accounting',

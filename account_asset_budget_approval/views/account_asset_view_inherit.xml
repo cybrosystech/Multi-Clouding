@@ -14,9 +14,9 @@
                  <button name="request_approval_asset" string="Request Approval" type="object" class="btn-primary"
                  invisible="request_approval_bool == True or state not in ['draft']"/>
                  <button name="asset_approve" string="Approve" type="object" class="btn-primary"
-                 invisible="asset_approve_bool == False or approved_life_bool == True"/>
+                 invisible="asset_approve_bool == False"/>
                  <button name="reject_asset" string="Reject" type="object" class="btn-primary"
-                 invisible="asset_approve_bool == False or approved_life_bool == True"/>
+                 invisible="asset_approve_bool == False"/>
             </xpath>
             <button name="validate" position="replace">
                 <button name="validate" string="Confirm" type="object" class="oe_highlight"
