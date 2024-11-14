@@ -144,6 +144,8 @@ class UserActivityReportWizard(models.Model):
         col += 1
         worksheet.write(row, col, _('User Status'), header_format)
         col += 1
+        worksheet.write(row, col, _('Default Company'), header_format)
+        col += 1
         worksheet.write(row, col, _('Vendor Bills'), header_format)
         col += 1
         worksheet.write(row, col, _('Customer Invoices'), header_format)
@@ -200,6 +202,8 @@ class UserActivityReportWizard(models.Model):
             worksheet.write(row, col, user.login, STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, user.state, STYLE_LINE_Data)
+            col += 1
+            worksheet.write(row, col, user.company_id.name, STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, bill_count, STYLE_LINE_Data)
             col += 1
