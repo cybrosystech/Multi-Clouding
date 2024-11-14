@@ -17,7 +17,6 @@ class InOutAssetBudgets(models.Model):
     def check_lines(self):
         for rec in self:
             count_map = {}
-            latest_to = 0
             for line in rec.budget_line_ids:
                 count = count_map.get(line.approval_seq, 0)
                 if count != 0:
@@ -25,7 +24,6 @@ class InOutAssetBudgets(models.Model):
                         _('Cannot add the same sequence more than once, '
                           'asequence of  %s is repeated') % line.name)
                 count_map[line.approval_seq] = 1
-                latest_to = line.to_amount
 
     @api.onchange('active', 'company_id')
     def onchange_active_bool(self):

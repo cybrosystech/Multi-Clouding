@@ -111,20 +111,25 @@ class SaleOrder(models.Model):
         for use in user:
             reseiver = use.partner_id
             if reseiver:
-                for purchase in self:
-                    email_template_id = self.env.ref(
-                        'analytic_account_types.email_template_send_mail_approval_sales')
-                    ctx = self._context.copy()
-                    ctx.update({'name': use.name})
-                    # email_from = self.env["ir.config_parameter"].get_param(
-                    #     "mail.default.from", "migrate+default_from")
-                    if email_template_id:
-                        email_template_id.with_context(ctx).send_mail(self.id,
-                                                                      force_send=True,
-                                                                      email_values={
-                                                                          'email_to': use.email,
-                                                                          'model': None,
-                                                                          'res_id': None})
+                email_template_id = self.env.ref(
+                    'analytic_account_types.email_template_send_mail_approval_sales')
+                ctx = self._context.copy()
+                ctx.update({'name': use.name})
+                if email_template_id:
+                    email_from_alias = self.env[
+                        'ir.config_parameter'].sudo().get_param(
+                        'mail.default.from')
+                    if email_from_alias:
+                        email_from = f"Odoo ERP <{email_from_alias}>"
+                    else:
+                        email_from = f"Odoo ERP <{self.env.user.company_id.email}>"
+                    email_template_id.with_context(ctx).send_mail(self.id,
+                                                                  force_send=True,
+                                                                  email_values={
+                                                                      'email_from': email_from,
+                                                                      'email_to': use.email,
+                                                                      'model': None,
+                                                                      'res_id': None})
 
     def request_approval_button(self):
         self.get_budgets_in_out_budget_tab()
@@ -188,7 +193,14 @@ class SaleOrder(models.Model):
                         'You cannot approve this record' + ' ' + str(
                             so.name))
                 last_approval.is_approved = True
-                so.send_user_notification(last_approval.user_approve_ids)
+                remaining_approvals = so.sale_approval_cycle_ids.filtered(
+                        lambda x: x.is_approved is not True).mapped(
+                        'approval_seq')
+                if len(remaining_approvals) > 0:
+                    min_seq_approval_next = min(remaining_approvals)
+                    last_approval_to_approve = so.sale_approval_cycle_ids.filtered(
+                        lambda x: x.approval_seq == int(min_seq_approval_next))
+                    so.send_user_notification(last_approval_to_approve.user_approve_ids)
                 if not so.sale_approval_cycle_ids.filtered(
                         lambda x: x.is_approved is False):
                     so.action_confirm()

@@ -20,7 +20,7 @@ class AccountMoveReferenceInherit(models.Model):
                     move = (moves.filtered(
                         lambda
                             x: x.payment_reference == rec.payment_reference)).filtered(
-                        lambda x: x.id != rec.id)
+                        lambda x: x.id != rec.id and not rec.is_from_sales)
                     if move:
                         raise ValidationError(
                             'The Payment reference already exists in ' + move.name)
@@ -62,7 +62,7 @@ class AccountMoveReferenceInherit(models.Model):
                     move = (moves.filtered(
                         lambda
                             x: x.payment_reference == rec.payment_reference)).filtered(
-                        lambda x: x.id != rec.id)
+                        lambda x: x.id != rec.id and not rec.is_from_purchase)
                     if move:
                         raise ValidationError(
                             'The Payment reference already exists in ' + move.name)
@@ -104,13 +104,6 @@ class AccountMoveReferenceInherit(models.Model):
         if not moves:
             return
 
-        # self.env["account.move"].flush([
-        #     "ref", "move_type", "invoice_date", "journal_id",
-        #     "company_id", "partner_id", "commercial_partner_id",
-        # ])
-        # self.env["account.journal"].flush(["company_id"])
-        # self.env["res.partner"].flush(["commercial_partner_id"])
-
         # /!\ Computed stored fields are not yet inside the database.
         self._cr.execute('''
                 SELECT move2.id
@@ -131,7 +124,6 @@ class AccountMoveReferenceInherit(models.Model):
     def request_approval_button(self):
         """inherit of the function from account. Move to check the validation of
         payment reference"""
-        res = super(AccountMoveReferenceInherit, self).request_approval_button()
         journal = self.env['account.journal'].search([('name', '=',
                                                        'Vendor Bills')],
                                                      limit=1)
@@ -141,37 +133,39 @@ class AccountMoveReferenceInherit(models.Model):
                     raise ValidationError(
                         'please provide a Invoice no / payment reference for '
                         'Vendor Bill')
-            return res
+        res = super(AccountMoveReferenceInherit, self).request_approval_button()
+        return res
 
     def button_request_purchase_cycle(self):
         journal = self.env['account.journal'].search([('name', '=',
                                                        'Vendor Bills')],
                                                      limit=1)
         for record in self:
-            res = super(AccountMoveReferenceInherit,
-                        record).button_request_purchase_cycle()
             for rec in journal:
                 if record.journal_id.id == rec.id:
                     if not record.payment_reference:
                         raise ValidationError(
                             'please provide a Invoice no / payment reference for '
                             'Vendor Bill')
+            res = super(AccountMoveReferenceInherit,
+                        record).button_request_purchase_cycle()
+
             return res
 
 
     def action_post(self):
         """inherit of the function from account. Move to check the validation of
         payment reference"""
-        res = super(AccountMoveReferenceInherit, self).action_post()
         journal = self.env['account.journal'].search([('name', '=',
                                                        'Vendor Bills')],
                                                      limit=1)
-        for rec in journal:
-            if self.journal_id.id == rec.id:
-                if not self.payment_reference:
+        for rec in self:
+            if rec.journal_id.id == journal.id:
+                if not rec.payment_reference:
                     raise ValidationError(
                         'please provide a Invoice no / payment reference for'
                         ' Vendor Bill')
+        res = super(AccountMoveReferenceInherit, self).action_post()
         return res
 
     def action_cancel_draft_entries(self):
