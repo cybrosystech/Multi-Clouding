@@ -194,14 +194,13 @@ class SaleOrder(models.Model):
                             so.name))
                 last_approval.is_approved = True
                 remaining_approvals = so.sale_approval_cycle_ids.filtered(
-                    lambda x: x.is_approved is not True).mapped(
-                    'approval_seq')
+                        lambda x: x.is_approved is not True).mapped(
+                        'approval_seq')
                 if len(remaining_approvals) > 0:
                     min_seq_approval_next = min(remaining_approvals)
                     last_approval_to_approve = so.sale_approval_cycle_ids.filtered(
                         lambda x: x.approval_seq == int(min_seq_approval_next))
-                    so.send_user_notification(
-                        last_approval_to_approve.user_approve_ids)
+                    so.send_user_notification(last_approval_to_approve.user_approve_ids)
                 if not so.sale_approval_cycle_ids.filtered(
                         lambda x: x.is_approved is False):
                     so.action_confirm()
