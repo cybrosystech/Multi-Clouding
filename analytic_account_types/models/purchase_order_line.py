@@ -188,7 +188,16 @@ class PurchaseOrder(models.Model):
                         'You cannot approve this record' + ' ' + str(
                             po.name))
                 last_approval.is_approved = True
-                po.send_user_notification(last_approval.user_approve_ids)
+                remaining_approvals = po.purchase_approval_cycle_ids.filtered(
+                    lambda x: x.is_approved is not True).mapped(
+                    'approval_seq')
+                if len(remaining_approvals) > 0:
+                    min_seq_approval_next = min(
+                        remaining_approvals)
+                    last_approval_to_approve = po.purchase_approval_cycle_ids.filtered(
+                        lambda x: x.approval_seq == int(min_seq_approval_next))
+                    po.send_user_notification(
+                        last_approval_to_approve.user_approve_ids)
                 if not po.purchase_approval_cycle_ids.filtered(
                         lambda x: x.is_approved is False):
                     po.button_confirm()
