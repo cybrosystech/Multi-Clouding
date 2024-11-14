@@ -8,8 +8,8 @@ class PurchaseOrder(models.Model):
     def action_send_approval_reminder(self):
         date_threshold = fields.Datetime.now() - timedelta(days=2)
         purchase_orders = self.env['purchase.order'].search([
-            ('state', '=', 'approval'),  # Assuming "approval" is the state name
-            ('write_date', '<=', date_threshold),
+            ('state', '=', 'to_approve'),  # Assuming "approval" is the state name
+            ('write_date', '<=', date_threshold.date()),
         ])
         for po in purchase_orders:
             if po.purchase_approval_cycle_ids:
