@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="user_activity_report_wizard_view_form" model="ir.ui.view">
+        <field name="name">TASC User Activity Report Wizard View Form</field>
+        <field name="model">user.activity.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Report Options">
+                <group>
+                    <group>
+                        <field name="start_date"/>
+                    </group>
+                    <group>
+                        <field name="end_date"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="print_report_xlsx" string="PRINT"
+                            type="object"
+                            default_focus="1" class="oe_highlight"/>
+                    <button string="Cancel" class="btn btn-default"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_user_activity_report_wizard"
+            model="ir.actions.act_window">
+        <field name="name">TASC User Activity Report</field>
+        <field name="res_model">user.activity.report.wizard</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+    <menuitem id="menu_user_activity_report"
+              name="TASC User Activity"
+              parent="cash_flow_statement_report.tasc_dynamic_reports"
+              action="action_user_activity_report_wizard"/>
+</odoo>
