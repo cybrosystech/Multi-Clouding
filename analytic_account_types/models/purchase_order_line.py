@@ -106,20 +106,27 @@ class PurchaseOrder(models.Model):
         for us in user:
             reseiver = us.partner_id
             if reseiver:
-                for purchase in self:
-                    email_template_id = self.env.ref(
-                        'analytic_account_types.email_template_send_mail_approval_purchase')
-                    ctx = self._context.copy()
-                    ctx.update({'name': us.name})
-                    # email_from = self.env["ir.config_parameter"].get_param(
-                    #     "mail.default.from", "migrate+default_from")
-                    if email_template_id:
-                        email_template_id.with_context(ctx).send_mail(self.id,
-                                                                      force_send=True,
-                                                                      email_values={
-                                                                          'email_to': us.email,
-                                                                          'model': None,
-                                                                          'res_id': None})
+                email_template_id = self.env.ref(
+                    'analytic_account_types.email_template_send_mail_approval_purchase')
+                ctx = self._context.copy()
+                ctx.update({'name': us.name})
+                if email_template_id:
+                    email_from_alias = self.env[
+                        'ir.config_parameter'].sudo().get_param(
+                        'mail.default.from')
+                    # Construct the email if alias and domain exist
+                    if email_from_alias:
+                        email_from = f"Odoo ERP <{email_from_alias}>"
+                    else:
+                        # Fallback to the company email if catchall is not set
+                        email_from = f"Odoo ERP <{self.env.user.company_id.email}>"
+                    email_template_id.with_context(ctx).send_mail(self.id,
+                                                                  force_send=True,
+                                                                  email_values={
+                                                                      'email_from': email_from,
+                                                                      'email_to': us.email,
+                                                                      'model': None,
+                                                                      'res_id': None})
 
     def request_approval_button(self):
         self.get_budgets_in_out_budget_tab()

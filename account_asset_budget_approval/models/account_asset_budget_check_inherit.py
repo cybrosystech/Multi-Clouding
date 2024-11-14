@@ -1,6 +1,7 @@
 import re
 
 from odoo import api, models, fields
+from odoo.exceptions import UserError
 
 
 class AccountAssetBudget(models.Model):
@@ -36,19 +37,27 @@ class AccountAssetBudget(models.Model):
                     lambda x: x.is_approved == True):
                 self.request_approval_bool = False
 
+    @api.depends('asset_approval_cycle_ids',
+                 'asset_approval_cycle_ids.is_approved')
     def compute_approval_process(self):
-        approval_lines = self.asset_approval_cycle_ids
-        for rec in range(0, len(approval_lines)):
-            if approval_lines[rec].is_approved:
-                continue
+        self.asset_approve_bool = False
+        current_approve = self.asset_approval_cycle_ids.filtered(
+            lambda x: x.is_approved).mapped('approval_seq')
+
+        last_approval = max(current_approve) if current_approve else 0
+        check_last_approval_is_approved = self.asset_approval_cycle_ids.filtered(
+            lambda x: x.approval_seq == int(last_approval))
+        for rec in self.asset_approval_cycle_ids:
+            if check_last_approval_is_approved:
+                if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids and check_last_approval_is_approved.is_approved:
+                    self.asset_approve_bool = True
+                    break
             else:
-                self.life_cycle_id = approval_lines[rec]
+                if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids:
+                    self.asset_approve_bool = True
+                    break
                 break
-        if self.life_cycle_id.user_approve_ids.filtered(
-                lambda x: x.id == self.env.user.id):
-            self.asset_approve_bool = True
-        else:
-            self.asset_approve_bool = False
+
 
     def send_asset_user_notification(self, user_ids):
         for user in user_ids:
@@ -79,19 +88,42 @@ class AccountAssetBudget(models.Model):
                 approval_cycle_ids.append(purchase.id)
                 approval.append(rec.id)
         self.asset_approval_cycle_ids = [(6, 0, approval_cycle_ids)]
-
         if approval:
             self.state = 'to_approve'
             self.send_asset_user_notification(sorted_approval[0].user_ids)
 
+
     def asset_approve(self):
-        self.life_cycle_id.is_approved = True
-        if self.asset_approval_cycle_ids.filtered(
-                lambda x: x.is_approved == False):
-            self.approved_life_bool = False
-        else:
-            self.approved_life_bool = True
-            self.validate()
+        for asset in self:
+            if not asset.asset_approval_cycle_ids:
+                asset.request_approval_asset()
+            if asset.asset_approval_cycle_ids:
+                min_seq_approval = min(
+                    asset.asset_approval_cycle_ids.filtered(
+                        lambda x: x.is_approved is not True).mapped(
+                        'approval_seq'))
+                last_approval = asset.asset_approval_cycle_ids.filtered(
+                    lambda x: x.approval_seq == int(min_seq_approval))
+                if self.env.user not in last_approval.user_approve_ids:
+                    raise UserError(
+                        'You cannot approve this record' + ' ' + str(
+                            asset.name))
+                last_approval.is_approved = True
+                remaining_approvals = asset.asset_approval_cycle_ids.filtered(
+                        lambda x: x.is_approved is not True).mapped(
+                        'approval_seq')
+                if len(remaining_approvals) > 0:
+                    min_seq_approval_next = min(remaining_approvals)
+                    last_approval_to_approve = asset.asset_approval_cycle_ids.filtered(
+                        lambda x: x.approval_seq == int(min_seq_approval_next))
+                    asset.send_asset_user_notification(last_approval_to_approve.user_approve_ids)
+                if not asset.asset_approval_cycle_ids.filtered(
+                        lambda x: x.is_approved is False):
+                    asset.validate()
+                message = 'Level ' + str(
+                    last_approval.approval_seq) + ' Approved by :' + str(
+                    self.env.user.name)
+                asset.message_post(body=message)
 
     def reject_asset(self):
         view_id = self.env.ref('approve_status.view_budget_rejection_form').id
