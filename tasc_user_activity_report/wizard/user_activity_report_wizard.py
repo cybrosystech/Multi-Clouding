@@ -60,6 +60,12 @@ class UserActivityReportWizard(models.Model):
             'align': 'left',
             'valign': 'vcenter',
         })
+        STYLE_LINE_BOLD = workbook.add_format({
+            'bold': 1,
+            'border': 0,
+            'align': 'left',
+            'valign': 'vcenter',
+        })
         STYLE_LINE_HEADER = workbook.add_format({
             'bold': 1,
             'font_name': 'Aharoni',
@@ -102,7 +108,7 @@ class UserActivityReportWizard(models.Model):
 
         if report_data:
             self.add_xlsx_sheet(report_data, workbook, STYLE_LINE_Data,
-                                header_format, STYLE_LINE_HEADER, date_format)
+                                header_format, STYLE_LINE_HEADER, STYLE_LINE_BOLD)
 
         self.excel_sheet_name = 'TASC User Activity Report'
         workbook.close()
@@ -123,7 +129,7 @@ class UserActivityReportWizard(models.Model):
         return users
 
     def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data,
-                       header_format, STYLE_LINE_HEADER, date_format):
+                       header_format, STYLE_LINE_HEADER, STYLE_LINE_BOLD):
         """ Method to add datas to the TASC User Activity Report xlsx"""
         self.ensure_one()
         worksheet = workbook.add_worksheet(_('TASC User Activity Report'))
@@ -133,7 +139,7 @@ class UserActivityReportWizard(models.Model):
 
         row = 0
         col = 0
-        worksheet.merge_range(row, row, col, col + 15,
+        worksheet.merge_range(row, row, col, col + 17,
                               _('TASC User Activity Report'),
                               STYLE_LINE_HEADER)
         row += 1
@@ -141,6 +147,8 @@ class UserActivityReportWizard(models.Model):
         worksheet.write(row, col, _('User Name'), header_format)
         col += 1
         worksheet.write(row, col, _('User Login'), header_format)
+        col += 1
+        worksheet.write(row, col, _('Department'), header_format)
         col += 1
         worksheet.write(row, col, _('User Status'), header_format)
         col += 1
@@ -170,13 +178,29 @@ class UserActivityReportWizard(models.Model):
         col += 1
         worksheet.write(row, col, _('Outgoing Receipts'), header_format)
         col += 1
+        worksheet.write(row, col, _('Total Count'), header_format)
+        col += 1
         row += 1
+        purchase_order_count_total = 0
+        bill_count_total = 0
+        invoice_count_total = 0
+        asset_count_total = 0
+        incoming_receipts_count_total = 0
+        vendor_payment_count_total = 0
+        customer_payment_count_total = 0
+        reconcilation_count_total = 0
+        lease_count_total = 0
+        misc_count_total = 0
+        sale_order_count_total = 0
+        outgoing_receipts_count_total = 0
+
         for user in report_data:
+            total =0
             query = f"""
                     SELECT
                         (SELECT COUNT(*) FROM purchase_order WHERE create_uid = %s AND state != 'cancel' AND create_date >= '{self.start_date}' AND create_date <= '{self.end_date}') AS purchase_order_count,
                         (SELECT COUNT(*) FROM account_move WHERE create_uid = %s AND move_type = 'out_invoice' AND state != 'cancel' AND create_date >= '{self.start_date}' AND create_date <= '{self.end_date}') AS invoice_count,
-                        (SELECT COUNT(*) FROM account_move am INNER JOIN account_journal j ON j.id = am.journal_id WHERE am.create_uid = %s AND am.move_type = 'in_invoice' AND am.state != 'cancel' AND j.name ->>'en_US' ILIKE %s AND am.create_date >= '{self.start_date}' AND am.create_date <= '{self.end_date}') AS bill_count,
+                        (SELECT COUNT(*) FROM account_move am INNER JOIN account_journal j ON j.id = am.journal_id WHERE am.create_uid = %s AND am.move_type = 'in_invoice' AND am.state != 'cancel' AND j.name ->>'en_US' NOT ILIKE %s AND am.create_date >= '{self.start_date}' AND am.create_date <= '{self.end_date}') AS bill_count,
                         (SELECT COUNT(*) FROM account_move INNER JOIN account_journal ON account_journal.id = account_move.journal_id 
                         WHERE account_move.create_uid = %s AND account_move.state != 'cancel' AND account_journal.code ILIKE 'MISC' AND account_move.create_date >= '{self.start_date}' AND account_move.create_date <= '{self.end_date}') AS misc_count,
                         (SELECT COUNT(*) FROM account_asset WHERE create_uid = %s AND state != 'cancelled' AND create_date >= '{self.start_date}' AND create_date <= '{self.end_date}') AS asset_count,
@@ -196,10 +220,25 @@ class UserActivityReportWizard(models.Model):
             ))
             counts = self.env.cr.fetchone()
             purchase_order_count, invoice_count, bill_count,misc_count,asset_count,sale_order_count,lease_count,incoming_receipts_count,outgoing_receipts_count,vendor_payment_count,customer_payment_count,reconcilation_count  = counts
+            purchase_order_count_total += purchase_order_count
+            invoice_count_total+= invoice_count
+            bill_count_total+= bill_count
+            misc_count_total+=misc_count
+            asset_count_total+= asset_count
+            sale_order_count_total+=sale_order_count
+            lease_count_total+= lease_count
+            incoming_receipts_count_total+=incoming_receipts_count
+            outgoing_receipts_count_total+=outgoing_receipts_count
+            vendor_payment_count_total+=vendor_payment_count
+            customer_payment_count_total+=customer_payment_count
+            reconcilation_count_total+= reconcilation_count
+            total+=purchase_order_count+invoice_count+bill_count+misc_count+asset_count+sale_order_count+lease_count+incoming_receipts_count+outgoing_receipts_count+vendor_payment_count+customer_payment_count+reconcilation_count
             col = 0
             worksheet.write(row, col, user.name, STYLE_LINE_Data)
             col+=1
             worksheet.write(row, col, user.login, STYLE_LINE_Data)
+            col += 1
+            worksheet.write(row, col, user.employee_id.department_id.display_name, STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, user.state, STYLE_LINE_Data)
             col += 1
@@ -229,4 +268,44 @@ class UserActivityReportWizard(models.Model):
             col += 1
             worksheet.write(row, col, outgoing_receipts_count, STYLE_LINE_Data)
             col += 1
+            worksheet.write(row, col, total, STYLE_LINE_Data)
+            col += 1
             row+=1
+
+        col = 0
+        worksheet.write(row, col, '', STYLE_LINE_BOLD)
+        col += 1
+        worksheet.write(row, col, '', STYLE_LINE_BOLD)
+        col += 1
+        worksheet.write(row, col, '',
+                        STYLE_LINE_BOLD)
+        col += 1
+        worksheet.write(row, col, '', STYLE_LINE_BOLD)
+        col += 1
+        worksheet.write(row, col, 'Totals', STYLE_LINE_BOLD)
+        col += 1
+        worksheet.write(row, col, bill_count_total, STYLE_LINE_BOLD)
+        col += 1
+        worksheet.write(row, col, invoice_count_total, STYLE_LINE_BOLD)
+        col += 1
+        worksheet.write(row, col, asset_count_total, STYLE_LINE_BOLD)
+        col += 1
+        worksheet.write(row, col, purchase_order_count_total, STYLE_LINE_BOLD)
+        col += 1
+        worksheet.write(row, col, incoming_receipts_count_total, STYLE_LINE_BOLD)
+        col += 1
+        worksheet.write(row, col, vendor_payment_count_total, STYLE_LINE_BOLD)
+        col += 1
+        worksheet.write(row, col, customer_payment_count_total, STYLE_LINE_BOLD)
+        col += 1
+        worksheet.write(row, col, misc_count_total, STYLE_LINE_BOLD)
+        col += 1
+        worksheet.write(row, col, reconcilation_count_total, STYLE_LINE_BOLD)
+        col += 1
+        worksheet.write(row, col, lease_count_total, STYLE_LINE_BOLD)
+        col += 1
+        worksheet.write(row, col, sale_order_count_total, STYLE_LINE_BOLD)
+        col += 1
+        worksheet.write(row, col, outgoing_receipts_count_total, STYLE_LINE_BOLD)
+        col += 1
+        row += 1

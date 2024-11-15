@@ -672,6 +672,14 @@ class AccountMoveLine(models.Model):
         [('capex', 'CAPEX'), ('opex', 'OPEX'), ],
         string='T.Budget')
 
+    @api.constrains('project_site_id', 'display_type')
+    def _check_project_site_id(self):
+        for line in self:
+            if line.display_type not in (
+            'line_section', 'line_note') and line.display_type in ('product') and  not line.project_site_id:
+                raise ValidationError(
+                    "Missing required project site on invoice line.")
+
     @api.onchange('analytic_distribution')
     def _inverse_analytic_distribution(self):
         """ Unlink and recreate analytic_lines when modifying the distribution."""
