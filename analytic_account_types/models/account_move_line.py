@@ -675,10 +675,15 @@ class AccountMoveLine(models.Model):
     @api.constrains('project_site_id', 'display_type')
     def _check_project_site_id(self):
         for line in self:
-            if line.display_type not in (
-            'line_section', 'line_note') and line.display_type in ('product') and  not line.project_site_id:
-                raise ValidationError(
-                    "Missing required project site on invoice line.")
+            if self._context.get('action_name') and self._context.get(
+                    'action_name') == 'action_bank_statement_tree':
+                pass
+            else:
+                if line.display_type not in (
+                        'line_section', 'line_note') and line.display_type in (
+                'product') and not line.project_site_id:
+                    raise ValidationError(
+                        "Missing required project site on invoice line.")
 
     @api.onchange('analytic_distribution')
     def _inverse_analytic_distribution(self):
