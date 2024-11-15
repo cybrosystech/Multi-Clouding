@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from odoo import api, fields, models, _, SUPERUSER_ID, tools
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from odoo.tools import float_compare, float_round
 from textwrap import shorten
 from odoo.tools import (format_date)
