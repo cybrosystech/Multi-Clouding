@@ -77,7 +77,7 @@
             </td>
         </tr>
         <!--Total amount with all taxes-->
-        <tr class="border-black o_total">
+        <tr class="border-black">
             <td style="background-color: #f0f0f0; color: black;border: 1px solid #000;">
                 <strong>Total</strong>
             </td>
@@ -644,7 +644,7 @@
             <div class="row" style="display: flex; align-items: stretch;">
                 <!-- Left column content if needed -->
                 <div class="col-6" style="flex: 1; display: flex; flex-direction: column;">
-                    <span style="font-weight:bold;">Vendor</span>
+                    <span style="font-weight:bold;">Vendor Details</span>
                     <table style="border: 1px solid #000; width:90%; height: 100%;">
                         <thead>
                             <tr>
@@ -813,14 +813,17 @@
                     <thead style="display: table-row-group">
                         <tr>
                             <th style="width:5%; background-color: #f0f0f0; color: black;border: 1px solid #000;">Sl No</th>
-                            <th name="th_description" style="width: 50%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                            <th name="th_description" style="width: 40%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
                                 <strong>Description</strong>
                             </th>
-                            <th name="th_quantity" class="text-end" style="width: 13%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                            <th name="th_quantity" class="text-end" style="width: 10%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
                                 <strong>Qty</strong>
                             </th>
                             <th name="th_price_unit" class="text-end" style="width: 13%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
                                 <strong>Price (<t t-esc="o.currency_id.name"/>) </strong>
+                            </th>
+                             <th name="th_tax" class="text-end" style="width: 13%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                                <strong>Tax</strong>
                             </th>
                             <th name="th_subtotal" class="text-end" style="width: 25%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
                                 <strong>Amount (<t t-esc="o.currency_id.name"/>)
@@ -860,6 +863,13 @@
                                     <td style="background-color: transparent; color: black;border: 1px solid #000;" class="text-end">
                                         <span t-esc="'{:,}'.format(round(line.price_unit, o.currency_id.decimal_places))"/>
 
+                                    </td>
+
+                                                                        <t t-set="taxes"
+                                       t-value="', '.join([(tax.invoice_label or tax.name) for tax in line.taxes_id])"/>
+                                    <td name="td_taxes" style="background-color: transparent; color: black;border: 1px solid #000;"
+                                        t-attf-class="text-end {{ 'text-nowrap' if len(taxes) &lt; 10 else '' }}">
+                                        <span t-out="taxes"></span>
                                     </td>
                                     <td  style="background-color: transparent; color: black;border: 1px solid #000;" class="text-end">
                                         <t t-esc="'{:,}'.format(round(line.price_subtotal, o.currency_id.decimal_places))"/>
