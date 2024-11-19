@@ -643,7 +643,8 @@
 
             <div class="row" style="display: flex; align-items: stretch;">
                 <!-- Left column content if needed -->
-                <div class="col-6" style="flex: 1; display: flex; flex-direction: column;">
+                <div class="col-6"
+                     style="flex: 1; display: flex; flex-direction: column;">
                     <span style="font-weight:bold;">Vendor Details</span>
                     <table style="border: 1px solid #000; width:90%; height: 100%;">
                         <thead>
@@ -695,8 +696,10 @@
                 </div>
 
                 <!-- Right column with the table -->
-                <div class="col-6" style="flex: 1; display: flex; flex-direction: column;">
-                    <span style="font-weight:bold;float: left;padding-left: 40px;">Delivery
+                <div class="col-6"
+                     style="flex: 1; display: flex; flex-direction: column;">
+                    <span style="font-weight:bold;float: left;padding-left: 40px;">
+                        Delivery
                         Details
                     </span>
                     <t t-if="o.dest_address_id">
@@ -715,9 +718,41 @@
                                         Address
                                     </td>
                                     <td style="background-color: transparent; color: black;border: 1px solid #000;">
-                                        <div t-field="o.dest_address_id"
-                                             t-options='{"widget": "contact", "fields": ["address"], "no_marker": True}'/>
+                                        <div class="o_address_format"
+                                             name="address">
+                                            <t t-if="o.dest_address_id.street">
+                                                <t t-esc="o.dest_address_id.street"/>
+                                                <br/>
+                                            </t>
+                                            <t t-if="o.dest_address_id.street2">
 
+                                                <t t-esc="o.dest_address_id.street2"/>
+                                                <br/>
+                                            </t>
+                                            <t t-if="o.dest_address_id.city">
+
+                                                <t t-esc="o.dest_address_id.city"/>
+                                            </t>
+                                            <t t-if="o.dest_address_id.state_id.name">
+
+                                                <t t-esc="o.dest_address_id.state_id.name"/>
+                                            </t>
+                                            <t t-if="o.dest_address_id.zip">
+                                                <t t-esc="o.dest_address_id.zip"/>
+                                            </t>
+
+                                            <t t-if="o.dest_address_id.country_id.name">
+
+                                                <t t-esc="o.dest_address_id.country_id.name"/>
+                                                <br/>
+                                            </t>
+                                            <t t-if="o.dest_address_id.phone">
+
+                                                <t t-esc="o.dest_address_id.phone"/>
+                                                <br/>
+                                            </t>
+
+                                        </div>
                                     </td>
                                 </tr>
                                 <tr>
@@ -771,8 +806,36 @@
                                         Address
                                     </td>
                                     <td style="background-color: transparent; color: black;border: 1px solid #000;">
-                                        <div t-field="o.picking_type_id.warehouse_id.partner_id"
-                                             t-options='{"widget": "contact", "fields": ["address"], "no_marker": True}'/>
+                                        <div class="o_address_format"
+                                             name="address">
+                                            <t t-if="o.picking_type_id.warehouse_id.partner_id.street">
+                                                <t t-esc="o.picking_type_id.warehouse_id.partner_id.street"/>
+                                                <br/>
+                                            </t>
+                                            <t t-if="o.picking_type_id.warehouse_id.partner_id.street2">
+
+                                                <t t-esc="o.picking_type_id.warehouse_id.partner_id.street2"/>
+                                                <br/>
+                                            </t>
+                                            <t t-if="o.picking_type_id.warehouse_id.partner_id.city">
+
+                                                <t t-esc="o.picking_type_id.warehouse_id.partner_id.city"/>
+                                            </t>
+                                            <t t-if="o.picking_type_id.warehouse_id.partner_id.state_id.name">
+
+                                                <t t-esc="o.picking_type_id.warehouse_id.partner_id.state_id.name"/>
+                                            </t>
+                                            <t t-if="o.picking_type_id.warehouse_id.partner_id.zip">
+                                                <t t-esc="o.picking_type_id.warehouse_id.partner_id.zip"/>
+                                            </t>
+                                            <t t-if="o.picking_type_id.warehouse_id.partner_id.country_id.name">
+
+                                                <t t-esc="o.picking_type_id.warehouse_id.partner_id.country_id.name"/>
+                                                <br/>
+                                            </t>
+
+                                        </div>
+
                                     </td>
                                 </tr>
                                 <tr>
@@ -798,7 +861,6 @@
                                     <td style="background-color: transparent; color: black;border: 1px solid #000;">
                                         <span t-esc="o.user_id.partner_id.phone"/>
                                     </td>
-
                                 </tr>
                             </thead>
                         </table>
