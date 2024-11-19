@@ -818,10 +818,10 @@
                             <th name="th_description" style="width: 50%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
                                 <strong>Description</strong>
                             </th>
-                            <th name="th_quantity" class="text-end" style="width: 11%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                            <th name="th_quantity" class="text-end" style="width: 13%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
                                 <strong>Qty</strong>
                             </th>
-                            <th name="th_price_unit" class="text-end" style="width: 10%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                            <th name="th_price_unit" class="text-end" style="width: 13%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
                                 <strong>Price (<t t-esc="o.currency_id.name"/>) </strong>
                             </th>
                             <th name="th_subtotal" class="text-end" style="width: 25%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
