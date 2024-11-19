@@ -1,73 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-            <template id="tax_groups_totals">
-            <t t-foreach="tax_totals['groups_by_subtotal'][subtotal_to_show]" t-as="amount_by_group">
-                <t t-set="display_tax_base" t-value="tax_totals['display_tax_base']"/>
-                <tr>
-                    <t t-if="tax_totals['display_tax_base']">
-                        <td>
-                         <span>Tax</span>
-                        </td>
-                        <td class="text-end ">
-                            <span class="text-nowrap" t-out="amount_by_group['formatted_tax_group_amount']">1.05</span>
-                        </td>
-                    </t>
-                    <t t-else="">
-                        <td>
-                            <span><strong>Tax</strong></span>
-                        </td>
-                        <td class="text-end ">
-                            <span class="text-nowrap" t-out="amount_by_group['formatted_tax_group_amount']">4.05</span>
-                        </td>
-                    </t>
-                </tr>
-            </t>
-        </template>
-
-            <template id="document_tax_totals_template">
-                <t t-if="discount!=0">
-                    <tr>
-                        <td>
-                            <strong>Discount</strong>
-                        </td>
-                        <td class="text-end">
-                            <span t-esc="o.currency_id.symbol"></span>
-                            <span t-esc="'{:,}'.format(round(discount, o.currency_id.decimal_places))"/>
-
-                        </td>
-                    </tr>
-                </t>
-
-            <t t-foreach="tax_totals.get('subtotals')" t-as="subtotal">
-                <tr class="border-black o_subtotal">
-                    <td><strong>Amount Before Tax</strong></td>
-                    <td class="text-end">
-                        <t t-set="untaxed_before_disc"
-                           t-value="o.amount_untaxed+discount"/>
-                        <span t-esc="o.currency_id.symbol"/> <span
-                                t-att-class="oe_subtotal_footer_separator"
-                                t-esc="'{:,}'.format(round(untaxed_before_disc, o.currency_id.decimal_places))">27.00</span>
+    <template id="tax_groups_totals">
+        <t t-foreach="tax_totals['groups_by_subtotal'][subtotal_to_show]"
+           t-as="amount_by_group">
+            <t t-set="display_tax_base"
+               t-value="tax_totals['display_tax_base']"/>
+            <tr>
+                <t t-if="tax_totals['display_tax_base']">
+                    <td  style="background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                        <span>Tax</span>
                     </td>
-                </tr>
+                    <td class="text-end "  style="background-color: transparent; color: black;border: 1px solid #000;">
+                        <span class="text-nowrap"
+                              t-out="amount_by_group['formatted_tax_group_amount']">
+                            1.05
+                        </span>
+                    </td>
+                </t>
+                <t t-else="">
+                    <td style="background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                        <span>
+                            <strong>Tax</strong>
+                        </span>
+                    </td>
+                    <td class="text-end" style="background-color: transparent; color: black;border: 1px solid #000;">
+                        <span class="text-nowrap"
+                              t-out="amount_by_group['formatted_tax_group_amount']">
+                            4.05
+                        </span>
+                    </td>
+                </t>
+            </tr>
+        </t>
+    </template>
 
-                <t t-set="subtotal_to_show" t-value="subtotal['name']"/>
-                <t t-call="tasc_purchase_reports.tax_groups_totals"/>
-            </t>
+    <template id="document_tax_totals_template">
+        <t t-if="discount!=0">
+            <tr>
+                <td style="background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                    <strong>Discount</strong>
+                </td>
+                <td class="text-end" style="background-color: transparent; color: black;border: 1px solid #000;">
+                    <span t-esc="o.currency_id.symbol"></span>
+                    <span t-esc="'{:,}'.format(round(discount, o.currency_id.decimal_places))"/>
 
-            <tr t-if="'formatted_rounding_amount' in tax_totals and tax_totals.get('rounding_amount') != 0">
-                <td>Rounding</td>
-                <td class="text-end">
-                    <span t-out="tax_totals.get('formatted_rounding_amount')">0</span>
                 </td>
             </tr>
-            <!--Total amount with all taxes-->
-            <tr class="border-black o_total">
-                <td><strong>Total</strong></td>
-                <td  class="text-end">
-                    <span t-out="tax_totals.get('formatted_amount_total')">31.05</span>
+        </t>
+
+        <t t-foreach="tax_totals.get('subtotals')" t-as="subtotal">
+            <tr class="border-black o_subtotal">
+                <td style="background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                    <strong>Amount Before Tax</strong>
+                </td>
+                <td class="text-end" style="background-color: transparent; color: black;border: 1px solid #000;">
+                    <t t-set="untaxed_before_disc"
+                       t-value="o.amount_untaxed+discount"/>
+                    <span t-esc="o.currency_id.symbol"/>
+                    <span
+                            t-att-class="oe_subtotal_footer_separator"
+                            t-esc="'{:,}'.format(round(untaxed_before_disc, o.currency_id.decimal_places))">
+                        27.00
+                    </span>
                 </td>
             </tr>
-        </template>
+
+            <t t-set="subtotal_to_show" t-value="subtotal['name']"/>
+            <t t-call="tasc_purchase_reports.tax_groups_totals"/>
+        </t>
+
+        <tr t-if="'formatted_rounding_amount' in tax_totals and tax_totals.get('rounding_amount') != 0">
+            <td style="background-color: #f0f0f0; color: black;border: 1px solid #000;">Rounding</td>
+            <td class="text-end" style="background-color: transparent; color: black;border: 1px solid #000;">
+                <span t-out="tax_totals.get('formatted_rounding_amount')">0
+                </span>
+            </td>
+        </tr>
+        <!--Total amount with all taxes-->
+        <tr class="border-black">
+            <td style="background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                <strong>Total</strong>
+            </td>
+            <td class="text-end" style="background-color: transparent; color: black;border: 1px solid #000;">
+                <span t-out="tax_totals.get('formatted_amount_total')">31.05
+                </span>
+            </td>
+        </tr>
+    </template>
 
     <template id="external_layout_striped">
         <div t-attf-class="o_company_#{company.id}_layout header"
@@ -116,7 +135,7 @@
 
                                     <t t-esc="company.partner_id.state_id.name"/>
                                 </t>
-                                <span>, </span>
+                                <span>,</span>
                                 <t t-if="company.partner_id.zip">
                                     <span>PO Box</span>
                                     <t t-esc="company.partner_id.zip"/>
@@ -134,7 +153,8 @@
                                     <br/>
                                 </t>
                                 <t t-if="company.partner_id.vat">
-                                    <span>TRN : </span><t t-esc="company.partner_id.vat"/>
+                                    <span>TRN :</span>
+                                    <t t-esc="company.partner_id.vat"/>
                                 </t>
                             </div>
                         </li>
@@ -222,7 +242,7 @@
 
                                         <t t-esc="company.partner_id.state_id.name"/>
                                     </t>
-                                    <span>, </span>
+                                    <span>,</span>
                                     <t t-if="company.partner_id.zip">
                                         <span>PO Box</span>
                                         <t t-esc="company.partner_id.zip"/>
@@ -240,7 +260,8 @@
                                         <br/>
                                     </t>
                                     <t t-if="company.partner_id.vat">
-                                        <span>TRN : </span><t t-esc="company.partner_id.vat"/>
+                                        <span>TRN :</span>
+                                        <t t-esc="company.partner_id.vat"/>
                                     </t>
                                 </div>
                             </li>
@@ -346,7 +367,7 @@
 
                                             <t t-esc="company.partner_id.state_id.name"/>
                                         </t>
-                                        <span>, </span>
+                                        <span>,</span>
                                         <t t-if="company.partner_id.zip">
                                             <span>PO Box</span>
                                             <t t-esc="company.partner_id.zip"/>
@@ -364,7 +385,8 @@
                                             <br/>
                                         </t>
                                         <t t-if="company.partner_id.vat">
-                                            <span>TRN : </span><t t-esc="company.partner_id.vat"/>
+                                            <span>TRN :</span>
+                                            <t t-esc="company.partner_id.vat"/>
                                         </t>
                                     </div>
                                 </li>
@@ -394,7 +416,7 @@
 
         <div t-attf-class="footer o_boxed_footer o_company_#{company.id}_layout">
             <div class="text-center">
-                <div t-field="company.report_footer"> </div>
+                <div t-field="company.report_footer"></div>
                 <div t-if="report_type == 'pdf'">
                     Page:
                     <span class="page"/>
@@ -466,7 +488,7 @@
 
                                     <t t-esc="company.partner_id.state_id.name"/>
                                 </t>
-                                <span>, </span>
+                                <span>,</span>
                                 <t t-if="company.partner_id.zip">
                                     <span>PO Box</span>
                                     <t t-esc="company.partner_id.zip"/>
@@ -485,7 +507,8 @@
                                     <br/>
                                 </t>
                                 <t t-if="company.partner_id.vat">
-                                     <span>TRN : </span><t t-esc="company.partner_id.vat"/>
+                                    <span>TRN :</span>
+                                    <t t-esc="company.partner_id.vat"/>
                                 </t>
                             </div>
                         </li>
@@ -574,199 +597,320 @@
     <template id="report_tasc_purchaseorder_document">
         <t t-call="tasc_purchase_reports.external_layout">
             <t t-set="o" t-value="o.with_context(lang=o.partner_id.lang)"/>
-            <t t-set="address">
-                <div t-field="o.partner_id"
-                     t-options='{"widget": "contact", "fields": ["address", "name", "phone", "vat"], "no_marker": True, "phone_icons": True}'/>
-            </t>
-            <t t-if="o.dest_address_id">
-                <t t-set="information_block">
-                    <strong>Shipping address:</strong>
-                    <div class="o_address_format"
-                         name="purchase_shipping_address">
-                        <t t-if="o.dest_address_id.name">
-                            <t t-esc="o.dest_address_id.name"/>
-                            <br/>
-                        </t>
-                        <t t-if="o.dest_address_id.street">
-                            <t t-esc="o.dest_address_id.street"/>
-                            <br/>
-                        </t>
-                        <t t-if="o.dest_address_id.street2">
+            <div class="row">
+                <!-- Left column content if needed -->
+                <div class="col-6">
+                    <!-- You can place other content here if you have a left side content -->
+                </div>
+                <!-- Right column with the table -->
+                <div class="col-6">
+                    <table class="table table-sm mt-4"
+                           style="border: 1px solid #000;float: right;width: 90%;">
+                        <tbody>
+                            <tr>
+                                <td style="width: 30%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                                    P.O. Number
+                                </td>
+                                <td style="background-color: transparent; color: black;border: 1px solid #000;">
+                                    <span t-field="o.name"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="width: 30%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                                    P.O. Date
+                                </td>
+                                <td style="background-color: transparent; color: black;border: 1px solid #000;">
+                                    <t t-if=" o.date_approve">
+                                        <p t-esc="o.date_approve.strftime('%d/%m/%Y')"
+                                           class="m-0"/>
+                                    </t>
 
-                            <t t-esc="o.dest_address_id.street2"/>
-                            <br/>
-                        </t>
-                        <t t-if="o.dest_address_id.city">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="width: 30%; background-color: #f0f0f0; border: 1px solid #000; color: black;">
+                                    Project Reference
+                                </td>
+                                <td style="background-color: transparent; border: 1px solid #000;color: black;">
+                                    <p t-field="o.partner_ref" class="m-0"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <br/>
 
-                            <t t-esc="o.dest_address_id.city"/>
-                        </t>
-                        <t t-if="o.dest_address_id.state_id.name">
+            <div class="row" style="display: flex; align-items: stretch;">
+                <!-- Left column content if needed -->
+                <div class="col-6"
+                     style="flex: 1; display: flex; flex-direction: column;">
+                    <span style="font-weight:bold;">Vendor Details</span>
+                    <table style="border: 1px solid #000; width:90%; height: 100%;">
+                        <thead>
+                            <tr>
+                                <td style="width: 30%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                                    From
+                                </td>
+                                <td style="background-color: transparent; color: black;border: 1px solid #000;">
+                                    <span t-field="o.partner_id"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="width: 30%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                                    Address
+                                </td>
+                                <td style="background-color: transparent; color: black;border: 1px solid #000;">
+                                    <div t-field="o.partner_id"
+                                         t-options='{"widget": "contact", "fields": ["address"], "no_marker": True}'/>
 
-                            <t t-esc="o.dest_address_id.state_id.name"/>
-                        </t>
-                        <span>, </span>
-                        <t t-if="o.dest_address_id.zip">
-                            <span>PO Box</span>
-                            <t t-esc="o.dest_address_id.zip"/>
-                        </t>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="width: 30%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                                    Contact
+                                </td>
+                                <td style="background-color: transparent; color: black;border: 1px solid #000;">
+                                    <span t-esc="o.supplier_representative"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="width: 30%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                                    Email
+                                </td>
+                                <td style="background-color: transparent; color: black;border: 1px solid #000;">
+                                    <span t-esc="o.supplier_email"/>
 
-                        <br/>
-                        <t t-if="o.dest_address_id.country_id.name">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="width: 30%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                                    Tel/ Mobile
+                                </td>
+                                <td style="background-color: transparent; color: black;border: 1px solid #000;">
+                                    <span t-esc="o.supplier_phone"/>
+                                </td>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
 
-                            <t t-esc="o.dest_address_id.country_id.name"/>
-                            <br/>
-                        </t>
-                        <t t-if="o.dest_address_id.phone">
+                <!-- Right column with the table -->
+                <div class="col-6"
+                     style="flex: 1; display: flex; flex-direction: column;">
+                    <span style="font-weight:bold;float: left;padding-left: 40px;">
+                        Delivery
+                        Details
+                    </span>
+                    <t t-if="o.dest_address_id">
+                        <table style="border: 1px solid #000; width:90%;float: right; height: 100%;">
+                            <thead>
+                                <tr>
+                                    <td style="width: 30%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                                        From
+                                    </td>
+                                    <td style="background-color: transparent; color: black;border: 1px solid #000;">
+                                        <span t-field="o.dest_address_id"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 30%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                                        Address
+                                    </td>
+                                    <td style="background-color: transparent; color: black;border: 1px solid #000;">
+                                        <div class="o_address_format"
+                                             name="address">
+                                            <t t-if="o.dest_address_id.street">
+                                                <t t-esc="o.dest_address_id.street"/>
+                                                <br/>
+                                            </t>
+                                            <t t-if="o.dest_address_id.street2">
 
-                            <t t-esc="o.dest_address_id.phone"/>
-                            <br/>
-                        </t>
-                        <t t-if="o.dest_address_id.vat">
-                             <span>TRN : </span><t t-esc="o.dest_address_id.vat"/>
-                        </t>
-                    </div>
-                </t>
-            </t>
-            <t t-else="">
-                <t t-set="information_block">
-                    <strong>Shipping address:</strong>
-                    <div class="o_address_format"
-                         name="purchase_shipping_address">
-                        <t t-if="o.picking_type_id.warehouse_id.partner_id.name">
-                            <t t-esc="o.picking_type_id.warehouse_id.partner_id.name"/>
-                            <br/>
-                        </t>
-                        <t t-if="o.picking_type_id.warehouse_id.partner_id.street">
-                            <t t-esc="o.picking_type_id.warehouse_id.partner_id.street"/>
-                            <br/>
-                        </t>
-                        <t t-if="o.picking_type_id.warehouse_id.partner_id.street2">
+                                                <t t-esc="o.dest_address_id.street2"/>
+                                                <br/>
+                                            </t>
+                                            <t t-if="o.dest_address_id.city">
 
-                            <t t-esc="o.picking_type_id.warehouse_id.partner_id.street2"/>
-                            <br/>
-                        </t>
-                        <t t-if="o.picking_type_id.warehouse_id.partner_id.city">
+                                                <t t-esc="o.dest_address_id.city"/>
+                                            </t>
+                                            <t t-if="o.dest_address_id.state_id.name">
 
-                            <t t-esc="o.picking_type_id.warehouse_id.partner_id.city"/>
-                        </t>
-                        <t t-if="o.picking_type_id.warehouse_id.partner_id.state_id.name">
+                                                <t t-esc="o.dest_address_id.state_id.name"/>
+                                            </t>
+                                            <t t-if="o.dest_address_id.zip">
+                                                <t t-esc="o.dest_address_id.zip"/>
+                                            </t>
 
-                            <t t-esc="o.picking_type_id.warehouse_id.partner_id.state_id.name"/>
-                        </t>
-                        <span>, </span>
-                        <t t-if="o.picking_type_id.warehouse_id.partner_id.zip">
-                            <span>PO Box</span>
-                            <t t-esc="o.picking_type_id.warehouse_id.partner_id.zip"/>
-                        </t>
+                                            <t t-if="o.dest_address_id.country_id.name">
 
-                        <br/>
-                        <t t-if="o.picking_type_id.warehouse_id.partner_id.country_id.name">
+                                                <t t-esc="o.dest_address_id.country_id.name"/>
+                                                <br/>
+                                            </t>
+                                            <t t-if="o.dest_address_id.phone">
 
-                            <t t-esc="o.picking_type_id.warehouse_id.partner_id.country_id.name"/>
-                            <br/>
-                        </t>
-                        <t t-if="o.picking_type_id.warehouse_id.partner_id.phone">
+                                                <t t-esc="o.dest_address_id.phone"/>
+                                                <br/>
+                                            </t>
 
-                            <t t-esc="o.picking_type_id.warehouse_id.partner_id.phone"/>
-                            <br/>
-                        </t>
-                        <t t-if="o.picking_type_id.warehouse_id.partner_id.vat">
-                             <span>TRN : </span><t t-esc="o.picking_type_id.warehouse_id.partner_id.vat"/>
-                        </t>
-                    </div>
-                </t>
-            </t>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 30%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                                        Contact
+                                    </td>
+                                    <td style="background-color: transparent; color: black;border: 1px solid #000;">
+                                        <span t-esc="o.supplier_representative"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 30%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                                        Email
+                                    </td>
+                                    <td style="background-color: transparent; color: black;border: 1px solid #000;">
+                                        <span t-esc="o.supplier_email"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 30%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                                        Tel/ Mobile
+                                    </td>
+                                    <td style="background-color: transparent; color: black;border: 1px solid #000;">
+                                        <span t-esc="o.dest_address_id.phone"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 30%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                                        PO Box
+                                    </td>
+                                    <td style="background-color: transparent; color: black;border: 1px solid #000;">
+                                        <t t-esc="o.dest_address_id.zip"/>
+                                    </td>
+                                </tr>
+                            </thead>
+                        </table>
+                    </t>
+                    <t t-else="">
+                        <table style="border: 1px solid #000; width:90%;float: right; height: 100%;">
+                            <thead>
+                                <tr>
+                                    <td style="width: 30%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                                        From
+                                    </td>
+                                    <td style="background-color: transparent; color: black;border: 1px solid #000;">
+                                        <span t-field="o.picking_type_id.warehouse_id.partner_id"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 30%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                                        Address
+                                    </td>
+                                    <td style="background-color: transparent; color: black;border: 1px solid #000;">
+                                        <div class="o_address_format"
+                                             name="address">
+                                            <t t-if="o.picking_type_id.warehouse_id.partner_id.street">
+                                                <t t-esc="o.picking_type_id.warehouse_id.partner_id.street"/>
+                                                <br/>
+                                            </t>
+                                            <t t-if="o.picking_type_id.warehouse_id.partner_id.street2">
+
+                                                <t t-esc="o.picking_type_id.warehouse_id.partner_id.street2"/>
+                                                <br/>
+                                            </t>
+                                            <t t-if="o.picking_type_id.warehouse_id.partner_id.city">
+
+                                                <t t-esc="o.picking_type_id.warehouse_id.partner_id.city"/>
+                                            </t>
+                                            <t t-if="o.picking_type_id.warehouse_id.partner_id.state_id.name">
+
+                                                <t t-esc="o.picking_type_id.warehouse_id.partner_id.state_id.name"/>
+                                            </t>
+                                            <t t-if="o.picking_type_id.warehouse_id.partner_id.zip">
+                                                <t t-esc="o.picking_type_id.warehouse_id.partner_id.zip"/>
+                                            </t>
+                                            <t t-if="o.picking_type_id.warehouse_id.partner_id.country_id.name">
+
+                                                <t t-esc="o.picking_type_id.warehouse_id.partner_id.country_id.name"/>
+                                                <br/>
+                                            </t>
+
+                                        </div>
+
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 30%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                                        Contact
+                                    </td>
+                                    <td style="background-color: transparent; color: black;border: 1px solid #000;">
+                                        <span t-field="o.user_id"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 30%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                                        Email
+                                    </td>
+                                    <td style="background-color: transparent; color: black;border: 1px solid #000;">
+                                        <span t-esc="o.user_id.partner_id.email"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 30%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                                        Tel/ Mobile
+                                    </td>
+                                    <td style="background-color: transparent; color: black;border: 1px solid #000;">
+                                        <span t-esc="o.user_id.partner_id.phone"/>
+                                    </td>
+                                </tr>
+                            </thead>
+                        </table>
+
+                    </t>
+                </div>
+            </div>
             <div class="page">
                 <div class="oe_structure"/>
-
-                <div class="mt-4">
-                    <h2 t-if="o.state in ['draft', 'sent', 'to approve']">
-                        Request for Quotation #
-                        <span t-field="o.name"/>
-                    </h2>
-                    <h2 t-if="o.state in ['purchase', 'done']">Purchase Order #
-                        <span t-field="o.name"/>
-                    </h2>
-                    <h2 t-if="o.state == 'cancel'">Cancelled Purchase Order #
-                        <span t-field="o.name"/>
-                    </h2>
-                </div>
-
-                <div id="informations" class="row mt-4 mb32">
-                    <div t-if="o.user_id" class="col-3 bm-2">
-                        <strong>Purchase Representative:</strong>
-                        <p t-field="o.user_id" class="m-0"/>
-                    </div>
-                    <div t-if="o.partner_ref" class="col-3 bm-2">
-                        <strong>Your Order Reference:</strong>
-                        <p t-field="o.partner_ref" class="m-0"/>
-                    </div>
-                    <div t-if="o.state in ['purchase','done'] and o.date_approve"
-                         class="col-3 bm-2">
-                        <strong>Order Date:</strong>
-                        <t t-if=" o.date_approve">
-                            <p t-esc="o.date_approve.strftime('%d/%m/%Y')" class="m-0"/>
-                        </t>
-                    </div>
-                    <div t-elif="o.date_order" class="col-3 bm-2">
-                        <strong>Order Deadline:</strong>
-                           <p t-esc="o.date_order.strftime('%d/%m/%Y')" class="m-0"/>
-
-                    </div>
-                    <div t-if="o.supplier_representative" class="col-3 bm-2">
-                        <strong>Supplier Representative:</strong>
-                        <p t-field="o.supplier_representative" class="m-0"/>
-                    </div>
-
-                </div>
                 <t t-set="discount" t-value="0"/>
-                <table class="table table-sm o_main_table table-borderless mt-4">
+                <table class="table table-sm o_main_table mt-4">
                     <thead style="display: table-row-group">
                         <tr>
-                            <th name="th_description">
+                            <th style="width:5%; background-color: #f0f0f0; color: black;border: 1px solid #000;">Sl No</th>
+                            <th name="th_description" style="width: 40%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
                                 <strong>Description</strong>
                             </th>
-                            <th name="th_taxes">
-                                <strong>Taxes</strong>
-                            </th>
-                            <th name="th_date_req" class="text-center">
-                                <strong>Date Req.</strong>
-                            </th>
-                            <th name="th_quantity" class="text-end">
+                            <th name="th_quantity" class="text-end" style="width: 10%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
                                 <strong>Qty</strong>
                             </th>
-                            <th name="th_price_unit" class="text-end">
-                                <strong>Unit Price</strong>
+                            <th name="th_price_unit" class="text-end" style="width: 13%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                                <strong>Price (<t t-esc="o.currency_id.name"/>) </strong>
                             </th>
-                            <th name="th_subtotal" class="text-end">
+                             <th name="th_tax" class="text-end" style="width: 13%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
+                                <strong>Tax</strong>
+                            </th>
+                            <th name="th_subtotal" class="text-end" style="width: 25%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
                                 <strong>Amount (<t t-esc="o.currency_id.name"/>)
                                 </strong>
                             </th>
                         </tr>
                     </thead>
                     <tbody>
+                        <t t-set="index" t-value="0"/>
                         <t t-set="current_subtotal" t-value="0"/>
                         <t t-foreach="o.order_line" t-as="line">
-                          <t t-set="discount" t-value="discount+((line.discount/100)*(line.price_unit*line.product_qty))"/>
+                            <t t-set="index" t-value="index+1"/>
+                            <t t-set="discount"
+                               t-value="discount+((line.discount/100)*(line.price_unit*line.product_qty))"/>
 
                             <t t-set="current_subtotal"
                                t-value="current_subtotal + line.price_subtotal"/>
 
                             <tr t-att-class="'bg-200 fw-bold o_line_section' if line.display_type == 'line_section' else 'fst-italic o_line_note' if line.display_type == 'line_note' else ''">
+                                <td style="background-color: transparent; color: black;border: 1px solid #000;"> <t t-esc="index"/></td>
                                 <t t-if="not line.display_type">
-                                    <td id="product">
+                                    <td style="background-color: transparent; color: black;border: 1px solid #000;" id="product">
                                         <span t-field="line.name"/>
                                     </td>
-                                    <t t-set="taxes"
-                                       t-value="', '.join([(tax.invoice_label or tax.name) for tax in line.taxes_id])"/>
-                                    <td name="td_taxes"
-                                        t-attf-class="text-end {{ 'text-nowrap' if len(taxes) &lt; 10 else '' }}">
-                                        <span t-out="taxes">Tax 15%</span>
-                                    </td>
-                                    <td class="text-center">
-                                      <span t-esc="line.date_planned.strftime('%d/%m/%Y')" />
-                                    </td>
-                                    <td class="text-end">
+                                    <td style="background-color: transparent; color: black;border: 1px solid #000;" class="text-end">
                                         <span t-field="line.product_qty"/>
                                         <span t-field="line.product_uom.name"
                                               groups="uom.group_uom"/>
@@ -778,30 +922,37 @@
                                             )
                                         </span>
                                     </td>
-                                    <td class="text-end">
+                                    <td style="background-color: transparent; color: black;border: 1px solid #000;" class="text-end">
                                         <span t-esc="'{:,}'.format(round(line.price_unit, o.currency_id.decimal_places))"/>
 
                                     </td>
-                                    <td class="text-end">
-                                    <t t-esc="'{:,}'.format(round(line.price_subtotal, o.currency_id.decimal_places))"/>
+
+                                                                        <t t-set="taxes"
+                                       t-value="', '.join([(tax.invoice_label or tax.name) for tax in line.taxes_id])"/>
+                                    <td name="td_taxes" style="background-color: transparent; color: black;border: 1px solid #000;"
+                                        t-attf-class="text-end {{ 'text-nowrap' if len(taxes) &lt; 10 else '' }}">
+                                        <span t-out="taxes"></span>
+                                    </td>
+                                    <td  style="background-color: transparent; color: black;border: 1px solid #000;" class="text-end">
+                                        <t t-esc="'{:,}'.format(round(line.price_subtotal, o.currency_id.decimal_places))"/>
                                     </td>
                                 </t>
                                 <t t-if="line.display_type == 'line_section'">
-                                    <td colspan="99" id="section">
+                                    <td style="background-color: transparent; color: black;border: 1px solid #000;" colspan="99" id="section">
                                         <span t-field="line.name"/>
                                     </td>
                                     <t t-set="current_section" t-value="line"/>
                                     <t t-set="current_subtotal" t-value="0"/>
                                 </t>
                                 <t t-if="line.display_type == 'line_note'">
-                                    <td colspan="99" id="note">
+                                    <td style="background-color: transparent; color: black;border: 1px solid #000;" colspan="99" id="note">
                                         <span t-field="line.name"/>
                                     </td>
                                 </t>
                             </tr>
                             <t t-if="current_section and (line_last or o.order_line[line_index+1].display_type == 'line_section')">
                                 <tr class="is-subtotal text-end">
-                                    <td colspan="99" id="subtotal">
+                                    <td style="background-color: transparent; color: black;border: 1px solid #000;" colspan="99" id="subtotal">
                                         <strong class="mr16">Subtotal</strong>
                                         <span
                                                 t-esc="current_subtotal"
@@ -842,7 +993,7 @@
                                     <span># Installment of</span>
                                     <t t-set="amt"
                                        t-value="o.amount_total * (term.value_amount / 100)"/>
-                                        <t t-esc="'{:,}'.format(round(amt, o.currency_id.decimal_places))"/>
+                                    <t t-esc="'{:,}'.format(round(amt, o.currency_id.decimal_places))"/>
                                     <span>(
                                         <span
                                                 t-out="o.currency_id.with_context(lang='en_US').amount_to_text(amt)"/>
@@ -854,7 +1005,7 @@
                                     <span># Installment of</span>
                                     <t t-set="amt"
                                        t-value="term.value_amount"/>
-                                      <t t-esc="'{:,}'.format(round(amt, o.currency_id.decimal_places))"/>
+                                    <t t-esc="'{:,}'.format(round(amt, o.currency_id.decimal_places))"/>
 
                                     <span>(
                                         <span
@@ -871,7 +1022,7 @@
                 <br/>
                 <br/>
                 <span style="font-weight:bold;">Delivery Date :</span>
-                <span t-esc="o.date_planned.strftime('%d/%m/%Y')" />
+                <span t-esc="o.date_planned.strftime('%d/%m/%Y')"/>
                 <br/>
                 <br/>
                 <span style="font-weight:bold;">Notes:</span>

@@ -139,7 +139,7 @@ class UserActivityReportWizard(models.Model):
 
         row = 0
         col = 0
-        worksheet.merge_range(row, row, col, col + 17,
+        worksheet.merge_range(row, row, col, col + 18,
                               _('TASC User Activity Report'),
                               STYLE_LINE_HEADER)
         row += 1
@@ -154,29 +154,32 @@ class UserActivityReportWizard(models.Model):
         col += 1
         worksheet.write(row, col, _('Default Company'), header_format)
         col += 1
-        worksheet.write(row, col, _('Vendor Bills'), header_format)
-        col += 1
-        worksheet.write(row, col, _('Customer Invoices'), header_format)
-        col += 1
-        worksheet.write(row, col, _('Assets'), header_format)
-        col += 1
         worksheet.write(row, col, _('Purchase Order'), header_format)
         col += 1
         worksheet.write(row, col, _('Incoming Receipts'), header_format)
         col += 1
-        worksheet.write(row, col, _('Vendor Payments'), header_format)
+        worksheet.write(row, col, _('Vendor Bills'), header_format)
         col += 1
-        worksheet.write(row, col, _('Customer Payments'), header_format)
+        worksheet.write(row, col, _('Assets'), header_format)
         col += 1
-        worksheet.write(row, col, _('MISC'), header_format)
+        worksheet.write(row, col, _('Vendor Payments - Non Lease'),
+                        header_format)
+        col += 1
+        worksheet.write(row, col, _('Vendor Payments - Lease'), header_format)
         col += 1
         worksheet.write(row, col, _('Bank Reconcilation'), header_format)
+        col += 1
+        worksheet.write(row, col, _('MISC'), header_format)
         col += 1
         worksheet.write(row, col, _('Lease'), header_format)
         col += 1
         worksheet.write(row, col, _('Sale Order'), header_format)
         col += 1
         worksheet.write(row, col, _('Outgoing Receipts'), header_format)
+        col += 1
+        worksheet.write(row, col, _('Customer Invoices'), header_format)
+        col += 1
+        worksheet.write(row, col, _('Customer Payments'), header_format)
         col += 1
         worksheet.write(row, col, _('Total Count'), header_format)
         col += 1
@@ -186,14 +189,14 @@ class UserActivityReportWizard(models.Model):
         invoice_count_total = 0
         asset_count_total = 0
         incoming_receipts_count_total = 0
-        vendor_payment_count_total = 0
+        vendor_payment_count_lease_total = 0
+        vendor_payment_count_non_lease_total =0
         customer_payment_count_total = 0
         reconcilation_count_total = 0
         lease_count_total = 0
         misc_count_total = 0
         sale_order_count_total = 0
         outgoing_receipts_count_total = 0
-
         for user in report_data:
             total =0
             query = f"""
@@ -208,18 +211,32 @@ class UserActivityReportWizard(models.Model):
                         (SELECT COUNT(*) FROM leasee_contract WHERE create_uid = %s AND state != 'cancel' AND create_date >= '{self.start_date}' AND create_date <= '{self.end_date}') AS lease_count,
                         (SELECT COUNT(*) FROM stock_picking sp INNER JOIN stock_picking_type spt ON sp.picking_type_id = spt.id WHERE sp.create_uid = %s AND sp.state != 'cancel' AND spt.code = 'incoming' AND sp.create_date >= '{self.start_date}' AND sp.create_date <= '{self.end_date}') AS incoming_receipts_count,
                         (SELECT COUNT(*) FROM stock_picking sp INNER JOIN stock_picking_type spt ON sp.picking_type_id = spt.id WHERE sp.create_uid = %s AND sp.state != 'cancel' AND spt.code = 'outgoing' AND sp.create_date >= '{self.start_date}' AND sp.create_date <= '{self.end_date}') AS outgoing_receipts_count,
-                        (SELECT COUNT(*) FROM account_payment WHERE create_uid = %s AND payment_type = 'outbound' AND create_date >= '{self.start_date}' AND create_date <= '{self.end_date}') AS vendor_payment_count,
                         (SELECT COUNT(*) FROM account_payment WHERE create_uid = %s AND payment_type = 'inbound' AND create_date >= '{self.start_date}' AND create_date <= '{self.end_date}') AS customer_payment_count,
                         (SELECT COUNT(*) FROM account_bank_statement_line WHERE create_uid = %s AND create_date >= '{self.start_date}' AND create_date <= '{self.end_date}') AS reconciliation_count
                 """
+            vendor_payment_count_non_lease = self.env[
+                'account.payment'].sudo().search_count([
+                ('create_uid', '=',user.id),
+                ('state', '!=', 'cancel'),
+                ('create_date', '>=', self.start_date),
+                ('create_date', '<=', self.end_date),
+                ('payment_type', '=', 'outbound'),
+                '|',
+                ('ref', '=', False),
+                ('ref', 'not ilike', 'Lease')
+            ])
+            vendor_payment_count_lease = self.env[ 'account.payment'].sudo().search_count(
+                [('create_date', '>=', self.start_date),
+                ('create_date', '<=', self.end_date),('create_uid', '=', user.id),('state', '!=', 'cancel'), ('payment_type', '=', 'outbound'),
+                 ('ref', 'ilike', 'Lease')])
 
             self.env.cr.execute(query, (
                 user.id, user.id, user.id, '%IFRS%',user.id, user.id,
                 user.id, user.id, user.id, user.id, user.id,
-                user.id, user.id
+                user.id
             ))
             counts = self.env.cr.fetchone()
-            purchase_order_count, invoice_count, bill_count,misc_count,asset_count,sale_order_count,lease_count,incoming_receipts_count,outgoing_receipts_count,vendor_payment_count,customer_payment_count,reconcilation_count  = counts
+            purchase_order_count, invoice_count, bill_count,misc_count,asset_count,sale_order_count,lease_count,incoming_receipts_count,outgoing_receipts_count,customer_payment_count,reconcilation_count  = counts
             purchase_order_count_total += purchase_order_count
             invoice_count_total+= invoice_count
             bill_count_total+= bill_count
@@ -229,44 +246,52 @@ class UserActivityReportWizard(models.Model):
             lease_count_total+= lease_count
             incoming_receipts_count_total+=incoming_receipts_count
             outgoing_receipts_count_total+=outgoing_receipts_count
-            vendor_payment_count_total+=vendor_payment_count
+            vendor_payment_count_lease_total+=vendor_payment_count_lease
+            vendor_payment_count_non_lease_total+=vendor_payment_count_non_lease
+
             customer_payment_count_total+=customer_payment_count
             reconcilation_count_total+= reconcilation_count
-            total+=purchase_order_count+invoice_count+bill_count+misc_count+asset_count+sale_order_count+lease_count+incoming_receipts_count+outgoing_receipts_count+vendor_payment_count+customer_payment_count+reconcilation_count
+            employees = self.env['hr.employee'].sudo().search(
+                [('user_id', '=', user.id)],limit=1)
+            total+=purchase_order_count+invoice_count+bill_count+misc_count+asset_count+sale_order_count+lease_count+incoming_receipts_count+outgoing_receipts_count+vendor_payment_count_non_lease+vendor_payment_count_lease+customer_payment_count+reconcilation_count
             col = 0
             worksheet.write(row, col, user.name, STYLE_LINE_Data)
             col+=1
             worksheet.write(row, col, user.login, STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, user.employee_id.department_id.display_name, STYLE_LINE_Data)
+            worksheet.write(row, col, employees.department_id.sudo().display_name, STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, user.state, STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, user.company_id.name, STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, bill_count, STYLE_LINE_Data)
-            col += 1
-            worksheet.write(row, col, invoice_count, STYLE_LINE_Data)
-            col += 1
-            worksheet.write(row, col, asset_count, STYLE_LINE_Data)
-            col += 1
             worksheet.write(row, col, purchase_order_count, STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, incoming_receipts_count, STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, vendor_payment_count, STYLE_LINE_Data)
+            worksheet.write(row, col, bill_count, STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, customer_payment_count, STYLE_LINE_Data)
+            worksheet.write(row, col, asset_count, STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, misc_count, STYLE_LINE_Data)
+            worksheet.write(row, col, vendor_payment_count_non_lease,
+                            STYLE_LINE_Data)
+            col += 1
+            worksheet.write(row, col, vendor_payment_count_lease,
+                            STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, reconcilation_count, STYLE_LINE_Data)
+            col += 1
+            worksheet.write(row, col, misc_count, STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, lease_count, STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, sale_order_count, STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, outgoing_receipts_count, STYLE_LINE_Data)
+            col += 1
+            worksheet.write(row, col, invoice_count, STYLE_LINE_Data)
+            col += 1
+            worksheet.write(row, col, customer_payment_count, STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, total, STYLE_LINE_Data)
             col += 1
@@ -284,28 +309,32 @@ class UserActivityReportWizard(models.Model):
         col += 1
         worksheet.write(row, col, 'Totals', STYLE_LINE_BOLD)
         col += 1
-        worksheet.write(row, col, bill_count_total, STYLE_LINE_BOLD)
+        worksheet.write(row, col, purchase_order_count_total, STYLE_LINE_Data)
         col += 1
-        worksheet.write(row, col, invoice_count_total, STYLE_LINE_BOLD)
+        worksheet.write(row, col, incoming_receipts_count_total, STYLE_LINE_Data)
         col += 1
-        worksheet.write(row, col, asset_count_total, STYLE_LINE_BOLD)
+        worksheet.write(row, col, bill_count_total, STYLE_LINE_Data)
         col += 1
-        worksheet.write(row, col, purchase_order_count_total, STYLE_LINE_BOLD)
+        worksheet.write(row, col, asset_count_total, STYLE_LINE_Data)
         col += 1
-        worksheet.write(row, col, incoming_receipts_count_total, STYLE_LINE_BOLD)
+        worksheet.write(row, col, vendor_payment_count_non_lease_total,
+                        STYLE_LINE_Data)
         col += 1
-        worksheet.write(row, col, vendor_payment_count_total, STYLE_LINE_BOLD)
+        worksheet.write(row, col, vendor_payment_count_lease_total,
+                        STYLE_LINE_Data)
         col += 1
-        worksheet.write(row, col, customer_payment_count_total, STYLE_LINE_BOLD)
+        worksheet.write(row, col, reconcilation_count_total, STYLE_LINE_Data)
         col += 1
-        worksheet.write(row, col, misc_count_total, STYLE_LINE_BOLD)
+        worksheet.write(row, col, misc_count_total, STYLE_LINE_Data)
         col += 1
-        worksheet.write(row, col, reconcilation_count_total, STYLE_LINE_BOLD)
+        worksheet.write(row, col, lease_count_total, STYLE_LINE_Data)
         col += 1
-        worksheet.write(row, col, lease_count_total, STYLE_LINE_BOLD)
+        worksheet.write(row, col, sale_order_count_total, STYLE_LINE_Data)
         col += 1
-        worksheet.write(row, col, sale_order_count_total, STYLE_LINE_BOLD)
+        worksheet.write(row, col, outgoing_receipts_count_total, STYLE_LINE_Data)
         col += 1
-        worksheet.write(row, col, outgoing_receipts_count_total, STYLE_LINE_BOLD)
+        worksheet.write(row, col, invoice_count_total, STYLE_LINE_Data)
+        col += 1
+        worksheet.write(row, col, customer_payment_count_total, STYLE_LINE_Data)
         col += 1
         row += 1
