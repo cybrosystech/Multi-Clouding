@@ -10,6 +10,10 @@ class PurchaseOrder(models.Model):
         check_company=True,
         domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]")
     supplier_representative = fields.Char(string="Supplier Representative")
+    supplier_email = fields.Char(string="Supplier Email")
+    supplier_phone = fields.Char(string="Supplier Phone")
+
+
 
     def _prepare_invoice(self):
         invoice_vals = super()._prepare_invoice()

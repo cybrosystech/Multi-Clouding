@@ -678,7 +678,7 @@
                                     Email
                                 </td>
                                 <td style="background-color: transparent; color: black;border: 1px solid #000;">
-                                    <span t-esc="o.partner_id.email"/>
+                                    <span t-esc="o.supplier_email"/>
 
                                 </td>
                             </tr>
@@ -687,8 +687,7 @@
                                     Tel/ Mobile
                                 </td>
                                 <td style="background-color: transparent; color: black;border: 1px solid #000;">
-                                    <span t-esc="o.partner_id.phone"/>
-
+                                    <span t-esc="o.supplier_phone"/>
                                 </td>
                             </tr>
                         </thead>
@@ -734,7 +733,7 @@
                                         Email
                                     </td>
                                     <td style="background-color: transparent; color: black;border: 1px solid #000;">
-                                        <span t-esc="o.dest_address_id.email"/>
+                                        <span t-esc="o.supplier_email"/>
                                     </td>
                                 </tr>
                                 <tr>
@@ -753,7 +752,6 @@
                                         <t t-esc="o.dest_address_id.zip"/>
                                     </td>
                                 </tr>
-
                             </thead>
                         </table>
                     </t>
@@ -790,7 +788,7 @@
                                         Email
                                     </td>
                                     <td style="background-color: transparent; color: black;border: 1px solid #000;">
-                                        <span t-esc="o.picking_type_id.warehouse_id.partner_id.email"/>
+                                        <span t-esc="o.user_id.partner_id.email"/>
                                     </td>
                                 </tr>
                                 <tr>
@@ -798,7 +796,7 @@
                                         Tel/ Mobile
                                     </td>
                                     <td style="background-color: transparent; color: black;border: 1px solid #000;">
-                                        <span t-esc="o.picking_type_id.warehouse_id.partner_id.phone"/>
+                                        <span t-esc="o.user_id.partner_id.phone"/>
                                     </td>
 
                                 </tr>
