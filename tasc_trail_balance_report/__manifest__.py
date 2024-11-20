@@ -14,5 +14,9 @@
             'views/tasc_trial_balance_report_view.xml',
             'wizard/tasc_trial_balance_detail_report_wizard_views.xml',
             'wizard/tasc_trial_balance_cc_report_views.xml',
+            'wizard/tasc_trial_balance_quick_consol_view.xml',
         ],
+    'installable': True,
+    'application': False,
+    'auto_install': False,
 }
