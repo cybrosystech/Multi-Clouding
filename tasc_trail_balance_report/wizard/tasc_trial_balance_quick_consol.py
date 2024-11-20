@@ -10,10 +10,10 @@ from odoo.exceptions import UserError
 from odoo.tools.misc import get_lang
 
 
-class TascTrialBalanceDetailReporttWizard(models.TransientModel):
-    """ Class for TASC Trial Balance Detailed Report xlsx """
-    _name = 'tasc.trial.balance.detail.report.wizard'
-    _description = 'TASC Trial Balance Report Detailed'
+class TascTrialBalanceQuickConsolReporttWizard(models.TransientModel):
+    """ Class for TASC Trial Balance - Quick Consol Report xlsx """
+    _name = 'tasc.trial.balance.quick.consol.report.wizard'
+    _description = 'TASC Trial Balance - Quick Consol Report '
 
     date_filter = fields.Selection([('this_month', 'This Month'),
                                     ('this_quarter', 'This Quarter'),
@@ -126,21 +126,21 @@ class TascTrialBalanceDetailReporttWizard(models.TransientModel):
             self.add_xlsx_sheet(report_data, workbook, STYLE_LINE_Data,
                                 header_format, STYLE_LINE_HEADER, date_format)
 
-        self.excel_sheet_name = 'TASC Trial Balance Detailed Report'
+        self.excel_sheet_name = 'TASC Trial Balance - Quick Consol Report '
         workbook.close()
         output.seek(0)
         self.excel_sheet = base64.b64encode(output.read())
         self.excel_sheet_name = str(self.excel_sheet_name) + '.xlsx'
         return {
             'type': 'ir.actions.act_url',
-            'name': 'TASC Trial Balance Detailed Report',
+            'name': 'TASC Trial Balance - Quick Consol Report ',
             'url': '/web/content/%s/%s/excel_sheet/%s?download=true' % (
                 self._name, self.id, self.excel_sheet_name),
             'target': 'new'
         }
 
     def get_report_data(self):
-        """Method to compute TASC Trial Balance Report Detailed."""
+        """Method to compute TASC Trial Balance - Quick Consol Report """
 
         company_ids = self.env.companies.ids
         if self.pool['account.account'].name.translate:
@@ -154,12 +154,6 @@ class TascTrialBalanceDetailReporttWizard(models.TransientModel):
             cc_name = f"COALESCE(cc.name->>'{lang}', cc.name->>'en_US')"
         else:
             cc_name = 'cc.name'
-
-        if self.pool['account.analytic.account'].name.translate:
-            lang = self.env.user.lang or get_lang(self.env).code
-            project_site_name = f"COALESCE(project_site.name->>'{lang}', project_site.name->>'en_US')"
-        else:
-            project_site_name = 'project_site.name'
 
         conversion_date = self.end_date
         ct_query = self.env['res.currency']._get_query_currency_table(
@@ -317,14 +311,19 @@ class TascTrialBalanceDetailReporttWizard(models.TransientModel):
                 days=1)
             ending_balance_end_date = last_date_of_current_period
         company_id_str = str(self.company_id.id)
+
+        cost_center = self.env['account.analytic.account'].search([('name','ilike','No Cost Center'),('company_id','=',self.env.company.id)],limit=1)
         qry = f'''SELECT
-                    account_account.id                            AS account_id,
+                   account_account.id                            AS account_id,
                     {account_name}                               AS account_name,
-                    {cc_name}                                       AS cc_name,
-                    {project_site_name}                               AS project_site_name,
+                    COALESCE({cc_name}, '{cost_center.name}') AS cc_name,
                     account_account.code                            AS code,
-                    cc.code                                         AS cc_code,
-                   'sum'                                                   AS key,
+                (CASE 
+                            WHEN (cc.code IS NULL OR cc.code = '') AND ({cc_name} IS NULL OR {cc_name} = '') THEN 'TH1276'
+                            ELSE cc.code
+                        END)
+                     AS cc_code,
+                    'sum'                                                   AS key,
                    MAX(account_move_line.date)                             AS max_date,
                    COALESCE(SUM(account_move_line.amount_currency), 0.0)   AS amount_currency,
                    SUM(ROUND(account_move_line.debit * currency_table.rate, currency_table.precision))   AS debit,
@@ -334,7 +333,6 @@ class TascTrialBalanceDetailReporttWizard(models.TransientModel):
                    LEFT JOIN {ct_query} ON currency_table.company_id = account_move_line.company_id
                    LEFT JOIN account_account ON account_account.id = account_move_line.account_id
                    LEFT JOIN account_analytic_account cc ON cc.id = account_move_line.analytic_account_id
-                   LEFT JOIN account_analytic_account project_site ON project_site.id = account_move_line.project_site_id
                    WHERE account_move_line.company_id IN ({company_id_str}) AND account_account.account_type != 'equity_unaffected' AND
                    account_move_line.parent_state IN ({states_str}) AND 
                     (
@@ -347,18 +345,21 @@ class TascTrialBalanceDetailReporttWizard(models.TransientModel):
                          account_move_line.date <= '{str(last_date_of_current_period)}'
                         END
                     )
-                   GROUP BY account_account.id,cc.id,project_site.id 
-                   
+                   GROUP BY account_account.id,cc.name,cc.code
+
                 '''
 
         qry2 = f'''SELECT
                        account_account.id                               AS account_id,
                        {account_name}                                   AS account_name,
-                       {cc_name}                                        AS cc_name,
-                       {project_site_name}                              AS project_site_name,
+                    COALESCE({cc_name}, '{cost_center.name}')        AS cc_name,
                        account_account.code                            AS code,
-                       cc.code                                         AS cc_code,
-                       'initial_balance'                                       AS key,
+                    (CASE 
+                            WHEN (cc.code IS NULL OR cc.code = '') AND ({cc_name} IS NULL OR {cc_name} = '') THEN 'TH1276'
+                            ELSE cc.code
+                        END)
+                     AS cc_code,
+                           'initial_balance'                                       AS key,
                       MAX(account_move_line.date)                             AS max_date,
                       COALESCE(SUM(account_move_line.amount_currency), 0.0)   AS amount_currency,
                       SUM(ROUND(account_move_line.debit * currency_table.rate, currency_table.precision))   AS debit,
@@ -368,7 +369,6 @@ class TascTrialBalanceDetailReporttWizard(models.TransientModel):
                       LEFT JOIN {ct_query} ON currency_table.company_id = account_move_line.company_id
                       LEFT JOIN account_account ON account_account.id = account_move_line.account_id
                       LEFT JOIN account_analytic_account cc ON cc.id = account_move_line.analytic_account_id
-                      LEFT JOIN account_analytic_account project_site ON project_site.id = account_move_line.project_site_id
                       WHERE account_move_line.company_id IN ({company_id_str}) AND 
                       account_account.account_type != 'equity_unaffected' AND
                         account_move_line.parent_state IN ({states_str}) AND
@@ -376,20 +376,23 @@ class TascTrialBalanceDetailReporttWizard(models.TransientModel):
                         CASE 
                             WHEN account_account.code LIKE '4%' OR account_account.code LIKE '5%' THEN 
                                 account_move_line.date >=  DATE_TRUNC('year', '{str(current_period_start_date)}'::DATE) AND  account_move_line.date <= '{str(initial_balance_end_date)}'
-                
+
                             ELSE 
                                 account_move_line.date <= '{str(initial_balance_end_date)}'
                         END
                     )
-                      GROUP BY account_account.id,cc.id,project_site.id'''
+                      GROUP BY account_account.id,cc.name,cc.code'''
 
         qry3 = f'''SELECT
                        account_account.id                            AS account_id,
                      {account_name}                                  AS account_name,
-                     {cc_name}                                       AS cc_name,
-                     {project_site_name}                             AS project_site_name,
+                    COALESCE({cc_name}, '{cost_center.name}')        AS cc_name,
                      account_account.code                            AS code,
-                     cc.code                                         AS cc_code,
+                      (CASE 
+                            WHEN (cc.code IS NULL OR cc.code = '') AND ({cc_name} IS NULL OR {cc_name} = '') THEN 'TH1276'
+                            ELSE cc.code
+                        END)
+                     AS cc_code,
                       'ending_balance'                                       AS key,
                       MAX(account_move_line.date)                             AS max_date,
                       COALESCE(SUM(account_move_line.amount_currency), 0.0)   AS amount_currency,
@@ -400,7 +403,6 @@ class TascTrialBalanceDetailReporttWizard(models.TransientModel):
                       LEFT JOIN {ct_query} ON currency_table.company_id = account_move_line.company_id
                       LEFT JOIN account_account ON account_account.id = account_move_line.account_id
                       LEFT JOIN account_analytic_account cc ON cc.id = account_move_line.analytic_account_id
-                     LEFT JOIN account_analytic_account project_site ON project_site.id = account_move_line.project_site_id
                       WHERE account_move_line.company_id IN ({company_id_str}) AND 
                       account_account.account_type != 'equity_unaffected' AND
                     account_move_line.parent_state  IN ({states_str}) AND
@@ -408,12 +410,12 @@ class TascTrialBalanceDetailReporttWizard(models.TransientModel):
                         CASE 
                             WHEN account_account.code LIKE '4%' OR account_account.code LIKE '5%' THEN 
                                 account_move_line.date >=  DATE_TRUNC('year', '{str(current_period_start_date)}'::DATE) AND  account_move_line.date <= '{str(ending_balance_end_date)}'
-                
+
                             ELSE 
                                 account_move_line.date <= '{str(ending_balance_end_date)}'
                         END
                     )
-                    GROUP BY account_account.id,cc.id,project_site.id'''
+                    GROUP BY account_account.id,cc.name,cc.code'''
 
         qry_u1 = f'''SELECT
                            'sum'                                                   AS key,
@@ -450,7 +452,7 @@ class TascTrialBalanceDetailReporttWizard(models.TransientModel):
                               FROM account_move_line
                               LEFT JOIN {ct_query} ON currency_table.company_id = account_move_line.company_id
                               LEFT JOIN account_account ON account_account.id = account_move_line.account_id
-                             
+
                               WHERE account_move_line.company_id IN ({company_id_str}) AND 
                               account_account.account_type != 'equity_unaffected' AND
                                 account_move_line.parent_state IN ({states_str}) AND
@@ -490,11 +492,11 @@ class TascTrialBalanceDetailReporttWizard(models.TransientModel):
                             )
                            '''
         combined_query_u = f'''{qry_u1} 
-                                     UNION ALL 
-                                     {qry2_u}
-                                     UNION ALL 
-                                     {qry3_u}   
-                                     '''
+                                 UNION ALL 
+                                 {qry2_u}
+                                 UNION ALL 
+                                 {qry3_u}   
+                                 '''
         self._cr.execute(combined_query_u)
         res_u = self._cr.dictfetchall()
         combined_query = f'''{qry} 
@@ -506,26 +508,48 @@ class TascTrialBalanceDetailReporttWizard(models.TransientModel):
                              code'''
         self._cr.execute(combined_query)
         res = self._cr.dictfetchall()
-        grouped_data = defaultdict(list)
+        grouped_data = defaultdict(lambda: {'total_initial_amount': 0.0,'total_current_amount': 0.0,'total_ending_amount': 0.0})
         for entry in res:
-            grouped_data[(
-                entry['account_id'], entry['account_name'], entry['cc_name'],
-                entry['project_site_name'], entry['code'],
-                entry['cc_code'])].append(
-                entry)
+            key = (entry['account_id'], entry['account_name'], entry['cc_name'],
+                   entry['code'], entry['cc_code'])
+            if key in grouped_data:
+                if 'balance' in entry and entry['balance'] is not None:
+                    if entry.get('key') == 'initial_balance':
+                        grouped_data[key]['total_initial_amount'] += entry['balance']
+                    elif entry.get('key') == 'ending_balance':
+                        grouped_data[key]['total_ending_amount'] += entry[
+                            'balance']
+                    else:
+                        grouped_data[key]['total_current_amount'] += entry[
+                            'balance']
+            else:
+                # Key does not exist: Add the entry and initialize total_amount
+                if entry.get('key') == 'initial_balance':
+                    grouped_data[key]['total_initial_amount'] = entry[
+                        'balance'] if 'balance' in entry and entry[
+                        'balance'] is not None else 0.0
+                elif entry.get('key') == 'ending_balance':
+                    grouped_data[key]['total_ending_amount'] = entry[
+                        'balance'] if 'balance' in entry and entry[
+                        'balance'] is not None else 0.0
+                else:
+                    grouped_data[key]['total_current_amount'] = entry[
+                        'balance'] if 'balance' in entry and entry[
+                        'balance'] is not None else 0.0
+
         grouped_data = dict(grouped_data)
         data = {'report_data': grouped_data,
-                'res_u':res_u,
+                'res_u': res_u,
                 'heading_str': heading_str}
 
         return data
 
     def add_xlsx_sheet(self, data, workbook, STYLE_LINE_Data,
                        header_format, STYLE_LINE_HEADER, date_format):
-        """ Method to add datas to the TASC Trial Balance Report Detailed"""
+        """ Method to add datas to the TASC Trial Balance - Quick Consol Report """
         self.ensure_one()
         worksheet = workbook.add_worksheet(
-            _('TASC Trial Balance Report Detailed'))
+            _('TASC Trial Balance - Quick Consol Report '))
         lang = self.env.user.lang
         if lang.startswith('ar_'):
             worksheet.right_to_left()
@@ -535,7 +559,7 @@ class TascTrialBalanceDetailReporttWizard(models.TransientModel):
         heading = data["heading_str"]
 
         worksheet.merge_range(row, row, col, col + 7,
-                              _('TASC Trial Balance Report Detailed'),
+                              _('TASC Trial Balance - Quick Consol Report '),
                               STYLE_LINE_HEADER)
         row += 1
         col = 0
@@ -547,53 +571,56 @@ class TascTrialBalanceDetailReporttWizard(models.TransientModel):
         col += 1
         worksheet.write(row, col, _('Cost Center Description'), header_format)
         col += 1
-        worksheet.write(row, col, _('Project Site'), header_format)
-        col += 1
         worksheet.write(row, col, _('Initial Balance'), header_format)
         col += 1
         worksheet.write(row, col, _(heading), header_format)
         col += 1
         worksheet.write(row, col, _('End Balance'), header_format)
+        col+=1
+        worksheet.write(row, col, _('Combination'), header_format)
         row += 1
         report_data = data["report_data"]
-        candidates_account_ids = self.env['account.account'].search([('account_type', '=', 'equity_unaffected'),('company_id','=',self.company_id.id)])
-
+        candidates_account_ids = self.env['account.account'].search(
+            [('account_type', '=', 'equity_unaffected'),
+             ('company_id', '=', self.company_id.id)])
+        project_site = self.env['account.analytic.account'].search([('name','ilike','No Project'),('company_id','=',self.env.company.id)],limit=1)
         for (account_id, account_name, cc_name,
-             project_site_name, code, cc_code), entries in report_data.items():
+              code, cc_code), entries in report_data.items():
             col = 0
             worksheet.write(row, col, (account_id, account_name, cc_name,
-                                       project_site_name, code, cc_code)[4],
+                                        code, cc_code)[3],
                             STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, (account_id, account_name, cc_name,
-                                       project_site_name, code, cc_code)[1],
+                                        code, cc_code)[1],
                             STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, (account_id, account_name, cc_name,
-                                       project_site_name, code, cc_code)[2],
+                                        code, cc_code)[2],
                             STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, (account_id, account_name, cc_name,
-                                       project_site_name, code, cc_code)[5],
+                                        code, cc_code)[4],
                             STYLE_LINE_Data)
-            col += 1
-            worksheet.write(row, col, (account_id, account_name, cc_name,
-                                       project_site_name, code, cc_code)[3],
+            if  entries["total_initial_amount"]:
+                col = 4
+                worksheet.write(row, col, entries["total_initial_amount"],
+                                STYLE_LINE_Data)
+            if entries["total_current_amount"]:
+                col = 5
+                worksheet.write(row, col,  entries["total_current_amount"],
+                                STYLE_LINE_Data)
+            if entries["total_ending_amount"]:
+                col = 6
+                worksheet.write(row, col,  entries["total_ending_amount"],
+                                STYLE_LINE_Data)
+            col=7
+            code = (account_id, account_name, cc_name,
+                                        code, cc_code)[3]
+            worksheet.write(row, col,(account_id, account_name, cc_name,
+                                        code, cc_code)[3]+"|"+(account_id, account_name, cc_name,
+                                        code, cc_code)[2]+"|"+ project_site.name ,
                             STYLE_LINE_Data)
-            for entry in entries:
-                amount = entry["balance"]
-                if entry["key"] == 'initial_balance':
-                    col = 5
-                    worksheet.write(row, col, amount,
-                                    STYLE_LINE_Data)
-                elif entry["key"] == 'sum':
-                    col = 6
-                    worksheet.write(row, col, amount,
-                                    STYLE_LINE_Data)
-                elif entry["key"] == 'ending_balance':
-                    col = 7
-                    worksheet.write(row, col, amount,
-                                    STYLE_LINE_Data)
             row += 1
         res_u = data["res_u"]
         balances = {}
@@ -602,9 +629,9 @@ class TascTrialBalanceDetailReporttWizard(models.TransientModel):
             if entry['key'] in ['ending_balance', 'initial_balance', 'sum']:
                 balances[entry['key']] = entry['balance']
 
-        for c_account  in candidates_account_ids:
+        for c_account in candidates_account_ids:
             col = 0
-            worksheet.write(row, col,c_account.code ,
+            worksheet.write(row, col, c_account.code,
                             STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, c_account.name,
@@ -616,15 +643,15 @@ class TascTrialBalanceDetailReporttWizard(models.TransientModel):
             worksheet.write(row, col, '',
                             STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, '',
+            worksheet.write(row, col, balances["initial_balance"] * -1,
                             STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, balances["initial_balance"] *-1,
+            worksheet.write(row, col, balances['sum'] * -1,
                             STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, balances['sum']*-1,
+            worksheet.write(row, col, balances['ending_balance'] * -1,
                             STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, balances['ending_balance']*-1,
+            worksheet.write(row, col, c_account.code +"|"+project_site.name,
                             STYLE_LINE_Data)
         row += 1
