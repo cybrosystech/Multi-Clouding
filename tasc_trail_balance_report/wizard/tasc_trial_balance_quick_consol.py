@@ -319,7 +319,7 @@ class TascTrialBalanceQuickConsolReporttWizard(models.TransientModel):
                     COALESCE({cc_name}, '{cost_center.name}') AS cc_name,
                     account_account.code                            AS code,
                 (CASE 
-                            WHEN (cc.code IS NULL OR cc.code = '') AND ({cc_name} IS NULL OR {cc_name} = '') THEN 'TH1276'
+                            WHEN (cc.code IS NULL OR cc.code = '') AND ({cc_name} IS NULL OR {cc_name} = '') THEN '{cost_center.code}'
                             ELSE cc.code
                         END)
                      AS cc_code,
@@ -355,7 +355,7 @@ class TascTrialBalanceQuickConsolReporttWizard(models.TransientModel):
                     COALESCE({cc_name}, '{cost_center.name}')        AS cc_name,
                        account_account.code                            AS code,
                     (CASE 
-                            WHEN (cc.code IS NULL OR cc.code = '') AND ({cc_name} IS NULL OR {cc_name} = '') THEN 'TH1276'
+                            WHEN (cc.code IS NULL OR cc.code = '') AND ({cc_name} IS NULL OR {cc_name} = '') THEN '{cost_center.code}'
                             ELSE cc.code
                         END)
                      AS cc_code,
@@ -389,7 +389,7 @@ class TascTrialBalanceQuickConsolReporttWizard(models.TransientModel):
                     COALESCE({cc_name}, '{cost_center.name}')        AS cc_name,
                      account_account.code                            AS code,
                       (CASE 
-                            WHEN (cc.code IS NULL OR cc.code = '') AND ({cc_name} IS NULL OR {cc_name} = '') THEN 'TH1276'
+                            WHEN (cc.code IS NULL OR cc.code = '') AND ({cc_name} IS NULL OR {cc_name} = '') THEN '{cost_center.code}'
                             ELSE cc.code
                         END)
                      AS cc_code,
