@@ -311,15 +311,19 @@ class TascTrialBalanceQuickConsolReporttWizard(models.TransientModel):
                 days=1)
             ending_balance_end_date = last_date_of_current_period
         company_id_str = str(self.company_id.id)
-
         cost_center = self.env['account.analytic.account'].search([('name','ilike','No Cost Center'),('company_id','=',self.env.company.id)],limit=1)
+        if cost_center.code:
+            cost_center_code = cost_center.code
+        else:
+            cost_center_code = ''
+
         qry = f'''SELECT
                    account_account.id                            AS account_id,
                     {account_name}                               AS account_name,
                     COALESCE({cc_name}, '{cost_center.name}') AS cc_name,
                     account_account.code                            AS code,
                 (CASE 
-                            WHEN (cc.code IS NULL OR cc.code = '') AND ({cc_name} IS NULL OR {cc_name} = '') THEN '{cost_center.code}'
+                            WHEN (cc.code IS NULL OR cc.code = '') AND ({cc_name} IS NULL OR {cc_name} = '') THEN '{cost_center_code}'
                             ELSE cc.code
                         END)
                      AS cc_code,
@@ -355,7 +359,7 @@ class TascTrialBalanceQuickConsolReporttWizard(models.TransientModel):
                     COALESCE({cc_name}, '{cost_center.name}')        AS cc_name,
                        account_account.code                            AS code,
                     (CASE 
-                            WHEN (cc.code IS NULL OR cc.code = '') AND ({cc_name} IS NULL OR {cc_name} = '') THEN '{cost_center.code}'
+                            WHEN (cc.code IS NULL OR cc.code = '') AND ({cc_name} IS NULL OR {cc_name} = '') THEN '{cost_center_code}'
                             ELSE cc.code
                         END)
                      AS cc_code,
@@ -389,7 +393,7 @@ class TascTrialBalanceQuickConsolReporttWizard(models.TransientModel):
                     COALESCE({cc_name}, '{cost_center.name}')        AS cc_name,
                      account_account.code                            AS code,
                       (CASE 
-                            WHEN (cc.code IS NULL OR cc.code = '') AND ({cc_name} IS NULL OR {cc_name} = '') THEN '{cost_center.code}'
+                            WHEN (cc.code IS NULL OR cc.code = '') AND ({cc_name} IS NULL OR {cc_name} = '') THEN '{cost_center_code}'
                             ELSE cc.code
                         END)
                      AS cc_code,
@@ -508,10 +512,13 @@ class TascTrialBalanceQuickConsolReporttWizard(models.TransientModel):
                              code'''
         self._cr.execute(combined_query)
         res = self._cr.dictfetchall()
-        grouped_data = defaultdict(lambda: {'total_initial_amount': 0.0,'total_current_amount': 0.0,'total_ending_amount': 0.0})
+        grouped_data = defaultdict(lambda: {'total_initial_amount': 0.0,'total_current_amount': 0.0,'total_ending_amount': 0.0,'cost_center_code':''})
         for entry in res:
             key = (entry['account_id'], entry['account_name'], entry['cc_name'],
-                   entry['code'], entry['cc_code'])
+                   entry['code'])
+
+            grouped_data[key]['cost_center_code'] = entry["cc_code"]
+
             if key in grouped_data:
                 if 'balance' in entry and entry['balance'] is not None:
                     if entry.get('key') == 'initial_balance':
@@ -585,22 +592,21 @@ class TascTrialBalanceQuickConsolReporttWizard(models.TransientModel):
              ('company_id', '=', self.company_id.id)])
         project_site = self.env['account.analytic.account'].search([('name','ilike','No Project'),('company_id','=',self.env.company.id)],limit=1)
         for (account_id, account_name, cc_name,
-              code, cc_code), entries in report_data.items():
+              code), entries in report_data.items():
             col = 0
             worksheet.write(row, col, (account_id, account_name, cc_name,
-                                        code, cc_code)[3],
+                                        code)[3],
                             STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, (account_id, account_name, cc_name,
-                                        code, cc_code)[1],
+                                        code)[1],
                             STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, (account_id, account_name, cc_name,
-                                        code, cc_code)[2],
+                                        code)[2],
                             STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, (account_id, account_name, cc_name,
-                                        code, cc_code)[4],
+            worksheet.write(row, col, entries["cost_center_code"] if  entries["cost_center_code"] else '',
                             STYLE_LINE_Data)
             if  entries["total_initial_amount"]:
                 col = 4
@@ -616,10 +622,10 @@ class TascTrialBalanceQuickConsolReporttWizard(models.TransientModel):
                                 STYLE_LINE_Data)
             col=7
             code = (account_id, account_name, cc_name,
-                                        code, cc_code)[3]
+                                        code)[3]
             worksheet.write(row, col,(account_id, account_name, cc_name,
-                                        code, cc_code)[3]+"|"+(account_id, account_name, cc_name,
-                                        code, cc_code)[2]+"|"+ project_site.name ,
+                                        code)[3]+"|"+(account_id, account_name, cc_name,
+                                        code)[2]+"|"+ project_site.name ,
                             STYLE_LINE_Data)
             row += 1
         res_u = data["res_u"]
