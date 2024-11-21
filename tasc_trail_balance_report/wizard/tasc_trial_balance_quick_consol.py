@@ -547,7 +547,8 @@ class TascTrialBalanceQuickConsolReporttWizard(models.TransientModel):
         grouped_data = dict(grouped_data)
         data = {'report_data': grouped_data,
                 'res_u': res_u,
-                'heading_str': heading_str}
+                'heading_str': heading_str,
+                'cost_center_id':cost_center}
 
         return data
 
@@ -587,6 +588,7 @@ class TascTrialBalanceQuickConsolReporttWizard(models.TransientModel):
         worksheet.write(row, col, _('Combination'), header_format)
         row += 1
         report_data = data["report_data"]
+        cost_center_id = data["cost_center_id"]
         candidates_account_ids = self.env['account.account'].search(
             [('account_type', '=', 'equity_unaffected'),
              ('company_id', '=', self.company_id.id)])
@@ -643,10 +645,10 @@ class TascTrialBalanceQuickConsolReporttWizard(models.TransientModel):
             worksheet.write(row, col, c_account.name,
                             STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, '',
+            worksheet.write(row, col, cost_center_id.name if cost_center_id else '',
                             STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, '',
+            worksheet.write(row, col, cost_center_id.code if cost_center_id else '',
                             STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, balances["initial_balance"] * -1,
@@ -658,6 +660,6 @@ class TascTrialBalanceQuickConsolReporttWizard(models.TransientModel):
             worksheet.write(row, col, balances['ending_balance'] * -1,
                             STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, c_account.code +"|"+project_site.name,
+            worksheet.write(row, col, c_account.code +"|"+cost_center_id.name+"|"+project_site.name,
                             STYLE_LINE_Data)
         row += 1
