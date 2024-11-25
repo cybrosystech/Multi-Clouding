@@ -21,6 +21,9 @@
                     <button name="print_report_xlsx" string="PRINT"
                             type="object"
                             default_focus="1" class="oe_highlight"/>
+<!--                     <button name="connect_quick_consol" string="Connect Quick consol"-->
+<!--                            type="object"-->
+<!--                            default_focus="1" class="oe_highlight"/>-->
                     <button string="Cancel" class="btn btn-default"
                             special="cancel"/>
                 </footer>
