@@ -3,6 +3,9 @@ import base64
 import io
 import xlsxwriter
 import calendar
+import requests
+import json
+import http.client
 from datetime import datetime, timedelta
 from collections import defaultdict
 from odoo import api, fields, models, _
@@ -565,27 +568,13 @@ class TascTrialBalanceQuickConsolReporttWizard(models.TransientModel):
         row = 0
         col = 0
         heading = data["heading_str"]
-
-        worksheet.merge_range(row, row, col, col + 7,
-                              _('TASC Trial Balance - Quick Consol Report '),
-                              STYLE_LINE_HEADER)
-        row += 1
         col = 0
-        worksheet.write(row, col, _('Account Code'), header_format)
+        worksheet.write(row, col, _('Account No'), header_format)
         col += 1
-        worksheet.write(row, col, _('Account'), header_format)
+        worksheet.write(row, col, _('Account Name'), header_format)
         col += 1
-        worksheet.write(row, col, _('Cost Center'), header_format)
-        col += 1
-        worksheet.write(row, col, _('Cost Center Description'), header_format)
-        col += 1
-        worksheet.write(row, col, _('Initial Balance'), header_format)
-        col += 1
-        worksheet.write(row, col, _(heading), header_format)
-        col += 1
-        worksheet.write(row, col, _('End Balance'), header_format)
+        worksheet.write(row, col, _('Amount'), header_format)
         col+=1
-        worksheet.write(row, col, _('Combination'), header_format)
         row += 1
         report_data = data["report_data"]
         cost_center_id = data["cost_center_id"]
@@ -596,39 +585,21 @@ class TascTrialBalanceQuickConsolReporttWizard(models.TransientModel):
         for (account_id, account_name, cc_name,
               code), entries in report_data.items():
             col = 0
-            worksheet.write(row, col, (account_id, account_name, cc_name,
-                                        code)[3],
-                            STYLE_LINE_Data)
-            col += 1
-            worksheet.write(row, col, (account_id, account_name, cc_name,
-                                        code)[1],
-                            STYLE_LINE_Data)
-            col += 1
-            worksheet.write(row, col, (account_id, account_name, cc_name,
-                                        code)[2],
-                            STYLE_LINE_Data)
-            col += 1
-            worksheet.write(row, col, entries["cost_center_code"] if  entries["cost_center_code"] else '',
-                            STYLE_LINE_Data)
-            if  entries["total_initial_amount"]:
-                col = 4
-                worksheet.write(row, col, entries["total_initial_amount"],
-                                STYLE_LINE_Data)
-            if entries["total_current_amount"]:
-                col = 5
-                worksheet.write(row, col,  entries["total_current_amount"],
-                                STYLE_LINE_Data)
-            if entries["total_ending_amount"]:
-                col = 6
-                worksheet.write(row, col,  entries["total_ending_amount"],
-                                STYLE_LINE_Data)
-            col=7
             code = (account_id, account_name, cc_name,
                                         code)[3]
             worksheet.write(row, col,(account_id, account_name, cc_name,
                                         code)[3]+"|"+(account_id, account_name, cc_name,
                                         code)[2]+"|"+ project_site.name ,
                             STYLE_LINE_Data)
+            col += 1
+            worksheet.write(row, col, (account_id, account_name, cc_name,
+                                        code)[1],
+                            STYLE_LINE_Data)
+            col += 1
+            if entries["total_ending_amount"]:
+                col = 2
+                worksheet.write(row, col,  entries["total_ending_amount"],
+                                STYLE_LINE_Data)
             row += 1
         res_u = data["res_u"]
         balances = {}
@@ -639,27 +610,14 @@ class TascTrialBalanceQuickConsolReporttWizard(models.TransientModel):
 
         for c_account in candidates_account_ids:
             col = 0
-            worksheet.write(row, col, c_account.code,
+            worksheet.write(row, col,
+                            c_account.code + "|" + cost_center_id.name + "|" + project_site.name,
                             STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, c_account.name,
                             STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, cost_center_id.name if cost_center_id else '',
-                            STYLE_LINE_Data)
-            col += 1
-            worksheet.write(row, col, cost_center_id.code if cost_center_id else '',
-                            STYLE_LINE_Data)
-            col += 1
-            worksheet.write(row, col, balances["initial_balance"] * -1,
-                            STYLE_LINE_Data)
-            col += 1
-            worksheet.write(row, col, balances['sum'] * -1,
-                            STYLE_LINE_Data)
-            col += 1
             worksheet.write(row, col, balances['ending_balance'] * -1,
                             STYLE_LINE_Data)
-            col += 1
-            worksheet.write(row, col, c_account.code +"|"+cost_center_id.name+"|"+project_site.name,
-                            STYLE_LINE_Data)
         row += 1
+
