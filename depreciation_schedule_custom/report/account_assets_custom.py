@@ -379,7 +379,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                 "asset_model": al["asset_model_name"],
                 "status": status,
                 "fixed_asset_account": al["account_code"] + "-" + al[
-                    "account_name"],
+                    "account_name"] if al["account_code"] else al["account_name"],
                 "currency": al["currency_name"],
                 "serial_no": al["serial_no"],
                 "additional_info": al["additional_info"],
@@ -708,7 +708,8 @@ class AccountReport(models.Model):
 
     def _init_options_buttons(self, options, previous_options=None):
         if options["available_variants"][0][
-            "name"] == 'Tasc Depreciation Schedule':
+            "name"] == 'Tasc Depreciation Schedule' or options["available_variants"][0][
+            "name"] == 'Tasc Depreciation Schedule Functional':
             options['buttons'] = [
                 {'name': _('PDF'), 'sequence': 10, 'action': 'export_file',
                  'action_param': 'export_to_pdf', 'file_export_type': _('PDF'),
@@ -771,43 +772,13 @@ class AccountReport(models.Model):
             date_default_col1_style = workbook.add_format(
                 {'font_name': 'Arial', 'font_size': 12, 'font_color': '#666666',
                  'indent': 2, 'num_format': 'yyyy-mm-dd'})
-            date_default_style = workbook.add_format(
-                {'font_name': 'Arial', 'font_size': 12, 'font_color': '#666666',
-                 'num_format': 'yyyy-mm-dd'})
-            default_col1_style = workbook.add_format(
-                {'font_name': 'Arial', 'font_size': 12, 'font_color': '#666666',
-                 'indent': 2})
+
             default_style = workbook.add_format(
                 {'font_name': 'Arial', 'font_size': 12,
                  'font_color': '#666666'})
             title_style = workbook.add_format(
                 {'font_name': 'Arial', 'bold': True, 'bottom': 2})
-            level_0_style = workbook.add_format(
-                {'font_name': 'Arial', 'bold': True, 'font_size': 13,
-                 'bottom': 6,
-                 'font_color': '#666666'})
-            level_1_style = workbook.add_format(
-                {'font_name': 'Arial', 'bold': True, 'font_size': 13,
-                 'bottom': 1,
-                 'font_color': '#666666'})
-            level_2_col1_style = workbook.add_format(
-                {'font_name': 'Arial', 'bold': True, 'font_size': 12,
-                 'font_color': '#666666', 'indent': 1})
-            level_2_col1_total_style = workbook.add_format(
-                {'font_name': 'Arial', 'bold': True, 'font_size': 12,
-                 'font_color': '#666666'})
-            level_2_style = workbook.add_format(
-                {'font_name': 'Arial', 'bold': True, 'font_size': 12,
-                 'font_color': '#666666'})
-            level_3_col1_style = workbook.add_format(
-                {'font_name': 'Arial', 'font_size': 12, 'font_color': '#666666',
-                 'indent': 2})
-            level_3_col1_total_style = workbook.add_format(
-                {'font_name': 'Arial', 'bold': True, 'font_size': 12,
-                 'font_color': '#666666', 'indent': 1})
-            level_3_style = workbook.add_format(
-                {'font_name': 'Arial', 'font_size': 12,
-                 'font_color': '#666666'})
+
             self.env['account.move.line'].check_access_rights('read')
             self.env['account.asset'].check_access_rights('read')
 
@@ -1060,12 +1031,22 @@ class AccountReport(models.Model):
                         status = ''
 
                     x_offset = 0
-                    sheet.write(y_offset, x_offset, i['asset_name'],
-                                date_default_col1_style)
+                    if i['asset_name']:
+                        sheet.write(y_offset, x_offset, i['asset_name'],
+                                    date_default_col1_style)
+                    else:
+                        sheet.write(y_offset, x_offset, '',
+                                    date_default_col1_style)
+
                     x_offset += 1
-                    sheet.write(y_offset, x_offset,
-                                i['asset_model_name'],
-                                date_default_col1_style)
+                    if i['asset_model_name']:
+                        sheet.write(y_offset, x_offset,
+                                    i['asset_model_name'],
+                                    date_default_col1_style)
+                    else:
+                        sheet.write(y_offset, x_offset,
+                                    '',
+                                    date_default_col1_style)
                     x_offset += 1
                     sheet.write(y_offset, x_offset,
                                 status,
@@ -1077,22 +1058,30 @@ class AccountReport(models.Model):
                                     i["asset_acquisition_date"]) or "",
                                 date_default_col1_style)
                     x_offset += 1
-
-                    sheet.write(y_offset, x_offset,
-                                i['account_code'] + i['account_name'],
-                                date_default_col1_style)
+                    if  i['account_code'] and i["account_name"]:
+                        sheet.write(y_offset, x_offset,
+                                    i['account_code'] + i['account_name'],
+                                    date_default_col1_style)
+                    elif i["account_name"]:
+                        sheet.write(y_offset, x_offset,
+                                    i['account_name'],
+                                    date_default_col1_style)
+                    else:
+                        sheet.write(y_offset, x_offset,
+                                    '',
+                                    date_default_col1_style)
                     x_offset += 1
 
                     sheet.write(y_offset, x_offset,
-                                i['project_site'],
+                                i['project_site'] if i["project_site"] else '',
                                 date_default_col1_style)
                     x_offset += 1
                     sheet.write(y_offset, x_offset,
-                                i['co_location'],
+                                i['co_location'] if i['co_location'] else '',
                                 date_default_col1_style)
                     x_offset += 1
                     sheet.write(y_offset, x_offset,
-                                i['currency_name'],
+                                i['currency_name'] if i['currency_name'] else '',
                                 date_default_col1_style)
                     x_offset += 1
                     sheet.write(y_offset, x_offset,
@@ -1100,15 +1089,15 @@ class AccountReport(models.Model):
                                 date_default_col1_style)
                     x_offset += 1
                     sheet.write(y_offset, x_offset,
-                                i['sequence_number'],
+                                i['sequence_number'] if i['sequence_number'] else '',
                                 date_default_col1_style)
                     x_offset += 1
                     sheet.write(y_offset, x_offset,
-                                i['serial_no'],
+                                i['serial_no'] if i['serial_no'] else '',
                                 date_default_col1_style)
                     x_offset += 1
                     sheet.write(y_offset, x_offset,
-                                i['additional_info'],
+                                i['additional_info'] if i['additional_info'] else '',
                                 date_default_col1_style)
                     x_offset += 1
                     sheet.write(y_offset, x_offset,
@@ -1142,6 +1131,58 @@ class AccountReport(models.Model):
                     else:
                         asset_depreciation_rate = ('{:.2f} %').format(
                             float(i['asset_method_progress_factor']) * 100)
+                    asset_id = self.env['account.asset'].browse(
+                        i["asset_id"])
+                    balance = asset_closing - depreciation_closing
+
+                    if i[
+                        "asset_currency_id"] != self.env.company.currency_id.id and options["available_variants"][0][
+            "name"] == 'Tasc Depreciation Schedule Functional':
+                        asset_opening = asset_id.currency_id._convert(
+                            asset_opening,
+                            self.env.company.currency_id,
+                            self.env.company,
+                            asset_id.acquisition_date)
+                        asset_add = asset_id.currency_id._convert(
+                            asset_add,
+                            self.env.company.currency_id,
+                            self.env.company,
+                            asset_id.acquisition_date)
+                        asset_minus = asset_id.currency_id._convert(
+                            asset_minus,
+                            self.env.company.currency_id,
+                            self.env.company,
+                            asset_id.acquisition_date)
+                        asset_closing = asset_id.currency_id._convert(
+                            asset_closing,
+                            self.env.company.currency_id,
+                            self.env.company,
+                            asset_id.acquisition_date)
+                        depreciation_minus = asset_id.currency_id._convert(
+                            depreciation_minus,
+                            self.env.company.currency_id,
+                            self.env.company,
+                            asset_id.acquisition_date)
+                        depreciation_opening = asset_id.currency_id._convert(
+                            depreciation_opening,
+                            self.env.company.currency_id,
+                            self.env.company,
+                            asset_id.acquisition_date)
+                        depreciation_add = asset_id.currency_id._convert(
+                            depreciation_add,
+                            self.env.company.currency_id,
+                            self.env.company,
+                            asset_id.acquisition_date)
+                        depreciation_closing = asset_id.currency_id._convert(
+                            depreciation_closing,
+                            self.env.company.currency_id,
+                            self.env.company,
+                            asset_id.acquisition_date)
+                        balance = asset_id.currency_id._convert(
+                            balance,
+                            self.env.company.currency_id,
+                            self.env.company,
+                            asset_id.acquisition_date)
 
                     sheet.write(y_offset, x_offset,
                                 asset_depreciation_rate,
@@ -1182,7 +1223,7 @@ class AccountReport(models.Model):
                                 default_style)
                     x_offset += 1
                     sheet.write(y_offset, x_offset,
-                                asset_closing - depreciation_closing,
+                                balance,
                                 default_style)
                     x_offset += 1
                     y_offset += 1
