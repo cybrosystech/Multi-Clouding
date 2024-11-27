@@ -600,6 +600,10 @@ class TascTrialBalanceQuickConsolReporttWizard(models.TransientModel):
                 col = 2
                 worksheet.write(row, col,  entries["total_ending_amount"],
                                 STYLE_LINE_Data)
+            else:
+                col = 2
+                worksheet.write(row, col, 0,
+                                STYLE_LINE_Data)
             row += 1
         res_u = data["res_u"]
         balances = {}
@@ -617,7 +621,11 @@ class TascTrialBalanceQuickConsolReporttWizard(models.TransientModel):
             worksheet.write(row, col, c_account.name,
                             STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, balances['ending_balance'] * -1,
-                            STYLE_LINE_Data)
+            if balances['ending_balance']:
+                worksheet.write(row, col, balances['ending_balance'] * -1,
+                                STYLE_LINE_Data)
+            else:
+                worksheet.write(row, col, 0,
+                                STYLE_LINE_Data)
         row += 1
 
