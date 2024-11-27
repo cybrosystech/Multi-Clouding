@@ -1,4 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_tasc_trial_balance_detailed_report_wizard_user,tasc.trial.balance.detail.report.wizard.user,model_tasc_trial_balance_detail_report_wizard,base.group_user,1,1,1,1
 access_tasc_trial_balance_cc_report_wizard_user,tasc.trial.balance.cc.report.wizard.user,model_tasc_trial_balance_cc_report_wizard,base.group_user,1,1,1,1
-
+access_tasc_trial_balance_quick_consol_report_wizard_user,tasc.trial.balance.quick.consol.report.wizard.user,model_tasc_trial_balance_quick_consol_report_wizard,base.group_user,1,1,1,1

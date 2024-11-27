@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <record id="view_purchase_requisition_form_inherit" model="ir.ui.view">
+            <field name="name">purchase.requisition.form.inherit</field>
+            <field name="model">purchase.requisition</field>
+            <field name="inherit_id"
+                   ref="purchase_requisition.view_purchase_requisition_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//header" position="inside">
+                    <button string="Request Approval"
+                            name="request_approval_button"
+                            type="object" class="btn-primary"
+                            invisible="state in ['approved', 'selected','in_approval'] or request_approve_bool == True or show_request_approve_button == True"/>
+                    <button name="button_approve_purchase_requisition_cycle" string="Approve"
+                            type="object" class="btn-primary"
+                            invisible="show_approve_button == False"
+                    />
+                    <button name="button_reject_purchase_requisition_cycle" string="Reject"
+                            type="object" class="btn-primary"
+                            invisible="show_approve_button == False"
+                    />
+                    <field name="request_approve_bool" invisible="1"/>
+                    <field name="show_request_approve_button"
+                               invisible="1"/>
+                        <field name="show_approve_button" invisible="1"/>
+                                    <field name="show_button_confirm" invisible="1"/>
+
+                </xpath>
+                                <xpath expr="//button[@name='action_in_progress']" position="attributes">
+                    <attribute name="invisible">state != 'draft' or show_button_confirm == False</attribute>
+                </xpath>
+                                       <xpath expr="//button[@name='action_cancel']" position="attributes">
+                    <attribute name="invisible">state not in ('draft', 'in_progress', 'ongoing','to_approve')</attribute>
+                </xpath>
+
+
+                <xpath expr="//header/field[@name='state']" position="replace">
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,to_approve,in_progress,open,done"
+                           invisible="is_quantity_copy == 'none'"/>
+
+                </xpath>
+                <xpath expr="//header/field[@name='state_blanket_order']"
+                       position="replace">
+                    <field name="state_blanket_order" widget="statusbar"
+                           statusbar_visible="draft,to_approve,ongoing,done"
+                           invisible="is_quantity_copy != 'none'"/>
+                </xpath>
+                <xpath expr="//notebook" postion="inside">
+                    <page string="Approval Cycle" name="approval_cycle">
+                        <field name="purchase_requisition_approval_cycle_ids"
+                               readonly="True">
+                            <tree>
+                                <field name="approval_seq"/>
+                                <field name="user_approve_ids"
+                                       widget="many2many_tags"/>
+                                <field name="is_approved"/>
+                            </tree>
+                        </field>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
