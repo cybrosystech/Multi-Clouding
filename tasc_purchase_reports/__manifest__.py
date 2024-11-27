@@ -11,6 +11,7 @@
     'version': '17.0.1.0.0',
     'depends': ['purchase', 'purchase_stock'],
     'data': [
+        'reports/paperformat.xml',
         'views/purchase_order_views.xml',
         'reports/purchase_reports.xml',
         'reports/purchase_order_templates.xml',

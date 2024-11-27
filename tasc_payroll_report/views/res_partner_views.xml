@@ -17,6 +17,7 @@
                         <field name="bank_iban"/>
                         <field name="acc_number"/>
                         <field name="acc_holder_name" invisible="1"/>
+                        <field name="currency_id"/>
                     </tree>
                 </xpath>
             </field>
@@ -34,6 +35,7 @@
                 </xpath>
                 <xpath expr="//field[@name='bank_id']" position="after">
                     <field name="branch"/>
+                    <field name="currency_id"/>
                     <field name="bank_bic" string="SWIFT/BIC"/>
                     <field name="bank_iban"/>
                 </xpath>
@@ -56,24 +58,26 @@
             </field>
         </record>
 
-        <record id="res_partner_view_form_tasc_payroll_report" model="ir.ui.view">
-        <field name="name">res.partner.view.form.tasc_payroll_report</field>
-        <field name="model">res.partner</field>
-        <field name="inherit_id" ref="account.view_partner_property_form"/>
-        <field name="arch" type="xml">
-            <xpath expr="//page[@name='accounting']/group[1]/group[1]/field[@name='bank_ids']/tree"
-                   position="replace">
-                <tree editable="bottom">
-                    <field name="sequence" widget="handle"/>
-                    <field name="bank_id"/>
-                    <field name="branch"/>
-                    <field name="bank_bic" string="SWIFT/BIC"/>
-                    <field name="bank_iban"/>
-                    <field name="acc_number"/>
-                    <field name="acc_holder_name" invisible="1"/>
-                </tree>
-            </xpath>
-        </field>
+        <record id="res_partner_view_form_tasc_payroll_report"
+                model="ir.ui.view">
+            <field name="name">res.partner.view.form.tasc_payroll_report</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="account.view_partner_property_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//page[@name='accounting']/group[1]/group[1]/field[@name='bank_ids']/tree"
+                       position="replace">
+                    <tree editable="bottom">
+                        <field name="sequence" widget="handle"/>
+                        <field name="bank_id"/>
+                        <field name="branch"/>
+                        <field name="bank_bic" string="SWIFT/BIC"/>
+                        <field name="bank_iban"/>
+                        <field name="acc_number"/>
+                        <field name="acc_holder_name" invisible="1"/>
+                        <field name="currency_id"/>
+                    </tree>
+                </xpath>
+            </field>
         </record>
     </data>
 </odoo>

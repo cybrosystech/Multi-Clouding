@@ -597,6 +597,11 @@
     <template id="report_tasc_purchaseorder_document">
         <t t-call="tasc_purchase_reports.external_layout">
             <t t-set="o" t-value="o.with_context(lang=o.partner_id.lang)"/>
+            <div class="page">
+
+            <div style="text-align: center; font-size: 20px; font-weight: bold;color:black;">
+                Purchase Order
+            </div>
             <div class="row">
                 <!-- Left column content if needed -->
                 <div class="col-6">
@@ -639,6 +644,7 @@
                     </table>
                 </div>
             </div>
+
             <br/>
 
             <div class="row" style="display: flex; align-items: stretch;">
@@ -868,13 +874,19 @@
                     </t>
                 </div>
             </div>
-            <div class="page">
+            <div>
+                <t t-if="o.state not in ['done','purchase']">
+                   <span t-attf-style="-webkit-transform:rotate(-35deg);color:grey;font-size:60px;text-align:center;position:fixed;text-align:right;padding-left:40%;opacity:0.25;align:center;">
+                       Draft
+                   </span>
+                </t>
+
                 <div class="oe_structure"/>
                 <t t-set="discount" t-value="0"/>
                 <table class="table table-sm o_main_table mt-4">
                     <thead style="display: table-row-group">
                         <tr>
-                            <th style="width:5%; background-color: #f0f0f0; color: black;border: 1px solid #000;">Sl No</th>
+                            <th style="width:4%; background-color: #f0f0f0; color: black;border: 1px solid #000;">#</th>
                             <th name="th_description" style="width: 40%; background-color: #f0f0f0; color: black;border: 1px solid #000;">
                                 <strong>Description</strong>
                             </th>
@@ -1029,6 +1041,7 @@
                 <t t-esc="o.notes" class="mt-4"/>
                 <div class="oe_structure"/>
             </div>
+        </div>
         </t>
     </template>
 
