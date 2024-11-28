@@ -16,20 +16,6 @@ class AccountMove(models.Model):
                                       search='_search_cost_center_id')
     reference = fields.Char(string="Tasc Reference")
 
-    # @api.depends('invoice_line_ids.project_site_id','invoice_line_ids.analytic_account_id','invoice_line_ids.sequence')
-    # def compute_project_site_cost_center(self):
-    #     for rec in self:
-    #         move_line_id = self.env['account.move.line'].search(
-    #             [('id', 'in', rec.invoice_line_ids.ids)], limit=1,
-    #             order="sequence,id ASC")
-    #         if move_line_id:
-    #             rec.project_site_id = move_line_id.project_site_id.id
-    #             rec.analytic_account_id = move_line_id.analytic_account_id.id
-    #         else:
-    #             rec.project_site_id = False
-    #             rec.analytic_account_id = False
-
-
     @api.depends('invoice_line_ids.project_site_id',
                  'invoice_line_ids.analytic_account_id',
                  'invoice_line_ids.sequence')

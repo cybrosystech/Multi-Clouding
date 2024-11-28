@@ -6,6 +6,12 @@ class Account(models.Model):
 
     code_num = fields.Integer(string="Code in Number",
                               compute='compute_code_num', store=True)
+    account_category = fields.Char(string="Account Category",
+                                   help="Used for classification of accounts "
+                                        "for reporting purpose.")
+    report_category = fields.Char(string="Report Category",
+                                   help="Used for classification of accounts "
+                                        "for reporting purpose.")
 
     @api.depends('code')
     def compute_code_num(self):
