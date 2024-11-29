@@ -36,7 +36,7 @@ class LeaseeContractInheritAdvance(models.Model):
                           copy=False)
     sd_leasor = fields.Many2one('res.partner', string="SD Leasor",
                                 help="Leasor for security advance "
-                                     "bills.")
+                                     "bills.",tracking=True)
     new_sd_leasor_ids = fields.One2many(comodel_name="sd.leasor",
                                         inverse_name="leasee_contract_id",
                                         string="", required=False, copy=False,
@@ -84,7 +84,6 @@ class LeaseeContractInheritAdvance(models.Model):
 
     @api.onchange('leasee_template_id')
     def onchange_leasee_template_id(self):
-        print("onchange_leasee_template_id")
         self.update({
             'lease_contract_period': self.leasee_template_id.lease_contract_period,
             'lease_contract_period_type': self.leasee_template_id.lease_contract_period_type,
@@ -112,7 +111,6 @@ class LeaseeContractInheritAdvance(models.Model):
             'initial_journal_id': self.leasee_template_id.initial_journal_id.id,
             'analytic_account_id': self.leasee_template_id.analytic_account_id.id,
             'project_site_id': self.leasee_template_id.project_site_id.id,
-
             'analytic_distribution': self.analytic_distribution,
             'incentives_account_id': self.leasee_template_id.incentives_account_id.id,
             'incentives_product_id': self.leasee_template_id.incentives_product_id.id,
@@ -368,6 +366,7 @@ class LeaseeContractInheritAdvance(models.Model):
 class SDLeasor(models.Model):
     _name = 'sd.leasor'
     _description = 'New SD Leasor'
+    _rec_name = 'partner_id'
 
     leasee_contract_id = fields.Many2one(comodel_name="leasee.contract",
                                          ondelete='cascade')

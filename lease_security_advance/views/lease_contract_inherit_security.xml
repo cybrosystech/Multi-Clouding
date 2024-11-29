@@ -43,7 +43,7 @@
                 <page string="SD Leasors"
                       invisible="is_new_sd_leasor_ids_visible == False">
                     <field name="new_sd_leasor_ids"
-                           readonly="state != 'draft'">
+                           >
                         <tree editable="bottom">
                             <field name="leasee_contract_id" invisible="1" column_invisible="1"/>
                             <field name="partner_id"/>
