@@ -1,15 +1,14 @@
 {
     'name': 'Assets Bulk Sale/Disposal',
-    'summary': """This module helps to sell or dispose assets on selected assets""",
-
-    'description': """""",
-
+    'summary': """This module helps to sell or dispose assets on selected
+     assets""",
+    'description': """This module helps to sell or dispose assets on selected
+     assets""",
     'author': "",
     'website': "",
     'category': 'account_asset',
     'version': '17.0.1.0.0',
     'depends': ['account_asset', 'queue_job', 'queue_job_cron_jobrunner'],
-
     'data':
         [
             'security/ir.model.access.csv',
