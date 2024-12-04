@@ -8,6 +8,24 @@ from odoo.exceptions import UserError
 class AccountAssetBulkSaleDisposal(models.Model):
     _inherit = 'account.asset'
 
+    # @api.constrains('depreciation_move_ids')
+    # def _check_depreciations(self):
+    #
+    #     for asset in self:
+    #         print("vvvvvvvv",asset.depreciation_move_ids.sorted(lambda x: (x.date, x.id))[
+    #                 -1].asset_remaining_value)
+    #         if (
+    #                 asset.state == 'open'
+    #                 and asset.depreciation_move_ids
+    #                 and not asset.currency_id.is_zero(
+    #             asset.depreciation_move_ids.sorted(lambda x: (x.date, x.id))[
+    #                 -1].asset_remaining_value
+    #         )
+    #         ):
+    #             raise UserError(
+    #                 _("The remaining value on the last depreciation entry must"
+    #                   " be 0 for the asset %s", asset.name))
+
     @api.constrains('depreciation_move_ids')
     def _check_depreciations(self):
         for asset in self:
