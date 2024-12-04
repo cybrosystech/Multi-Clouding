@@ -8,20 +8,43 @@ from odoo.exceptions import UserError
 class AccountAssetBulkSaleDisposal(models.Model):
     _inherit = 'account.asset'
 
+    # @api.constrains('depreciation_move_ids')
+    # def _check_depreciations(self):
+    #
+    #     for asset in self:
+    #         print("vvvvvvvv",asset.depreciation_move_ids.sorted(lambda x: (x.date, x.id))[
+    #                 -1].asset_remaining_value)
+    #         if (
+    #                 asset.state == 'open'
+    #                 and asset.depreciation_move_ids
+    #                 and not asset.currency_id.is_zero(
+    #             asset.depreciation_move_ids.sorted(lambda x: (x.date, x.id))[
+    #                 -1].asset_remaining_value
+    #         )
+    #         ):
+    #             raise UserError(
+    #                 _("The remaining value on the last depreciation entry must"
+    #                   " be 0 for the asset %s", asset.name))
+
     @api.constrains('depreciation_move_ids')
     def _check_depreciations(self):
         for asset in self:
-            if (
-                    asset.state == 'open'
-                    and asset.depreciation_move_ids
-                    and not asset.currency_id.is_zero(
-                asset.depreciation_move_ids.sorted(lambda x: (x.date, x.id))[
-                    -1].asset_remaining_value
-            )
-            ):
-                raise UserError(
-                    _("The remaining value on the last depreciation entry must"
-                      " be 0 for the asset %s", asset.name))
+            remaining_value = \
+            asset.depreciation_move_ids.sorted(lambda x: (x.date, x.id))[
+                -1].asset_remaining_value
+            cancelled_asset_entries = asset.depreciation_move_ids.filtered(
+                lambda x: x.state == 'cancel')
+            cancelled_amount = 0
+            if cancelled_asset_entries:
+                cancelled_amount = sum(
+                    cancelled_asset_entries.mapped('amount_total'))
+            rem = abs(remaining_value) - cancelled_amount
+            if (asset.state == 'open'and asset.depreciation_move_ids and not asset.currency_id.is_zero(asset.depreciation_move_ids.sorted(lambda x: (x.date, x.id))[-1].asset_remaining_value)):
+                if not asset.currency_id.is_zero(rem):
+                    raise UserError(
+                        _("The remaining value on the last depreciation entry must"
+                          " be 0 for the asset %s", asset.name))
+
 
     def asset_bulk_sale_dispose(self):
         abc = []
