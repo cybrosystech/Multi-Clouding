@@ -22,6 +22,7 @@ class AccountAssetInherit(models.Model):
         self.acquisition_date = Date
         self.prorata_date = Date
 
+
     def _recompute_board(self,start_depreciation_date=False):
         self.ensure_one()
         # All depreciation moves that are posted
@@ -92,49 +93,26 @@ class AccountAssetInherit(models.Model):
                                      precision_rounding=self.currency_id.rounding):
                     # For deferred revenues, we should invert the amounts.
                     if period_end_depreciation_date:
-                        if self.id == 493285 and self.company_id.id == 6 :
-                            lease = self.leasee_contract_ids.filtered(lambda x:x.id == 34165 and x.company_id.id == 6)
-                            if lease.commencement_date and lease.inception_date and period_end_depreciation_date >= lease.commencement_date and period_end_depreciation_date <= lease.inception_date and lease.commencement_date < lease.inception_date:
-                                depreciation_move_values.append(self.env[
-                                    'account.move']._prepare_move_for_asset_depreciation(
-                                    {
-                                        'amount': amount,
-                                        'asset_id': self,
-                                        'depreciation_beginning_date': start_depreciation_date,
-                                        'date': lease.inception_date,
-                                        'asset_number_days': days,
-                                    }))
-                            else:
-                                depreciation_move_values.append(self.env[
-                                    'account.move']._prepare_move_for_asset_depreciation(
-                                    {
-                                        'amount': amount,
-                                        'asset_id': self,
-                                        'depreciation_beginning_date': start_depreciation_date,
-                                        'date': period_end_depreciation_date,
-                                        'asset_number_days': days,
-                                    }))
+                        if self.leasee_contract_ids.commencement_date and self.leasee_contract_ids.inception_date and period_end_depreciation_date >= self.leasee_contract_ids.commencement_date and period_end_depreciation_date <= self.leasee_contract_ids.inception_date and self.leasee_contract_ids.commencement_date < self.leasee_contract_ids.inception_date:
+                            depreciation_move_values.append(self.env[
+                                'account.move']._prepare_move_for_asset_depreciation(
+                                {
+                                    'amount': amount,
+                                    'asset_id': self,
+                                    'depreciation_beginning_date': start_depreciation_date,
+                                    'date': self.leasee_contract_ids.inception_date,
+                                    'asset_number_days': days,
+                                }))
                         else:
-                            if self.leasee_contract_ids.commencement_date and self.leasee_contract_ids.inception_date and period_end_depreciation_date >= self.leasee_contract_ids.commencement_date and period_end_depreciation_date <= self.leasee_contract_ids.inception_date and self.leasee_contract_ids.commencement_date < self.leasee_contract_ids.inception_date:
-                                depreciation_move_values.append(self.env[
-                                    'account.move']._prepare_move_for_asset_depreciation(
-                                    {
-                                        'amount': amount,
-                                        'asset_id': self,
-                                        'depreciation_beginning_date': start_depreciation_date,
-                                        'date': self.leasee_contract_ids.inception_date,
-                                        'asset_number_days': days,
-                                    }))
-                            else:
-                                depreciation_move_values.append(self.env[
-                                    'account.move']._prepare_move_for_asset_depreciation(
-                                    {
-                                        'amount': amount,
-                                        'asset_id': self,
-                                        'depreciation_beginning_date': start_depreciation_date,
-                                        'date': period_end_depreciation_date,
-                                        'asset_number_days': days,
-                                    }))
+                            depreciation_move_values.append(self.env[
+                                'account.move']._prepare_move_for_asset_depreciation(
+                                {
+                                    'amount': amount,
+                                    'asset_id': self,
+                                    'depreciation_beginning_date': start_depreciation_date,
+                                    'date': period_end_depreciation_date,
+                                    'asset_number_days': days,
+                                }))
                     else:
                         depreciation_move_values.append(self.env[
                             'account.move']._prepare_move_for_asset_depreciation(
