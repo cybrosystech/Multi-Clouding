@@ -7,8 +7,19 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='deferred_start_date']"
                    position="before">
-                <field name="deferred_account_id"  required="deferred_start_date != False or deferred_end_date != False"
-                      />
+                <field name="deferred_account_id"
+                       required="deferred_start_date != False or deferred_end_date != False"
+                />
+            </xpath>
+            <xpath expr="//field[@name='deferred_start_date']"
+                   position="replace">
+                <field name="deferred_start_date" optional="hide"
+                       required="deferred_account_id != False"/>
+            </xpath>
+            <xpath expr="//field[@name='deferred_end_date']"
+                   position="replace">
+                <field name="deferred_end_date" optional="hide"
+                       required="deferred_account_id != False"/>
             </xpath>
         </field>
     </record>
