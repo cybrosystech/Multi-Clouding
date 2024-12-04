@@ -223,13 +223,12 @@ class LeaseeContract(models.Model):
         return is_admin
 
     def compute_is_admin(self):
-        for rec in self:
-            if self.env.user.id == SUPERUSER_ID or self.env.user.has_group(
-                    'base.group_erp_manager') or self.env.user.has_group(
-                    'base.group_system'):
-                rec.is_admin = True
-            else:
-                rec.is_admin = False
+        is_admin = self.env.user.id == SUPERUSER_ID or \
+                   self.env.user.has_group('base.group_erp_manager') or \
+                   self.env.user.has_group('base.group_system')
+        # Perform bulk write on all records at once
+        self.update({'is_admin': is_admin})
+
 
     def get_lease_ending_date(self):
         """
@@ -1377,7 +1376,7 @@ class LeaseeContract(models.Model):
                 'location_id': self.location_id.id,
                 'currency_id': self.leasee_currency_id.id
             })]
-            move = self.env['account.move'].create({
+            self.env['account.move'].create({
                 'partner_id': self.vendor_id.id,
                 'move_type': 'entry',
                 'currency_id': self.leasee_currency_id.id,
@@ -1430,6 +1429,11 @@ class LeaseeContract(models.Model):
     def action_open_bills(self):
         domain = [('id', 'in', self.account_move_ids.ids),
                   ('move_type', 'in', ['in_invoice', 'in_refund'])]
+        journal = self.env['account.journal'].search([('name', 'ilike', 'ifrs'),
+                                                      ('type', '=', 'purchase'),
+                                                      ('company_id', '=',
+                                                       self.company_id.id)],
+                                                     limit=1)
         view_tree = {
             'name': _(' Vendor Bills '),
             'view_type': 'form',
@@ -1437,6 +1441,7 @@ class LeaseeContract(models.Model):
             'res_model': 'account.move',
             'type': 'ir.actions.act_window',
             'domain': domain,
+            "context": {'default_journal_id': journal.id if journal.id else False},
         }
 
         return view_tree
@@ -1517,14 +1522,15 @@ class LeaseeContract(models.Model):
 
     def create_termination_fees(self):
         amount = self.terminate_fine
-        if self.leasor_type == 'single':
-            self.create_termination_fees_bill(amount, self.vendor_id)
-        else:
-            for leasor in self.multi_leasor_ids:
-                partner = leasor.partner_id
-                leasor_amount = (
-                                        leasor.amount / self.installment_amount) * amount if leasor.type == 'amount' else leasor.percentage * amount / 100
-                self.create_termination_fees_bill(leasor_amount, partner)
+        if amount !=0:
+            if self.leasor_type == 'single':
+                self.create_termination_fees_bill(amount, self.vendor_id)
+            else:
+                for leasor in self.multi_leasor_ids:
+                    partner = leasor.partner_id
+                    leasor_amount = (
+                                            leasor.amount / self.installment_amount) * amount if leasor.type == 'amount' else leasor.percentage * amount / 100
+                    self.create_termination_fees_bill(leasor_amount, partner)
 
     def create_termination_fees_bill(self, amount, partner):
 
