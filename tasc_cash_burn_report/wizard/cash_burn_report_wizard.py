@@ -459,7 +459,7 @@ class CashBurnReportWizard(models.Model):
             if move:
                 for mv in move:
                     reconciled_line_id = move_line_ids.filtered(
-                        lambda x: x.move_id.id == mv.id and x.debit!=0)
+                        lambda x: x.move_id.id == mv.id )
                     col = 0
                     if mv.journal_id.type in ['sale',
                                               'purchase'] and not mv.payment_id and mv.move_type != 'entry':
@@ -777,14 +777,12 @@ class CashBurnReportWizard(models.Model):
                                     reconciled_line_id.amount_currency)
                                 amount = abs(
                                         reconciled_line_id.credit) if reconciled_line_id.credit else abs(reconciled_line_id.debit)
-
                                 if bank_line_id.credit:
                                     credit_amount = amount
                                     debit_amount = 0
                                 else:
                                     credit_amount = 0
                                     debit_amount = amount
-
                                 self.add_row(worksheet, date_format,
                                              STYLE_LINE_Data, col,
                                              row,
@@ -869,3 +867,105 @@ class CashBurnReportWizard(models.Model):
                                  credit_amount, False, False,
                                  invoice_amount,bank_line_id)
                     row += 1
+        ##################################################################
+        bank_clearing_items = self.env['account.move.line'].search([
+            ('account_id.account_type', '=', 'asset_current'),
+            ('account_id.code', '=', '111199'),
+            ('date', '>=', self.start_date),
+            ('date', '<=', self.end_date),
+            ('parent_state', '=', 'posted'),
+            ('company_id','=',self.company_id.id)])
+        for item in bank_clearing_items:
+            col=0
+            worksheet.write(row, col, item.date if item.date else '',
+                            date_format)
+            col+=1
+            worksheet.write(row, col, item.move_name if item.move_name else '',
+                            STYLE_LINE_Data)
+            col+=1
+            worksheet.write(row, col, item.ref if item.ref else '',
+                            STYLE_LINE_Data)
+            col+=1
+            worksheet.write(row, col, item.name if item.name else '',
+                            STYLE_LINE_Data)
+            col+=1
+            worksheet.write(row, col, "",
+                            STYLE_LINE_Data)
+            col+=1
+            worksheet.write(row, col, item.journal_id.name if item.journal_id else '',
+                            STYLE_LINE_Data)
+            col+=1
+            if item.analytic_account_id.name:
+                if item.analytic_account_id.code:
+                    worksheet.write(row, col,
+                                    item.analytic_account_id.code + " " + item.analytic_account_id.name,
+                                    STYLE_LINE_Data)
+                else:
+                    worksheet.write(row, col,
+                                    item.analytic_account_id.name,
+                                    STYLE_LINE_Data)
+            else:
+                worksheet.write(row, col,
+                                '',
+                                STYLE_LINE_Data)
+            col+=1
+            if item.project_site_id.name:
+                if item.project_site_id.code:
+                    worksheet.write(row, col,
+                                    item.project_site_id.code + " " + item.project_site_id.name,
+                                    STYLE_LINE_Data)
+                else:
+                    worksheet.write(row, col,
+                                    item.project_site_id.name,
+                                    STYLE_LINE_Data)
+            else:
+                worksheet.write(row, col,
+                                '',
+                                STYLE_LINE_Data)
+            col+=1
+            if item.account_id.name:
+                if item.account_id.code:
+                    worksheet.write(row, col,
+                                    item.account_id.code + " " + item.account_id.name,
+                                    STYLE_LINE_Data)
+                else:
+                    worksheet.write(row, col,
+                                    item.account_id.name,
+                                    STYLE_LINE_Data)
+            else:
+                worksheet.write(row, col,
+                                '',
+                                STYLE_LINE_Data)
+            col+=1
+            if item.account_id.name:
+                if item.account_id.code:
+                    worksheet.write(row, col,
+                                    item.account_id.code + " " + item.account_id.name,
+                                    STYLE_LINE_Data)
+                else:
+                    worksheet.write(row, col,
+                                    item.account_id.name,
+                                    STYLE_LINE_Data)
+            else:
+                worksheet.write(row, col,
+                                '',
+                                STYLE_LINE_Data)
+            col+=1
+            worksheet.write(row, col, item.partner_id.name if item.partner_id.name else '',
+                            STYLE_LINE_Data)
+            col+=1
+            worksheet.write(row, col, item.currency_id.name if item.currency_id.name else '',
+                            STYLE_LINE_Data)
+            col+=1
+            worksheet.write(row, col, 0,
+                            STYLE_LINE_Data)
+            col+=1
+            worksheet.write(row, col, item.debit if item.debit else 0,
+                            STYLE_LINE_Data)
+            col+=1
+            worksheet.write(row, col, item.credit if item.credit else 0,
+                            STYLE_LINE_Data)
+            col+=1
+            worksheet.write(row, col, abs(item.credit)-abs(item.debit),
+                            STYLE_LINE_Data)
+            row+=1

@@ -8,6 +8,7 @@
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='currency_id']" position="after">
                     <field name="payment_term_id"/>
+                    <field name="payment_state" invisible="1"/>
                 </xpath>
                 <xpath expr="//field[@name='notes']" position="before">
                     <field name="supplier_representative"/>
@@ -16,5 +17,37 @@
                 </xpath>
             </field>
         </record>
+
+        <record id="purchase_order_view_tree" model="ir.ui.view">
+            <field name="name">purchase.order.tree.inherit.tasc.purchase.reports</field>
+            <field name="model">purchase.order</field>
+            <field name="inherit_id" ref="purchase.purchase_order_view_tree"/>
+            <field name="arch" type="xml">
+                <field name="invoice_status" position="after">
+                    <field name="payment_state" optional="hide" widget="badge"
+                           decoration-success="payment_state == 'paid'"
+                           decoration-info="payment_state == 'partial'"
+                           decoration-muted="payment_state == 'not_paid'"
+                           decoration-warning="payment_state == 'in_payment'"/>
+                </field>
+            </field>
+        </record>
+
+        <record id="purchase_order_kpis_tree" model="ir.ui.view">
+            <field name="name">purchase.order.tree.inherit.tasc.purchase.reprorts</field>
+            <field name="model">purchase.order</field>
+            <field name="inherit_id" ref="purchase.purchase_order_kpis_tree"/>
+            <field name="arch" type="xml">
+                <field name="invoice_status" position="after">
+                    <field name="payment_state" optional="hide" widget="badge"
+                           decoration-success="payment_state == 'paid'"
+                           decoration-info="payment_state == 'partial'"
+                           decoration-muted="payment_state == 'not_paid'"
+                           decoration-warning="payment_state == 'in_payment'"/>
+                </field>
+            </field>
+        </record>
+
+
     </data>
 </odoo>
