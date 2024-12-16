@@ -40,25 +40,17 @@ class AccountMove(models.Model):
     state = fields.Selection(
         selection_add=[('to_approve', 'To Approve'), ('posted',), ],
         ondelete={'to_approve': 'set default', 'draft': 'set default', })
-    is_admin = fields.Boolean(string="Is Admin", compute='compute_is_admin',
-                              default=lambda self: self.get_is_admin())
+    is_admin = fields.Boolean(string="Is Admin", compute='_compute_is_admin')
 
-    def get_is_admin(self):
-        if self.env.user.has_group(
-                'base.group_erp_manager') or self.env.user.has_group(
-            'base.group_system'):
-            is_admin = True
-        else:
-            is_admin = False
-        return is_admin
-
-
-    def compute_is_admin(self):
-        is_admin = self.env.user.id == SUPERUSER_ID or \
-                   self.env.user.has_group('base.group_erp_manager') or \
-                   self.env.user.has_group('base.group_system')
-        # Perform bulk write on all records at once
-        self.write({'is_admin': is_admin})
+    @api.depends_context('uid')
+    def _compute_is_admin(self):
+        is_admin = (
+                self.env.user.id == SUPERUSER_ID or
+                self.env.user.has_group('base.group_erp_manager') or
+                self.env.user.has_group('base.group_system')
+        )
+        for record in self:
+            record.is_admin = is_admin
 
 
     @api.depends('line_ids.balance')
@@ -190,15 +182,6 @@ class AccountMove(models.Model):
         for rec in self:
             rec.is_from_purchase = bool(grouped_invoice_lines.get(rec.id))
 
-        # @api.depends('invoice_line_ids.purchase_line_id')
-        # def check_if_from_purchase(self):
-        # for rec in self:
-        #     rec.is_from_purchase = False
-        #     purchased = rec.invoice_line_ids.filtered(
-        #         lambda x: x.purchase_line_id)
-        #     if purchased:
-        #         rec.is_from_purchase = True
-
     @api.depends('invoice_line_ids.sale_line_ids')
     def check_if_from_sales(self):
         grouped_invoice_lines = defaultdict(list)
@@ -210,18 +193,6 @@ class AccountMove(models.Model):
         # Iterate over records without batch processing (avoid tools.split_every if not necessary)
         for rec in self:
             rec.is_from_sales = bool(grouped_invoice_lines.get(rec.id))
-
-
-    # @api.depends('invoice_line_ids.sale_line_ids')
-    # def check_if_from_sales(self):
-    #     print("check_if_from_sales")
-    #     for rec in self:
-    #         print("context2",rec.env.context)
-    #         rec.is_from_sales = False
-    #         sales = rec.invoice_line_ids.filtered(lambda x: x.sale_line_ids)
-    #         if sales:
-    #             rec.is_from_sales = True
-
 
     @api.depends('purchase_approval_cycle_ids','state','purchase_approval_cycle_ids.is_approved','purchase_approval_cycle_ids.user_approve_ids')
     def check_show_approve_button(self):
@@ -351,13 +322,14 @@ class AccountMove(models.Model):
             out_budget = self.env['budget.in.out.check.invoice'].search(
                 [('type', '=', 'out_budget'),
                  ('company_id', '=', self.env.company.id)], limit=1)
-            max_value = max(self.budget_collect_ids.mapped('demand_amount'))
-            for rec in out_budget.budget_line_ids:
-                if max_value >= rec.from_amount:
-                    out_budget_list.append((0, 0, {
-                        'approval_seq': rec.approval_seq,
-                        'user_approve_ids': rec.user_ids.ids,
-                    }))
+            if self.budget_collect_ids:
+                max_value = max(self.budget_collect_ids.mapped('demand_amount'))
+                for rec in out_budget.budget_line_ids:
+                    if max_value >= rec.from_amount:
+                        out_budget_list.append((0, 0, {
+                            'approval_seq': rec.approval_seq,
+                            'user_approve_ids': rec.user_ids.ids,
+                        }))
 
             self.write({'purchase_approval_cycle_ids': out_budget_list})
         if not self.out_budget and not self.purchase_approval_cycle_ids:
@@ -672,18 +644,6 @@ class AccountMoveLine(models.Model):
         [('capex', 'CAPEX'), ('opex', 'OPEX'), ],
         string='T.Budget')
 
-    # @api.constrains('project_site_id', 'display_type')
-    # def _check_project_site_id(self):
-    #     for line in self:
-    #         if self._context.get('action_name') and self._context.get(
-    #                 'action_name') == 'action_bank_statement_tree':
-    #             pass
-    #         else:
-    #             if line.display_type not in (
-    #                     'line_section', 'line_note') and line.display_type in (
-    #             'product') and not line.project_site_id:
-    #                 raise ValidationError(
-    #                     "Missing required project site on invoice line.")
 
     @api.onchange('analytic_distribution')
     def _inverse_analytic_distribution(self):

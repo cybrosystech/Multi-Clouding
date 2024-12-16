@@ -1,9 +1,7 @@
 {
-    'name': 'Tasc Cash Burn Report',
-    'summary': """The module is used for Tasc Cash Burn Report""",
-
-    'description': """The module is used for Tasc Cash Burn Report""",
-
+    'name': 'Tasc Cash Burn GL Report',
+    'summary': """The module is used for Tasc Cash Burn GL Report""",
+    'description': """The module is used for Tasc Cash Burn GLReport""",
     'author': " Cybrosys Technologies",
     'website': "",
     'category': 'Accounting',
@@ -12,7 +10,7 @@
     'data':
         [
             'security/ir.model.access.csv',
-            'wizard/cash_burn_report_wizard_views.xml',
+            'wizard/cash_burn_report_gl_wizard_views.xml',
         ],
     'installable': True,
     'auto_install': False,

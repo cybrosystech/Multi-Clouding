@@ -22,31 +22,15 @@ class PurchaseOrder(models.Model):
     state = fields.Selection(
         selection_add=[('to_approve', 'To Approve'), ('sent',), ],
         ondelete={'to_approve': 'set default', 'draft': 'set default', })
-    is_admin = fields.Boolean(string="Is Admin", compute='compute_is_admin',default=lambda self: self.get_is_admin())
+    is_admin = fields.Boolean(string="Is Admin", compute='compute_is_admin')
 
-    def get_is_admin(self):
-        if self.env.user.has_group(
-                'base.group_erp_manager') or self.env.user.has_group(
-            'base.group_system'):
-            is_admin = True
-        else:
-            is_admin = False
-        return is_admin
-
-    # def compute_is_admin(self):
-    #     for rec in self:
-    #         if self.env.user.id == SUPERUSER_ID or self.env.user.has_group(
-    #                 'base.group_erp_manager') or self.env.user.has_group(
-    #                 'base.group_system'):
-    #             rec.is_admin = True
-    #         else:
-    #             rec.is_admin = False
+    @api.depends_context('uid')
     def compute_is_admin(self):
         is_admin = self.env.user.id == SUPERUSER_ID or \
                    self.env.user.has_group('base.group_erp_manager') or \
                    self.env.user.has_group('base.group_system')
-        # Perform bulk write on all records at once
-        self.write({'is_admin': is_admin})
+        for rec in self:
+            rec.is_admin=is_admin
 
     def button_cancel(self):
         res = super(PurchaseOrder, self).button_cancel()

@@ -459,7 +459,7 @@ class CashBurnReportWizard(models.Model):
             if move:
                 for mv in move:
                     reconciled_line_id = move_line_ids.filtered(
-                        lambda x: x.move_id.id == mv.id and x.debit!=0)
+                        lambda x: x.move_id.id == mv.id )
                     col = 0
                     if mv.journal_id.type in ['sale',
                                               'purchase'] and not mv.payment_id and mv.move_type != 'entry':
@@ -777,14 +777,12 @@ class CashBurnReportWizard(models.Model):
                                     reconciled_line_id.amount_currency)
                                 amount = abs(
                                         reconciled_line_id.credit) if reconciled_line_id.credit else abs(reconciled_line_id.debit)
-
                                 if bank_line_id.credit:
                                     credit_amount = amount
                                     debit_amount = 0
                                 else:
                                     credit_amount = 0
                                     debit_amount = amount
-
                                 self.add_row(worksheet, date_format,
                                              STYLE_LINE_Data, col,
                                              row,
