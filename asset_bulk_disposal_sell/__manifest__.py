@@ -8,7 +8,7 @@
     'website': "",
     'category': 'account_asset',
     'version': '17.0.1.0.0',
-    'depends': ['account_asset', 'queue_job', 'queue_job_cron_jobrunner'],
+    'depends': ['account_asset','lease_management','lease_management_inherit','queue_job', 'queue_job_cron_jobrunner'],
     'data':
         [
             'security/ir.model.access.csv',

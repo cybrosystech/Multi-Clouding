@@ -8,42 +8,23 @@ from odoo.exceptions import UserError
 class AccountAssetBulkSaleDisposal(models.Model):
     _inherit = 'account.asset'
 
-    # @api.constrains('depreciation_move_ids')
-    # def _check_depreciations(self):
-    #
-    #     for asset in self:
-    #         print("vvvvvvvv",asset.depreciation_move_ids.sorted(lambda x: (x.date, x.id))[
-    #                 -1].asset_remaining_value)
-    #         if (
-    #                 asset.state == 'open'
-    #                 and asset.depreciation_move_ids
-    #                 and not asset.currency_id.is_zero(
-    #             asset.depreciation_move_ids.sorted(lambda x: (x.date, x.id))[
-    #                 -1].asset_remaining_value
-    #         )
-    #         ):
-    #             raise UserError(
-    #                 _("The remaining value on the last depreciation entry must"
-    #                   " be 0 for the asset %s", asset.name))
-
     @api.constrains('depreciation_move_ids')
     def _check_depreciations(self):
         for asset in self:
-            remaining_value = \
-            asset.depreciation_move_ids.sorted(lambda x: (x.date, x.id))[
-                -1].asset_remaining_value
-            cancelled_asset_entries = asset.depreciation_move_ids.filtered(
-                lambda x: x.state == 'cancel')
-            cancelled_amount = 0
-            if cancelled_asset_entries:
-                cancelled_amount = sum(
-                    cancelled_asset_entries.mapped('amount_total'))
-            rem = abs(remaining_value) - cancelled_amount
-            if (asset.state == 'open'and asset.depreciation_move_ids and not asset.currency_id.is_zero(asset.depreciation_move_ids.sorted(lambda x: (x.date, x.id))[-1].asset_remaining_value)):
-                if not asset.currency_id.is_zero(rem):
-                    raise UserError(
-                        _("The remaining value on the last depreciation entry must"
-                          " be 0 for the asset %s", asset.name))
+            if asset.depreciation_move_ids and  asset.depreciation_move_ids.sorted(lambda x: (x.date, x.id))[-1]:
+                remaining_value = asset.depreciation_move_ids.sorted(lambda x: (x.date, x.id))[-1].asset_remaining_value
+                cancelled_asset_entries = asset.depreciation_move_ids.filtered(
+                    lambda x: x.state == 'cancel')
+                cancelled_amount = 0
+                if cancelled_asset_entries:
+                    cancelled_amount = sum(
+                        cancelled_asset_entries.mapped('amount_total'))
+                rem = abs(remaining_value) - cancelled_amount
+                if (asset.state == 'open'and asset.depreciation_move_ids and not asset.currency_id.is_zero(asset.depreciation_move_ids.sorted(lambda x: (x.date, x.id))[-1].asset_remaining_value)):
+                    if not asset.currency_id.is_zero(rem):
+                        raise UserError(
+                            _("The remaining value on the last depreciation entry must"
+                              " be 0 for the asset %s", asset.name))
 
 
     def asset_bulk_sale_dispose(self):
@@ -115,16 +96,7 @@ class AccountAssetBulkSaleDisposal(models.Model):
                 'res_id': move_ids[0],
                 'domain': [('id', 'in', move_ids)]
             }
-        # self.ensure_one()
-        # disposal_date = date or fields.Date.today()
-        # if invoice_line_ids and self.children_ids.filtered(lambda a: a.state in ('draft', 'open') or a.value_residual > 0):
-        #     raise UserError(_("You cannot automate the journal entry for an asset that has a running gross increase. Please use 'Dispose' on the increase(s)."))
-        # full_asset = self + self.children_ids
-        # full_asset._get_disposal_moves_bulk([invoice_line_ids] * len(full_asset), disposal_date, partial, partial_amount)
-        # if not partial:
-        #     full_asset.write({'state': 'close'})
-        # # if move_ids:
-        # #     return self._return_disposal_view(move_ids)
+
 
     def _get_disposal_moves_bulk(self, invoice_line_ids, disposal_date, partial, partial_amount):
         def get_line(asset, amount, account):
@@ -135,15 +107,7 @@ class AccountAssetBulkSaleDisposal(models.Model):
                                               precision_digits=prec) > 0 else -amount,
                 'credit': amount if float_compare(amount, 0.0,
                                                   precision_digits=prec) > 0 else 0.0,
-                # 'analytic_account_id': account_analytic_id.id if asset.leasee_contract_ids else False,
-                # 'analytic_tag_ids': [(6, 0,
-                #                       analytic_tag_ids.ids)] if asset.asset_type == 'sale' else False,
                 'currency_id': current_currency.id,
-                # 'amount_currency': asset.value_residual if float_compare(amount, 0.0,
-                #                               precision_digits=prec) > 0 else -(asset.value_residual),
-                # 'project_site_id': asset.project_site_id.id,
-                # 'type_id': asset.type_id.id,
-                # 'location_id': asset.location_id.id,
                 'analytic_distribution': asset.analytic_distribution,
             })
         if len(self.leasee_contract_ids) == 1:
@@ -163,8 +127,6 @@ class AccountAssetBulkSaleDisposal(models.Model):
                             'There are depreciation posted in the future, please revert them.')
                 disposal_date = self.env.context.get(
                     'disposal_date') or disposal_date
-                # account_analytic_id = asset.account_analytic_id
-                # analytic_tag_ids = asset.analytic_tag_ids
                 company_currency = asset.company_id.currency_id
                 current_currency = asset.currency_id
                 prec = company_currency.decimal_places
