@@ -14,7 +14,9 @@
             'data/account_bank_statement_data.xml',
             'data/mail_template.xml',
             'views/account_statement_approval_check_views.xml',
-            'views/account_bank_statement_views.xml'
+            'views/account_bank_statement_views.xml',
+            'views/tasc_bank_reconcilation_report.xml',
+            'views/account_journal_views.xml',
         ],
     'installable': True,
     'auto_install': False,
