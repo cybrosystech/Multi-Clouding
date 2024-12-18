@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <record id="action_tasc_account_report_bank_reconciliation" model="ir.actions.client">
+            <field name="name">TASC Bank Reconciliation</field>
+            <field name="tag">account_report</field>
+            <field name="context" eval="{'report_id': ref('bank_reconcilation_report.tasc_bank_reconciliation_report')}"/>
+        </record>
+
+        <record model="ir.ui.view" id="account_reports_journal_dashboard_kanban_view">
+            <field name="name">account.journal.view.kanban.bank_reconcilation_report</field>
+            <field name="model">account.journal</field>
+            <field name="inherit_id" ref="account_reports.account_reports_journal_dashboard_kanban_view" />
+            <field name="arch" type="xml">
+                <xpath expr="//div[hasclass('o_kanban_manage_reconciliation')]" position="replace">
+                    <div class="col-4 o_kanban_card_manage_section o_kanban_manage_reconciliation">
+                    <h5 id="card_action_view_menus" class="o_kanban_card_manage_title">
+                        <span role="separator">Reconciliation</span>
+                    </h5>
+                    <div>
+                        <a type="action" name="%(account_reports.action_account_report_bank_reconciliation)d">Reconciliation Report</a>
+                    </div>
+                    <div>
+                        <a type="action" name="%(action_tasc_account_report_bank_reconciliation)d">TASC Reconciliation Report</a>
+                    </div>
+                </div>
+                </xpath>
+            </field>
+         </record>
+    </data>
+</odoo>
