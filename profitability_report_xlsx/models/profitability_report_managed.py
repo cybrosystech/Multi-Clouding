@@ -1,13 +1,12 @@
-from odoo import fields, models
+from odoo import fields, models, api
 import json
 import calendar
 import io
-
 from odoo.exceptions import UserError
 from odoo.tools import date_utils, get_lang
 from odoo.tools.safe_eval import datetime
-from datetime import timedelta
 import xlsxwriter
+from collections import defaultdict
 
 
 class ProfitabilityReportManaged(models.Model):
@@ -64,42 +63,30 @@ class ProfitabilityReportManaged(models.Model):
                               default='last_financial_year')
     company_id = fields.Many2one('res.company', 'Company',
                                  default=lambda self: self.env.company)
-    end_limit = fields.Integer('end limit', default=0)
     from_date = fields.Date('From')
     to_date = fields.Date('To')
     current_filter = fields.Char('Selected Filter')
-    cron_id = fields.Many2one('ir.cron', String="Scheduled Action",
-                              domain=[('name', 'ilike',
-                                       'Profitability Managed Cron :')])
-    _sql_constraints = [
-        ('cron_uniq', 'unique (cron_id)',
-         """This scheduled action is already selected on another!."""),
-    ]
 
-    def profitability_managed_report_general(self, limit):
-        cron_id = self.env.ref(
-            'profitability_report_xlsx.action_profitability_managed_cron_general').id
-        profitability_managed = self.env['profitability.report.managed'].search(
-            [('cron_id', '=', cron_id)])
+    @api.onchange('period')
+    def onchange_period(self):
         current_date = fields.Date.today()
-        profitability_managed_report = profitability_managed.json_report_values
         from_date = ''
         to_date = ''
         Current_months = ''
-        if profitability_managed.period == 'this_financial_year':
+        if self.period == 'this_financial_year':
             first, last = calendar.monthrange(current_date.year,
                                               12)
             from_date = datetime.date(current_date.year, 1, 1)
             to_date = datetime.date(current_date.year, 12, last)
             Current_months = from_date.year
-        if profitability_managed.period == 'last_financial_year':
+        if self.period == 'last_financial_year':
             last_financial_year = current_date.year - 1
             first, last = calendar.monthrange(last_financial_year,
                                               12)
             from_date = datetime.date(last_financial_year, 1, 1)
             to_date = datetime.date(last_financial_year, 12, last)
             Current_months = from_date.year
-        if profitability_managed.period == 'this_quarter':
+        if self.period == 'this_quarter':
             current_quarter = (current_date.month - 1) // 3 + 1
             first, last = calendar.monthrange(current_date.year,
                                               3 * current_quarter)
@@ -110,7 +97,7 @@ class ProfitabilityReportManaged(models.Model):
             from_month = from_date.strftime("%B")
             to_month = to_date.strftime("%B")
             Current_months = from_month + ' - ' + to_month
-        if profitability_managed.period == 'last_quarter':
+        if self.period == 'last_quarter':
             last_quarter = ((current_date.month - 1) // 3 + 1) - 1
             first, last = calendar.monthrange(current_date.year,
                                               3 * last_quarter)
@@ -121,769 +108,43 @@ class ProfitabilityReportManaged(models.Model):
             from_month = from_date.strftime("%B")
             to_month = to_date.strftime("%B")
             Current_months = from_month + ' - ' + to_month
-        if profitability_managed.from_date and profitability_managed.to_date:
-            if profitability_managed.from_date > profitability_managed.to_date:
+
+        self.from_date = False
+        self.to_date = False
+        self.from_date = from_date
+        self.to_date = to_date
+        self.current_filter = Current_months
+
+    @api.constrains('from_date','to_date')
+    def onsave_period(self):
+        if self.from_date and self.to_date:
+            if self.from_date > self.to_date:
                 raise UserError("Start date should be less than end date")
-        # plan = self.env['account.analytic.plan'].search(
-        #     [('name', 'ilike', 'managed')])
-        group_id = 'managed'
-        data = {
-            'ids': self.ids,
-            'model': self._name,
-            'lease_anchor_tenant_ids': profitability_managed.lease_anchor_tenant.ids,
-            'lease_colo_tenant_ids': profitability_managed.lease_colo_tenant.ids,
-            'additional_space_revenue_ids': profitability_managed.additional_space_revenue.ids,
-            'bts_revenue_ids': profitability_managed.bts_revenue.ids,
-            'active_sharing_fees_ids': profitability_managed.active_sharing_fees.ids,
-            'discount_ids': profitability_managed.discount.ids,
-            'rou_depreciation_ids': profitability_managed.rou_depreciation.ids,
-            'fa_depreciation_ids': profitability_managed.fa_depreciation.ids,
-            'lease_finance_cost_ids': profitability_managed.lease_finance_cost.ids,
-            'site_maintenance_ids': profitability_managed.site_maintenance_managed.ids,
-            'site_rent_ids': profitability_managed.site_rent.ids,
-            'security_ids': profitability_managed.security.ids,
-            'service_level_credit_ids': profitability_managed.service_level_credits.ids,
-            'from': from_date if from_date else profitability_managed.from_date,
-            'to': to_date if to_date else profitability_managed.to_date,
-            'company_id': profitability_managed.company_id.id,
-            # 'analytic_account_plan': plan.id,
-            'group_id':group_id,
-            'Current_months': Current_months,
-            'limit': limit
-        }
-        report_values = profitability_managed.get_profitability_managed(data,
-                                                                        profitability_managed_report,
-                                                                        profitability_managed)
-        profitability_managed.json_report_values = json.dumps(report_values)
-        profitability_managed.current_filter = Current_months
-
-    def profitability_managed_report(self, limit):
-        cron_id = self.env.ref(
-            'profitability_report_xlsx.action_profitability_managed_cron').id
-        profitability_managed = self.env['profitability.report.managed'].search(
-            [('cron_id', '=', cron_id)])
-        current_date = fields.Date.today()
-        profitability_managed_report = profitability_managed.json_report_values
-        from_date = ''
-        to_date = ''
-        Current_months = ''
-        if profitability_managed.period == 'this_financial_year':
-            first, last = calendar.monthrange(current_date.year,
-                                              12)
-            from_date = datetime.date(current_date.year, 1, 1)
-            to_date = datetime.date(current_date.year, 12, last)
-            Current_months = from_date.year
-        if profitability_managed.period == 'last_financial_year':
-            last_financial_year = current_date.year - 1
-            first, last = calendar.monthrange(last_financial_year,
-                                              12)
-            from_date = datetime.date(last_financial_year, 1, 1)
-            to_date = datetime.date(last_financial_year, 12, last)
-            Current_months = from_date.year
-        if profitability_managed.period == 'this_quarter':
-            current_quarter = (current_date.month - 1) // 3 + 1
-            first, last = calendar.monthrange(current_date.year,
-                                              3 * current_quarter)
-            from_date = datetime.date(current_date.year,
-                                      3 * current_quarter - 2, 1)
-            to_date = datetime.date(current_date.year, 3 * current_quarter,
-                                    last)
-            from_month = from_date.strftime("%B")
-            to_month = to_date.strftime("%B")
-            Current_months = from_month + ' - ' + to_month
-        if profitability_managed.period == 'last_quarter':
-            last_quarter = ((current_date.month - 1) // 3 + 1) - 1
-            first, last = calendar.monthrange(current_date.year,
-                                              3 * last_quarter)
-            from_date = datetime.date(current_date.year,
-                                      3 * last_quarter - 2, 1)
-            to_date = datetime.date(current_date.year, 3 * last_quarter,
-                                    last)
-            from_month = from_date.strftime("%B")
-            to_month = to_date.strftime("%B")
-            Current_months = from_month + ' - ' + to_month
-        if profitability_managed.from_date and profitability_managed.to_date:
-            if profitability_managed.from_date > profitability_managed.to_date:
-                raise UserError("Start date should be less than end date")
-        # plan = self.env['account.analytic.plan'].search(
-        #     [('name', 'ilike', 'managed')])
-        group_id = 'managed'
-        data = {
-            'ids': self.ids,
-            'model': self._name,
-            'lease_anchor_tenant_ids': profitability_managed.lease_anchor_tenant.ids,
-            'lease_colo_tenant_ids': profitability_managed.lease_colo_tenant.ids,
-            'additional_space_revenue_ids': profitability_managed.additional_space_revenue.ids,
-            'bts_revenue_ids': profitability_managed.bts_revenue.ids,
-            'active_sharing_fees_ids': profitability_managed.active_sharing_fees.ids,
-            'discount_ids': profitability_managed.discount.ids,
-            'rou_depreciation_ids': profitability_managed.rou_depreciation.ids,
-            'fa_depreciation_ids': profitability_managed.fa_depreciation.ids,
-            'lease_finance_cost_ids': profitability_managed.lease_finance_cost.ids,
-            'site_maintenance_ids': profitability_managed.site_maintenance_managed.ids,
-            'site_rent_ids': profitability_managed.site_rent.ids,
-            'security_ids': profitability_managed.security.ids,
-            'service_level_credit_ids': profitability_managed.service_level_credits.ids,
-            'from': from_date if from_date else profitability_managed.from_date,
-            'to': to_date if to_date else profitability_managed.to_date,
-            'company_id': profitability_managed.company_id.id,
-            'group_id': group_id,
-            'Current_months': Current_months,
-            'limit': limit
-        }
-        report_values = profitability_managed.get_profitability_managed(data,
-                                                                        profitability_managed_report,
-                                                                        profitability_managed)
-        profitability_managed.json_report_values = json.dumps(report_values)
-        profitability_managed.current_filter = Current_months
-
-    def profitability_managed_report_baghdad(self, limit):
-        cron_id = self.env.ref(
-            'profitability_report_xlsx.action_profitability_managed_cron_baghdad').id
-        profitability_managed = self.env['profitability.report.managed'].search(
-            [('cron_id', '=', cron_id)])
-        current_date = fields.Date.today()
-        profitability_managed_report = profitability_managed.json_report_values
-        from_date = ''
-        to_date = ''
-        Current_months = ''
-        if profitability_managed.period == 'this_financial_year':
-            first, last = calendar.monthrange(current_date.year,
-                                              12)
-            from_date = datetime.date(current_date.year, 1, 1)
-            to_date = datetime.date(current_date.year, 12, last)
-            Current_months = from_date.year
-        if profitability_managed.period == 'last_financial_year':
-            last_financial_year = current_date.year - 1
-            first, last = calendar.monthrange(last_financial_year,
-                                              12)
-            from_date = datetime.date(last_financial_year, 1, 1)
-            to_date = datetime.date(last_financial_year, 12, last)
-            Current_months = from_date.year
-        if profitability_managed.period == 'this_quarter':
-            current_quarter = (current_date.month - 1) // 3 + 1
-            first, last = calendar.monthrange(current_date.year,
-                                              3 * current_quarter)
-            from_date = datetime.date(current_date.year,
-                                      3 * current_quarter - 2, 1)
-            to_date = datetime.date(current_date.year, 3 * current_quarter,
-                                    last)
-            from_month = from_date.strftime("%B")
-            to_month = to_date.strftime("%B")
-            Current_months = from_month + ' - ' + to_month
-        if profitability_managed.period == 'last_quarter':
-            last_quarter = ((current_date.month - 1) // 3 + 1) - 1
-            first, last = calendar.monthrange(current_date.year,
-                                              3 * last_quarter)
-            from_date = datetime.date(current_date.year,
-                                      3 * last_quarter - 2, 1)
-            to_date = datetime.date(current_date.year, 3 * last_quarter,
-                                    last)
-            from_month = from_date.strftime("%B")
-            to_month = to_date.strftime("%B")
-            Current_months = from_month + ' - ' + to_month
-        if profitability_managed.from_date and profitability_managed.to_date:
-            if profitability_managed.from_date > profitability_managed.to_date:
-                raise UserError("Start date should be less than end date")
-        # plan = self.env['account.analytic.plan'].search(
-        #     [('name', 'ilike', 'managed')])
-        group_id = 'managed'
-        data = {
-            'ids': self.ids,
-            'model': self._name,
-            'lease_anchor_tenant_ids': profitability_managed.lease_anchor_tenant.ids,
-            'lease_colo_tenant_ids': profitability_managed.lease_colo_tenant.ids,
-            'additional_space_revenue_ids': profitability_managed.additional_space_revenue.ids,
-            'bts_revenue_ids': profitability_managed.bts_revenue.ids,
-            'active_sharing_fees_ids': profitability_managed.active_sharing_fees.ids,
-            'discount_ids': profitability_managed.discount.ids,
-            'rou_depreciation_ids': profitability_managed.rou_depreciation.ids,
-            'fa_depreciation_ids': profitability_managed.fa_depreciation.ids,
-            'lease_finance_cost_ids': profitability_managed.lease_finance_cost.ids,
-            'site_maintenance_ids': profitability_managed.site_maintenance_managed.ids,
-            'site_rent_ids': profitability_managed.site_rent.ids,
-            'security_ids': profitability_managed.security.ids,
-            'service_level_credit_ids': profitability_managed.service_level_credits.ids,
-            'from': from_date if from_date else profitability_managed.from_date,
-            'to': to_date if to_date else profitability_managed.to_date,
-            'company_id': profitability_managed.company_id.id,
-            # 'analytic_account_plan': plan.id,
-            'group_id': group_id,
-            'Current_months': Current_months,
-            'limit': limit
-        }
-        report_values = profitability_managed.get_profitability_managed(data,
-                                                                        profitability_managed_report,
-                                                                        profitability_managed)
-        profitability_managed.json_report_values = json.dumps(report_values)
-        profitability_managed.current_filter = Current_months
-
-    def profitability_managed_report_erbill(self, limit):
-        cron_id = self.env.ref(
-            'profitability_report_xlsx.action_profitability_managed_cron_erbill').id
-        profitability_managed = self.env['profitability.report.managed'].search(
-            [('cron_id', '=', cron_id)])
-        current_date = fields.Date.today()
-        profitability_managed_report = profitability_managed.json_report_values
-        from_date = ''
-        to_date = ''
-        Current_months = ''
-        if profitability_managed.period == 'this_financial_year':
-            first, last = calendar.monthrange(current_date.year,
-                                              12)
-            from_date = datetime.date(current_date.year, 1, 1)
-            to_date = datetime.date(current_date.year, 12, last)
-            Current_months = from_date.year
-        if profitability_managed.period == 'last_financial_year':
-            last_financial_year = current_date.year - 1
-            first, last = calendar.monthrange(last_financial_year,
-                                              12)
-            from_date = datetime.date(last_financial_year, 1, 1)
-            to_date = datetime.date(last_financial_year, 12, last)
-            Current_months = from_date.year
-        if profitability_managed.period == 'this_quarter':
-            current_quarter = (current_date.month - 1) // 3 + 1
-            first, last = calendar.monthrange(current_date.year,
-                                              3 * current_quarter)
-            from_date = datetime.date(current_date.year,
-                                      3 * current_quarter - 2, 1)
-            to_date = datetime.date(current_date.year, 3 * current_quarter,
-                                    last)
-            from_month = from_date.strftime("%B")
-            to_month = to_date.strftime("%B")
-            Current_months = from_month + ' - ' + to_month
-        if profitability_managed.period == 'last_quarter':
-            last_quarter = ((current_date.month - 1) // 3 + 1) - 1
-            first, last = calendar.monthrange(current_date.year,
-                                              3 * last_quarter)
-            from_date = datetime.date(current_date.year,
-                                      3 * last_quarter - 2, 1)
-            to_date = datetime.date(current_date.year, 3 * last_quarter,
-                                    last)
-            from_month = from_date.strftime("%B")
-            to_month = to_date.strftime("%B")
-            Current_months = from_month + ' - ' + to_month
-        if profitability_managed.from_date and profitability_managed.to_date:
-            if profitability_managed.from_date > profitability_managed.to_date:
-                raise UserError("Start date should be less than end date")
-        # plan = self.env['account.analytic.plan'].search(
-        #     [('name', 'ilike', 'managed')])
-        group_id = 'managed'
-        data = {
-            'ids': self.ids,
-            'model': self._name,
-            'lease_anchor_tenant_ids': profitability_managed.lease_anchor_tenant.ids,
-            'lease_colo_tenant_ids': profitability_managed.lease_colo_tenant.ids,
-            'additional_space_revenue_ids': profitability_managed.additional_space_revenue.ids,
-            'bts_revenue_ids': profitability_managed.bts_revenue.ids,
-            'active_sharing_fees_ids': profitability_managed.active_sharing_fees.ids,
-            'discount_ids': profitability_managed.discount.ids,
-            'rou_depreciation_ids': profitability_managed.rou_depreciation.ids,
-            'fa_depreciation_ids': profitability_managed.fa_depreciation.ids,
-            'lease_finance_cost_ids': profitability_managed.lease_finance_cost.ids,
-            'site_maintenance_ids': profitability_managed.site_maintenance_managed.ids,
-            'site_rent_ids': profitability_managed.site_rent.ids,
-            'security_ids': profitability_managed.security.ids,
-            'service_level_credit_ids': profitability_managed.service_level_credits.ids,
-            'from': from_date if from_date else profitability_managed.from_date,
-            'to': to_date if to_date else profitability_managed.to_date,
-            'company_id': profitability_managed.company_id.id,
-            # 'analytic_account_plan': plan.id,
-            'group_id': group_id,
-            'Current_months': Current_months,
-            'limit': limit
-        }
-        report_values = profitability_managed.get_profitability_managed(data,
-                                                                        profitability_managed_report,
-                                                                        profitability_managed)
-        profitability_managed.json_report_values = json.dumps(report_values)
-        profitability_managed.current_filter = Current_months
-
-    def get_profitability_managed(self, data, profitability_managed_report,
-                                  profitability_managed):
-        lang = self.env.user.lang or get_lang(self.env).code
-
-        projects = ''
-        if profitability_managed_report:
-            profitability_managed_report_load = json.loads(
-                profitability_managed_report)
-
-            # name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
-            #     self.pool[
-            #         'account.analytic.account'].name.translate else 'analatyc_account.name'
-            # query = f'''
-            #                         select id,{name} as name from account_analytic_account as analatyc_account
-            #                         WHERE analatyc_account.analytic_account_type = 'project_site'
-            #                         and analatyc_account.company_id = ''' + str(
-            #     data['company_id']) + '''
-            #                         and analatyc_account.group_id = ''' + str(
-            #     data['group_id'])
-            #
-            # cr = self._cr
-            # cr.execute(query)
-            # lang = self.env.user.lang or get_lang(self.env).code
-            cr = self._cr
-            name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
-                self.pool[
-                    'account.analytic.account'].name.translate else 'analatyc_account.name'
-
-            query = f'''
-                        SELECT id, {name} AS name 
-                        FROM account_analytic_account AS analatyc_account 
-                        WHERE analatyc_account.analytic_account_type = %(type)s
-                        AND analatyc_account.company_id = %(company_id)s
-                        AND analatyc_account.group_id = %(group)s
-                    '''
-            params = {
-                'company_id': data["company_id"],
-                'type': 'project_site',
-                'group': data["group_id"],
-            }
-
-            cr.execute(query, params)
-            project_site = cr.dictfetchall()
-            end_limit = profitability_managed.limits_pr + int(data['limit'])
-            profitability_managed.end_limit = end_limit
-            for i in project_site[
-                     profitability_managed.limits_pr: end_limit]:
-                prof_rep = {}
-                prof_rep.update({
-                    'project': i['name'],
-                    'company_id': profitability_managed.company_id.id
-                })
-                projects = self.env['account.move.line'].search(
-                    [('project_site_id', '=', i['id']),
-                     ('move_id.date', '<=', data['to']),
-                     ('move_id.date', '>=', data['from']),
-                     ('parent_state', '=', 'posted'),
-                     ('company_id', '=', profitability_managed.company_id.id)])
-                lease_anchor_tenant = projects.filtered(
-                    lambda x: x.account_id.id in data[
-                        'lease_anchor_tenant_ids'])
-                total = sum(lease_anchor_tenant.mapped('debit')) - sum(
-                    lease_anchor_tenant.mapped('credit'))
-                prof_rep.update({
-                    'lease_anchor_tenant': total,
-                })
-
-                lease_colo_tenant = projects.filtered(
-                    lambda x: x.account_id.id in data['lease_colo_tenant_ids'])
-                total = sum(lease_colo_tenant.mapped('debit')) - sum(
-                    lease_colo_tenant.mapped('credit'))
-                prof_rep.update({
-                    'lease_colo_tenant': total,
-                })
-
-                additional_space_revenue = projects.filtered(
-                    lambda x: x.account_id.id in data[
-                        'additional_space_revenue_ids'])
-                total = sum(additional_space_revenue.mapped('debit')) - sum(
-                    additional_space_revenue.mapped('credit'))
-                prof_rep.update({
-                    'additional_space_revenue': total,
-                })
-
-                bts_revenue = projects.filtered(
-                    lambda x: x.account_id.id in data['bts_revenue_ids'])
-                total = sum(bts_revenue.mapped('debit')) - sum(
-                    bts_revenue.mapped('credit'))
-                prof_rep.update({
-                    'bts_revenue': total,
-                })
-
-                active_sharing_fees = projects.filtered(
-                    lambda x: x.account_id.id in data[
-                        'active_sharing_fees_ids'])
-                total = sum(active_sharing_fees.mapped('debit')) - sum(
-                    active_sharing_fees.mapped('credit'))
-                prof_rep.update({
-                    'active_sharing_fees': total,
-                })
-
-                discount = projects.filtered(
-                    lambda x: x.account_id.id in data['discount_ids'])
-                total = sum(discount.mapped('debit')) - sum(
-                    discount.mapped('credit'))
-                prof_rep.update({
-                    'discount': total,
-                })
-
-                total_revenue = prof_rep['lease_anchor_tenant'] + prof_rep[
-                    'lease_colo_tenant'] + prof_rep[
-                                    'additional_space_revenue'] + \
-                                prof_rep[
-                                    'bts_revenue'] + prof_rep[
-                                    'active_sharing_fees'] + prof_rep[
-                                    'discount']
-                prof_rep.update({
-                    'total_revenue': total_revenue,
-                })
-
-                rou_depreciation = projects.filtered(
-                    lambda x: x.account_id.id in data['rou_depreciation_ids'])
-                total = sum(rou_depreciation.mapped('debit')) - sum(
-                    rou_depreciation.mapped('credit'))
-                prof_rep.update({
-                    'rou_depreciation': total,
-                })
-
-                fa_depreciation = projects.filtered(
-                    lambda x: x.account_id.id in data['fa_depreciation_ids'])
-                total = sum(fa_depreciation.mapped('debit')) - sum(
-                    fa_depreciation.mapped('credit'))
-                prof_rep.update({
-                    'fa_depreciation': total,
-                })
-
-                lease_finance_cost = projects.filtered(
-                    lambda x: x.account_id.id in data['lease_finance_cost_ids'])
-                total = sum(lease_finance_cost.mapped('debit')) - sum(
-                    lease_finance_cost.mapped('credit'))
-                prof_rep.update({
-                    'lease_finance_cost': total,
-                })
-
-                site_maintenance = projects.filtered(
-                    lambda x: x.account_id.id in data['site_maintenance_ids'])
-                total = sum(site_maintenance.mapped('debit')) - sum(
-                    site_maintenance.mapped('credit'))
-                prof_rep.update({
-                    'site_maintenance': total,
-                })
-
-                site_rent = projects.filtered(
-                    lambda x: x.account_id.id in data['site_rent_ids'])
-                total = sum(site_rent.mapped('debit')) - sum(
-                    site_rent.mapped('credit'))
-                prof_rep.update({
-                    'site_rent': total,
-                })
-
-                security = projects.filtered(
-                    lambda x: x.account_id.id in data['security_ids'])
-                total = sum(security.mapped('debit')) - sum(
-                    security.mapped('credit'))
-                prof_rep.update({
-                    'security': total,
-                })
-
-                service_level_credit = projects.filtered(
-                    lambda x: x.account_id.id in data[
-                        'service_level_credit_ids'])
-                total = sum(service_level_credit.mapped('debit')) - sum(
-                    service_level_credit.mapped('credit'))
-                prof_rep.update({
-                    'service_level_credit': total,
-                })
-
-                total_cost = prof_rep['rou_depreciation'] + prof_rep[
-                    'fa_depreciation'] + \
-                             prof_rep['lease_finance_cost'] + prof_rep[
-                                 'site_maintenance'] + \
-                             prof_rep['site_rent'] + prof_rep['security'] + \
-                             prof_rep['service_level_credit']
-                jdo = total_revenue - total_cost
-                total_percent = ''
-                if total_revenue != 0:
-                    total_percent = (abs(jdo) / total_revenue) * 100
-                prof_rep.update({
-                    'total_cost': total_cost,
-                    'jdo': abs(jdo),
-                    '%': total_percent if total_percent else 0
-                })
-                profitability_managed_report_load.append(prof_rep)
-            profitability_managed.limits_pr = end_limit
-            if end_limit <= len(project_site):
-                date = fields.Datetime.now()
-                xml_id = profitability_managed.cron_id.get_external_id()
-                if xml_id.get(
-                        profitability_managed.cron_id.id) == 'profitability_report_xlsx.action_profitability_managed_cron':
-                    schedule = self.env.ref(
-                        'profitability_report_xlsx.action_profitability_managed_cron_update')
-                    schedule.update({
-                        'nextcall': date + timedelta(seconds=15),
-                    })
-                elif xml_id.get(
-                        profitability_managed.cron_id.id) == 'profitability_report_xlsx.action_profitability_managed_cron_baghdad':
-                    schedule = self.env.ref(
-                        'profitability_report_xlsx.action_profitability_managed_cron_update_baghdad')
-                    schedule.update({
-                        'nextcall': date + timedelta(seconds=15),
-                    })
-                elif xml_id.get(
-                        profitability_managed.cron_id.id) == 'profitability_report_xlsx.action_profitability_managed_cron_erbill':
-                    schedule = self.env.ref(
-                        'profitability_report_xlsx.action_profitability_managed_cron_update_erbill')
-                    schedule.update({
-                        'nextcall': date + timedelta(seconds=15),
-                    })
-                elif xml_id.get(
-                        profitability_managed.cron_id.id) == 'profitability_report_xlsx.action_profitability_managed_cron_general':
-                    schedule = self.env.ref(
-                        'profitability_report_xlsx.action_profitability_managed_cron_update_general')
-                    schedule.update({
-                        'nextcall': date + timedelta(seconds=15),
-                    })
-                else:
-                    pass
-            return profitability_managed_report_load
-        else:
-            dummy_prof_list = []
-            # name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
-            #     self.pool[
-            #         'account.analytic.account'].name.translate else 'analatyc_account.name'
-            # query = f'''
-            #                                 select id,{name} as name from account_analytic_account as analatyc_account
-            #                                 WHERE analatyc_account.analytic_account_type = 'project_site'
-            #                                 and analatyc_account.company_id = ''' + str(
-            #     data['company_id']) + '''
-            #                                 and analatyc_account.group_id = ''' + str(
-            #     data['group_id'])
-            #
-            # cr = self._cr
-            # cr.execute(query)
-            cr = self._cr
-            name = f"COALESCE(analatyc_account.name->>'{lang}', analatyc_account.name->>'en_US')" if \
-                self.pool[
-                    'account.analytic.account'].name.translate else 'analatyc_account.name'
-
-            query = f'''
-                                    SELECT id, {name} AS name 
-                                    FROM account_analytic_account AS analatyc_account 
-                                    WHERE analatyc_account.analytic_account_type = %(type)s
-                                    AND analatyc_account.company_id = %(company_id)s
-                                    AND analatyc_account.group_id = %(group)s
-                                '''
-            params = {
-                'company_id': data["company_id"],
-                'type': 'project_site',
-                'group': data["group_id"],
-            }
-
-            cr.execute(query, params)
-            project_site = cr.dictfetchall()
-            end_limit = profitability_managed.limits_pr + int(data['limit'])
-            profitability_managed.end_limit = end_limit
-            for i in project_site[profitability_managed.limits_pr: end_limit]:
-                prof_rep = {}
-                prof_rep.update({
-                    'project': i['name'],
-                    'company_id': profitability_managed.company_id.id,
-                })
-                projects = self.env['account.move.line'].search(
-                    [('project_site_id', '=', i['id']),
-                     ('move_id.date', '<=', data['to']),
-                     ('move_id.date', '>=', data['from']),
-                     ('parent_state', '=', 'posted'),
-                     ('company_id', '=', profitability_managed.company_id.id)])
-                lease_anchor_tenant = projects.filtered(
-                    lambda x: x.account_id.id in data[
-                        'lease_anchor_tenant_ids'])
-                total = sum(lease_anchor_tenant.mapped('debit')) - sum(
-                    lease_anchor_tenant.mapped('credit'))
-                prof_rep.update({
-                    'lease_anchor_tenant': total,
-                })
-
-                lease_colo_tenant = projects.filtered(
-                    lambda x: x.account_id.id in data['lease_colo_tenant_ids'])
-                total = sum(lease_colo_tenant.mapped('debit')) - sum(
-                    lease_colo_tenant.mapped('credit'))
-                prof_rep.update({
-                    'lease_colo_tenant': total,
-                })
-
-                additional_space_revenue = projects.filtered(
-                    lambda x: x.account_id.id in data[
-                        'additional_space_revenue_ids'])
-                total = sum(additional_space_revenue.mapped('debit')) - sum(
-                    additional_space_revenue.mapped('credit'))
-                prof_rep.update({
-                    'additional_space_revenue': total,
-                })
-
-                bts_revenue = projects.filtered(
-                    lambda x: x.account_id.id in data['bts_revenue_ids'])
-                total = sum(bts_revenue.mapped('debit')) - sum(
-                    bts_revenue.mapped('credit'))
-                prof_rep.update({
-                    'bts_revenue': total,
-                })
-
-                active_sharing_fees = projects.filtered(
-                    lambda x: x.account_id.id in data[
-                        'active_sharing_fees_ids'])
-                total = sum(active_sharing_fees.mapped('debit')) - sum(
-                    active_sharing_fees.mapped('credit'))
-                prof_rep.update({
-                    'active_sharing_fees': total,
-                })
-
-                discount = projects.filtered(
-                    lambda x: x.account_id.id in data['discount_ids'])
-                total = sum(discount.mapped('debit')) - sum(
-                    discount.mapped('credit'))
-                prof_rep.update({
-                    'discount': total,
-                })
-
-                total_revenue = prof_rep['lease_anchor_tenant'] + prof_rep[
-                    'lease_colo_tenant'] + prof_rep[
-                                    'additional_space_revenue'] + \
-                                prof_rep[
-                                    'bts_revenue'] + prof_rep[
-                                    'active_sharing_fees'] + prof_rep[
-                                    'discount']
-                prof_rep.update({
-                    'total_revenue': total_revenue,
-                })
-
-                rou_depreciation = projects.filtered(
-                    lambda x: x.account_id.id in data['rou_depreciation_ids'])
-                total = sum(rou_depreciation.mapped('debit')) - sum(
-                    rou_depreciation.mapped('credit'))
-                prof_rep.update({
-                    'rou_depreciation': total,
-                })
-
-                fa_depreciation = projects.filtered(
-                    lambda x: x.account_id.id in data['fa_depreciation_ids'])
-                total = sum(fa_depreciation.mapped('debit')) - sum(
-                    fa_depreciation.mapped('credit'))
-                prof_rep.update({
-                    'fa_depreciation': total,
-                })
-
-                lease_finance_cost = projects.filtered(
-                    lambda x: x.account_id.id in data['lease_finance_cost_ids'])
-                total = sum(lease_finance_cost.mapped('debit')) - sum(
-                    lease_finance_cost.mapped('credit'))
-                prof_rep.update({
-                    'lease_finance_cost': total,
-                })
-
-                site_maintenance = projects.filtered(
-                    lambda x: x.account_id.id in data['site_maintenance_ids'])
-                total = sum(site_maintenance.mapped('debit')) - sum(
-                    site_maintenance.mapped('credit'))
-                prof_rep.update({
-                    'site_maintenance': total,
-                })
-
-                site_rent = projects.filtered(
-                    lambda x: x.account_id.id in data['site_rent_ids'])
-                total = sum(site_rent.mapped('debit')) - sum(
-                    site_rent.mapped('credit'))
-                prof_rep.update({
-                    'site_rent': total,
-                })
-
-                security = projects.filtered(
-                    lambda x: x.account_id.id in data['security_ids'])
-                total = sum(security.mapped('debit')) - sum(
-                    security.mapped('credit'))
-                prof_rep.update({
-                    'security': total,
-                })
-
-                service_level_credit = projects.filtered(
-                    lambda x: x.account_id.id in data[
-                        'service_level_credit_ids'])
-                total = sum(service_level_credit.mapped('debit')) - sum(
-                    service_level_credit.mapped('credit'))
-                prof_rep.update({
-                    'service_level_credit': total,
-                })
-
-                total_cost = prof_rep['rou_depreciation'] + prof_rep[
-                    'fa_depreciation'] + \
-                             prof_rep['lease_finance_cost'] + prof_rep[
-                                 'site_maintenance'] + \
-                             prof_rep['site_rent'] + prof_rep['security'] + \
-                             prof_rep['service_level_credit']
-                jdo = total_revenue - total_cost
-                total_percent = ''
-                if total_revenue != 0:
-                    total_percent = (abs(jdo) / total_revenue) * 100
-                prof_rep.update({
-                    'total_cost': total_cost,
-                    'jdo': abs(jdo),
-                    '%': total_percent if total_percent else 0
-                })
-                dummy_prof_list.append(prof_rep)
-            profitability_managed.limits_pr = end_limit
-            if end_limit <= len(project_site):
-                date = fields.Datetime.now()
-                xml_id = profitability_managed.cron_id.get_external_id()
-                if xml_id.get(
-                        profitability_managed.cron_id.id) == 'profitability_report_xlsx.action_profitability_managed_cron':
-                    schedule = self.env.ref(
-                        'profitability_report_xlsx.action_profitability_managed_cron_update')
-                    schedule.update({
-                        'nextcall': date + timedelta(seconds=15),
-                    })
-                elif xml_id.get(
-                        profitability_managed.cron_id.id) == 'profitability_report_xlsx.action_profitability_managed_cron_baghdad':
-                    schedule = self.env.ref(
-                        'profitability_report_xlsx.action_profitability_managed_cron_update_baghdad')
-                    schedule.update({
-                        'nextcall': date + timedelta(seconds=15),
-                    })
-                elif xml_id.get(
-                        profitability_managed.cron_id.id) == 'profitability_report_xlsx.action_profitability_managed_cron_erbill':
-                    schedule = self.env.ref(
-                        'profitability_report_xlsx.action_profitability_managed_cron_update_erbill')
-                    schedule.update({
-                        'nextcall': date + timedelta(seconds=15),
-                    })
-                elif xml_id.get(
-                        profitability_managed.cron_id.id) == 'profitability_report_xlsx.action_profitability_managed_cron_general':
-                    schedule = self.env.ref(
-                        'profitability_report_xlsx.action_profitability_managed_cron_update_general')
-                    schedule.update({
-                        'nextcall': date + timedelta(seconds=15),
-                    })
-                else:
-                    pass
-            return dummy_prof_list
-
-    def profitability_managed_cron_update_general(self):
-        date = fields.Datetime.now()
-        schedule = self.env.ref(
-            'profitability_report_xlsx.action_profitability_managed_cron_general')
-        schedule.update({
-            'nextcall': date + timedelta(seconds=15)
-        })
-
-    def profitability_managed_cron_update(self):
-        date = fields.Datetime.now()
-        schedule = self.env.ref(
-            'profitability_report_xlsx.action_profitability_managed_cron')
-        schedule.update({
-            'nextcall': date + timedelta(seconds=15)
-        })
-
-    def profitability_managed_cron_update_baghdad(self):
-        date = fields.Datetime.now()
-        schedule = self.env.ref(
-            'profitability_report_xlsx.action_profitability_managed_cron_baghdad')
-        schedule.update({
-            'nextcall': date + timedelta(seconds=15)
-        })
-
-    def profitability_managed_cron_update_erbill(self):
-        date = fields.Datetime.now()
-        schedule = self.env.ref(
-            'profitability_report_xlsx.action_profitability_managed_cron_erbill')
-        schedule.update({
-            'nextcall': date + timedelta(seconds=15)
-        })
 
     def action_get_report(self):
+        data = {
+            'lease_anchor_tenant_ids': self.lease_anchor_tenant.ids,
+            'lease_colo_tenant_ids': self.lease_colo_tenant.ids,
+            'additional_space_revenue_ids': self.additional_space_revenue.ids,
+            'bts_revenue_ids': self.bts_revenue.ids,
+            'active_sharing_fees_ids': self.active_sharing_fees.ids,
+            'discount_ids': self.discount.ids,
+            'rou_depreciation_ids': self.rou_depreciation.ids,
+            'fa_depreciation_ids': self.fa_depreciation.ids,
+            'lease_finance_cost_ids': self.lease_finance_cost.ids,
+            'site_maintenance_ids': self.site_maintenance_managed.ids,
+            'site_rent_ids': self.site_rent.ids,
+            'security_ids': self.security.ids,
+            'service_level_credit_ids': self.service_level_credits.ids,
+            'from': self.from_date if self.from_date else fields.Date.today(),
+            'to': self.to_date if self.to_date else fields.Date.today(),
+            'company_id': self.company_id.id,
+            'Current_months': self.current_filter,
+        }
         return {
             'type': 'ir.actions.report',
             'data': {'model': 'profitability.report.managed',
-                     'options': json.dumps(self.json_report_values,
+                     'options': json.dumps(data,
                                            default=date_utils.json_default),
                      'output_format': 'xlsx',
                      'report_name': 'Profitability Managed Report',
@@ -892,11 +153,6 @@ class ProfitabilityReportManaged(models.Model):
         }
 
     def get_xlsx(self, data, response):
-        profitability_managed_report = json.loads(data)
-        profitability_managed_object = self.env[
-            'profitability.report.managed'].search([('company_id', '=',
-                                                     profitability_managed_report[
-                                                         0]['company_id'])])
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
 
@@ -947,55 +203,378 @@ class ProfitabilityReportManaged(models.Model):
         sheet.write('S4', 'JOD', sub_heading1)
         sheet.write('T4', '%', sub_heading1)
 
-        sheet.merge_range('B2:T2', profitability_managed_object.current_filter,
+        sheet.merge_range('B2:T2', self.current_filter,
                           main_head)
         sheet.merge_range('D3:J3', 'Revenues', head)
         sheet.merge_range('K3:R3', 'Costs', head)
         sheet.merge_range('S3:T3', 'Gross Profit', head)
 
         row_num = 3
-        col_num = 1
         sln_no = 1
+        lang = self.env.user.lang or get_lang(self.env).code
+        project_site_name = f"COALESCE(ac.name->>'{lang}', ac.name->>'en_US')" if \
+            self.pool[
+                'account.analytic.account'].name.translate else 'ac.name'
+        account_name = f"COALESCE(act.name->>'{lang}', act.name->>'en_US')" if \
+            self.pool[
+                'account.analytic.account'].name.translate else 'act.name'
 
-        for i in profitability_managed_report:
-            sheet.write(row_num + 1, col_num, sln_no)
-            sheet.write(row_num + 1, col_num + 1, i.get('project'))
-            sheet.write(row_num + 1, col_num + 2, i.get('lease_anchor_tenant'))
-            sheet.write(row_num + 1, col_num + 3, i.get('lease_colo_tenant'))
-            sheet.write(row_num + 1, col_num + 4,
-                        i.get('additional_space_revenue'))
-            sheet.write(row_num + 1, col_num + 5, i.get('bts_revenue'))
-            sheet.write(row_num + 1, col_num + 6, i.get('active_sharing_fees'))
-            sheet.write(row_num + 1, col_num + 7, i.get('discount'))
-            sheet.write(row_num + 1, col_num + 8, i.get('total_revenue'))
-            sheet.write(row_num + 1, col_num + 9, i.get('rou_depreciation'))
-            sheet.write(row_num + 1, col_num + 10, i.get('fa_depreciation'))
-            sheet.write(row_num + 1, col_num + 11, i.get('lease_finance_cost'))
-            sheet.write(row_num + 1, col_num + 12, i.get('site_maintenance'))
-            sheet.write(row_num + 1, col_num + 13, i.get('site_rent'))
-            sheet.write(row_num + 1, col_num + 14, i.get('security'))
-            sheet.write(row_num + 1, col_num + 15,
-                        i.get('service_level_credit'))
-            sheet.write(row_num + 1, col_num + 16, i.get('total_cost'))
-            sheet.write(row_num + 1, col_num + 17, i.get('jdo'))
-            sheet.write(row_num + 1, col_num + 18, i.get('%'))
+        lease_anchor_tenant_ids =  data["lease_anchor_tenant_ids"]
+        if len(lease_anchor_tenant_ids) == 1:
+            lease_anchor_tenant_ids = f"({lease_anchor_tenant_ids[0]})"  # Single-element tuple for SQL
+        else:
+            lease_anchor_tenant_ids = str(tuple(lease_anchor_tenant_ids))
 
-            row_num = row_num + 1
+        lease_colo_tenant_ids = data["lease_colo_tenant_ids"]
+        if len(lease_colo_tenant_ids) == 1:
+            lease_colo_tenant_ids = f"({lease_colo_tenant_ids[0]})"  # Single-element tuple for SQL
+        else:
+            lease_colo_tenant_ids = str(tuple(lease_colo_tenant_ids))
+
+        additional_space_revenue_ids = data["additional_space_revenue_ids"]
+        if len(additional_space_revenue_ids) == 1:
+            additional_space_revenue_ids = f"({additional_space_revenue_ids[0]})"  # Single-element tuple for SQL
+        else:
+            additional_space_revenue_ids = str(tuple(additional_space_revenue_ids))
+
+        bts_revenue_ids =data["bts_revenue_ids"]
+        if len(bts_revenue_ids) == 1:
+            bts_revenue_ids = f"({bts_revenue_ids[0]})"  # Single-element tuple for SQL
+        else:
+            bts_revenue_ids = str(tuple(bts_revenue_ids))
+
+        active_sharing_fees_ids = data["active_sharing_fees_ids"]
+        if len(active_sharing_fees_ids) == 1:
+            active_sharing_fees_ids = f"({active_sharing_fees_ids[0]})"  # Single-element tuple for SQL
+        else:
+            active_sharing_fees_ids = str(tuple(active_sharing_fees_ids))
+
+        discount_ids = data["discount_ids"]
+        if len(discount_ids) == 1:
+            discount_ids = f"({discount_ids[0]})"  # Single-element tuple for SQL
+        else:
+            discount_ids = str(tuple(discount_ids))
+
+        rou_depreciation_ids = data["rou_depreciation_ids"]
+        if len(rou_depreciation_ids) == 1:
+            rou_depreciation_ids = f"({rou_depreciation_ids[0]})"  # Single-element tuple for SQL
+        else:
+            rou_depreciation_ids = str(tuple(rou_depreciation_ids))
+
+        fa_depreciation_ids = data["fa_depreciation_ids"]
+        if len(fa_depreciation_ids) == 1:
+            fa_depreciation_ids = f"({fa_depreciation_ids[0]})"  # Single-element tuple for SQL
+        else:
+            fa_depreciation_ids = str(tuple(fa_depreciation_ids))
+
+        lease_finance_cost_ids = data["lease_finance_cost_ids"]
+        if len(lease_finance_cost_ids) == 1:
+            lease_finance_cost_ids = f"({lease_finance_cost_ids[0]})"  # Single-element tuple for SQL
+        else:
+            lease_finance_cost_ids = str(tuple(lease_finance_cost_ids))
+
+        site_maintenance_ids = data["site_maintenance_ids"]
+        if len(site_maintenance_ids) == 1:
+            site_maintenance_ids = f"({site_maintenance_ids[0]})"  # Single-element tuple for SQL
+        else:
+            site_maintenance_ids = str(tuple(site_maintenance_ids))
+
+        site_rent_ids = data["site_rent_ids"]
+        if len(site_rent_ids) == 1:
+            site_rent_ids = f"({site_rent_ids[0]})"  # Single-element tuple for SQL
+        else:
+            site_rent_ids = str(tuple(site_rent_ids))
+
+        security_ids = data["security_ids"]
+        if len(security_ids) == 1:
+            security_ids = f"({security_ids[0]})"  # Single-element tuple for SQL
+        else:
+            security_ids = str(tuple(security_ids))
+
+        service_level_credit_ids = data["service_level_credit_ids"]
+        if len(service_level_credit_ids) == 1:
+            service_level_credit_ids = f"({service_level_credit_ids[0]})"  # Single-element tuple for SQL
+        else:
+            service_level_credit_ids = str(tuple(service_level_credit_ids))
+
+        from_date = data["from"]
+        to_date = data["to"]
+        company_id_str = str(data["company_id"])
+        combined_query = ""
+
+        if len(data["lease_anchor_tenant_ids"])>0:
+            lease_anchor_tenant_query = f'''SELECT 
+                        'lease_anchor_tenant'                                       AS key,
+                        SUM(COALESCE(l.debit, 0)) - SUM(COALESCE(l.credit, 0)) AS balance,{account_name} as account_name,{project_site_name} as project_site_name,ac.id as project_site_id from account_move_line l 
+                        LEFT JOIN account_analytic_account ac ON l.project_site_id = ac.id 
+                        LEFT JOIN account_account act ON l.account_id=act.id
+                        where ac.analytic_account_type='project_site' and ac.group_id='managed' and
+                        l.date>='{str(from_date)}' and l.date<='{str(to_date)}' and l.company_id= ({company_id_str}) and l.parent_state='posted' and l.account_id in {lease_anchor_tenant_ids}
+                        group by l.company_id,ac.id, act.id'''
+            combined_query += f"{lease_anchor_tenant_query} UNION ALL "
+        if len(data["lease_colo_tenant_ids"])>0:
+            lease_colo_tenant_query = f'''SELECT 
+                                'lease_colo_tenant'                                       AS key,
+                                SUM(COALESCE(l.debit, 0)) - SUM(COALESCE(l.credit, 0)) AS balance,{account_name} as account_name,{project_site_name} as project_site_name,ac.id as project_site_id from account_move_line l 
+                                LEFT JOIN account_analytic_account ac ON l.project_site_id = ac.id 
+                                LEFT JOIN account_account act ON l.account_id=act.id
+                                where ac.analytic_account_type='project_site' and ac.group_id='managed' and
+                                l.date>='{str(from_date)}' and l.date<='{str(to_date)}' and l.company_id= ({company_id_str}) and l.parent_state='posted' and l.account_id in {lease_colo_tenant_ids}
+                                group by l.company_id,ac.id, act.id'''
+            combined_query += f"{lease_colo_tenant_query} UNION ALL "
+        if len(data["additional_space_revenue_ids"])>0:
+            additional_space_revenue_query = f'''SELECT 
+                                        'additional_space_revenue'                                       AS key,
+                                        SUM(COALESCE(l.debit, 0)) - SUM(COALESCE(l.credit, 0)) AS balance,{account_name} as account_name,{project_site_name} as project_site_name,ac.id as project_site_id from account_move_line l 
+                                        LEFT JOIN account_analytic_account ac ON l.project_site_id = ac.id 
+                                        LEFT JOIN account_account act ON l.account_id=act.id
+                                        where ac.analytic_account_type='project_site' and ac.group_id='managed' and
+                                        l.date>='{str(from_date)}' and l.date<='{str(to_date)}' and l.company_id= ({company_id_str}) and l.parent_state='posted' and l.account_id in {additional_space_revenue_ids}
+                                        group by l.company_id,ac.id, act.id'''
+            combined_query += f"{additional_space_revenue_query} UNION ALL "
+
+        if len(data["bts_revenue_ids"])>0:
+            bts_revenue_query = f'''SELECT 
+                        'bts_revenue'                                       AS key,
+                        SUM(COALESCE(l.debit, 0)) - SUM(COALESCE(l.credit, 0)) AS balance,{account_name} as account_name,{project_site_name} as project_site_name,ac.id as project_site_id from account_move_line l 
+                        LEFT JOIN account_analytic_account ac ON l.project_site_id = ac.id 
+                        LEFT JOIN account_account act ON l.account_id=act.id
+                        where ac.analytic_account_type='project_site' and ac.group_id='managed' and
+                        l.date>='{str(from_date)}' and l.date<='{str(to_date)}' and l.company_id=({company_id_str}) and l.parent_state='posted' and l.account_id in {bts_revenue_ids}
+                        group by l.company_id,ac.id, act.id'''
+            combined_query += f"{bts_revenue_query} UNION ALL "
+        if len(data["active_sharing_fees_ids"])>0:
+            active_sharing_fees_query = f'''SELECT 
+                                            'active_sharing_fees'                                       AS key,
+                                            SUM(COALESCE(l.debit, 0)) - SUM(COALESCE(l.credit, 0)) AS balance,{account_name} as account_name,{project_site_name} as project_site_name,ac.id as project_site_id from account_move_line l 
+                                            LEFT JOIN account_analytic_account ac ON l.project_site_id = ac.id 
+                                            LEFT JOIN account_account act ON l.account_id=act.id
+                                            where ac.analytic_account_type='project_site' and ac.group_id='managed' and
+                                            l.date>='{str(from_date)}' and l.date<='{str(to_date)}' and l.company_id= ({company_id_str}) and l.parent_state='posted' and l.account_id in {active_sharing_fees_ids}
+                                            group by l.company_id,ac.id, act.id'''
+            combined_query += f"{active_sharing_fees_query} UNION ALL "
+        if len(data["discount_ids"])>0:
+            discount_query = f'''SELECT 
+                                        'discount'                                       AS key,
+                                        SUM(COALESCE(l.debit, 0)) - SUM(COALESCE(l.credit, 0)) AS balance,{account_name} as account_name,{project_site_name} as project_site_name,ac.id as project_site_id from account_move_line l 
+                                        LEFT JOIN account_analytic_account ac ON l.project_site_id = ac.id 
+                                        LEFT JOIN account_account act ON l.account_id=act.id
+                                        where ac.analytic_account_type='project_site' and ac.group_id='managed' and
+                                        l.date>='{str(from_date)}' and l.date<='{str(to_date)}' and l.company_id= ({company_id_str}) and l.parent_state='posted' and l.account_id in {discount_ids}
+                                        group by l.company_id,ac.id, act.id'''
+            combined_query += f"{discount_query} UNION ALL "
+        if len(data["rou_depreciation_ids"])>0:
+            rou_depreciation_query = f'''SELECT 
+                                            'rou_depreciation'                                       AS key,
+                                            SUM(COALESCE(l.debit, 0)) - SUM(COALESCE(l.credit, 0)) AS balance,{account_name} as account_name,{project_site_name} as project_site_name,ac.id as project_site_id from account_move_line l 
+                                            LEFT JOIN account_analytic_account ac ON l.project_site_id = ac.id 
+                                            LEFT JOIN account_account act ON l.account_id=act.id
+                                            where ac.analytic_account_type='project_site' and ac.group_id='managed' and
+                                            l.date>='{str(from_date)}' and l.date<='{str(to_date)}' and l.company_id= ({company_id_str}) and l.parent_state='posted' and l.account_id in {rou_depreciation_ids}
+                                            group by l.company_id,ac.id, act.id'''
+            combined_query += f"{rou_depreciation_query} UNION ALL "
+        if len(data["fa_depreciation_ids"])>0:
+            fa_depreciation_query = f'''SELECT 
+                                            'fa_depreciation'                                       AS key,
+                                            SUM(COALESCE(l.debit, 0)) - SUM(COALESCE(l.credit, 0)) AS balance,{account_name} as account_name,{project_site_name} as project_site_name,ac.id as project_site_id from account_move_line l 
+                                            LEFT JOIN account_analytic_account ac ON l.project_site_id = ac.id 
+                                            LEFT JOIN account_account act ON l.account_id=act.id
+                                            where ac.analytic_account_type='project_site' and ac.group_id='managed' and
+                                            l.date>='{str(from_date)}' and l.date<='{str(to_date)}' and l.company_id= ({company_id_str}) and l.parent_state='posted' and l.account_id in {fa_depreciation_ids}
+                                            group by l.company_id,ac.id, act.id'''
+            combined_query += f"{fa_depreciation_query} UNION ALL "
+        if len(data["lease_finance_cost_ids"])>0:
+            lease_finance_cost_query = f'''SELECT 
+                                                'lease_finance_cost'                                       AS key,
+                                                SUM(COALESCE(l.debit, 0)) - SUM(COALESCE(l.credit, 0)) AS balance,{account_name} as account_name,{project_site_name} as project_site_name,ac.id as project_site_id from account_move_line l 
+                                                LEFT JOIN account_analytic_account ac ON l.project_site_id = ac.id 
+                                                LEFT JOIN account_account act ON l.account_id=act.id
+                                                where ac.analytic_account_type='project_site' and ac.group_id='managed' and
+                                                l.date>='{str(from_date)}' and l.date<='{str(to_date)}' and l.company_id= ({company_id_str}) and l.parent_state='posted' and l.account_id in {lease_finance_cost_ids}
+                                                group by l.company_id,ac.id, act.id'''
+            combined_query += f"{lease_finance_cost_query} UNION ALL "
+        if len(data["site_maintenance_ids"])>0:
+            site_maintenance_query = f'''SELECT 
+                                            'site_maintenance'                                       AS key,
+                                            SUM(COALESCE(l.debit, 0)) - SUM(COALESCE(l.credit, 0)) AS balance,{account_name} as account_name,{project_site_name} as project_site_name,ac.id as project_site_id from account_move_line l 
+                                            LEFT JOIN account_analytic_account ac ON l.project_site_id = ac.id 
+                                            LEFT JOIN account_account act ON l.account_id=act.id
+                                            where ac.analytic_account_type='project_site' and ac.group_id='managed' and
+                                            l.date>='{str(from_date)}' and l.date<='{str(to_date)}' and l.company_id= ({company_id_str}) and l.parent_state='posted' and l.account_id in {site_maintenance_ids}
+                                            group by l.company_id,ac.id, act.id'''
+            combined_query += f"{site_maintenance_query} UNION ALL "
+        if len(data["site_rent_ids"])>0:
+            site_rent_query = f'''SELECT 
+                                        'site_rent'                                       AS key,
+                                        SUM(COALESCE(l.debit, 0)) - SUM(COALESCE(l.credit, 0)) AS balance,{account_name} as account_name,{project_site_name} as project_site_name,ac.id as project_site_id from account_move_line l 
+                                        LEFT JOIN account_analytic_account ac ON l.project_site_id = ac.id 
+                                        LEFT JOIN account_account act ON l.account_id=act.id
+                                        where ac.analytic_account_type='project_site' and ac.group_id='managed' and
+                                        l.date>='{str(from_date)}' and l.date<='{str(to_date)}' and l.company_id= ({company_id_str}) and l.parent_state='posted' and l.account_id in {site_rent_ids}
+                                        group by l.company_id,ac.id, act.id'''
+            combined_query += f"{site_rent_query} UNION ALL "
+        if len(data["security_ids"])>0:
+            security_query = f'''SELECT 
+                                        'security'                                       AS key,
+                                        SUM(COALESCE(l.debit, 0)) - SUM(COALESCE(l.credit, 0)) AS balance,{account_name} as account_name,{project_site_name} as project_site_name,ac.id as project_site_id from account_move_line l 
+                                        LEFT JOIN account_analytic_account ac ON l.project_site_id = ac.id 
+                                        LEFT JOIN account_account act ON l.account_id=act.id
+                                        where ac.analytic_account_type='project_site' and ac.group_id='managed' and
+                                        l.date>='{str(from_date)}' and l.date<='{str(to_date)}' and l.company_id= ({company_id_str}) and l.parent_state='posted' and l.account_id in {security_ids}
+                                        group by l.company_id,ac.id, act.id'''
+            combined_query += f"{security_query} UNION ALL "
+
+        if len(data["service_level_credit_ids"])>0:
+            service_level_credit_query = f'''SELECT 
+                                            'service_level_credit'                                       AS key,
+                                            SUM(COALESCE(l.debit, 0)) - SUM(COALESCE(l.credit, 0)) AS balance,{account_name} as account_name,{project_site_name} as project_site_name,ac.id as project_site_id from account_move_line l 
+                                            LEFT JOIN account_analytic_account ac ON l.project_site_id = ac.id 
+                                            LEFT JOIN account_account act ON l.account_id=act.id
+                                            where ac.analytic_account_type='project_site' and ac.group_id='managed' and
+                                            l.date>='{str(from_date)}' and l.date<='{str(to_date)}' and l.company_id= ({company_id_str}) and l.parent_state='posted' and l.account_id in {service_level_credit_ids}
+                                            group by l.company_id,ac.id, act.id'''
+            combined_query += f"{service_level_credit_query} UNION ALL "
+
+        # Remove the last 'UNION ALL' if it exists
+        if combined_query.endswith(" UNION ALL "):
+            combined_query = combined_query[:-11]
+
+        self._cr.execute(combined_query)
+        res = self._cr.dictfetchall()
+        grouped_data = defaultdict(
+            lambda: {'lease_anchor_tenant': 0, 'lease_colo_tenant':0,
+                     'additional_space_revenue':0,
+                     'active_sharing_fees':0,'discount':0,
+                     'rou_depreciation':0,'fa_depreciation':0,
+                     'bts_revenue': 0,'lease_finance_cost':0,
+                     'site_maintenance':0,'site_rent':0,
+                     'security':0,'service_level_credit':0,
+                     'project_site_name': '', 'account_name': ''})
+
+        for record in res:
+            site_code = record['project_site_id']
+            project_site_name = record['project_site_name']
+            account_name = record['account_name']
+
+            grouped_data[site_code][
+                'project_site_name'] = project_site_name  # Set project site name
+            grouped_data[site_code]['account_name'] = account_name
+            grouped_data[site_code][record['key']] += record['balance']
+        row_num+=1
+        analytic_accounts = self.env['account.analytic.account'].search(
+            [('group_id', '=', 'managed'),
+             ('analytic_account_type', '=', 'project_site'),
+             ('company_id', '=', data["company_id"])])
+        for psite in analytic_accounts:
+            col_num = 1
+            if  psite.id in grouped_data:
+                values = grouped_data[psite.id]
+                site_name = values.get('project_site_name', '')
+                lease_anchor_tenant = values.get('lease_anchor_tenant', 0)
+                lease_colo_tenant = values.get('lease_colo_tenant', 0)
+                additional_space_revenue = values.get(
+                    'additional_space_revenue', 0)
+                active_sharing_fees = values.get('active_sharing_fees', 0)
+                discount = values.get('discount', 0)
+                rou_depreciation = values.get('rou_depreciation', 0)
+                fa_depreciation = values.get('fa_depreciation', 0)
+                lease_finance_cost = values.get('lease_finance_cost', 0)
+                site_maintenance = values.get('site_maintenance', 0)
+                site_rent = values.get('site_rent', 0)
+                security = values.get('security', 0)
+                service_level_credit = values.get('service_level_credit', 0)
+                bts_revenue = values.get('bts_revenue', 0)
+                total_revenue = lease_anchor_tenant + lease_colo_tenant + additional_space_revenue + bts_revenue + active_sharing_fees + discount
+                total_cost = rou_depreciation + fa_depreciation + lease_finance_cost + site_maintenance + site_rent + security + service_level_credit
+                jdo = total_revenue - total_cost
+                total_percent = ''
+                if total_revenue != 0:
+                    total_percent = (abs(jdo) / total_revenue) * 100
+
+                sheet.write(row_num, col_num, sln_no)
+                col_num += 1
+                sheet.write(row_num, col_num, site_name)
+                col_num += 1
+                sheet.write(row_num, col_num, lease_anchor_tenant)
+                col_num += 1
+                sheet.write(row_num, col_num, lease_colo_tenant)
+                col_num += 1
+                sheet.write(row_num, col_num, additional_space_revenue)
+                col_num += 1
+                sheet.write(row_num, col_num, bts_revenue)
+                col_num += 1
+                sheet.write(row_num, col_num, active_sharing_fees)
+                col_num += 1
+                sheet.write(row_num, col_num, discount)
+                col_num += 1
+                sheet.write(row_num, col_num, total_revenue)
+                col_num += 1
+                sheet.write(row_num, col_num, rou_depreciation)
+                col_num += 1
+                sheet.write(row_num, col_num, fa_depreciation)
+                col_num += 1
+                sheet.write(row_num, col_num, lease_finance_cost)
+                col_num += 1
+                sheet.write(row_num, col_num, site_maintenance)
+                col_num += 1
+                sheet.write(row_num, col_num, site_rent)
+                col_num += 1
+                sheet.write(row_num, col_num, security)
+                col_num += 1
+                sheet.write(row_num, col_num, service_level_credit)
+                col_num += 1
+                sheet.write(row_num, col_num,
+                            total_cost)
+                col_num += 1
+                sheet.write(row_num, col_num,
+                            abs(jdo))
+                col_num += 1
+                sheet.write(row_num, col_num,
+                            total_percent)
+                col_num += 1
+            else:
+                sheet.write(row_num, col_num, sln_no)
+                col_num += 1
+                sheet.write(row_num, col_num, psite.name)
+                col_num += 1
+                sheet.write(row_num, col_num, 0)
+                col_num += 1
+                sheet.write(row_num, col_num, 0)
+                col_num += 1
+                sheet.write(row_num, col_num, 0)
+                col_num += 1
+                sheet.write(row_num, col_num, 0)
+                col_num += 1
+                sheet.write(row_num, col_num, 0)
+                col_num += 1
+                sheet.write(row_num, col_num, 0)
+                col_num += 1
+                sheet.write(row_num, col_num, 0)
+                col_num += 1
+                sheet.write(row_num, col_num, 0)
+                col_num += 1
+                sheet.write(row_num, col_num, 0)
+                col_num += 1
+                sheet.write(row_num, col_num, 0)
+                col_num += 1
+                sheet.write(row_num, col_num, 0)
+                col_num += 1
+                sheet.write(row_num, col_num, 0)
+                col_num += 1
+                sheet.write(row_num, col_num, 0)
+                col_num += 1
+                sheet.write(row_num, col_num, 0)
+                col_num += 1
+                sheet.write(row_num, col_num,0)
+                col_num += 1
+                sheet.write(row_num, col_num,0)
+                col_num += 1
+                sheet.write(row_num, col_num,0)
+                col_num += 1
+            row_num += 1
             sln_no = sln_no + 1
 
         workbook.close()
         output.seek(0)
         response.stream.write(output.read())
         output.close()
-
-    def schedule_managed_cron(self):
-        date = fields.Datetime.now()
-        schedule_action = self.cron_id
-        schedule_action.update({
-            'nextcall': date + timedelta(seconds=15)
-        })
-        self.update({
-            'limits_pr': 0,
-            'end_limit': 0,
-            'json_report_values': ''
-        })
