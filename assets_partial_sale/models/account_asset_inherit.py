@@ -130,6 +130,7 @@ class AccountAssetPartialInherit(models.Model):
                             'depreciation_value')) + asset.already_depreciated_amount_import,
                         -initial_amount,
                     ))
+
                     depreciation_account = asset.account_depreciation_id
                     for invoice_line in invoice_line_ids:
                         dict_invoice[invoice_line.account_id] = copysign(
@@ -153,23 +154,27 @@ class AccountAssetPartialInherit(models.Model):
                                 move.action_post()
                         difference = -initial_amount - depreciated_amount - invoice_amount
                         difference_account = asset.company_id.gain_account_id if difference > 0 else asset.company_id.loss_account_id
-
                         short_leasee_account = lease.lease_liability_account_id
                         short_lease_liability_amount = lease.remaining_short_lease_liability
                         short_remaining_leasee_amount = -1 * short_lease_liability_amount
                         long_leasee_account = lease.long_lease_liability_account_id
                         remaining_long_lease_liability = -1 * lease.remaining_long_lease_liability
-                        leasee_difference = initial_amount - abs(
-                            depreciated_amount) - abs(remaining_long_lease_liability+short_remaining_leasee_amount)
-                        line_datas = [(round(initial_amount, 3), initial_account),
+                        diff = -initial_amount - depreciated_amount + (
+                                    lease.remaining_long_lease_liability + lease.remaining_short_lease_liability)
+                        line_datas = [(round(initial_amount, 3),
+                                       initial_account),
                                       (round(depreciated_amount, 3),
                                        depreciation_account), (
-                                          round(short_remaining_leasee_amount, 3),
+                                          round(
+                                              short_remaining_leasee_amount,
+                                              3),
                                           short_leasee_account),
-                                      (round(remaining_long_lease_liability, 3),
+                                      (round(remaining_long_lease_liability,
+                                             3),
                                        long_leasee_account)] + list_accounts + [
                                          (
-                                             round(-1 * leasee_difference, 3),
+                                             round(diff,
+                                                   3),
                                              difference_account),
                                      ]
                     else:
