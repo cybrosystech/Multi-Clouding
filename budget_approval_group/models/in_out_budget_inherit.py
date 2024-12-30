@@ -66,13 +66,12 @@ class AccountMoveCustom(models.Model):
             # Set default value for the field
             rec.is_reset_to_draft_show = False
             if is_approver and rec.state == 'posted' and (not rec.deferred_move_ids and not rec.asset_ids and not rec.asset_id and not rec.asset_id.state in [
-                'draft', 'cancelled']):
+                'draft', 'cancelled']) and not rec.state == 'draft':
                 rec.is_reset_to_draft_show = True
-            elif rec.move_type == 'entry' and not rec.deferred_move_ids and not rec.asset_ids and not rec.asset_id and not rec.asset_id.state in [
-                'draft', 'cancelled']:
+            elif rec.move_type == 'entry' and not rec.deferred_move_ids and not rec.state == 'draft':
                 rec.is_reset_to_draft_show = True
             elif rec.payment_state == 'not_paid' and not rec.deferred_move_ids and not rec.asset_ids and not rec.asset_id and not rec.asset_id.state in [
-                'draft', 'cancelled']:
+                'draft', 'cancelled'] and not rec.state == 'draft':
                 rec.is_reset_to_draft_show = True
 
 

@@ -1,5 +1,5 @@
-from odoo import models, fields, _
-from odoo.exceptions import ValidationError
+from odoo import api,models, fields, _
+from odoo.exceptions import ValidationError, UserError
 from datetime import datetime, date, timedelta
 
 
@@ -27,15 +27,32 @@ class JournalEntryPostingConfig(models.Model):
                               domain=[('name', 'ilike',
                                        'Account Journal Entry Posting :')])
 
+    @api.constrains('to_date','from_date')
+    def onsave_period(self):
+        if self.to_date < self.from_date:
+            raise UserError(
+                "The end date should be greater than or equal to start date.")
+        else:
+            today = datetime.today().date()
+            # Adjust dates or default to today
+            if  self.from_date > today or  self.to_date > today:
+                raise UserError(
+                    "The start date or end date should not exceed today's date.")
+
     def journal_entry_posting_general(self):
         cron_id = self.env.ref(
             'journal_entry_posting.journal_entry_posting_config_cron_general').id
         journal = self.env['journal.entry.posting.config'].search(
             [('cron_id', '=', cron_id)], limit=1)
+        today = datetime.today().date()
+
+        # Adjust dates or default to today
+        from_date = journal.from_date if journal.from_date and journal.from_date <= today else today
+        to_date = journal.to_date if journal.to_date and journal.to_date <= today else today
         journals = self.env['account.move'].search(
             [('state', '=', 'draft'),
-             ('date', '>=', journal.from_date),
-             ('date', '<=', journal.to_date),
+             ('date', '>=', from_date),
+             ('date', '<=', to_date),
              ('company_id', 'in', journal.company_ids.ids),
              ('journal_id', 'in', journal.journals.ids),
              ],order="id ASC", limit=journal.limit)
@@ -47,8 +64,8 @@ class JournalEntryPostingConfig(models.Model):
 
         journals_lim = self.env['account.move'].search(
             [('state', '=', 'draft'),
-             ('date', '>=', journal.from_date),
-             ('date', '<=', journal.to_date),
+             ('date', '>=', from_date),
+             ('date', '<=', to_date),
              ('company_id', 'in', journal.company_ids.ids),
              ('journal_id', 'in', journal.journals.ids)])
         schedule = self.env.ref(
@@ -66,10 +83,14 @@ class JournalEntryPostingConfig(models.Model):
             'journal_entry_posting.journal_entry_posting_config_cron').id
         journal = self.env['journal.entry.posting.config'].search(
             [('cron_id', '=', cron_id)], limit=1)
+        today = datetime.today().date()
+        # Adjust dates or default to today
+        from_date = journal.from_date if journal.from_date and journal.from_date <= today else today
+        to_date = journal.to_date if journal.to_date and journal.to_date <= today else today
         journals = self.env['account.move'].search(
             [('state', '=', 'draft'),
-             ('date', '>=', journal.from_date),
-             ('date', '<=', journal.to_date),
+             ('date', '>=', from_date),
+             ('date', '<=', to_date),
              ('company_id', 'in', journal.company_ids.ids),
              ('journal_id', 'in', journal.journals.ids),
              ], order="id ASC", limit=journal.limit)
@@ -80,8 +101,8 @@ class JournalEntryPostingConfig(models.Model):
         journals.mapped(lambda journal: journal.message_post(body=msg))
         journals_lim = self.env['account.move'].search(
             [('state', '=', 'draft'),
-             ('date', '>=', journal.from_date),
-             ('date', '<=', journal.to_date),
+             ('date', '>=', from_date),
+             ('date', '<=', to_date),
              ('company_id', 'in', journal.company_ids.ids),
              ('journal_id', 'in', journal.journals.ids)])
         schedule = self.env.ref(
@@ -99,10 +120,14 @@ class JournalEntryPostingConfig(models.Model):
             'journal_entry_posting.journal_entry_posting_config_cron_baghdad').id
         journal = self.env['journal.entry.posting.config'].search(
             [('cron_id', '=', cron_id)], limit=1)
+        today = datetime.today().date()
+        # Adjust dates or default to today
+        from_date = journal.from_date if journal.from_date and journal.from_date <= today else today
+        to_date = journal.to_date if journal.to_date and journal.to_date <= today else today
         journals = self.env['account.move'].search(
             [('state', '=', 'draft'),
-             ('date', '>=', journal.from_date),
-             ('date', '<=', journal.to_date),
+             ('date', '>=', from_date),
+             ('date', '<=', to_date),
              ('company_id', 'in', journal.company_ids.ids),
              ('journal_id', 'in', journal.journals.ids),
              ], order="id ASC", limit=journal.limit)
@@ -113,8 +138,8 @@ class JournalEntryPostingConfig(models.Model):
         journals.mapped(lambda journal: journal.message_post(body=msg))
         journals_lim = self.env['account.move'].search(
             [('state', '=', 'draft'),
-             ('date', '>=', journal.from_date),
-             ('date', '<=', journal.to_date),
+             ('date', '>=', from_date),
+             ('date', '<=', to_date),
              ('company_id', 'in', journal.company_ids.ids),
              ('journal_id', 'in', journal.journals.ids)])
         schedule = self.env.ref('journal_entry_posting.journal_entry_posting_config_cron_update_baghdad')
@@ -131,10 +156,14 @@ class JournalEntryPostingConfig(models.Model):
             'journal_entry_posting.journal_entry_posting_config_cron_erbill').id
         journal = self.env['journal.entry.posting.config'].search(
             [('cron_id', '=', cron_id)], limit=1)
+        today = datetime.today().date()
+        # Adjust dates or default to today
+        from_date = journal.from_date if journal.from_date and journal.from_date <= today else today
+        to_date = journal.to_date if journal.to_date and journal.to_date <= today else today
         journals = self.env['account.move'].search(
             [('state', '=', 'draft'),
-             ('date', '>=', journal.from_date),
-             ('date', '<=', journal.to_date),
+             ('date', '>=', from_date),
+             ('date', '<=', to_date),
              ('company_id', 'in', journal.company_ids.ids),
              ('journal_id', 'in', journal.journals.ids),
              ], order="id ASC", limit=journal.limit)
@@ -145,8 +174,8 @@ class JournalEntryPostingConfig(models.Model):
         journals.mapped(lambda journal: journal.message_post(body=msg))
         journals_lim = self.env['account.move'].search(
             [('state', '=', 'draft'),
-             ('date', '>=', journal.from_date),
-             ('date', '<=', journal.to_date),
+             ('date', '>=', from_date),
+             ('date', '<=', to_date),
              ('company_id', 'in', journal.company_ids.ids),
              ('journal_id', 'in', journal.journals.ids)])
         schedule = self.env.ref(
@@ -212,15 +241,20 @@ class JournalEntryPostingConfig(models.Model):
         return [lst[i:i + limit] for i in range(0, len(lst), limit)]
 
     def action_post_journal_entries(self):
+        today = datetime.today().date()
+        # Adjust dates or default to today
+        from_date = self.from_date if self.from_date and self.from_date <= today else today
+        to_date = self.to_date if self.to_date and self.to_date <= today else today
         journals = self.env['account.move'].search(
             [('state', '=', 'draft'),
-             ('date', '>=', self.from_date),
-             ('date', '<=', self.to_date),
+             ('date', '>=', from_date),
+             ('date', '<=', to_date),
              ('company_id', 'in', self.company_ids.ids),
              ('journal_id', 'in', self.journals.ids),
              ])
-        sublists = self.split_list(journals, self.limit)
-        self.create_jobs(sublists)
+        if journals:
+            sublists = self.split_list(journals, self.limit)
+            self.create_jobs(sublists)
 
     def create_jobs(self, sublist):
         for i in sublist:

@@ -1,7 +1,5 @@
-from odoo import fields, _
+from odoo import _
 from math import copysign
-from odoo.tools import float_compare
-from odoo.exceptions import UserError
 from odoo.tools import float_compare, float_round
 from odoo.addons.analytic_account_types.models.account_asset import \
     AccountAsset
@@ -13,45 +11,21 @@ _logger = logging.getLogger(__name__)
 def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial,
                         partial_amount):
     def get_line(asset, amount, account):
-        prec = asset.company_id.currency_id.decimal_places
-
-        if asset.currency_id.id != asset.company_id.currency_id.id:
-            amount_test = float_round(asset.currency_id._convert(
-                amount, self.env.company.currency_id,
-                asset.company_id, disposal_date), precision_digits=prec)
-            return (0, 0, {
-                'name': asset.name,
-                'account_id': account.id,
-                'balance': -amount_test,
-                'debit': 0.0 if float_compare(amount_test, 0.0,
-                                              precision_digits=prec) > 0 else -amount_test,
-                'credit': amount_test if float_compare(amount_test, 0.0,
-                                                       precision_digits=prec) > 0 else 0.0,
-                'analytic_account_id': asset.analytic_account_id.id,
-                'currency_id': asset.currency_id.id,
-                'amount_currency': -float_round(amount, precision_digits=prec),
-                'project_site_id': asset.project_site_id.id,
-                'analytic_distribution': asset.analytic_distribution,
-            })
-        else:
-
-            return (0, 0, {
-                'name': asset.name,
-                'account_id': account.id,
-                'balance': -amount,
-                'analytic_distribution': asset.analytic_distribution,
-                'analytic_account_id': asset.analytic_account_id.id,
-                'project_site_id': asset.project_site_id.id,
-                'currency_id': asset.currency_id.id,
-                'amount_currency': -asset.company_id.currency_id._convert(
-                    from_amount=amount,
-                    to_currency=asset.currency_id,
-                    company=asset.company_id,
-                    date=disposal_date,
-                )
-            })
-
-
+        return (0, 0, {
+            'name': asset.name,
+            'account_id': account.id,
+            'balance': -amount,
+            'analytic_distribution': asset.analytic_distribution,
+            'analytic_account_id': asset.analytic_account_id.id,
+            'project_site_id': asset.project_site_id.id,
+            'currency_id': asset.currency_id.id,
+            'amount_currency': -asset.company_id.currency_id._convert(
+                from_amount=amount,
+                to_currency=asset.currency_id,
+                company=asset.company_id,
+                date=disposal_date,
+            )
+        })
 
     if len(self.leasee_contract_ids) >= 1:
         move_ids = []
@@ -111,15 +85,15 @@ def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial,
                     depreciated_amount) - abs(
                     remaining_long_lease_liability) - abs(
                     short_remaining_leasee_amount)
-                line_datas = [(round(initial_amount, 3), initial_account),
-                              (round(depreciated_amount, 3),
+                line_datas = [(initial_amount, initial_account),
+                              (depreciated_amount,
                                depreciation_account), (
-                                  round(short_remaining_leasee_amount, 3),
+                                  short_remaining_leasee_amount,
                                   short_leasee_account),
-                              (round(remaining_long_lease_liability, 3),
+                              (remaining_long_lease_liability,
                                long_leasee_account)] + list_accounts + [
                                  (
-                                     round(-1 * leasee_difference, 3),
+                                (-1 * leasee_difference),
                                      difference_account),
                              ]
 
@@ -178,10 +152,26 @@ def _get_disposal_moves(self, invoice_line_ids, disposal_date, partial,
                                            -initial_amount)
             list_accounts = [(amount, account) for account, amount in
                              dict_invoice.items()]
+            if asset.currency_id.id != asset.company_id.currency_id.id:
+                initial_amount = float_round(asset.currency_id._convert(
+                    initial_amount, self.env.company.currency_id,
+                    asset.company_id, disposal_date),
+                    precision_digits=asset.currency_id.decimal_places)
+
+                depreciated_amount = float_round(asset.currency_id._convert(
+                    depreciated_amount, self.env.company.currency_id,
+                    asset.company_id, disposal_date),
+                    precision_digits=asset.currency_id.decimal_places)
+
+                invoice_amount = float_round(asset.currency_id._convert(
+                    invoice_amount, self.env.company.currency_id,
+                    asset.company_id, disposal_date),
+                    precision_digits=asset.currency_id.decimal_places)
+
             difference = -initial_amount - depreciated_amount - invoice_amount
             difference_account = asset.company_id.gain_account_id if difference > 0 else asset.company_id.loss_account_id
             line_datas = [(initial_amount, initial_account), (
-                depreciated_amount, depreciation_account)] + list_accounts + [
+                depreciated_amount, depreciation_account)] + [
                              (difference, difference_account)]
             vals = {
                 'asset_id': asset.id,
