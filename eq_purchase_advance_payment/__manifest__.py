@@ -25,6 +25,7 @@
     'license': 'OPL-1',
     'website': "",
     'data': [
+        'data/purchase_data.xml',
         'views/purchase_view.xml',
     ],
     'demo': [],
