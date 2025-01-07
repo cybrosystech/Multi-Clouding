@@ -1,9 +1,7 @@
 {
     'name': 'Deferred Expense',
     'summary': """""",
-
     'description': """""",
-
     'author': "",
     'website': "",
     'category': 'Accounting',

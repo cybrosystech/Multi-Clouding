@@ -68,6 +68,22 @@ class AccountAssetBulkSaleDisposal(models.Model):
             'res_id': dd.id,
         }
 
+    def asset_bulk_revaluate(self):
+        dd = self.env['asset.bulk.revaluate'].create({
+            'asset_ids': self.ids,
+        })
+        if not dd:
+            raise ValueError("Failed to create asset.bulk.revaluate record.")
+
+        return {
+            'name': 'Asset Bulk Revaluate',
+            'view_mode': 'form',
+            'res_model': 'asset.bulk.revaluate',
+            'type': 'ir.actions.act_window',
+            'target': 'new',
+            'res_id': dd.id,
+        }
+
     def set_to_close_bulk(self, invoice_line_ids, partial, partial_amount, date=None):
         self.ensure_one()
         disposal_date = date or fields.Date.today()

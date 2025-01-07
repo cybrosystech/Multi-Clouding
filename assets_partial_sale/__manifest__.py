@@ -8,7 +8,7 @@
     'version': '17.0.1.0.0',
     'depends': ['account_asset', 'lease_management', 'assets_sub_models_config'],
     'data':
-        [
+        [   'data/account_asset_data.xml',
             'views/asset_sell_inherit_view.xml',
             'views/account_aaset_form_capex_inherit.xml',
         ],
