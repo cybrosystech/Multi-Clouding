@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
     <record id="def_exp_wizard_view_form" model="ir.ui.view">
-        <field name="name">Def Exp wizard view</field>
+        <field name="name">TASC Prepayments Report</field>
         <field name="model">def.exp.wizard</field>
         <field name="arch" type="xml">
             <form string="Report Options">
@@ -26,14 +26,14 @@
     </record>
     <record id="action_def_exp_wizard"
             model="ir.actions.act_window">
-        <field name="name">Def Exp Report Wizard</field>
+        <field name="name">TASC Prepayments Report</field>
         <field name="res_model">def.exp.wizard</field>
         <field name="type">ir.actions.act_window</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
     </record>
     <menuitem id="menu_def_exp_wizard"
-              name="TASC Def Expense"
+              name="TASC Prepayments Report"
               parent="cash_flow_statement_report.tasc_dynamic_reports"
               action="action_def_exp_wizard"/>
 </odoo>
