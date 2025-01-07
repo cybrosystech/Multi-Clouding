@@ -8,7 +8,8 @@
     'website': "",
     'category': 'account_asset',
     'version': '17.0.1.0.0',
-    'depends': ['account_asset','lease_management','lease_management_inherit','queue_job', 'queue_job_cron_jobrunner'],
+    'depends': ['account_asset','lease_management','lease_management_inherit',
+                'queue_job', 'queue_job_cron_jobrunner','account_audit_trail'],
     'data':
         [
             'security/ir.model.access.csv',
@@ -17,6 +18,7 @@
             'views/account_asset_bulk_relation_view.xml',
             'wizard/asset_bulk_pause_depreciation_view.xml',
             'wizard/asset_bulk_sale_dispose_wizard_views.xml',
+            'wizard/asset_bulk_revaluate_views.xml',
         ],
     'installable': True,
     'auto_install': False,

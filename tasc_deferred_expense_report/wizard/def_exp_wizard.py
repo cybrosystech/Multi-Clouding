@@ -7,9 +7,9 @@ from odoo.exceptions import UserError
 
 
 class DefeExpWizard(models.Model):
-    """ Class for Deferred Expense Report xlsx """
+    """ Class for TASC Prepayments Report xlsx """
     _name = 'def.exp.wizard'
-    _description = 'Deferred Expense Report Wizard'
+    _description = 'TASC Prepayments Report'
 
     start_date = fields.Date(string="From Date",
                              default=datetime.datetime.now(), required=True)
@@ -128,14 +128,14 @@ class DefeExpWizard(models.Model):
                                 header_format, STYLE_LINE_HEADER, journal,
                                 date_format)
 
-        self.excel_sheet_name = 'Deferred Expense Report'
+        self.excel_sheet_name = 'TASC Prepayments Report'
         workbook.close()
         output.seek(0)
         self.excel_sheet = base64.b64encode(output.read())
         self.excel_sheet_name = str(self.excel_sheet_name) + '.xlsx'
         return {
             'type': 'ir.actions.act_url',
-            'name': 'Deferred Expense Report',
+            'name': 'TASC Prepayments Report',
             'url': '/web/content/%s/%s/excel_sheet/%s?download=true' % (
                 self._name, self.id, self.excel_sheet_name),
             'target': 'new'
@@ -321,7 +321,7 @@ class DefeExpWizard(models.Model):
         row = 0
         col = 0
         worksheet_summary.merge_range(row, row, col, col + 3,
-                                      _('Tasc Deferred Expense Report - Summary'),
+                                      _('TASC Prepayments Report - Summary'),
                                       STYLE_LINE_HEADER)
         row += 1
         col = 0
@@ -370,7 +370,7 @@ class DefeExpWizard(models.Model):
         row = 0
         col = 0
         worksheet.merge_range(row, row, col, col + 13,
-                              _('Tasc Deferred Expense Report'),
+                              _('TASC Prepayments Report'),
                               STYLE_LINE_HEADER)
         row += 1
         col = 0

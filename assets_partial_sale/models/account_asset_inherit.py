@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from dateutil.relativedelta import relativedelta
 from odoo import models, fields, _, api
 from math import copysign
@@ -10,6 +12,35 @@ from odoo.addons.lease_management.models.account_asset import AccountAsset
 
 class AccountAssetPartialInherit(models.Model):
     _inherit = 'account.asset'
+
+    @api.model
+    def action_compute_value_residual(self, limits,company_id):
+        asset_ids = self.env['account.asset'].search(
+            [('state', '=', 'close'),('book_value','<',0),
+             ('company_id','=',company_id),('leasee_contract_ids','=',False)],
+            limit=limits)
+        for line in asset_ids:
+            line._compute_value_residual()
+
+        asset_ids = self.env['account.asset'].search(
+            [('state', '=', 'close'),('book_value','<',0),
+             ('company_id','=',company_id),('leasee_contract_ids','=',False)])
+        schedule = self.env.ref(
+            'assets_partial_sale.action_compute_value_residual_cron_update')
+        if len(asset_ids) > 0 and schedule.active:
+            date = fields.Datetime.now()
+            schedule.update({
+                'nextcall': date + timedelta(seconds=15)
+            })
+
+    @api.model
+    def action_compute_value_residual_cron_update(self):
+        date = fields.Datetime.now()
+        schedule = self.env.ref(
+            'assets_partial_sale.action_compute_value_residual')
+        schedule.update({
+            'nextcall': date + timedelta(seconds=15)
+        })
 
     def _get_default_currency(self):
         return self.env.company.currency_id.id
@@ -333,6 +364,7 @@ class AccountAssetPartialInherit(models.Model):
         'original_value', 'salvage_value', 'already_depreciated_amount_import',
         'depreciation_move_ids.state',
         'depreciation_move_ids.amount_total',
+        'depreciation_move_ids.depreciation_value',
         'depreciation_move_ids.reversal_move_id'
     )
     def _compute_value_residual(self):
