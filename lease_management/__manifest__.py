@@ -5,7 +5,7 @@
     'author': "Mahmoud Naguib",
     "version": "1.0",
     "category": "Accounting",
-    "depends": ["account", "account_asset", "analytic_account_types"],
+    "depends": ["account", "account_asset", "analytic_account_types","analytic_account_colocation_type"],
     "data": [
         'security/ir.model.access.csv',
         'data/data.xml',

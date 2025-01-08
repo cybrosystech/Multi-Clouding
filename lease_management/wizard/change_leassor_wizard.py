@@ -2,7 +2,7 @@
 """ init object """
 from odoo import fields, models, api, _
 from odoo.exceptions import ValidationError
-from datetime import date
+from datetime import date, datetime
 import logging
 
 LOGGER = logging.getLogger(__name__)
@@ -58,6 +58,20 @@ class ChangeLeasorWizard(models.TransientModel):
     def action_apply(self):
         self.check_leasor()
         contract = self.leasee_contract_id
+        multi_leasor = contract.multi_leasor_ids
+        vendor = contract.vendor_id
+        company_lock_date = contract.company_id.period_lock_date
+        if company_lock_date and self.change_date < company_lock_date:
+            raise ValidationError(
+                f"The date {self.change_date} cannot be earlier than the journal entries lock date {company_lock_date}."
+            )
+        if vendor:
+            vendor_from = vendor.name
+        elif multi_leasor:
+            vendor_from = ', '.join(
+                multi_leasor.mapped('partner_id').mapped('name'))
+        else:
+            vendor_from = ''
         if self.leasor_type != contract.leasor_type:
             contract.leasor_type = self.leasor_type
             bills = self.env['account.move'].search([
@@ -75,6 +89,8 @@ class ChangeLeasorWizard(models.TransientModel):
         if self.leasor_type == 'single':
             if self.vendor_id != contract.vendor_id:
                 contract.vendor_id = self.vendor_id.id
+                bdy = 'Leasor Changed: ' + vendor_from + " -> " + contract.vendor_id.name
+                contract.message_post(body=bdy)
                 contract.multi_leasor_ids.unlink()
                 bills = self.env['account.move'].search([
                     ('leasee_contract_id', '=', contract.id),
@@ -85,10 +101,31 @@ class ChangeLeasorWizard(models.TransientModel):
                 installments = self.env['leasee.installment'].search([
                     ('leasee_contract_id', '=', contract.id),
                 ]).filtered(lambda i: i.date >= self.change_date)
+
+                existing_posted_bills_dates = self.env['account.move'].search([
+                    ('leasee_contract_id', '=', contract.id),
+                    ('move_type', '=', 'in_invoice'),
+                    ('state', '=', 'posted'),
+                    ('date', '>=', self.change_date)
+                ]).mapped('invoice_date')
+                changed_bills = 0
                 for installment in installments:
-                    contract.create_installment_bill(contract, installment, contract.vendor_id, installment.amount)
+                    if installment.date not in existing_posted_bills_dates:
+                        changed_bills +=1
+                        contract.create_installment_bill(contract, installment, contract.vendor_id, installment.amount)
+                not_changed_bills = len(installments.ids)- changed_bills
+                body = 'Total bills updated = ' + str(changed_bills)
+                if not_changed_bills:
+                    body += ", Total Bills not updated (as status is posted) = " + str(not_changed_bills)
+
+                body+= ",\nChanged Date = " +self.change_date.strftime('%d-%b-%Y')
+                contract.message_post(body=body)
                 
         if self.leasor_type == 'multi':
+            if vendor:
+                vendor_from = vendor.name
+            else:
+                vendor_from = ', '.join(multi_leasor.mapped('partner_id').mapped('name'))
             removed_lines = contract.multi_leasor_ids - self.multi_leasor_ids.mapped('multi_leasor_id')
             if removed_lines:
                 for line in removed_lines:
@@ -100,7 +137,8 @@ class ChangeLeasorWizard(models.TransientModel):
                     ]).filtered(lambda m: m.date >= self.change_date)
                     bills.sudo().unlink()
             removed_lines.sudo().unlink()
-
+            changed_bills = 0
+            not_changed_bills = 0
             for ml in self.multi_leasor_ids:
                 if not ml.multi_leasor_id:
                     self.env['multi.leasor'].create({
@@ -114,11 +152,21 @@ class ChangeLeasorWizard(models.TransientModel):
                             ('leasee_contract_id', '=', contract.id),
                         ]).filtered(lambda i: i.date >= self.change_date)
 
+                    existing_posted_bills_dates = self.env[
+                        'account.move'].search([
+                        ('leasee_contract_id', '=', contract.id),
+                        ('move_type', '=', 'in_invoice'),
+                        ('state', '=', 'posted'),
+                        ('date', '>=', self.change_date)
+                    ]).mapped('invoice_date')
+                    changed_bills = 0
                     for install in installments:
                         partner = ml.partner_id
                         amount = (ml.amount / contract.installment_amount) * install.amount if ml.type == 'amount' else ml.percentage * install.amount / 100
-                        contract.create_installment_bill(contract, install, partner, amount)
-
+                        if install.date not in existing_posted_bills_dates:
+                            changed_bills+=1
+                            contract.create_installment_bill(contract, install, partner, amount)
+                    not_changed_bills = len(installments.ids) - changed_bills
                 else:
                     bills = self.env['account.move'].search([
                         ('leasee_contract_id', '=', contract.id),
@@ -126,7 +174,13 @@ class ChangeLeasorWizard(models.TransientModel):
                         ('state', '=', 'draft'),
                         ('partner_id', '=', ml.partner_id.id),
                     ]).filtered(lambda m: m.date >= self.change_date)
-
+                    existing_posted_bills_dates = self.env[
+                        'account.move'].search([
+                        ('leasee_contract_id', '=', contract.id),
+                        ('move_type', '=', 'in_invoice'),
+                        ('state', '=', 'posted'),
+                        ('date', '>=', self.change_date)
+                    ]).mapped('invoice_date')
                     installments = self.env['leasee.installment'].search([
                             ('leasee_contract_id', '=', contract.id),
                         ]).filtered(lambda i: i.date >= self.change_date)
@@ -146,10 +200,27 @@ class ChangeLeasorWizard(models.TransientModel):
                         changed = True
                     if changed:
                         bills.sudo().unlink()
+                        changed_bills = 0
                         for install in installments:
                             partner = ml.partner_id
                             amount = (ml.amount / contract.installment_amount) * install.amount if ml.type == 'amount' else ml.percentage * install.amount / 100
-                            contract.create_installment_bill(contract, install, partner, amount)
+                            if install.date not in existing_posted_bills_dates:
+                                changed_bills +=1
+                                contract.create_installment_bill(contract, install, partner, amount)
+                        not_changed_bills = len(
+                            installments.ids) - changed_bills
+
+            vendor_to = ','.join(contract.multi_leasor_ids.mapped('partner_id').mapped('name'))
+            bdy = 'Leasor Changed: ' + vendor_from + " -> " + vendor_to
+            contract.message_post(body=bdy)
+
+            body = 'Total bills updated = ' + str(
+                changed_bills)
+            if not_changed_bills:
+                body += "," + "Total Bills not updated (as status is  posted) = " + str(
+                not_changed_bills)
+            body += ",\nChanged Date = " +self.change_date.strftime('%d-%b-%Y')
+            contract.message_post(body=body)
 
 
 class ChangeLeasorLineWizard(models.TransientModel):

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+    <record id="product_category_form_view" model="ir.ui.view">
+        <field name="name">product.category.form.view.inherit.account_custom</field>
+        <field name="model">product.category</field>
+        <field name="inherit_id" ref="product.product_category_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='property_account_expense_categ_id']" position="after">
+                <field name="asset_account_id"/>
+                                <field name="cip_account_id"/>
+
+            </xpath>
+        </field>
+    </record>
+
+    </data>
+</odoo>

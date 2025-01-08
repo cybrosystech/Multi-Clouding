@@ -211,23 +211,15 @@ class LeaseeContract(models.Model):
                                         compute='compute_total_period',
                                         )
     end_date = fields.Date(string="Ending Date",compute='compute_contract_end_date')
-    is_admin = fields.Boolean(string="Is Admin", compute='compute_is_admin',default=lambda self: self.get_is_admin())
+    is_admin = fields.Boolean(string="Is Admin", compute='compute_is_admin')
 
-    def get_is_admin(self):
-        if self.env.user.has_group(
-                'base.group_erp_manager') or self.env.user.has_group(
-            'base.group_system'):
-            is_admin = True
-        else:
-            is_admin = False
-        return is_admin
-
+    @api.depends_context('uid')
     def compute_is_admin(self):
         is_admin = self.env.user.id == SUPERUSER_ID or \
                    self.env.user.has_group('base.group_erp_manager') or \
                    self.env.user.has_group('base.group_system')
-        # Perform bulk write on all records at once
-        self.update({'is_admin': is_admin})
+        for rec in self:
+            rec.is_admin=is_admin
 
 
     def get_lease_ending_date(self):
@@ -1429,10 +1421,9 @@ class LeaseeContract(models.Model):
     def action_open_bills(self):
         domain = [('id', 'in', self.account_move_ids.ids),
                   ('move_type', 'in', ['in_invoice', 'in_refund'])]
-        journal = self.env['account.journal'].search([('name', 'ilike', 'ifrs'),
-                                                      ('type', '=', 'purchase'),
-                                                      ('company_id', '=',
-                                                       self.company_id.id)],
+        journal = self.env['account.journal'].search([('name', 'ilike','ifrs'),
+                                                      ('type','=','purchase'),
+                                                      ('company_id','=',self.company_id.id)],
                                                      limit=1)
         view_tree = {
             'name': _(' Vendor Bills '),
@@ -1441,7 +1432,7 @@ class LeaseeContract(models.Model):
             'res_model': 'account.move',
             'type': 'ir.actions.act_window',
             'domain': domain,
-            "context": {'default_journal_id': journal.id if journal.id else False},
+            "context": {'default_journal_id': journal.id if journal else False},
         }
 
         return view_tree
