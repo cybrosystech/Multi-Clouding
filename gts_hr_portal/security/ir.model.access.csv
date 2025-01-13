@@ -8,7 +8,6 @@ access_hr_leave_allocation_portal_user,hr.leave.allocation.user,hr_holidays.mode
 access_hr_leave_type_portal_user,hr.leave.type.user,hr_holidays.model_hr_leave_type,base.group_portal,1,0,0,0
 access_calendar_event_portal_user,calendar.event.user,calendar.model_calendar_event,base.group_portal,1,1,1,1
 access_calendar_event,calendar.event,calendar.model_calendar_event,base.group_portal,1,1,1,1
-access_calendar_attendee,calendar.attendee,calendar.model_calendar_attendee,base.group_portal,1,1,1,1
 access_mail_activity_type_portal_user,mail.activity.type.user,calendar.model_mail_activity_type,base.group_portal,1,0,0,0
 access_mail_activity_portal_user,mail.activity.user,calendar.model_mail_activity,base.group_portal,1,1,1,1
 access_calendar_attendee_portal_user,calendar.attendee.user,calendar.model_calendar_attendee,base.group_portal,1,1,0,0

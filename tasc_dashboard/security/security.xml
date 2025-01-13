@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <record model="res.groups" id="dashboard_builder_user_bits">
+            <field name="name">Own Dashboard</field>
+            <field name="category_id"
+                   ref="analytix_dashboard_bits.access_group_dashboard_bits"/>
+        </record>
+
+        <record id="purchase_user_own_rule" model="ir.rule">
+            <field name="name">Purchase User Own Records</field>
+            <field name="model_id" ref="purchase.model_purchase_order"/>
+            <field name="domain_force">[('user_id','=', user.id)]</field>
+            <field name="groups"
+                   eval="[(4, ref('purchase.group_purchase_user'))]"/>
+        </record>
+        <record id="purchase_all_rule" model="ir.rule">
+            <field name="name">Purchase All Records</field>
+            <field name="model_id" ref="purchase.model_purchase_order"/>
+            <field name="domain_force">[(1,'=', 1)]</field>
+            <field name="groups"
+                   eval="[(4, ref('purchase.group_purchase_manager')),(4, ref('account.group_account_manager')),(4, ref('account.group_account_invoice')),(4, ref('account.group_account_user')),(4, ref('account_consolidation.group_consolidation_user')),(4, ref('account.group_account_readonly')),(4, ref('budget_approval_group.group_budget_check_approver')),(4, ref('base.group_erp_manager')),(4, ref('base.group_system'))]"/>
+        </record>
+    </data>
+</odoo>
