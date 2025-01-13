@@ -48,3 +48,4 @@
     'installable': True,
     'application': True,
 }
+
