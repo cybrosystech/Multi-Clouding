@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <menuitem name="My Dashboards"
+                  id="analytix_dashboard_bits.menu_all_dashboard_bits"
+                  action="analytix_dashboard_bits.action_dashboards_view_bits"
+                  groups="tasc_dashboard.dashboard_builder_user_bits,analytix_dashboard_bits.dashboard_builder_manager_bits"
+                  web_icon="analytix_dashboard_bits,static/description/icon.png"/>
+
+        <menuitem
+                id="spreadsheet_dashboard.spreadsheet_dashboard_menu_root"
+                name="Dashboards"
+                action="spreadsheet_dashboard.ir_actions_dashboard_action"
+                groups="spreadsheet_dashboard.group_dashboard_manager"
+                web_icon="spreadsheet_dashboard,static/description/icon.png"
+                sequence="37"/>
+
+        <menuitem id="izi_data.izi_dashboard_root"
+                  groups="izi_data.group_user_analysis,izi_data.group_manager_analysis,izi_dashboard.group_user_dashboard,izi_dashboard.group_manager_dashboard"
+                  web_icon="izi_dashboard,static/description/icon.png"
+                  name="Analytics" sequence="-2"/>
+
+        <menuitem id="base.menu_apps" name="Apps" parent="base.menu_management"
+                  groups="base.group_erp_manager,base.group_system"
+                  sequence="5"/>
+
+        <menuitem name="Website"
+                  id="website.menu_website_configuration"
+                  sequence="95"
+                  groups="website.group_website_designer,website.group_multi_website,website.group_website_restricted_editor"
+                  web_icon="website,static/description/icon.png"/>
+
+    </data>
+</odoo>
