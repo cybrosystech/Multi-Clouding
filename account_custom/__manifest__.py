@@ -19,6 +19,7 @@
             'views/product_view.xml',
             'views/account_move.xml',
             'views/account_move_line_views.xml',
+            'views/product_category_views.xml',
         ],
     'installable': True,
     'auto_install': False,
