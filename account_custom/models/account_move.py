@@ -112,3 +112,7 @@ class AccountMoveLine(models.Model):
     _inherit = 'account.move.line'
 
     code = fields.Integer(string="Code", related='account_id.code_num')
+
+    def _can_use_stock_accounts(self):
+        return self.product_id.type == 'product' and self.product_id.categ_id.property_valuation == 'real_time' and  self.purchase_line_id
+
