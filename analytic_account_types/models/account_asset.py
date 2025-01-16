@@ -14,11 +14,11 @@ class AccountAsset(models.Model):
                                       string="Project/Site",
                                       domain=[('analytic_account_type', '=',
                                                'project_site')],
-                                      required=False, )
+                                      required=True, )
     analytic_account_id = fields.Many2one(
         comodel_name="account.analytic.account",
         string="Cost Center",
-        required=False, domain=[
+        required=True, domain=[
             ('analytic_account_type', '=',
              'cost_center')], )
     site_address = fields.Char(string='Site Address',

@@ -26,6 +26,33 @@ class ModelRecordUnlink(models.Model):
                                domain="[('company_id', '=', company_id),'|',('analytic_account_type','=',analytic_account_types),('analytic_account_type','=',False)]")
     year = fields.Char(default=lambda self: fields.Date.today().year)
 
+    def split_list(self, lst, limit):
+        return [lst[i:i + limit] for i in range(0, len(lst), limit)]
+
+    def create_jobs(self, sublist):
+        for i in sublist:
+            self.with_delay(priority=5)._process_job(i)
+
+    def _process_job(self, iteration):
+        # Process the job
+        # Perform your task here
+        items = iteration
+        for item in items:
+            if self.analytic_account_types == 'cost_center':
+                item.analytic_account_id = self.to_value.id
+                item.onchange_project_site()
+                analytic_line = self.env['account.analytic.line'].search(
+                    [('move_line_id', '=', item.id)])
+                analytic_line.account_id = self.to_value.id
+            else:
+                item.project_site_id = self.to_value.id
+                item.onchange_project_site()
+                analytic_line = self.env['account.analytic.line'].search(
+                    [('move_line_id', '=', item.id)])
+                analytic_line.project_site_id = self.to_value.id
+
+
+
     def modify_cost_center(self):
         domain = []
 
@@ -42,23 +69,13 @@ class ModelRecordUnlink(models.Model):
         if self.project_site_id:
             domain.append(('project_site_id', '=', self.project_site_id.id))
 
-        items = self.env['account.move.line'].search(domain, limit=self.limit)
+        items = self.env['account.move.line'].search(domain,limit=self.limit)
         if self.year:
             items = items.filtered( lambda l: l.move_id.date.year == int(self.year))
 
-        for item in items:
-            if self.analytic_account_types == 'cost_center':
-                item.analytic_account_id = self.to_value.id
-                item.onchange_project_site()
-                analytic_line = self.env['account.analytic.line'].search(
-                    [('move_line_id', '=', item.id)])
-                analytic_line.account_id = self.to_value.id
-            else:
-                item.project_site_id = self.to_value.id
-                item.onchange_project_site()
-                analytic_line = self.env['account.analytic.line'].search(
-                    [('move_line_id', '=', item.id)])
-                analytic_line.project_site_id = self.to_value.id
+        my_list = items
+        sublists = self.split_list(my_list, 250)
+        self.create_jobs(sublists)
 
     @api.onchange('from_value', 'company_id', 'journal_state', 'year','project_site_id')
     def onchange_from_value(self):
