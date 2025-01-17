@@ -9,12 +9,12 @@ class ModelRecordUnlink(models.Model):
                                               default='cost_center', selection=[
             ('cost_center', 'Cost Center'), ('project_site', 'Project/Site')],
                                               required=True)
-    records = fields.Integer(string="Records")
+    records = fields.Integer(string="Records",compute='compute_records_count',store=True)
     limit = fields.Integer(string="Limit", required=True)
     journal_state = fields.Selection(
         [('draft', 'Draft'), ('to_approve', 'To Approve'),
          ('posted', 'Posted'), ('cancel', 'Cancelled')])
-
+    journal_ids = fields.Many2many('account.journal', string='Journals')
     from_value = fields.Many2one('account.analytic.account',
                                  string="From",
                                  domain="[('company_id', '=', company_id),'|',('analytic_account_type','=',analytic_account_types),('analytic_account_type','=',False)]")
@@ -68,6 +68,8 @@ class ModelRecordUnlink(models.Model):
 
         if self.project_site_id:
             domain.append(('project_site_id', '=', self.project_site_id.id))
+        if self.journal_ids:
+            domain.append(('journal_id', 'in', self.journal_ids.ids))
 
         items = self.env['account.move.line'].search(domain,limit=self.limit)
         if self.year:
@@ -77,26 +79,31 @@ class ModelRecordUnlink(models.Model):
         sublists = self.split_list(my_list, 250)
         self.create_jobs(sublists)
 
-    @api.onchange('from_value', 'company_id', 'journal_state', 'year','project_site_id')
-    def onchange_from_value(self):
-        domain = []
 
-        if self.analytic_account_types == 'cost_center':
-            domain.append(('analytic_account_id', '=', self.from_value.id))
-        else:
-            domain.append(('project_site_id', '=', self.from_value.id))
+    @api.depends('from_value', 'company_id', 'journal_state', 'year','project_site_id','journal_ids')
+    def compute_records_count(self):
+        for rec in self:
+            domain = []
+            if rec.analytic_account_types == 'cost_center':
+                domain.append(('analytic_account_id', '=', rec.from_value.id))
+            else:
+                domain.append(('project_site_id', '=', rec.from_value.id))
 
-        domain.append(('company_id', '=', self.company_id.id))
+            domain.append(('company_id', '=', rec.company_id.id))
 
-        if self.journal_state:
-            domain.append(('move_id.state', '=', self.journal_state))
+            if rec.journal_state:
+                domain.append(('move_id.state', '=', rec.journal_state))
 
-        if self.project_site_id:
-            domain.append(('project_site_id', '=', self.project_site_id.id))
+            if rec.project_site_id:
+                domain.append(('project_site_id', '=', rec.project_site_id.id))
 
-        items = self.env['account.move.line'].search(domain)
-        if self.year:
-            items = items.filtered(
-                lambda l: l.move_id.date.year == int(self.year))
-        items_count = len(items)
-        self.records = items_count
+            if rec.journal_ids:
+                domain.append(('journal_id', 'in', rec.journal_ids.ids))
+
+            items = self.env['account.move.line'].search(domain)
+            if rec.year:
+                items = items.filtered(
+                    lambda l: l.move_id.date.year == int(rec.year))
+            items_count = len(items)
+            rec.records = items_count
+

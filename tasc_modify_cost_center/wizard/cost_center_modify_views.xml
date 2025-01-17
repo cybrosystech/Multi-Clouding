@@ -17,6 +17,7 @@
                         <group>
                             <field name="year"/>
                             <field name="journal_state"/>
+                            <field name="journal_ids" widget="many2many_tags" />
                             <field name="records"/>
                             <field name="limit"/>
                         </group>
