@@ -11,7 +11,7 @@
             <button name="action_activate" position="after">
                 <button name="action_security_advance" string="Security"
                         class="oe_highlight"
-                        invisible="security_button_bool != True or state!= 'active'"
+                        invisible="security_button_bool != True or (state!= 'active' and security_amount == 0)"
                         type="object"/>
             </button>
             <button name="action_open_bills" position="after">
