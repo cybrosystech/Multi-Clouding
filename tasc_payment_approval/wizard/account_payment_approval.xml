@@ -22,17 +22,20 @@
                 </header>
                 <sheet>
                     <group>
-                        <field name="batch_name" readonly="state == 'approved'"
+                        <field name="batch_name" readonly="state == 'approved' or bank_integration_status == 'success'"
                         />
                         <field name="from_date"
-                               readonly="state == 'approved'"/>
+                               readonly="state == 'approved' or bank_integration_status == 'success'"/>
                         <field name="to_date"
-                               readonly="state == 'approved'"/>
+                               readonly="state == 'approved' or bank_integration_status == 'success'"/>
                         <field name="company_id"
-                               readonly="state == 'approved'"/>
+                               readonly="state == 'approved' or bank_integration_status == 'success'"/>
                         <field name="bank_integration_status"
                        groups="base.group_erp_manager,base.group_system,account.group_account_manager"
+                               readonly="bank_integration_status == 'success'"
+
                 />
+                        <field name="bank_integration_status" invisible="1"/>
                         <field name="request_approve_bool" invisible="1"
                         />
                         <field name="show_request_approve_button"
@@ -41,12 +44,12 @@
                         <button string="Generate  Payments"
                                 name="action_generate_approval_batch"
                                 type="object" class="btn-secondary"
-                                invisible="state != 'draft'"/>
+                                invisible="state != 'draft' or bank_integration_status == 'success'"/>
 
                     </group>
                     <notebook>
                         <page string="Payments">
-                            <field name="payment_ids" readonly="state == 'approved'">
+                            <field name="payment_ids" readonly="state == 'approved' or bank_integration_status == 'success'">
                                 <tree>
                                     <field name="payment_id" invisible="1" column_invisible="1" optional="hide"/>
                                     <field name="description"/>
