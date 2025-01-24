@@ -1692,10 +1692,6 @@ class LeaseeContract(models.Model):
             invoice.date = contract.inception_date
             invoice.invoice_date_due = contract.inception_date
             invoice.auto_post = 'at_date'
-        else:
-            if self.env.context.get('lease_extension') and contract.inception_date:
-                invoice.date = contract.inception_date
-
 
         invoice.invoice_line_ids = [(0, 0, {
             'product_id': contract.installment_product_id.id,
