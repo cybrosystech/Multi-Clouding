@@ -12,14 +12,14 @@
                        position="before">
                     <field name="is_admin" invisible="1"/>
                     <field name="analytic_account_id"
-                           invisible="is_admin == True"
+                           invisible="is_admin == True" required="state !='model'"
                            options="{'no_quick_create': True, 'no_create_edit': True}"/>
                     <field name="project_site_id"
-                           invisible="is_admin == True"
+                           invisible="is_admin == True" required="state !='model'"
                            options="{'no_quick_create': True, 'no_create_edit': True}"/>
-                    <field name="analytic_account_id"
+                    <field name="analytic_account_id" required="state !='model'"
                            invisible="is_admin == False"/>
-                    <field name="project_site_id"
+                    <field name="project_site_id" required="state !='model'"
                            invisible="is_admin == False"/>
                 </xpath>
 

@@ -153,3 +153,232 @@ class TascTrialBalance(models.AbstractModel):
                     line_classes = line.get('class', '')
                     line['class'] = line_classes + ' o_account_coa_column_contrast_hierarchy'
         return lines
+        
+        
+class AccountReport(models.Model):
+    _inherit = 'account.report'
+
+
+    def _inject_report_into_xlsx_sheet(self, options, workbook, sheet):
+        if options["available_variants"][0][
+            "name"] == 'TASC Trial Balance':
+            def write_with_colspan(sheet, x, y, value, colspan, style):
+                if colspan == 1:
+                    sheet.write(y, x, value, style)
+                else:
+                    sheet.merge_range(y, x, y, x + colspan - 1, value, style)
+
+            date_default_col1_style = workbook.add_format(
+                {'font_name': 'Arial', 'font_size': 12, 'font_color': '#666666',
+                 'indent': 2, 'num_format': 'yyyy-mm-dd'})
+            date_default_style = workbook.add_format(
+                {'font_name': 'Arial', 'font_size': 12, 'font_color': '#666666',
+                 'num_format': 'yyyy-mm-dd'})
+            default_col1_style = workbook.add_format(
+                {'font_name': 'Arial', 'font_size': 12, 'font_color': '#666666',
+                 'indent': 2})
+            default_col2_style = workbook.add_format(
+                {'font_name': 'Arial', 'font_size': 12,
+                 'font_color': '#666666'})
+            default_style = workbook.add_format(
+                {'font_name': 'Arial', 'font_size': 12,
+                 'font_color': '#666666'})
+            title_style = workbook.add_format(
+                {'font_name': 'Arial', 'bold': True, 'bottom': 2})
+            level_0_style = workbook.add_format(
+                {'font_name': 'Arial', 'bold': True, 'font_size': 13,
+                 'bottom': 6, 'font_color': '#666666'})
+            level_1_col1_style = workbook.add_format(
+                {'font_name': 'Arial', 'bold': True, 'font_size': 13,
+                 'bottom': 1, 'font_color': '#666666', 'indent': 1})
+            level_1_col1_total_style = workbook.add_format(
+                {'font_name': 'Arial', 'bold': True, 'font_size': 13,
+                 'bottom': 1, 'font_color': '#666666'})
+            level_1_col2_style = workbook.add_format(
+                {'font_name': 'Arial', 'bold': True, 'font_size': 13,
+                 'bottom': 1, 'font_color': '#666666'})
+            level_1_style = workbook.add_format(
+                {'font_name': 'Arial', 'bold': True, 'font_size': 13,
+                 'bottom': 1, 'font_color': '#666666'})
+            level_2_col1_style = workbook.add_format(
+                {'font_name': 'Arial', 'bold': True, 'font_size': 12,
+                 'font_color': '#666666', 'indent': 2})
+            level_2_col1_total_style = workbook.add_format(
+                {'font_name': 'Arial', 'bold': True, 'font_size': 12,
+                 'font_color': '#666666', 'indent': 1})
+            level_2_col2_style = workbook.add_format(
+                {'font_name': 'Arial', 'bold': True, 'font_size': 12,
+                 'font_color': '#666666'})
+            level_2_style = workbook.add_format(
+                {'font_name': 'Arial', 'bold': True, 'font_size': 12,
+                 'font_color': '#666666'})
+            col1_styles = {}
+
+            print_mode_self = self.with_context(no_format=True)
+            lines = self._filter_out_folded_children(
+                print_mode_self._get_lines(options))
+
+            # For reports with lines generated for accounts, the account name and codes are shown in a single column.
+            # To help user post-process the report if they need, we should in such a case split the account name and code in two columns.
+            account_lines_split_names = {}
+            for line in lines:
+                line_model = self._get_model_info_from_id(line['id'])[0]
+                if line_model == 'account.account':
+                    # Reuse the _split_code_name to split the name and code in two values.
+                    # account_lines_split_names[line['id']] = self.env['account.account']._split_code_name(line['name'])
+                    account_lines_split_names[line['id']] = self.env[
+                        'account.account']._split_code_name(line['name'])
+
+            # Set the first column width to 50.
+            # If we have account lines and split the name and code in two columns, we will also set the second column.
+            sheet.set_column(0, 0, 50)
+            if len(account_lines_split_names) > 0:
+                sheet.set_column(1, 1, 13)
+
+            original_x_offset = 1 if len(account_lines_split_names) > 0 else 0
+
+            y_offset = 0
+            # 1 and not 0 to leave space for the line name. original_x_offset allows making place for the code column if needed.
+            x_offset = original_x_offset + 1
+
+            # Add headers.
+            # For this, iterate in the same way as done in main_table_header template
+            column_headers_render_data = self._get_column_headers_render_data(
+                options)
+            for header_level_index, header_level in enumerate(
+                    options['column_headers']):
+                for header_to_render in header_level * \
+                                        column_headers_render_data[
+                                            'level_repetitions'][
+                                            header_level_index]:
+                    colspan = header_to_render.get('colspan',
+                                                   column_headers_render_data[
+                                                       'level_colspan'][
+                                                       header_level_index])
+                    write_with_colspan(sheet, x_offset, y_offset,
+                                       header_to_render.get('name', ''),
+                                       colspan, title_style)
+                    x_offset += colspan
+                if options['show_growth_comparison']:
+                    write_with_colspan(sheet, x_offset, y_offset, '%', 1,
+                                       title_style)
+                y_offset += 1
+                x_offset = original_x_offset + 1
+
+            if account_lines_split_names:
+                # If we have a separate account code column, add a title for it
+                sheet.write(y_offset+1, x_offset - 2, _("Account Code"),
+                            title_style)
+                sheet.write(y_offset + 1, x_offset - 1, _("Account Name"),
+                            title_style)
+
+            for subheader in column_headers_render_data['custom_subheaders']:
+                colspan = subheader.get('colspan', 1)
+                write_with_colspan(sheet, x_offset - 1, y_offset,
+                                   subheader.get('name', ''), colspan,
+                                   title_style)
+                x_offset += colspan
+            y_offset += 1
+            x_offset = original_x_offset + 1
+
+            for column in options['columns']:
+                colspan = column.get('colspan', 1)
+                write_with_colspan(sheet, x_offset, y_offset,
+                                   column.get('name', ''), colspan, title_style)
+                x_offset += colspan
+            y_offset += 1
+
+            if options.get('order_column'):
+                lines = self.sort_lines(lines, options)
+
+            # Add lines.
+            for y in range(0, len(lines)):
+                level = lines[y].get('level')
+                is_total_line = 'total' in lines[y].get('class', '').split(' ')
+                if level == 0:
+                    y_offset += 1
+                    style = level_0_style
+                    col1_style = style
+                    col2_style = style
+                elif level == 1:
+                    style = level_1_style
+                    col1_style = level_1_col1_total_style if is_total_line else level_1_col1_style
+                    col2_style = level_1_col2_style
+                elif level == 2:
+                    style = level_2_style
+                    col1_style = level_2_col1_total_style if is_total_line else level_2_col1_style
+                    col2_style = level_2_col2_style
+                elif level and level >= 3:
+                    style = default_style
+                    col2_style = style
+                    level_col1_styles = col1_styles.get(level)
+                    if not level_col1_styles:
+                        level_col1_styles = col1_styles[level] = {
+                            'default': workbook.add_format(
+                                {'font_name': 'Arial', 'font_size': 12,
+                                 'font_color': '#666666', 'indent': level}
+                            ),
+                            'total': workbook.add_format(
+                                {
+                                    'font_name': 'Arial',
+                                    'bold': True,
+                                    'font_size': 12,
+                                    'font_color': '#666666',
+                                    'indent': level - 1,
+                                }
+                            ),
+                        }
+                    col1_style = level_col1_styles[
+                        'total'] if is_total_line else level_col1_styles[
+                        'default']
+                else:
+                    style = default_style
+                    col1_style = default_col1_style
+                    col2_style = default_col2_style
+
+                # write the first column, with a specific style to manage the indentation
+                x_offset = original_x_offset + 1
+                if lines[y]['id'] in account_lines_split_names:
+                    code, name = account_lines_split_names[lines[y]['id']]
+                    sheet.write(y + y_offset, 1, name, col1_style)
+                    sheet.write(y + y_offset, 0, code, col2_style)
+                else:
+                    cell_type, cell_value = self._get_cell_type_value(lines[y])
+                    if cell_type == 'date':
+                        sheet.write_datetime(y + y_offset, 0, cell_value,
+                                             date_default_col1_style)
+                    else:
+                        sheet.write(y + y_offset, 0, cell_value, col1_style)
+
+                    if lines[y].get('parent_id') and lines[y][
+                        'parent_id'] in account_lines_split_names:
+                        sheet.write(y + y_offset, 1, account_lines_split_names[
+                            lines[y]['parent_id']][0], col2_style)
+                    elif account_lines_split_names:
+                        sheet.write(y + y_offset, 1, "", col2_style)
+
+                # write all the remaining cells
+                columns = lines[y]['columns']
+                if options[
+                    'show_growth_comparison'] and 'growth_comparison_data' in \
+                        lines[y]:
+                    columns += [lines[y].get('growth_comparison_data')]
+                for x, column in enumerate(columns, start=x_offset):
+                    cell_type, cell_value = self._get_cell_type_value(column)
+                    if cell_type == 'date':
+                        sheet.write_datetime(y + y_offset,
+                                             x + lines[y].get('colspan', 1) - 1,
+                                             cell_value, date_default_style)
+                    else:
+                        sheet.write(y + y_offset,
+                                    x + lines[y].get('colspan', 1) - 1,
+                                    cell_value, style)
+        else:
+            super()._inject_report_into_xlsx_sheet(options, workbook, sheet)
+
+        
+        
+        
+        
+        
+        

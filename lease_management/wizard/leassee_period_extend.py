@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 
 import logging
 
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError
 
 LOGGER = logging.getLogger(__name__)
 
@@ -71,13 +71,15 @@ class LeaseePeriodExtend(models.TransientModel):
 
     def action_apply(self):
         contract = self.leasee_contract_id
+        if contract.child_ids:
+            raise UserError('The lease has already been extended; go to the latest child lease for further extension.')
         self.action_create_extend_log()
         last_installment = self.env['leasee.installment'].search([
             ('leasee_contract_id', '=', self.leasee_contract_id.id),
             ('amount', '>', 0.0),
         ], order='date desc', limit=1)
         if self.inception_date:
-            new_contract = contract.copy({
+            new_contract = contract.with_context(lease_extension=True).copy({
                 'name': contract.name,
                 'inception_date': self.inception_date,
                 'commencement_date': contract.estimated_ending_date + relativedelta(
