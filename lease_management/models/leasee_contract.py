@@ -914,7 +914,6 @@ class LeaseeContract(models.Model):
                 invoice_lines.append((0, 0, {
                     'product_id': self.initial_product_id.id,
                     'display_type': 'product',
-
                     'name': self.initial_product_id.name,
                     'product_uom_id': self.initial_product_id.uom_id.id,
                     'account_id':
@@ -1688,10 +1687,15 @@ class LeaseeContract(models.Model):
             'journal_id': contract.installment_journal_id.id,
             'leasee_contract_id': contract.id,
         })
+
         if invoice.date >= contract.commencement_date and invoice.date <= contract.inception_date:
             invoice.date = contract.inception_date
             invoice.invoice_date_due = contract.inception_date
             invoice.auto_post = 'at_date'
+        else:
+            if self.env.context.get('lease_extension') and contract.inception_date:
+                invoice.date = contract.inception_date
+
 
         invoice.invoice_line_ids = [(0, 0, {
             'product_id': contract.installment_product_id.id,

@@ -77,7 +77,7 @@ class LeaseePeriodExtend(models.TransientModel):
             ('amount', '>', 0.0),
         ], order='date desc', limit=1)
         if self.inception_date:
-            new_contract = contract.copy({
+            new_contract = contract.with_context(lease_extension=True).copy({
                 'name': contract.name,
                 'inception_date': self.inception_date,
                 'commencement_date': contract.estimated_ending_date + relativedelta(
