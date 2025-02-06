@@ -1243,7 +1243,8 @@ class AccountReport(models.Model):
 
     def _inject_report_into_xlsx_sheet(self, options, workbook, sheet):
         if options["available_variants"][0][
-            "name"] == 'Tasc Depreciation Schedule':
+            "name"] == 'Tasc Depreciation Schedule' or options["available_variants"][0][
+            "name"] == 'Tasc Depreciation Schedule Grouped':
             def write_with_colspan(sheet, x, y, value, colspan, style):
                 if colspan == 1:
                     sheet.write(y, x, value, style)
