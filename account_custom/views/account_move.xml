@@ -6,7 +6,9 @@
         <field name="inherit_id" ref="account.view_invoice_tree"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='payment_reference']" position="attributes">
-              <attribute name="string">Invoice No./Pay Ref</attribute>
+                <attribute name="string">Invoice No./Pay Ref</attribute>
+                <attribute name="column_invisible">False</attribute>
+                <attribute name="optional">show</attribute>
             </xpath>
             <xpath expr="//field[@name='payment_reference']" position="after">
                 <field name="project_site_id"  optional="hide" />
