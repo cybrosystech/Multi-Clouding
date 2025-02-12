@@ -13,6 +13,7 @@
             'report/account_assets_custom_report_view.xml',
             'report/account_asset.xml',
             'report/account_asset_report_depreciation_functional.xml',
+            'report/account_assets_custom_report_grouped_view.xml',
         ],
     'installable': True,
     'auto_install': False,
