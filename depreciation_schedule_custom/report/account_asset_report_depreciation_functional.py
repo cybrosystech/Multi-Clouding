@@ -29,12 +29,11 @@ class AssetsReportCustomHandler(models.AbstractModel):
                                  all_column_groups_expression_totals,
                                  warnings=None):
         report = self._with_context_company2code2account(report)
-
         lines, totals_by_column_group = self._generate_report_lines_without_grouping(
             report, options)
         if options["available_variants"][0][
             "name"] == 'Tasc Depreciation Schedule' or options["available_variants"][0][
-            "name"] == 'Tasc Depreciation Schedule Functional':
+            "name"] == 'Tasc Depreciation Schedule Functional' :
 
             if self.env.context.get('is_xlsx'):
                 # add the groups by account
@@ -108,7 +107,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
         column_names = [
             'assets_date_from', 'assets_plus', 'assets_minus', 'assets_date_to',
             'depre_date_from',
-            'depre_plus', 'depre_minus', 'depre_date_to', 'balance'
+            'depre_plus', 'depre_minus', 'depre_date_to', 'depre_for_year','balance'
         ]
         totals_by_column_group = defaultdict(
             lambda: dict.fromkeys(column_names, 0.0))
@@ -198,7 +197,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
         options['custom_columns_subheaders'] = [
             {"name": _("Characteristics"), "colspan": 15},
             {"name": _("Assets"), "colspan": 4},
-            {"name": _("Depreciation"), "colspan": 4},
+            {"name": _("Depreciation"), "colspan": 5},
             {"name": _("Book Value"), "colspan": 1}
         ]
 
@@ -265,6 +264,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
             # Get the main values of the board for the asset
             depreciation_opening = al['depreciated_before']
             depreciation_add = al['depreciated_during']
+            depreciation_for_the_year = al['depreciated_for_the_year']
             depreciation_minus = 0.0
 
             asset_disposal_value = al['asset_disposal_value'] if al[
@@ -282,6 +282,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
             for child in children_lines[al['asset_id']]:
                 depreciation_opening += child['depreciated_before']
                 depreciation_add += child['depreciated_during']
+                depreciation_for_the_year += child['depreciated_for_the_year']
 
                 opening = (child['asset_acquisition_date'] or child[
                     'asset_date']) < fields.Date.to_date(
@@ -392,6 +393,11 @@ class AssetsReportCustomHandler(models.AbstractModel):
                     self.env.company.currency_id,
                     self.env.company,
                     asset_id.acquisition_date)
+                depreciation_for_the_year = asset_id.currency_id._convert(
+                    depreciation_for_the_year,
+                    self.env.company.currency_id,
+                    self.env.company,
+                    asset_id.acquisition_date)
                 balance = asset_id.currency_id._convert(
                     balance,
                     self.env.company.currency_id,
@@ -420,6 +426,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                 "depre_plus": depreciation_add,
                 "depre_minus": depreciation_minus,
                 "depre_date_to": depreciation_closing,
+                "depre_for_year": depreciation_for_the_year,
                 "balance": balance ,
                 "project_site": al["project_site"],
                 "capex_type": apex_type,
@@ -590,6 +597,11 @@ class AssetsReportCustomHandler(models.AbstractModel):
                                                 WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.state = 'posted'
                                               ), 0
                                             ) AS depreciated_during, 
+                                             COALESCE(
+                                            SUM(move.depreciation_value) FILTER (
+                                              WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.state = 'posted' AND move.ref NOT ILIKE '%%Disposal%%'
+                                            ), 0
+                                          ) AS depreciated_for_the_year, 
                                             COALESCE(
                                               SUM(move.depreciation_value) FILTER (
                                                 WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.state = 'posted'
@@ -665,6 +677,11 @@ class AssetsReportCustomHandler(models.AbstractModel):
                           WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.state = 'posted'
                         ), 0
                       ) AS depreciated_during, 
+                       COALESCE(
+                                            SUM(move.depreciation_value) FILTER (
+                                              WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.state = 'posted' AND move.ref NOT ILIKE '%%Disposal%%'
+                                            ), 0
+                                          ) AS depreciated_for_the_year, 
                       COALESCE(
                         SUM(move.depreciation_value) FILTER (
                           WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.state = 'posted'
