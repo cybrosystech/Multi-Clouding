@@ -198,7 +198,9 @@ class AssetsReportCustomHandler(models.AbstractModel):
             {"name": _("Characteristics"), "colspan": 15},
             {"name": _("Assets"), "colspan": 4},
             {"name": _("Depreciation"), "colspan": 4},
-            {"name": _("Book Value"), "colspan": 1}
+            {"name": _("Book Value"), "colspan": 1},
+            {"name": _(""), "colspan": 1}
+
         ]
 
         # Group by account by default

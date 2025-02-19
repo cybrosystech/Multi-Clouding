@@ -451,6 +451,7 @@ class AccountReport(models.Model):
     _inherit = 'account.report'
 
     def _inject_report_into_xlsx_sheet(self, options, workbook, sheet):
+        print("33333333")
         if options["available_variants"][0][
             "name"] == 'Tasc Deferred Expense Report':
             def write_with_colspan(sheet, x, y, value, colspan, style):
