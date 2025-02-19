@@ -17,7 +17,6 @@
             'views/account_move_views.xml',
             'wizard/deferred_expense_wizard_view.xml',
             'wizard/def_exp_wizard_views.xml',
-            # 'report/tasc_deferred_expense_report.xml',
         ],
 
 }
