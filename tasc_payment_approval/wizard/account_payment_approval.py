@@ -207,6 +207,7 @@ class PaymentApprovalLine(models.Model):
     description = fields.Char(string="Description", help="Description")
     purchase_ids = fields.Many2many('purchase.order',compute='compute_purchase_and_invoices',store=True)
     invoice_ids = fields.Many2many('account.move',compute='compute_purchase_and_invoices',store=True)
+    acknowledgement =  fields.Char(string="Acknowledgement",help="Acknowledgement")
 
     _sql_constraints = [
         ('unique_payment_per_payment_approval_batch', 'UNIQUE(payment_approval_batch_id, payment_id)',

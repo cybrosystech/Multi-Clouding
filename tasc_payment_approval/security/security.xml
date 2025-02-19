@@ -16,5 +16,14 @@
                 ('company_id', 'in', company_ids)]
             </field>
         </record>
+
+    <record id="purpose_code_company_rule" model="ir.rule">
+        <field name="name">Purpose Code: Multi Company</field>
+        <field name="model_id" ref="model_purpose_code"/>
+        <field name="global" eval="False"/>
+        <field name="domain_force">[('company_ids', 'in', company_ids + [False])]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
     </data>
 </odoo>
