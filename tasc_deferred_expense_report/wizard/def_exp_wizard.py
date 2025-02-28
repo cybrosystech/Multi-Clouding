@@ -22,6 +22,10 @@ class DefeExpWizard(models.Model):
                                  readonly=True)
     excel_sheet = fields.Binary('Download Report')
     excel_sheet_name = fields.Char(string='Name', size=64)
+    state = fields.Selection([('only_posted', 'Posted Entries Only'),
+                              ('include_draft', 'Include Draft'),
+                              ],
+                             required=True, default='only_posted')
 
     def print_report_xlsx(self):
         """ Method for print Cash Burn xlsx report"""
@@ -139,6 +143,7 @@ class DefeExpWizard(models.Model):
 
     def get_report_data(self, journal):
         """Method to compute Tasc Cash Burn Report."""
+
         qry = f"""SELECT 
             ac.name AS account_name,
             ac.code AS account_code,
@@ -146,7 +151,7 @@ class DefeExpWizard(models.Model):
             CASE 
                 WHEN l.name LIKE %(refund_key)s
                 THEN -1 * (SUM(
-                    CASE WHEN l.parent_state not in ('cancel') AND l.parent_state in ('posted') AND l.date <= %(end_date)s 
+                    CASE WHEN l.parent_state not in ('cancel') AND l.date <= %(end_date)s 
                     THEN abs(l.debit)
                     ELSE 0 END))
                 ELSE (SUM(
@@ -158,36 +163,24 @@ class DefeExpWizard(models.Model):
                 WHEN l.name LIKE %(refund_key)s
                 THEN -1 * abs(SUM(
                     CASE WHEN l.parent_state not in ('cancel') AND l.date > %(end_date)s 
-                    THEN abs(l.debit) 
-                    ELSE 0 END) - SUM(
-                    CASE WHEN l.parent_state not in ('cancel') AND l.date > %(end_date)s 
-                    THEN abs(l.credit) 
+                    THEN abs(l.debit)
                     ELSE 0 END))
                 ELSE abs(SUM(
                     CASE WHEN l.parent_state not in ('cancel') AND l.date > %(end_date)s 
-                    THEN abs(l.debit) 
-                    ELSE 0 END) - SUM(
-                    CASE WHEN l.parent_state not in ('cancel') AND l.date > %(end_date)s 
-                    THEN abs(l.credit) 
+                    THEN abs(l.credit)
                     ELSE 0 END))
             END AS sum_unposted_credits,
             CASE WHEN l.name LIKE %(refund_key)s
                 THEN 
-                    CASE 
-                        WHEN (SUM(CASE WHEN l.parent_state not in ('cancel') THEN abs(l.debit) ELSE 0 END) - 
-                             SUM(CASE WHEN l.parent_state not in ('cancel') THEN abs(l.credit) ELSE 0 END)) = 0 
-                        THEN -1 * SUM(CASE WHEN l.parent_state not in ('cancel') THEN abs(l.credit) ELSE 0 END)
-                        ELSE -1 * ABS(SUM(CASE WHEN l.parent_state not in ('cancel') THEN abs(l.debit) ELSE 0 END) - 
-                             SUM(CASE WHEN l.parent_state not in ('cancel') THEN abs(l.credit) ELSE 0 END))
-                    END
+                   -1 * abs( SUM(
+                    CASE WHEN l.parent_state not in ('cancel')
+                    THEN abs(l.debit)
+                    ELSE 0 END))
                 ELSE 
-                    CASE 
-                        WHEN (SUM(CASE WHEN l.parent_state not in ('cancel') THEN abs(l.debit) ELSE 0 END) - 
-                             SUM(CASE WHEN l.parent_state not in ('cancel') THEN abs(l.credit) ELSE 0 END)) = 0 
-                        THEN SUM(CASE WHEN l.parent_state not in ('cancel') THEN abs(l.credit) ELSE 0 END)
-                        ELSE ABS(SUM(CASE WHEN l.parent_state not in ('cancel') THEN abs(l.debit) ELSE 0 END) - 
-                             SUM(CASE WHEN l.parent_state not in ('cancel') THEN abs(l.credit) ELSE 0 END))
-                    END
+                    SUM(
+                    CASE WHEN l.parent_state not in ('cancel') 
+                    THEN abs(l.credit)
+                    ELSE 0 END)
             END AS total_credits,
             CASE
                 WHEN (SUM(CASE WHEN l.parent_state not in ('cancel') THEN abs(l.debit) ELSE 0 END) - 
@@ -230,6 +223,8 @@ class DefeExpWizard(models.Model):
             AND aj.name::text LIKE %(deferred_journal)s
         GROUP BY 
             ac.id, l.name, debit_ac.name, debit_ac.code, r.name, cc.id, ps.id, aj.name, l.deferred_start_date
+        HAVING 
+            MIN(l.date) <= %(end_date)s
         order by ac.id,l.name"""
         self._cr.execute(qry, {'start_date': self.start_date,
                                'end_date': self.end_date,
@@ -238,6 +233,7 @@ class DefeExpWizard(models.Model):
                                'ac_code_pattern': '1132%',
                                'refund_key': '%RBILL%',
                                'deferred_journal': '%Deferred%'
+                               # 'deferred_journal': '%Miscellaneous%'
                                })
         results = self._cr.dictfetchall()
         return results
@@ -344,11 +340,12 @@ class DefeExpWizard(models.Model):
             matching_entry = next((item for item in result if
                                    item['account_code'] == data[
                                        "account_code"]), None)
-            total_credits_sum = matching_entry['total_credits_sum']
-            sum_unposted_credits_sum = matching_entry[
-                'sum_unposted_credits_sum']
-            sum_posted_credits_sum = matching_entry[
-                'sum_posted_credits_sum']
+            if matching_entry is not None:
+                total_credits_sum = matching_entry['total_credits_sum']
+                sum_unposted_credits_sum = matching_entry[
+                    'sum_unposted_credits_sum']
+                sum_posted_credits_sum = matching_entry[
+                    'sum_posted_credits_sum']
             col = 0
             if data["account_name"]:
                 if data["account_code"]:
