@@ -7,10 +7,11 @@
     'website': "",
     'category': 'Accounting',
     'version': '17.0.1.0.0',
-    'depends': ['analytic_account_types'],
+    'depends': ['purchase','analytic_account_types'],
     'data':
         [
-            'data/purchase_data.xml'
+            'data/purchase_data.xml',
+            'data/mail_template.xml',
         ],
     "license": 'AGPL-3',
     'installable': True,
