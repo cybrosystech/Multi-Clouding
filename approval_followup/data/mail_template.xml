@@ -14,7 +14,7 @@
                 <table width="100%" cellpadding="0" cellspacing="0">
                     <tr>
                         <td class="content-block">
-                            <h3 style="margin: 0;">Receive Products.</h3>
+                            <h3 style="margin: 0;">Receive Products/Services.</h3>
                         </td>
                     </tr>
                     <tr>
@@ -25,13 +25,13 @@
                     <tr>
                         <t t-if="object.receipt_status == 'partial'">
                             <td class="content-block">
-                            Your Purchase Order <strong><t t-out="object.name"/></strong> has been partially received. Please complete the receiving process for the remaining products at your earliest convenience.
+                            Your Purchase Order <strong><t t-out="object.name"/></strong> has been partially received. Please complete the receiving process for the remaining products/services at your earliest convenience.
                             Please follow the link below to open the item.
                             </td>
                         </t>
                         <t t-else="">
                          <td class="content-block">
-                            This is a reminder to receive the products for your Purchase Order <strong><t t-out="object.name"/></strong>. Kindly confirm receipt once the products arrive.
+                            This is a reminder to receive the products/services for your Purchase Order <strong><t t-out="object.name"/></strong>. Kindly confirm receipt once the products/services arrive.
                         </td>
 
                         </t>
