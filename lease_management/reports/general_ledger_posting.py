@@ -41,44 +41,138 @@ class GeneralLedgerPostingWizard(models.TransientModel):
 
     def get_report_data(self):
         date_format = get_lang(self.env).date_format
-        data = []
-        domain = [('move_id.date', '<=', self.date_to),('move_id.date', '>=', self.date_from),]
-        if self.is_posted:
-            domain.append(('move_id.state', '=', 'posted'))
-        if self.account_ids:
-            domain.append(('account_id', 'in', self.account_ids.ids))
-        if self.analytic_account_ids:
-            domain.append(('analytic_account_id', 'in', self.analytic_account_ids.ids))
-        if self.leasee_contract_ids:
-            domain += ['|', ('move_id.leasee_contract_id', 'child_of', self.leasee_contract_ids.ids)]
-            assets = self.leasee_contract_ids.mapped('asset_id')
-            domain += [('move_id.asset_id', 'child_of', assets.ids)]
+        # data = []
+        # domain = [('move_id.date', '<=', self.date_to),('move_id.date', '>=', self.date_from),]
+        # if self.is_posted:
+        #     domain.append(('move_id.state', '=', 'posted'))
+        # if self.account_ids:
+        #     domain.append(('account_id', 'in', self.account_ids.ids))
+        # if self.analytic_account_ids:
+        #     domain.append(('analytic_account_id', 'in', self.analytic_account_ids.ids))
+        # if self.leasee_contract_ids:
+        #     domain += ['|', ('move_id.leasee_contract_id', 'child_of', self.leasee_contract_ids.ids)]
+        #     assets = self.leasee_contract_ids.mapped('asset_id')
+        #     domain += [('move_id.asset_id', 'child_of', assets.ids)]
+        #
+        # journal_items = self.env['account.move.line'].search(domain,order='account_id')
 
-        journal_items = self.env['account.move.line'].search(domain,order='account_id')
-        for line in journal_items:
-            data.append({
-                'posting_date': line.move_id.posting_date.strftime(date_format) if line.move_id.posting_date else '',
-                'acc_date': line.move_id.date.strftime(date_format) if line.move_id.date else '',
-                'inv_date': line.move_id.invoice_date.strftime(date_format) if line.move_id.invoice_date else line.move_id.date.strftime(date_format),
-                'document_no': line.move_id.name,
-                'account_number': line.account_id.code,
-                'account_name': line.account_id.name,
-                'description': line.name.split(':', 1)[0] if line.name else line.product_id.name,
-                'amount': line.amount_currency,
-                'lease_no': line.move_id.leasee_contract_id.name if line.move_id.leasee_contract_id.name else line.name.split(':', 1)[0] if line.name else '',
-                'lease_state': line.move_id.leasee_contract_id.state or '',
-                'move_state': line.move_id.state or '',
-                'dimension_1': line.analytic_account_id.name or '',
-                'dimension_2': line.project_site_id.name or '',
-                'dimension_3': '',
-                'dimension_4': '',
-                'company_name': line.company_id.name,
-                'download_datetime': fieldsDatetime.now().strftime(DTF),
-                'debit': line.debit,
-                'credit': line.credit,
-                'Currency': line.currency_id.name,
-            })
-        return data
+        ############################################3
+
+        params = {
+            'date_from': self.date_from,
+            'date_to': self.date_to,
+            'company_id': self.env.company.id,
+        }
+
+        query = """
+            SELECT 
+                am.posting_date,
+                am.date AS acc_date,
+                COALESCE(am.invoice_date, am.date) AS inv_date,
+                am.name AS document_no,
+                a.code AS account_number,
+                COALESCE(a.name ->> 'en_US', '') AS account_name,
+                COALESCE(SPLIT_PART(aml.name, ':', 1), p.name::TEXT, '') AS description,
+                aml.amount_currency AS amount,
+                COALESCE(lc.name, SPLIT_PART(aml.name, ':', 1), '') AS lease_no,
+                lc.state AS lease_state,
+                am.state AS move_state,
+                COALESCE(aa.name ->> 'en_US', '') AS dimension_1,
+                COALESCE(ps.name ->> 'en_US', '') AS dimension_2,
+                '' AS dimension_3,
+                '' AS dimension_4,
+                c.name AS company_name,
+                %(download_datetime)s AS download_datetime,
+                aml.debit,
+                aml.credit,
+                cur.name AS Currency
+            FROM account_move_line aml
+            JOIN account_move am ON aml.move_id = am.id
+            LEFT JOIN account_account a ON aml.account_id = a.id
+            LEFT JOIN product_template p ON aml.product_id = p.id
+            LEFT JOIN leasee_contract lc ON am.leasee_contract_id = lc.id
+            LEFT JOIN account_analytic_account aa ON aml.analytic_account_id = aa.id
+            LEFT JOIN account_analytic_account ps ON aml.project_site_id = ps.id
+            LEFT JOIN res_company c ON am.company_id = c.id
+            LEFT JOIN res_currency cur ON aml.currency_id = cur.id
+            WHERE am.date BETWEEN %(date_from)s AND %(date_to)s AND (lc.company_id = %(company_id)s  OR lc.company_id IS NULL)
+            """
+
+        params['download_datetime'] = fieldsDatetime.now().strftime(DTF)
+
+        # Filter for posted journal entries
+        if self.is_posted:
+            query += " AND am.state = 'posted'"
+
+        # Filter for specific account_ids
+        if self.account_ids:
+            query += " AND aml.account_id = ANY(%(account_ids)s)"
+            params['account_ids'] = self.account_ids.ids  # Direct list, PostgreSQL supports `ANY()`
+
+        # Filter for analytic accounts
+        if self.analytic_account_ids:
+            query += " AND aml.analytic_account_id = ANY(%(analytic_ids)s)"
+            params['analytic_ids'] = self.analytic_account_ids.ids
+
+        # Efficiently fetch child leasee contracts and asset IDs via subqueries
+        if self.leasee_contract_ids:
+            leasee_contract_ids = self.env['leasee.contract'].search([
+                ('id', 'child_of', self.leasee_contract_ids.ids)
+            ]).ids
+
+            asset_ids = self.env['account.asset'].search([
+                ('id', 'child_of', self.leasee_contract_ids.mapped('asset_id').ids)
+            ]).ids
+
+            if leasee_contract_ids or asset_ids:
+                query += " AND ("
+
+                if leasee_contract_ids:
+                    query += " am.leasee_contract_id = ANY(%(leasee_contract_ids)s)"
+                    params['leasee_contract_ids'] = leasee_contract_ids
+
+                if leasee_contract_ids and asset_ids:
+                    query += " OR "
+
+                if asset_ids:
+                    query += " am.asset_id = ANY(%(asset_ids)s)"
+                    params['asset_ids'] = asset_ids
+
+                query += ")"
+
+        # Sorting for better performance
+        query += " ORDER BY aml.account_id"
+
+        # Execute the query
+        self.env.cr.execute(query, params)
+
+        res = self.env.cr.dictfetchall()
+        ############################################333
+        #
+        # for line in journal_items:
+        #     data.append({
+        #         'posting_date': line.move_id.posting_date.strftime(date_format) if line.move_id.posting_date else '',
+        #         'acc_date': line.move_id.date.strftime(date_format) if line.move_id.date else '',
+        #         'inv_date': line.move_id.invoice_date.strftime(date_format) if line.move_id.invoice_date else line.move_id.date.strftime(date_format),
+        #         'document_no': line.move_id.name,
+        #         'account_number': line.account_id.code,
+        #         'account_name': line.account_id.name,
+        #         'description': line.name.split(':', 1)[0] if line.name else line.product_id.name,
+        #         'amount': line.amount_currency,
+        #         'lease_no': line.move_id.leasee_contract_id.name if line.move_id.leasee_contract_id.name else line.name.split(':', 1)[0] if line.name else '',
+        #         'lease_state': line.move_id.leasee_contract_id.state or '',
+        #         'move_state': line.move_id.state or '',
+        #         'dimension_1': line.analytic_account_id.name or '',
+        #         'dimension_2': line.project_site_id.name or '',
+        #         'dimension_3': '',
+        #         'dimension_4': '',
+        #         'company_name': line.company_id.name,
+        #         'download_datetime': fieldsDatetime.now().strftime(DTF),
+        #         'debit': line.debit,
+        #         'credit': line.credit,
+        #         'Currency': line.currency_id.name,
+        #     })
+        return res
 
     def print_report_xlsx(self):
 
@@ -148,9 +242,14 @@ class GeneralLedgerPostingWizard(models.TransientModel):
         })
         STYLE_LINE_Data = STYLE_LINE
         STYLE_LINE_Data.num_format_str = '#,##0.00_);(#,##0.00)'
+        date_format = workbook.add_format({
+            'border': 0,
+            'align': 'left',
+            'valign': 'vcenter',
+            'num_format': 'dd/mm/yyyy'})
 
         if report_data:
-            self.add_xlsx_sheet(report_data, workbook, STYLE_LINE_Data, header_format)
+            self.add_xlsx_sheet(report_data, workbook, STYLE_LINE_Data, header_format,date_format)
 
         self.excel_sheet_name = 'General Ledger Posting'
         workbook.close()
@@ -164,7 +263,7 @@ class GeneralLedgerPostingWizard(models.TransientModel):
             'target': 'new'
         }
 
-    def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data, header_format):
+    def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data, header_format,date_format):
         self.ensure_one()
         worksheet = workbook.add_worksheet(_('IFRS16 GL Output file'))
         lang = self.env.user.lang
@@ -224,47 +323,72 @@ class GeneralLedgerPostingWizard(models.TransientModel):
         for line in report_data:
             col = 0
             row += 1
-            worksheet.write(row, col, line['posting_date'], STYLE_LINE_Data)
+            if  line['posting_date'] is not None:
+                worksheet.write(row, col, line['posting_date'], date_format)
+            else:
+                worksheet.write(row, col, '', date_format)
+
             col += 1
-            worksheet.write(row, col, line['acc_date'], STYLE_LINE_Data)
+            if  line['acc_date'] is not None:
+                worksheet.write(row, col, line['acc_date'], date_format)
+            else:
+                worksheet.write(row, col, '', date_format)
             col += 1
-            worksheet.write(row, col, line['inv_date'], STYLE_LINE_Data)
+            if  line['inv_date'] is not None:
+                worksheet.write(row, col, line['inv_date'], date_format)
+            else:
+                worksheet.write(row, col, '', date_format)
             col += 1
-            worksheet.write(row, col, line['document_no'], STYLE_LINE_Data)
+            if line['document_no'] is not None:
+                worksheet.write(row, col, line['document_no'], STYLE_LINE_Data)
+            else:
+                worksheet.write(row, col, '', STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['account_number'], STYLE_LINE_Data)
+            if  line['account_number'] is not None:
+                worksheet.write(row, col, line['account_number'], STYLE_LINE_Data)
+            else:
+                worksheet.write(row, col, '', STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['account_name'], STYLE_LINE_Data)
+            if line['account_name'] is not None:
+                worksheet.write(row, col, line['account_name'], STYLE_LINE_Data)
+            else:
+                worksheet.write(row, col, '', STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['description'], STYLE_LINE_Data)
+            if line['description'] is not None:
+                worksheet.write(row, col, line['description'], STYLE_LINE_Data)
+            else:
+                worksheet.write(row, col, '', STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['amount'], STYLE_LINE_Data)
+            if line['amount'] is not None:
+                worksheet.write(row, col, line['amount'], STYLE_LINE_Data)
+            else:
+                worksheet.write(row, col, '', STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['lease_no'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['lease_no'] if line['lease_no'] is not None else '', STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['lease_state'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['lease_state'] if line['lease_state'] is not None else '', STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['move_state'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['move_state'] if line['move_state'] is not None else '', STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['dimension_1'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['dimension_1'] if line['dimension_1'] is not None else '', STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['dimension_2'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['dimension_2'] if line['dimension_2'] is not None else '', STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['dimension_3'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['dimension_3'] if line['dimension_3'] is not None else '', STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['dimension_4'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['dimension_4'] if line['dimension_4'] is not None else '', STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['company_name'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['company_name'] if line['company_name'] is not None else '', STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['download_datetime'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['download_datetime'] if line['download_datetime'] is not None else '', STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['debit'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['debit'] if line['debit'] is not None else '', STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['credit'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['credit'] if line['credit'] is not None else '', STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col,
                             line['debit'] if line['debit'] != 0 else -line[
                                 'credit'], STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['Currency'], STYLE_LINE_Data)
+            worksheet.write(row, col, line['currency'] if line['currency'] is not None else '', STYLE_LINE_Data)
 

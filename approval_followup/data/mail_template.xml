@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <record id="email_template_send_mail_reminder_purchase_receive"
+                model="mail.template">
+            <field name="name">Purchase Order Receive Reminder Mail Template</field>
+            <field name="email_from"></field>
+            <field name="subject">Purchase Order Receive </field>
+            <field name="email_to"></field>
+            <field name="model_id" ref="purchase.model_purchase_order"/>
+            <field name="auto_delete" eval="True"/>
+            <field name="body_html" type="html">
+                <meta itemprop="name" content="Notification Email"/>
+                <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td class="content-block">
+                            <h3 style="margin: 0;">Receive Products/Services.</h3>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="content-block">
+                           Dear <t t-esc="ctx.get('name', '')">  </t>,
+                        </td>
+                    </tr>
+                    <tr>
+                        <t t-if="object.receipt_status == 'partial'">
+                            <td class="content-block">
+                            Your Purchase Order <strong><t t-out="object.name"/></strong> has been partially received. Please complete the receiving process for the remaining products/services at your earliest convenience.
+                            Please follow the link below to open the item.
+                            </td>
+                        </t>
+                        <t t-else="">
+                         <td class="content-block">
+                            This is a reminder to receive the products/services for your Purchase Order <strong><t t-out="object.name"/></strong>. Kindly confirm receipt once the products/services arrive.
+                        </td>
+
+                        </t>
+                    </tr>
+                    <tr>
+                        <td class="content-block" itemprop="handler"
+                            itemtype="http://schema.org/HttpActionHandler">
+                            <a t-attf-href="/web?#id={{ object.id }}&amp;view_type=form&amp;model=purchase.order&amp;action="
+                               class="btn-basic" itemprop="url">Open
+                            </a>
+                        </td>
+                    </tr>
+                </table>
+            </field>
+        </record>
+
+    </data>
+</odoo>

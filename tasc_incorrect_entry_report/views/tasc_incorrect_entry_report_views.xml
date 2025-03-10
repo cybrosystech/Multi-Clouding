@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <!-- Action -->
+        <record id="action_tasc_incorrect_entry_report" model="ir.actions.act_url">
+            <field name="name">TASC Incorrect Entry Report</field>
+            <field name="type">ir.actions.act_url</field>
+            <field name="url">/tasc_incorrect_entry_report/tasc_incorrect_entry_xlsx_report</field>
+            <field name="target">self</field>
+        </record>
+
+        <!-- Menu Item -->
+        <menuitem id="menu_tasc_incorrect_entry_report"
+                  name="TASC Incorrect Entry"
+                  action="action_tasc_incorrect_entry_report"
+                  parent="account_reports.account_reports_audit_reports_menu"/>
+    </data>
+</odoo>
