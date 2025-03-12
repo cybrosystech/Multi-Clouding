@@ -65,9 +65,12 @@
             </xpath>
             <xpath expr="//t[@t-name='JournalMiscelaneous']//div[hasclass('o_kanban_primary_right')]"
                    position="inside">
-                <div class="row">
+
+
+
+                <div class="row" t-if="journal_type == 'general'">
                     <div class="col overflow-hidden text-left">
-                        <a type="object" t-if="journal_type == 'general'"
+                        <a type="object"
                            name="open_journal_entry_to_approve"
                            id="account_dashboard_misc_journal">
                             <span title="Journals to approve">
@@ -90,7 +93,7 @@
                            id="account_dashboard_leasee_draft">
                             <span title="Leasee Contract draft entries">
                                 <t t-esc="dashboard.lease_drafts"/>
-                                Draft entries
+                                Draft
                             </span>
                         </a>
                     </div>
@@ -108,7 +111,7 @@
                            id="account_dashboard_leasee_active">
                             <span title="Leasee Contract active entries">
                                 <t t-esc="dashboard.lease_active"/>
-                                Active entries
+                                Active
                             </span>
                         </a>
                     </div>
@@ -126,7 +129,7 @@
                            id="account_dashboard_leasee_extended">
                             <span title="Leasee Contract extended entries">
                                 <t t-esc="dashboard.lease_extended"/>
-                                Extended entries
+                                Extended
                             </span>
                         </a>
                     </div>
@@ -144,7 +147,7 @@
                            id="account_dashboard_leasee_expired">
                             <span title="Leasee Contract expired entries">
                                 <t t-esc="dashboard.lease_expired"/>
-                                Expired entries
+                                Expired
                             </span>
                         </a>
                     </div>
@@ -162,7 +165,7 @@
                            id="account_dashboard_leasee_terminated">
                             <span title="Leasee Contract terminated entries">
                                 <t t-esc="dashboard.lease_terminated"/>
-                                Terminated entries
+                                Terminated
                             </span>
                         </a>
                     </div>
