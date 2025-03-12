@@ -175,7 +175,6 @@ class GeneralLedgerPostingWizard(models.TransientModel):
         return res
 
     def print_report_xlsx(self):
-
         report_data = self.get_report_data()
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
@@ -248,8 +247,8 @@ class GeneralLedgerPostingWizard(models.TransientModel):
             'valign': 'vcenter',
             'num_format': 'dd/mm/yyyy'})
 
-        if report_data:
-            self.add_xlsx_sheet(report_data, workbook, STYLE_LINE_Data, header_format,date_format)
+        # if report_data:
+        self.add_xlsx_sheet(report_data, workbook, STYLE_LINE_Data, header_format,date_format)
 
         self.excel_sheet_name = 'General Ledger Posting'
         workbook.close()
@@ -265,17 +264,12 @@ class GeneralLedgerPostingWizard(models.TransientModel):
 
     def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data, header_format,date_format):
         self.ensure_one()
-        worksheet = workbook.add_worksheet(_('IFRS16 GL Output file'))
+        sheet_name = f"IFRS16 GL Output file"
+        worksheet = workbook.add_worksheet(sheet_name)
         lang = self.env.user.lang
         if lang.startswith('ar_'):
             worksheet.right_to_left()
-
         row = 0
-        col = 0
-        worksheet.merge_range(row , row, col, col + 10, _('General Ledger postings'), STYLE_LINE_Data)
-        worksheet.merge_range('L1:P1', _('Interface technical fields'), STYLE_LINE_Data)
-
-        row += 1
         col = 0
         worksheet.write(row, col, _('Posting Date'), header_format)
         col += 1
@@ -303,14 +297,7 @@ class GeneralLedgerPostingWizard(models.TransientModel):
         col += 1
         worksheet.write(row, col, _('Dimension 2'), header_format)
         col += 1
-        worksheet.write(row, col, _('Dimension 3'), header_format)
-        col += 1
-        worksheet.write(row, col, _('Dimension 4'), header_format)
-
-        col += 1
         worksheet.write(row, col, _('Company Name'), header_format)
-        col += 1
-        worksheet.write(row, col, _('Download Date and Time'), header_format)
         col += 1
         worksheet.write(row, col, _('Debit'), header_format)
         col += 1
@@ -319,7 +306,6 @@ class GeneralLedgerPostingWizard(models.TransientModel):
         worksheet.write(row, col, _('Functional Amount'), header_format)
         col += 1
         worksheet.write(row, col, _('Lease Currency'), header_format)
-
         for line in report_data:
             col = 0
             row += 1
@@ -374,13 +360,7 @@ class GeneralLedgerPostingWizard(models.TransientModel):
             col += 1
             worksheet.write(row, col, line['dimension_2'] if line['dimension_2'] is not None else '', STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line['dimension_3'] if line['dimension_3'] is not None else '', STYLE_LINE_Data)
-            col += 1
-            worksheet.write(row, col, line['dimension_4'] if line['dimension_4'] is not None else '', STYLE_LINE_Data)
-            col += 1
             worksheet.write(row, col, line['company_name'] if line['company_name'] is not None else '', STYLE_LINE_Data)
-            col += 1
-            worksheet.write(row, col, line['download_datetime'] if line['download_datetime'] is not None else '', STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, line['debit'] if line['debit'] is not None else '', STYLE_LINE_Data)
             col += 1

@@ -9,12 +9,15 @@ class AccountMoveReversalInherit(models.TransientModel):
     _inherit = 'account.move.reversal'
 
     def reverse_moves(self, is_modify=False):
+        print("reverse_moves")
         self.ensure_one()
         moves = self.move_ids
 
         # Create default values.
         default_values_list = []
         for move in moves:
+            if move.reversal_move_id:
+                raise UserError(_('The entry has already been reversed.'))
             default_values_list.append(self._prepare_default_reversal(move))
 
         batches = [
@@ -94,6 +97,7 @@ class AccountMoveInherit(models.Model):
                                          index=True)
 
     def button_draft(self):
+        print("button_draft")
         res = super().button_draft()
         if any(move.state not in ('cancel', 'posted', 'to_approve') for move in
                self):
@@ -147,6 +151,7 @@ class AccountMoveInherit(models.Model):
         return res
 
     def request_approval_button(self):
+        print("request_approval_button2")
         self.get_budgets_in_out_budget_tab()
         if self.out_budget and not self.purchase_approval_cycle_ids:
             out_budget_list = []
@@ -195,6 +200,7 @@ class AccountMoveInherit(models.Model):
             self.request_approve_bool = True
 
     def button_draft(self):
+        print("button_draft")
         res = super(AccountMoveInherit, self).button_draft()
         self.request_approve_bool = False
         self.show_request_approve_button = False

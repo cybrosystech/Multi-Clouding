@@ -17,7 +17,6 @@
         'views/res_config_settings.xml',
         'views/leasee_contract.xml',
         'views/leasee_interest_rate_views.xml',
-
         'views/leasee_contract_template.xml',
         'views/account_payment.xml',
         'views/leasor_contract.xml',
@@ -28,7 +27,6 @@
         'reports/lease_liability_schedule.xml',
         'reports/rou_asset_schedule_wizard.xml',
         'wizard/cancel_lease_entries.xml',
-
     ],
     "license": 'AGPL-3',
     'installable': True,
