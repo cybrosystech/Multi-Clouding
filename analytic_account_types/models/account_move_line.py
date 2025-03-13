@@ -44,11 +44,13 @@ class AccountMove(models.Model):
 
     @api.depends_context('uid')
     def _compute_is_admin(self):
-        is_admin = (
-                self.env.user.id == SUPERUSER_ID or
-                self.env.user.has_group('base.group_erp_manager') or
-                self.env.user.has_group('base.group_system')
-        )
+        # is_admin = (
+        #         self.env.user.id == SUPERUSER_ID or
+        #         self.env.user.has_group('base.group_erp_manager') or
+        #         self.env.user.has_group('base.group_system')
+        # )
+        env = self.env
+        is_admin = env.su or env.user.has_group('base.group_erp_manager') or env.user.has_group('base.group_system')
         for record in self:
             record.is_admin = is_admin
 
@@ -147,81 +149,153 @@ class AccountMove(models.Model):
             f" ({shorten(self.ref, width=50)})" if show_ref and self.ref else '')
 
 
-    @api.depends('state','auto_post','move_type','is_from_purchase','is_from_sales','purchase_approval_cycle_ids')
+    # @api.depends('state','auto_post','move_type','is_from_purchase','is_from_sales','purchase_approval_cycle_ids')
+    # def check_show_confirm_and_post_buttons(self):
+    #     print("check_show_confirm_and_post_buttons")
+    #     for rec in self:
+    #         rec.show_post_button = False
+    #         rec.show_confirm_button = False
+    #         if rec.state not in ['draft',
+    #                              'to_approve'] or rec.auto_post or rec.move_type != 'entry':
+    #             if rec.is_from_purchase or rec.is_from_sales:
+    #                 rec.show_post_button = True
+    #             elif not rec.is_from_purchase and not rec.is_from_sales:
+    #                 if not rec.purchase_approval_cycle_ids:
+    #                     rec.show_post_button = True
+    #                 else:
+    #                     rec.show_post_button = False
+    #             else:
+    #                 rec.show_post_button = False
+    #         elif rec.state not in ['draft',
+    #                                'to_approve'] or rec.auto_post == True or rec.move_type == 'entry':
+    #             if rec.is_from_purchase or rec.is_from_sales:
+    #                 rec.show_confirm_button = True
+    #             else:
+    #                 rec.show_confirm_button = False
+
+    @api.depends('state', 'auto_post', 'move_type', 'is_from_purchase', 'is_from_sales', 'purchase_approval_cycle_ids')
     def check_show_confirm_and_post_buttons(self):
         for rec in self:
+            # Default values
             rec.show_post_button = False
             rec.show_confirm_button = False
-            if rec.state not in ['draft',
-                                 'to_approve'] or rec.auto_post or rec.move_type != 'entry':
-                if rec.is_from_purchase or rec.is_from_sales:
-                    rec.show_post_button = True
-                elif not rec.is_from_purchase and not rec.is_from_sales:
-                    if not rec.purchase_approval_cycle_ids:
-                        rec.show_post_button = True
-                    else:
-                        rec.show_post_button = False
-                else:
-                    rec.show_post_button = False
-            elif rec.state not in ['draft',
-                                   'to_approve'] or rec.auto_post == True or rec.move_type == 'entry':
-                if rec.is_from_purchase or rec.is_from_sales:
-                    rec.show_confirm_button = True
-                else:
-                    rec.show_confirm_button = False
+
+            # Common conditions
+            is_draft_or_approve = rec.state in ['draft', 'to_approve']
+            is_entry_type = rec.move_type == 'entry'
+            has_purchase_or_sales = rec.is_from_purchase or rec.is_from_sales
+            has_no_approval_cycle = not rec.purchase_approval_cycle_ids
+
+            if not is_draft_or_approve or rec.auto_post or not is_entry_type:
+                rec.show_post_button = has_purchase_or_sales or has_no_approval_cycle
+            else:
+                rec.show_confirm_button = has_purchase_or_sales
+
+    # @api.depends('invoice_line_ids.purchase_line_id')
+    # def check_if_from_purchase(self):
+    #     print("check_if_from_purchase")
+    #     grouped_invoice_lines = defaultdict(list)
+    #     # Precompute invoice lines and their respective move_ids in one pass
+    #     invoice_lines = self.mapped('invoice_line_ids').filtered(
+    #         lambda line: line.purchase_line_id)
+    #     for line in invoice_lines:
+    #         grouped_invoice_lines[line.move_id.id].append(line)
+    #     # Iterate over records without batch processing (avoid tools.split_every if not necessary)
+    #     for rec in self:
+    #         rec.is_from_purchase = bool(grouped_invoice_lines.get(rec.id))
 
     @api.depends('invoice_line_ids.purchase_line_id')
     def check_if_from_purchase(self):
-        grouped_invoice_lines = defaultdict(list)
-        # Precompute invoice lines and their respective move_ids in one pass
-        invoice_lines = self.mapped('invoice_line_ids').filtered(
-            lambda line: line.purchase_line_id)
-        for line in invoice_lines:
-            grouped_invoice_lines[line.move_id.id].append(line)
-        # Iterate over records without batch processing (avoid tools.split_every if not necessary)
+        invoice_lines = self.env['account.move.line'].search_read(
+            [('move_id', 'in', self.ids), ('purchase_line_id', '!=', False)],
+            ['move_id']
+        )
+        # Use a set for fast lookup
+        move_ids_with_purchase = {line['move_id'][0] for line in invoice_lines}
+
         for rec in self:
-            rec.is_from_purchase = bool(grouped_invoice_lines.get(rec.id))
+            rec.is_from_purchase = rec.id in move_ids_with_purchase
+
+    # @api.depends('invoice_line_ids.sale_line_ids')
+    # def check_if_from_sales(self):
+    #     print("check_if_from_sales")
+    #     grouped_invoice_lines = defaultdict(list)
+    #     # Precompute invoice lines and their respective move_ids in one pass
+    #     invoice_lines = self.mapped('invoice_line_ids').filtered(
+    #         lambda line: line.sale_line_ids)
+    #     for line in invoice_lines:
+    #         grouped_invoice_lines[line.move_id.id].append(line)
+    #     # Iterate over records without batch processing (avoid tools.split_every if not necessary)
+    #     for rec in self:
+    #         rec.is_from_sales = bool(grouped_invoice_lines.get(rec.id))
 
     @api.depends('invoice_line_ids.sale_line_ids')
     def check_if_from_sales(self):
-        grouped_invoice_lines = defaultdict(list)
-        # Precompute invoice lines and their respective move_ids in one pass
-        invoice_lines = self.mapped('invoice_line_ids').filtered(
-            lambda line: line.sale_line_ids)
-        for line in invoice_lines:
-            grouped_invoice_lines[line.move_id.id].append(line)
-        # Iterate over records without batch processing (avoid tools.split_every if not necessary)
-        for rec in self:
-            rec.is_from_sales = bool(grouped_invoice_lines.get(rec.id))
+        invoice_lines = self.env['account.move.line'].search_read(
+            [('move_id', 'in', self.ids), ('sale_line_ids', '!=', False)],
+            ['move_id']
+        )
+        # Use a set for fast lookup
+        move_ids_with_sales = {line['move_id'][0] for line in invoice_lines}
 
-    @api.depends('purchase_approval_cycle_ids','state','purchase_approval_cycle_ids.is_approved','purchase_approval_cycle_ids.user_approve_ids')
+        for rec in self:
+            rec.is_from_sales = rec.id in move_ids_with_sales
+
+    # @api.depends('purchase_approval_cycle_ids','state','purchase_approval_cycle_ids.is_approved','purchase_approval_cycle_ids.user_approve_ids')
+    # def check_show_approve_button(self):
+    #     print("check_show_approve_button")
+    #     for r in self:
+    #         r.show_approve_button = False
+    #         current_approve = r.purchase_approval_cycle_ids.filtered(
+    #             lambda x: x.is_approved).mapped('approval_seq')
+    #
+    #         last_approval = max(current_approve) if current_approve else 0
+    #         check_last_approval_is_approved = r.purchase_approval_cycle_ids.filtered(
+    #             lambda x: x.approval_seq == int(last_approval))
+    #
+    #         for rec in r.purchase_approval_cycle_ids:
+    #             if check_last_approval_is_approved:
+    #                 if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids and check_last_approval_is_approved.is_approved:
+    #                     r.show_approve_button = True
+    #                     break
+    #             else:
+    #                 if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids:
+    #                     r.show_approve_button = True
+    #                     break
+    #                 break
+    #
+    #         if r.state != 'posted':
+    #             if r.purchase_approval_cycle_ids:
+    #                 approve_list = r.purchase_approval_cycle_ids.mapped(
+    #                     'is_approved')
+    #                 if all(approve_list):
+    #                     r.state = 'posted'
+
+    @api.depends('purchase_approval_cycle_ids', 'state',
+                 'purchase_approval_cycle_ids.is_approved',
+                 'purchase_approval_cycle_ids.user_approve_ids')
     def check_show_approve_button(self):
         for r in self:
             r.show_approve_button = False
-            current_approve = r.purchase_approval_cycle_ids.filtered(
-                lambda x: x.is_approved).mapped('approval_seq')
 
-            last_approval = max(current_approve) if current_approve else 0
-            check_last_approval_is_approved = r.purchase_approval_cycle_ids.filtered(
-                lambda x: x.approval_seq == int(last_approval))
+            # Get all approved approval sequences
+            approved_cycles = r.purchase_approval_cycle_ids.filtered(lambda x: x.is_approved)
+            last_approval = max(approved_cycles.mapped('approval_seq'), default=0)
 
+            # Get the last approval cycle object
+            last_approval_cycle = r.purchase_approval_cycle_ids.filtered_domain([('approval_seq', '=', last_approval)])
+
+            # Check if current user is in any pending approval cycle
             for rec in r.purchase_approval_cycle_ids:
-                if check_last_approval_is_approved:
-                    if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids and check_last_approval_is_approved.is_approved:
+                if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids:
+                    if not last_approval or last_approval_cycle.is_approved:
                         r.show_approve_button = True
-                        break
-                else:
-                    if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids:
-                        r.show_approve_button = True
-                        break
-                    break
+                        break  # Stop checking once a valid case is found
 
-            if r.state != 'posted':
-                if r.purchase_approval_cycle_ids:
-                    approve_list = r.purchase_approval_cycle_ids.mapped(
-                        'is_approved')
-                    if all(approve_list):
-                        r.state = 'posted'
+            # Update state only if all approvals are completed
+            if r.state != 'posted' and r.purchase_approval_cycle_ids:
+                if all(r.purchase_approval_cycle_ids.mapped('is_approved')):
+                    r.state = 'posted'
 
     @api.depends('line_ids.budget_id', 'line_ids.remaining_amount')
     def check_out_budget(self):
