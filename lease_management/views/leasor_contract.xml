@@ -77,7 +77,7 @@
 
         <menuitem id="menuitem_leasor_contract" name="Leasor Contract"
                   parent="lease_management.menuitem_lease_contract_categ" action="view_leasor_contract_action"
-                  sequence="1"/>
+                  sequence="2"/>
 
     </data>
 </odoo>

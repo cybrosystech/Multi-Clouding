@@ -31,7 +31,8 @@
         <field name="target">new</field>
     </record>
     <menuitem id="menu_ll_aging_report"
-              name="LL Aging Report"
+              name="TASC LL Aging Report"
+              sequence="9"
               parent="lease_management.menuitem_lease_contract_categ"
               action="action_ll_aging_report_wizard"/>
 </odoo>

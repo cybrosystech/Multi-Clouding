@@ -145,18 +145,17 @@ class LeaseContractXlsxWizard(models.TransientModel):
             project_site = f"COALESCE(project_site.name->>'{lang}', project_site.name->>'en_US')" if \
                 self.pool[
                     'account.analytic.account'].name.translate else 'project_site.name'
-
             self._cr.execute(
                 'select sum(journal.amount_total) total, leasee.id as lease_id,'
                 'leasee.name as lease_name,'
                 'leasee.external_reference_number,currency.name as currency_name,'
                 f'{project_site} from leasee_contract as leasee inner'
                 ' join account_move  as journal on '
-                'journal.leasee_contract_id=leasee.id inner join '
+                'leasee.id=journal.leasee_contract_id= inner join '
                 'res_currency as currency on '
                 'currency.id=leasee.leasee_currency_id left join '
                 'account_analytic_account as project_site on '
-                'project_site.id=leasee.project_site_id where '
+                'leasee.project_site_id=project_site.id where '
                 'leasee.id in %(contract)s and '
                 'journal.invoice_date_due <= %(end_date)s and ' \
                 'journal.invoice_date_due >=  %(start_date)s group by ' \
@@ -181,7 +180,7 @@ class LeaseContractXlsxWizard(models.TransientModel):
                 'res_currency as currency on '
                 'currency.id=leasee.leasee_currency_id left join '
                 'account_analytic_account as project_site on '
-                'project_site.id=leasee.project_site_id where '
+                'leasee.project_site_id=project_site.id where '
                 'leasee.id in %(contract)s and '
                 'journal.invoice_date_due <= %(end_date)s and ' \
                 'journal.invoice_date_due >=  %(start_date)s group by ' \
@@ -190,7 +189,6 @@ class LeaseContractXlsxWizard(models.TransientModel):
                 {'contract': tuple(lease_contracts.ids),
                  'end_date': next_2year_end_date,
                  'start_date': next_2year_start_date})
-
             move_ids_next_two_years_qry = self._cr.dictfetchall()
             one_to_2_year_lease_names = list(
                 map(itemgetter('lease_name'), move_ids_next_two_years_qry))
@@ -206,7 +204,7 @@ class LeaseContractXlsxWizard(models.TransientModel):
                 'res_currency as currency on '
                 'currency.id=leasee.leasee_currency_id left join '
                 'account_analytic_account as project_site on '
-                'project_site.id=leasee.project_site_id where '
+                'leasee.project_site_id=project_site.id where '
                 'leasee.id in %(contract)s and '
                 'journal.invoice_date_due <= %(end_date)s and ' \
                 'journal.invoice_date_due >=  %(start_date)s group by ' \
@@ -216,7 +214,6 @@ class LeaseContractXlsxWizard(models.TransientModel):
                     'contract': tuple(lease_contracts.ids),
                     'end_date': end_date_5th_year,
                     'start_date': start_date_2nd_year})
-
             move_ids_next_5_years_qry = self._cr.dictfetchall()
             two_to_5_year_lease_names = list(
                 map(itemgetter('lease_name'), move_ids_next_5_years_qry))
@@ -269,9 +266,8 @@ class LeaseContractXlsxWizard(models.TransientModel):
                     amount_more_than_5_years) >= 1:
                     data.append({
                         'leasor_name': lease,
-                        'external_reference_number': amount_less_than_1_year[0][
-                            "external_reference_number"],
-                        'project_site': amount_less_than_1_year[0]["name"],
+                        'external_reference_number':  amount_less_than_1_year[0].get("external_reference_number", ""),
+                        'project_site': amount_less_than_1_year[0].get("name", ""),
                         'total_amount_next_year': amount_less_than_1_year[0][
                             "total"],
                         'total_amount_next_2years': amount_1_to_2_year[0][
@@ -280,14 +276,13 @@ class LeaseContractXlsxWizard(models.TransientModel):
                             "total"],
                         'total_amount_more_than_5_years':
                             amount_more_than_5_years[0]["total"],
-                        'currency': amount_less_than_1_year[0]["currency_name"],
+                        'currency':amount_less_than_1_year[0].get("currency_name", ""),
                     })
                 else:
                     data.append({
                         'leasor_name': lease,
-                        'external_reference_number': amount_lists[0][
-                            "external_reference_number"],
-                        'project_site': amount_lists[0]["coalesce"],
+                        'external_reference_number': amount_lists[0].get("external_reference_number", ""),
+                        'project_site':  amount_lists[0].get("coalesce", ""),
                         'total_amount_next_year': amount_less_than_1_year[0][
                             "total"] if len(
                             amount_less_than_1_year) >= 1 else 0.0,
@@ -298,7 +293,7 @@ class LeaseContractXlsxWizard(models.TransientModel):
                         'total_amount_more_than_5_years':
                             amount_more_than_5_years[0]["total"] if len(
                                 amount_more_than_5_years) >= 1 else 0.0,
-                        'currency': amount_lists[0]["currency_name"],
+                        'currency': amount_lists[0].get("currency_name", ""),
                     })
         return data
 

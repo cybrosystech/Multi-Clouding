@@ -42,7 +42,8 @@
         <field name="target">new</field>
     </record>
     <menuitem id="menu_lease_interest_and_amortization_excel_report"
-              name="Lease Interest and Amortization Report"
+              name="TASC Lease Int and Amortization Report"
+              sequence="13"
               parent="lease_management.menuitem_lease_contract_categ"
               action="action_lease_interest_and_amortization_excel_report"/>
 </odoo>

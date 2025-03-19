@@ -33,9 +33,9 @@
             <field name="target">new</field>
         </record>
 
-        <menuitem id="menuitem_lease_liability_schedule" name="Lease Liability Schedule"
+        <menuitem id="menuitem_lease_liability_schedule" name="TASC Lease Liability Schedule"
                   parent="lease_management.menuitem_lease_contract_categ"
-                  action="view_lease_liability_schedule_wizard_action" sequence="10"/>
+                  action="view_lease_liability_schedule_wizard_action" sequence="6"/>
 
     </data>
 </odoo>
