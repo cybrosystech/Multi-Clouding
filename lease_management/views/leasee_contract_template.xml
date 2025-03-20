@@ -80,7 +80,7 @@
             <field name="view_mode">tree,form</field>
         </record>
 
-        <menuitem id="menuitem_lease_contract_template" name="Leasee Contract Template" parent="lease_management.menuitem_lease_contract_categ" action="view_leasee_contract_template_action" sequence="10"/>
+        <menuitem id="menuitem_lease_contract_template" name="Leasee Contract Template" parent="lease_management.menuitem_lease_contract_categ" action="view_leasee_contract_template_action" sequence="3"/>
 
     </data>
 </odoo>

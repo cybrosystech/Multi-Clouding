@@ -32,5 +32,6 @@
     </record>
     <menuitem id="menu_lease_details_report" name="TASC Lease Details"
               parent="lease_management.menuitem_lease_contract_categ"
+              sequence="11"
               action="action_lease_details_report_wizard"/>
 </odoo>

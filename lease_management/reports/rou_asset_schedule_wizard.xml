@@ -31,7 +31,7 @@
             <field name="target">new</field>
         </record>
         
-        <menuitem id="menuitem_rou_asset_schedule" name="Rou Asset Schedule" parent="lease_management.menuitem_lease_contract_categ" action="view_rou_asset_schedule_wizard_action" sequence="10"/>
+        <menuitem id="menuitem_rou_asset_schedule" name="TASC ROU Asset Schedule" parent="lease_management.menuitem_lease_contract_categ" action="view_rou_asset_schedule_wizard_action" sequence="7"/>
     
     </data>
 </odoo>

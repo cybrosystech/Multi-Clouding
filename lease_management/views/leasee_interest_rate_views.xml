@@ -42,6 +42,7 @@
     <menuitem id="menu_leasee_interest_rate" name="Leasee Interest Rate"
                   parent="lease_management.menuitem_lease_contract_categ"
                   action="action_leasee_interest_rate"
+                  sequence="4"
                   groups="base.group_system,base.group_erp_manager"
                   />
 </odoo>
