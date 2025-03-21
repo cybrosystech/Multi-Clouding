@@ -1,6 +1,7 @@
 from odoo import api,models, fields, _
 from odoo.exceptions import ValidationError, UserError
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 
 
 class JournalEntryPostingConfig(models.Model):
@@ -34,10 +35,11 @@ class JournalEntryPostingConfig(models.Model):
                 "The end date should be greater than or equal to start date.")
         else:
             today = datetime.today().date()
+            end_of_month = today.replace(day=1) + relativedelta(months=1, days=-1)
             # Adjust dates or default to today
-            if  self.from_date > today or  self.to_date > today:
-                raise UserError(
-                    "The start date or end date should not exceed today's date.")
+            if  self.from_date > end_of_month or  self.to_date > end_of_month:
+                raise UserError("The start date or end date should not exceed the"
+                                " end date of the current month.")
 
     def journal_entry_posting_general(self):
         cron_id = self.env.ref(
@@ -243,8 +245,8 @@ class JournalEntryPostingConfig(models.Model):
     def action_post_journal_entries(self):
         today = datetime.today().date()
         # Adjust dates or default to today
-        from_date = self.from_date if self.from_date and self.from_date <= today else today
-        to_date = self.to_date if self.to_date and self.to_date <= today else today
+        from_date = self.from_date if self.from_date  else today
+        to_date = self.to_date if self.to_date else today
         journals = self.env['account.move'].search(
             [('state', '=', 'draft'),
              ('date', '>=', from_date),
