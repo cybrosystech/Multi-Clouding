@@ -151,7 +151,7 @@ class LeaseContractXlsxWizard(models.TransientModel):
                 'leasee.external_reference_number,currency.name as currency_name,'
                 f'{project_site} from leasee_contract as leasee inner'
                 ' join account_move  as journal on '
-                'leasee.id=journal.leasee_contract_id= inner join '
+                'journal.leasee_contract_id=leasee.id inner join '
                 'res_currency as currency on '
                 'currency.id=leasee.leasee_currency_id left join '
                 'account_analytic_account as project_site on '
