@@ -29,7 +29,6 @@ class AccountAsset(models.Model):
     def action_asset_modify(self):
         """ Returns an action opening the asset modification wizard.
         """
-        print("action_asset_modify")
         self.ensure_one()
         if self.leasee_contract_ids:
             new_wizard = self.env['asset.modify'].create({
@@ -50,7 +49,6 @@ class AccountAsset(models.Model):
             return super(AccountAsset, self).action_asset_modify()
 
     def _get_disposal_moves(self, invoice_line_ids, disposal_date):
-        print("_get_disposal_moves1")
         def get_line(asset, amount, account):
             return (0, 0, {
                 'name': asset.name,
@@ -63,6 +61,7 @@ class AccountAsset(models.Model):
                 'currency_id': current_currency.id,
                 'amount_currency': -asset.value_residual,
                 'project_site_id': asset.project_site_id.id,
+                'business_unit_id': asset.business_unit_id.id,
                 'location_id': asset.location_id.id,
             })
 
@@ -212,7 +211,6 @@ class AccountAsset(models.Model):
                 invoice_line_ids, disposal_date)
 
     def create_last_termination_move(self, disposal_date):
-        print("create_last_termination_move")
         end_move = self.depreciation_move_ids.filtered(lambda
                                                            m: m.date.month == disposal_date.month and m.date.year == disposal_date.year and m.state not in [
             'posted', 'cancel'])
@@ -234,14 +232,12 @@ class AccountAsset(models.Model):
         end_move.action_post()
 
     def set_to_close(self, invoice_line_ids, date=None, message=None):
-        print("set_to_close1")
         if self.env.context.get('disposal_date'):
             date = self.env.context.get('disposal_date')
         return super(AccountAsset, self).set_to_close(invoice_line_ids, date,
                                                       message)
 
     def _recompute_board(self, start_depreciation_date=False):
-        print("_recompute_board1")
         move_vals = super(AccountAsset, self)._recompute_board(
             start_depreciation_date)
         if self._context.get('decrease'):
@@ -292,7 +288,6 @@ class AccountAsset(models.Model):
         return move_vals
 
     def leasee_asset_entry_post(self, limits):
-        print("leasee_asset_entry_post")
         assets = self.env['account.asset'].search([('name', 'ilike', 'Leasee'),
                                                    ('state', '=', 'draft'),
                                                    ('company_id', '=',
@@ -320,7 +315,6 @@ class AccountAsset(models.Model):
             channel.sudo().message_post(body=message)
 
     def update_asset_cron(self):
-        print("update_asset_cron")
         date = fields.Datetime.now()
         schedule = self.env.ref(
             'lease_management.action_draft_leasee_asset_posting')
@@ -330,7 +324,6 @@ class AccountAsset(models.Model):
         LOGGER.info('Leasee Contract Entry Posting updated')
 
     def non_leasee_asset_entry_post(self, limits):
-        print("non_leasee_asset_entry_post")
         assets = self.env['account.asset'].search(
             [('name', 'not like', 'Leasee'),
              ('state', '=', 'draft')],
@@ -356,7 +349,6 @@ class AccountAsset(models.Model):
             channel.sudo().message_post(body=message)
 
     def update_non_leasee_asset_cron(self):
-        print("update_non_leasee_asset_cron")
         date = fields.Datetime.now()
         schedule = self.env.ref(
             'lease_management.action_draft_non_leasee_asset_posting')
