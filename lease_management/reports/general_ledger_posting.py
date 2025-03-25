@@ -3,7 +3,7 @@
 import base64
 import io
 from io import BytesIO,StringIO
-from odoo import fields, models, _
+from odoo import api,fields, models, _
 from datetime import datetime , date
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT as DTF
 from odoo.tools.misc import get_lang
@@ -30,12 +30,19 @@ class GeneralLedgerPostingWizard(models.TransientModel):
 
     date_from = fields.Date(string="Date From",default=_get_date_from_now , required=True, )
     date_to = fields.Date(string="Date To",default=_get_date_to , required=True, )
-    account_ids = fields.Many2many(comodel_name="account.account",required=True )
+    account_ids = fields.Many2many(comodel_name="account.account",required=True,
+                                   default=lambda self: self._default_accounts())
     leasee_contract_ids = fields.Many2many(comodel_name="leasee.contract", domain=[('parent_id', '=', False)] )
     analytic_account_ids = fields.Many2many(comodel_name="account.analytic.account", )
     is_posted = fields.Boolean(string="Show Posted Entries Only ?", default=False  )
     excel_sheet = fields.Binary('Download Report')
     excel_sheet_name = fields.Char(string='Name', size=64)
+
+    @api.model
+    def _default_accounts(self):
+        """Fetch default accounts based on account codes."""
+        account_codes = ['214201', '224201','122201','122302','581201','554101','211109']  # Replace with the required account codes
+        return self.env['account.account'].search([('code', 'in', account_codes)]).ids
 
     def get_report_data(self):
         date_format = get_lang(self.env).date_format

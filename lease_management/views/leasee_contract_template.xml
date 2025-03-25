@@ -44,6 +44,7 @@
                                 <field name="initial_journal_id" />
                                 <field name="analytic_account_id"  string="Cost Center"/>
                                 <field name="project_site_id" />
+                                <field name="business_unit_id" />
                                 <field name="analytic_distribution"  widget="analytic_distribution"/>
 <!--                                <field name="location_id" />-->
                             </group>

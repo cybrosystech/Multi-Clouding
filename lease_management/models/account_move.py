@@ -17,14 +17,12 @@ class AccountMove(models.Model):
     is_installment_entry = fields.Boolean(default=False)
 
     def _post(self, soft=True):
-        print("_post")
         to_post = super(AccountMove, self)._post(soft)
         for move in to_post:
             move.posting_date = fields.Date.today()
         return to_post
 
     def _unlink_or_reverse(self):
-        print("_unlink_or_reverse")
         if not self:
             return
         to_reverse = self.env['account.move']

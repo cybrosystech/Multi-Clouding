@@ -109,7 +109,6 @@ class ChangeLeasorWizard(models.TransientModel):
                     ('date', '>=', self.change_date)
                 ]).mapped('invoice_date')
                 changed_bills = 0
-                print("installments",installments.mapped('date'))
                 for installment in installments:
                     if installment.date not in existing_posted_bills_dates:
                         changed_bills +=1
