@@ -20,7 +20,6 @@ class AccountMove(models.Model):
                  'invoice_line_ids.analytic_account_id',
                  'invoice_line_ids.sequence')
     def compute_project_site_cost_center(self):
-        print("compute_project_site_cost_center")
         all_invoice_line_ids = self.mapped('invoice_line_ids').ids
         if not all_invoice_line_ids:
             for rec in self:
@@ -57,7 +56,6 @@ class AccountMove(models.Model):
                     rec.analytic_account_id = False
 
     def _search_project_site_id(self, operator, value):
-        print("_search_project_site_id")
         move_ids = self.env['account.move'].search([])
         if operator == '=':
             move_ids = move_ids.filtered(
@@ -84,7 +82,6 @@ class AccountMove(models.Model):
         return [('id', 'in', move_ids.ids)]
 
     def _search_cost_center_id(self, operator, value):
-        print("_search_cost_center_id")
         move_ids = self.env['account.move'].search([])
         if operator == '=':
             move_ids = move_ids.filtered(

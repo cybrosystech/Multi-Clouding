@@ -7,7 +7,6 @@ class PurchaseOrder(models.Model):
 
     def button_confirm(self):
         res = super().button_confirm()
-        print("resssssssssss",res,self)
         for rec in self:
             email_template_id = self.env.ref(
                 'approval_followup.email_template_send_mail_reminder_purchase_receive')
