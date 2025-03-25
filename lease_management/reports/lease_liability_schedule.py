@@ -44,7 +44,6 @@ class LeaseLiabilitySchedule(models.TransientModel):
 
     def get_report_data(self):
         data = []
-        print("kkkkkkkk",self.env.company.name)
         domain = [('date', '>=', self.date_from), ('date', '<=', self.date_to),('leasee_contract_id.company_id','=',self.env.company.id)]
         if self.contract_ids:
             domain.append(
