@@ -26,7 +26,8 @@
         <field name="view_mode">form</field>
         <field name="target">new</field>
     </record>
-    <menuitem id="menu_lease_contract_excel_report" name="Payment Aging Report"
+    <menuitem id="menu_lease_contract_excel_report" name="TASC Payment Aging Report"
               parent="lease_management.menuitem_lease_contract_categ"
+              sequence="8"
               action="action_lease_contract_xlsx_report_wizard"/>
 </odoo>

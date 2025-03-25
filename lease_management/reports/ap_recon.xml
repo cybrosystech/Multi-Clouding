@@ -33,7 +33,7 @@
         </record>
 
 
-        <menuitem id="menuitem_ap_reconcile" name="AP Reconcile" parent="lease_management.menuitem_lease_contract_categ" action="view_ap_recon_wizard_action" sequence="11"/>
+        <menuitem id="menuitem_ap_reconcile" name="TASC AP Reconcile" parent="lease_management.menuitem_lease_contract_categ" action="view_ap_recon_wizard_action" sequence="12"/>
 
     </data>
 </odoo>

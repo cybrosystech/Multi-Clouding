@@ -44,17 +44,17 @@ class LeaseLiabilitySchedule(models.TransientModel):
 
     def get_report_data(self):
         data = []
-        domain = [('date', '>=', self.date_from), ('date', '<=', self.date_to)]
+        domain = [('date', '>=', self.date_from), ('date', '<=', self.date_to),('leasee_contract_id.company_id','=',self.env.company.id)]
         if self.contract_ids:
             domain.append(
                 ('leasee_contract_id', 'child_of', self.contract_ids.ids))
-        elif self.analytic_account_ids:
+        if self.analytic_account_ids:
             domain.append(('leasee_contract_id.analytic_account_id', 'in',
                            self.analytic_account_ids.ids))
-        elif self.partner_ids:
+        if self.partner_ids:
             domain.append(
                 ('leasee_contract_id.vendor_id', 'in', self.partner_ids.ids))
-        installments = self.env['leasee.installment'].search(domain,
+        installments = self.env['leasee.installment'].sudo().search(domain,
                                                              order='leasee_contract_id,date,period')
         period_closing = 0
         for contract1 in installments.mapped('leasee_contract_id'):
@@ -185,7 +185,6 @@ class LeaseLiabilitySchedule(models.TransientModel):
         return data
 
     def print_report_xlsx(self):
-
         report_data = self.get_report_data()
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})

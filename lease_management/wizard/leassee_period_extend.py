@@ -145,7 +145,7 @@ class LeaseePeriodExtend(models.TransientModel):
             'credit': 0,
             'debit': amount,
             'display_type': 'product',
-
+            'business_unit_id': contract.business_unit_id.id,
             'analytic_account_id': contract.analytic_account_id.id,
             'project_site_id': contract.project_site_id.id,
             'type_id': contract.type_id.id,
@@ -156,7 +156,7 @@ class LeaseePeriodExtend(models.TransientModel):
             'debit': 0,
             'credit': amount,
             'display_type': 'product',
-
+            'business_unit_id': contract.business_unit_id.id,
             'analytic_account_id': contract.analytic_account_id.id,
             'project_site_id': contract.project_site_id.id,
             'type_id': contract.type_id.id,

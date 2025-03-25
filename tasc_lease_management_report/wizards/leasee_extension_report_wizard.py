@@ -12,7 +12,7 @@ class LeaseContractExtensionXlsxWizard(models.TransientModel):
 
     lease_contract_ids = fields.Many2many('leasee.contract',
                                           string="Lease Contract")
-    state = fields.Selection(string="Status", selection=[('draft', 'Draft'),
+    state = fields.Selection(string="Status", default='extended',selection=[('draft', 'Draft'),
                                                          ('active', 'Active'),
                                                          ('extended',
                                                           'Extended'),
@@ -115,98 +115,84 @@ class LeaseContractExtensionXlsxWizard(models.TransientModel):
         }
 
     def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data,
-                       header_format, STYLE_LINE_HEADER,date_format):
+                       header_format, STYLE_LINE_HEADER, date_format):
         self.ensure_one()
-        worksheet = workbook.add_worksheet(
-            _('Lease Extension Report'))
+        worksheet = workbook.add_worksheet(_('Lease Extension Report'))
         lang = self.env.user.lang
         if lang.startswith('ar_'):
             worksheet.right_to_left()
 
+        # row = 0
+        # col = 0
+        # worksheet.merge_range(row, row, col, col + 5, _('Lease Extension Report'), STYLE_LINE_HEADER)
+
         row = 0
-        col = 0
-        worksheet.merge_range(row, row, col, col + 5,
-                              _('Lease Extension Report'),
-                              STYLE_LINE_HEADER)
-        row = 1
         col = 3
-        worksheet.merge_range(row, col, row, col + 4,
-                              _('Original Lease'),
-                              header_format)
+        worksheet.merge_range(row, 0, row, col + 5, _('Original Lease'), header_format)
 
         row += 1
         col = 0
-        worksheet.write(row, col, _('Lease Name'), header_format)
-        col += 1
-        worksheet.write(row, col, _('External Reference Number'), header_format)
-        col += 1
-        worksheet.write(row, col, _('Project Site'), header_format)
-        col += 1
-        worksheet.write(row, col, _('Start Date'), header_format)
-        col += 1
-        worksheet.write(row, col, _('End Date'), header_format)
-        col += 1
-        worksheet.write(row, col, _('Installment Amount'), header_format)
-        col += 1
-        worksheet.write(row, col, _('Contract Period'), header_format)
-        col += 1
-        worksheet.write(row, col, _('Leasor Type'), header_format)
-        col += 1
+        headers = [_('Lease Name'), _('External Reference Number'), _('Project Site'),
+                   _('Start Date'), _('End Date'), _('Installment Amount'),
+                   _('Contract Period'), _('Leasor Type'),_('Creation Date')]
 
-        head_col = col
-        sub_head_row = 2
+        for header in headers:
+            worksheet.write(row, col, header, header_format)
+            col += 1
+
+        head_col = col  # Column where extended lease data starts
+
         for line in report_data:
-            ext = 0
             col = 0
             row += 1
             worksheet.write(row, col, line.name, STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line.external_reference_number,
-                            STYLE_LINE_Data)
+            worksheet.write(row, col, line.external_reference_number, STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line.project_site_id.name,
-                            STYLE_LINE_Data)
+            worksheet.write(row, col, line.project_site_id.name, STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line.inception_date,
-                            date_format)
+            worksheet.write(row, col, line.inception_date, date_format)
             col += 1
-            worksheet.write(row, col, line.estimated_ending_date,
-                            date_format)
+            worksheet.write(row, col, line.estimated_ending_date, date_format)
             col += 1
-            worksheet.write(row, col, line.installment_amount,
-                            STYLE_LINE_Data)
+            worksheet.write(row, col, line.installment_amount, STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line.lease_contract_period,
-                            STYLE_LINE_Data)
+            worksheet.write(row, col, line.lease_contract_period, STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, line.leasor_type,
-                            STYLE_LINE_Data)
+            worksheet.write(row, col, line.leasor_type, STYLE_LINE_Data)
+            col += 1
+            worksheet.write(row, col, line.create_date, date_format)
+
             if line.child_ids:
-                hexadecimal = ["#" + ''.join(
-                    [random.choice('ABCDEF0123456789') for i in range(6)])]
-
-                header_format_ext = workbook.add_format({
-                    'bold': 1,
-                    'font_name': 'Aharoni',
-                    'border': 0,
-                    'font_size': 13,
-                    'align': 'center',
-                    'valign': 'vcenter',
-                    'font_color': 'black',
-                    'bg_color': hexadecimal[0],
-                })
-                row2 = 1
-                ext += 1
-                lease_name_ext = 'Extended Leasee' + str(ext)
-                worksheet.merge_range(row2, head_col, row2, head_col + 4,
-                                      _(lease_name_ext),
-                                      header_format_ext)
+                ext = 0
                 for child in line.child_ids:
-                    ext += 1
+                    ext += 1  # Keep track of extended lease count
+                    row2 = 0  # Header row for extended leasee
 
-                    self.add_extension_data(workbook, worksheet, child, row,
-                                            col, head_col + 5,
-                                            STYLE_LINE_Data, ext, sub_head_row,header_format,date_format)
+                    # Generate unique color
+                    hexadecimal = ["#" + ''.join([random.choice('ABCDEF0123456789') for _ in range(6)])]
+
+                    header_format_ext = workbook.add_format({
+                        'bold': 1,
+                        'font_name': 'Aharoni',
+                        'border': 0,
+                        'font_size': 13,
+                        'align': 'center',
+                        'valign': 'vcenter',
+                        'font_color': 'black',
+                        'bg_color': hexadecimal[0],
+                    })
+
+                    lease_name_ext = 'Extended Leasee ' + str(ext)
+
+                    # Adjust column placement dynamically for multiple lease extensions
+                    ext_col_start = head_col + (6 * (ext - 1))  # Dynamically shift right for each extension
+                    ext_col_end = ext_col_start + 5
+
+                    worksheet.merge_range(row2, ext_col_start, row2, ext_col_end, lease_name_ext, header_format_ext)
+
+                    self.add_extension_data(workbook, worksheet, child, row, col, ext_col_start, STYLE_LINE_Data, ext,
+                                            row2 + 1, header_format, date_format)
 
     def add_extension_data(self, workbook, worksheet, contract, row, col,
                            head_col, STYLE_LINE_Data, ext, sub_head_row,
@@ -248,15 +234,24 @@ class LeaseContractExtensionXlsxWizard(models.TransientModel):
         worksheet.write(sub_head_row, col, _('Leasor Type'), header_format)
         worksheet.write(row, col, contract.leasor_type,
                         STYLE_LINE_Data)
+        col += 1
+        worksheet.write(sub_head_row, col, _('Creation Date (EXT)'), header_format)
+        worksheet.write(row, col, contract.create_date,
+                        date_format)
         if contract.child_ids:
             for child in contract.child_ids:
-                row2 = 1
-                worksheet.merge_range(row2, head_col, row2, head_col + 4,
-                                      _(extension_text),
-                                      header_format_subhead)
+                row2 = 0
+                if extension_text == 'Original Leasee':
+                    worksheet.merge_range(row2, 0, row2, head_col + 5,
+                                          _(extension_text),
+                                          header_format_subhead)
+                else:
+                    worksheet.merge_range(row2, head_col, row2, head_col + 5,
+                                          _(extension_text),
+                                          header_format_subhead)
                 ext += 1
                 self.add_extension_data(workbook, worksheet, child, row, col,
-                                        head_col + 5,
+                                        head_col + 6,
                                         STYLE_LINE_Data, ext, sub_head_row,header_format,date_format)
 
     def get_report_data(self):

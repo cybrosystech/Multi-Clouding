@@ -39,7 +39,8 @@
         <field name="target">new</field>
     </record>
     <menuitem id="menu_lease_ll_and_rou_report"
-              name="Lease LL and ROU Report"
+              name="TASC Lease LL and ROU Report"
               parent="lease_management.menuitem_lease_contract_categ"
+              sequence="14"
               action="action_lease_ll_rou_report_wizard"/>
 </odoo>

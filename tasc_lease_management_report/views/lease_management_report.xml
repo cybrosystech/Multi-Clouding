@@ -91,5 +91,6 @@
     </record>
     <menuitem id="menu_lease_management_report" name="Lease Reports"
               parent="lease_management.menuitem_lease_contract_categ"
+              sequence="15"
               action="action_lease_management_report"/>
 </odoo>

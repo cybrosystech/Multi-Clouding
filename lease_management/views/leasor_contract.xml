@@ -34,6 +34,7 @@
                                 <field name="estimated_ending_date" />
                                 <field name="account_analytic_id" />
                                 <field name="project_site_id" />
+                                <field name="business_unit_id" />
 <!--                                <field name="type_id" />-->
 <!--                                <field name="location_id" />-->
                                 <field name="prorate" />
@@ -77,7 +78,7 @@
 
         <menuitem id="menuitem_leasor_contract" name="Leasor Contract"
                   parent="lease_management.menuitem_lease_contract_categ" action="view_leasor_contract_action"
-                  sequence="1"/>
+                  sequence="2"/>
 
     </data>
 </odoo>
