@@ -86,9 +86,6 @@ class LeaseContractTemplate(models.Model):
                                       domain=[('analytic_account_type', '=',
                                                'project_site')],
                                       required=True, )
-    business_unit_id = fields.Many2one(comodel_name="account.analytic.account",
-                                       domain=[('plan_id.name', '=ilike', 'Business Unit')],
-                                       string="Business Unit", required=False, )
     analytic_distribution = fields.Json()
 
     incentives_account_id = fields.Many2one(comodel_name="account.account",
@@ -117,16 +114,16 @@ class LeaseContractTemplate(models.Model):
             else:
                 self.interest_rate = 0.0
 
-    @api.onchange('project_site_id', 'analytic_account_id','business_unit_id')
+    @api.onchange('project_site_id', 'analytic_account_id')
     def onchange_project_site(self):
+        type = self.project_site_id.analytic_type_filter_id.id
+        location = self.project_site_id.analytic_location_id.id
+        co_location = self.project_site_id.co_location.id
         analytic_dist = {}
         analytic_distributions = ''
         if self.analytic_account_id:
             analytic_distributions = analytic_distributions + ',' + str(
                 self.analytic_account_id.id)
-        if self.business_unit_id:
-            analytic_distributions = analytic_distributions + ',' + str(
-                self.business_unit_id.id)
         if self.project_site_id:
             analytic_distributions = analytic_distributions + ',' + str(
                 self.project_site_id.id)
