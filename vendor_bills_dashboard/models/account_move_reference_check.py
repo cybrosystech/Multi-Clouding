@@ -7,7 +7,6 @@ class AccountMoveReferenceInherit(models.Model):
 
     @api.constrains('payment_reference')
     def payment_reference_check(self):
-        print("payment_reference_check")
         """This function is being performed at the time of saving a journal to
         check if the payment reference has been a unique"""
         for rec in self:
@@ -99,7 +98,6 @@ class AccountMoveReferenceInherit(models.Model):
     @api.constrains('ref', 'move_type', 'partner_id', 'journal_id',
                     'invoice_date', 'state')
     def _check_duplicate_supplier_reference(self):
-        print("_check_duplicate_supplier_reference")
         """removed the validation of bill reference check"""
         moves = self.filtered(lambda
                                   move: move.state == 'posted' and move.is_purchase_document() and move.ref)
@@ -124,7 +122,6 @@ class AccountMoveReferenceInherit(models.Model):
         duplicated_moves = self.browse([r[0] for r in self._cr.fetchall()])
 
     def request_approval_button(self):
-        print("request_approval_button3")
         """inherit of the function from account. Move to check the validation of
         payment reference"""
         journal = self.env['account.journal'].search([('name', '=',
@@ -140,7 +137,6 @@ class AccountMoveReferenceInherit(models.Model):
         return res
 
     def button_request_purchase_cycle(self):
-        print("button_request_purchase_cycle")
         journal = self.env['account.journal'].search([('name', '=',
                                                        'Vendor Bills')],
                                                      limit=1)
