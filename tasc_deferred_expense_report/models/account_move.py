@@ -14,11 +14,13 @@ class AccountMoveLine(models.Model):
 
     @api.model
     def _get_deferred_lines_values(self, account_id, balance, ref, analytic_distribution, line):
+        print("_get_deferred_lines_values")
         deferred_lines_values = super()._get_deferred_lines_values(account_id, balance, ref, analytic_distribution)
         return {
             **deferred_lines_values,
             'project_site_id': int(line['project_site_id'] or 0) or None,
             'analytic_account_id': int(line['analytic_account_id'] or 0) or None,
+            'business_unit_id': int(line['business_unit_id'] or 0) or None,
         }
 
 
