@@ -148,31 +148,6 @@ class AccountMove(models.Model):
         return name + (
             f" ({shorten(self.ref, width=50)})" if show_ref and self.ref else '')
 
-
-    # @api.depends('state','auto_post','move_type','is_from_purchase','is_from_sales','purchase_approval_cycle_ids')
-    # def check_show_confirm_and_post_buttons(self):
-    #     print("check_show_confirm_and_post_buttons")
-    #     for rec in self:
-    #         rec.show_post_button = False
-    #         rec.show_confirm_button = False
-    #         if rec.state not in ['draft',
-    #                              'to_approve'] or rec.auto_post or rec.move_type != 'entry':
-    #             if rec.is_from_purchase or rec.is_from_sales:
-    #                 rec.show_post_button = True
-    #             elif not rec.is_from_purchase and not rec.is_from_sales:
-    #                 if not rec.purchase_approval_cycle_ids:
-    #                     rec.show_post_button = True
-    #                 else:
-    #                     rec.show_post_button = False
-    #             else:
-    #                 rec.show_post_button = False
-    #         elif rec.state not in ['draft',
-    #                                'to_approve'] or rec.auto_post == True or rec.move_type == 'entry':
-    #             if rec.is_from_purchase or rec.is_from_sales:
-    #                 rec.show_confirm_button = True
-    #             else:
-    #                 rec.show_confirm_button = False
-
     @api.depends('state', 'auto_post', 'move_type', 'is_from_purchase', 'is_from_sales', 'purchase_approval_cycle_ids')
     def check_show_confirm_and_post_buttons(self):
         for rec in self:
@@ -191,18 +166,6 @@ class AccountMove(models.Model):
             else:
                 rec.show_confirm_button = has_purchase_or_sales
 
-    # @api.depends('invoice_line_ids.purchase_line_id')
-    # def check_if_from_purchase(self):
-    #     print("check_if_from_purchase")
-    #     grouped_invoice_lines = defaultdict(list)
-    #     # Precompute invoice lines and their respective move_ids in one pass
-    #     invoice_lines = self.mapped('invoice_line_ids').filtered(
-    #         lambda line: line.purchase_line_id)
-    #     for line in invoice_lines:
-    #         grouped_invoice_lines[line.move_id.id].append(line)
-    #     # Iterate over records without batch processing (avoid tools.split_every if not necessary)
-    #     for rec in self:
-    #         rec.is_from_purchase = bool(grouped_invoice_lines.get(rec.id))
 
     @api.depends('invoice_line_ids.purchase_line_id')
     def check_if_from_purchase(self):
@@ -216,19 +179,6 @@ class AccountMove(models.Model):
         for rec in self:
             rec.is_from_purchase = rec.id in move_ids_with_purchase
 
-    # @api.depends('invoice_line_ids.sale_line_ids')
-    # def check_if_from_sales(self):
-    #     print("check_if_from_sales")
-    #     grouped_invoice_lines = defaultdict(list)
-    #     # Precompute invoice lines and their respective move_ids in one pass
-    #     invoice_lines = self.mapped('invoice_line_ids').filtered(
-    #         lambda line: line.sale_line_ids)
-    #     for line in invoice_lines:
-    #         grouped_invoice_lines[line.move_id.id].append(line)
-    #     # Iterate over records without batch processing (avoid tools.split_every if not necessary)
-    #     for rec in self:
-    #         rec.is_from_sales = bool(grouped_invoice_lines.get(rec.id))
-
     @api.depends('invoice_line_ids.sale_line_ids')
     def check_if_from_sales(self):
         invoice_lines = self.env['account.move.line'].search_read(
@@ -241,35 +191,6 @@ class AccountMove(models.Model):
         for rec in self:
             rec.is_from_sales = rec.id in move_ids_with_sales
 
-    # @api.depends('purchase_approval_cycle_ids','state','purchase_approval_cycle_ids.is_approved','purchase_approval_cycle_ids.user_approve_ids')
-    # def check_show_approve_button(self):
-    #     print("check_show_approve_button")
-    #     for r in self:
-    #         r.show_approve_button = False
-    #         current_approve = r.purchase_approval_cycle_ids.filtered(
-    #             lambda x: x.is_approved).mapped('approval_seq')
-    #
-    #         last_approval = max(current_approve) if current_approve else 0
-    #         check_last_approval_is_approved = r.purchase_approval_cycle_ids.filtered(
-    #             lambda x: x.approval_seq == int(last_approval))
-    #
-    #         for rec in r.purchase_approval_cycle_ids:
-    #             if check_last_approval_is_approved:
-    #                 if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids and check_last_approval_is_approved.is_approved:
-    #                     r.show_approve_button = True
-    #                     break
-    #             else:
-    #                 if not rec.is_approved and self.env.user.id in rec.user_approve_ids.ids:
-    #                     r.show_approve_button = True
-    #                     break
-    #                 break
-    #
-    #         if r.state != 'posted':
-    #             if r.purchase_approval_cycle_ids:
-    #                 approve_list = r.purchase_approval_cycle_ids.mapped(
-    #                     'is_approved')
-    #                 if all(approve_list):
-    #                     r.state = 'posted'
 
     @api.depends('purchase_approval_cycle_ids', 'state',
                  'purchase_approval_cycle_ids.is_approved',
@@ -519,6 +440,7 @@ class AccountMove(models.Model):
                                 'company_id': move_line.company_id.id,
                                 'currency_id': move_line.company_currency_id.id,
                                 'analytic_account_id': move_line.analytic_account_id.id,
+                                'business_unit_id': move_line.business_unit_id.id,
                                 'project_site_id': move_line.project_site_id.id,
                                 'analytic_distribution': move_line.analytic_distribution,
                                 'original_move_line_ids': [
@@ -581,6 +503,7 @@ class AccountMove(models.Model):
                                     'currency_id': move_line.company_currency_id.id,
                                     'analytic_account_id': move_line.analytic_account_id.id,
                                     'project_site_id': move_line.project_site_id.id,
+                                    'business_unit_id': move_line.business_unit_id.id,
                                     'analytic_distribution': move_line.analytic_distribution,
                                     'original_move_line_ids': [
                                         (6, False, move_line.ids)],
@@ -645,6 +568,8 @@ class AccountMove(models.Model):
                                               precision_digits=prec) > 0 else 0.0,
             'analytic_distribution': analytic_distribution,
             'project_site_id': project_site_id.id if project_site_id else False,
+            'business_unit_id': asset.business_unit_id.id if asset.business_unit_id else False,
+
             'analytic_account_id': analytic_account_id.id if analytic_account_id.id else False,
             'currency_id': current_currency.id,
             'amount_currency': -amount_currency,
@@ -658,6 +583,7 @@ class AccountMove(models.Model):
             'debit': amount if float_compare(amount, 0.0,
                                              precision_digits=prec) > 0 else 0.0,
             'analytic_distribution': analytic_distribution,
+            'business_unit_id': asset.business_unit_id.id if asset.business_unit_id else False,
             'project_site_id': project_site_id.id if project_site_id else False,
             'analytic_account_id': analytic_account_id.id if analytic_account_id.id else False,
             'currency_id': current_currency.id,
@@ -693,6 +619,10 @@ class AccountMoveLine(models.Model):
                                       domain=[
                                           ('analytic_account_type', '=',
                                            'project_site')],
+                                      required=False, store=True)
+    business_unit_id = fields.Many2one(comodel_name="account.analytic.account",
+                                      string="Business Unit",
+                                      domain=[('plan_id.name', '=ilike', 'Business Unit')],
                                       required=False, store=True)
     type_id = fields.Many2one(comodel_name="account.analytic.account",
                               string="Type",

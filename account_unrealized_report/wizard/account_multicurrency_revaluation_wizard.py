@@ -9,19 +9,25 @@ class AccountMulticurrencyRevaluationWizard(models.TransientModel):
 
     analytic_account_id = fields.Many2one('account.analytic.account',
                                           string="Cost Center")
+    business_unit_id = fields.Many2one('account.analytic.account',
+                                       domain=[('plan_id.name', '=ilike', 'Business Unit')],
+                                       string="Business Unit")
     project_site_id = fields.Many2one('account.analytic.account',
                                       string="Project Site",domain=[('analytic_account_type', '=',
                                                'project_site')],)
     analytic_distribution = fields.Json()
 
 
-    @api.onchange('project_site_id', 'analytic_account_id')
+    @api.onchange('project_site_id', 'analytic_account_id','business_unit_id')
     def onchange_project_site(self):
         analytic_dist = {}
         analytic_distributions = ''
         if self.analytic_account_id:
             analytic_distributions = analytic_distributions + ',' + str(
                 self.analytic_account_id.id)
+        if self.business_unit_id:
+            analytic_distributions = analytic_distributions + ',' + str(
+                self.business_unit_id.id)
         if self.project_site_id:
             analytic_distributions = analytic_distributions + ',' + str(
                 self.project_site_id.id)

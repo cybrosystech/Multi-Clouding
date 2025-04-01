@@ -43,6 +43,10 @@ class LeasorContract(models.Model):
     account_analytic_id = fields.Many2one(comodel_name="account.analytic.account", string="Cost center", required=False, )
     project_site_id = fields.Many2one(comodel_name="account.analytic.account", string="Project/Site",
                                       domain=[('analytic_account_type', '=', 'project_site')], required=False, )
+    business_unit_id = fields.Many2one(comodel_name="account.analytic.account",
+                                       domain=[('plan_id.name', '=ilike', 'Business Unit')],
+                                       string="Business Unit",
+                                       required=False, )
     type_id = fields.Many2one(comodel_name="account.analytic.account", string="Type",
                               domain=[('analytic_account_type', '=', 'type')], required=False, )
     location_id = fields.Many2one(comodel_name="account.analytic.account", string="Location",
@@ -159,6 +163,7 @@ class LeasorContract(models.Model):
                 'quantity': 1,
                 'analytic_account_id': self.account_analytic_id.id,
                 'project_site_id': self.project_site_id.id,
+                'business_unit_id':self.business_unit_id.id,
                 'type_id': self.type_id.id,
                 'location_id': self.location_id.id,
             })]
@@ -181,6 +186,7 @@ class LeasorContract(models.Model):
                 line.write({
                     'analytic_account_id': self.analytic_account_id.id,
                     'project_site_id': self.project_site_id.id,
+                    'business_unit_id':self.business_unit_id.id,
                     'type_id': self.type_id.id,
                     'location_id': self.location_id.id,
                 })

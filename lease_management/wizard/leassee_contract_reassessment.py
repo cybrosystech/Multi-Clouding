@@ -125,6 +125,7 @@ class Reassessment(models.TransientModel):
                 'move_id': move.id,
                 'analytic_account_id': contract.analytic_account_id.id,
                 'project_site_id': contract.project_site_id.id,
+                'business_unit_id': contract.business_unit_id.id,
                 'analytic_distribution': contract.analytic_distribution,
                 'currency_id': contract.leasee_currency_id.id
             }), (0, 0, {
@@ -134,6 +135,7 @@ class Reassessment(models.TransientModel):
                 'credit': amount if amount > 0 else 0,
                 'move_id': move.id,
                 'analytic_account_id': contract.analytic_account_id.id,
+                'business_unit_id': contract.business_unit_id.id,
                 'project_site_id': contract.project_site_id.id,
                 'analytic_distribution': contract.analytic_distribution,
                 'currency_id': contract.leasee_currency_id.id
@@ -185,6 +187,7 @@ class Reassessment(models.TransientModel):
                 'currency_id': invoice_line.currency_id.id,
                 'account_id': invoice_line.account_id.id,
                 'analytic_account_id': invoice_line.analytic_account_id.id,
+                'business_unit_id': invoice_line.business_unit_id.id,
                 'project_site_id': invoice_line.project_site_id.id,
                 # 'type_id': invoice_line.type_id.id,
                 # 'location_id': invoice_line.location_id.id,
@@ -358,6 +361,7 @@ class Reassessment(models.TransientModel):
                 'move_id': move.id,
                 'analytic_account_id': contract.analytic_account_id.id,
                 'project_site_id': contract.project_site_id.id,
+                'business_unit_id': contract.business_unit_id.id,
                 'analytic_distribution': contract.analytic_distribution,
                 'currency_id': contract.leasee_currency_id.id
             }),
@@ -369,6 +373,7 @@ class Reassessment(models.TransientModel):
                          'move_id': move.id,
                          'analytic_account_id': contract.analytic_account_id.id,
                          'project_site_id': contract.project_site_id.id,
+                         'business_unit_id': contract.business_unit_id.id,
                          'analytic_distribution':contract.analytic_distribution,
                          'currency_id': contract.leasee_currency_id.id
                      })]
