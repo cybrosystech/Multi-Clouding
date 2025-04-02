@@ -112,6 +112,7 @@ class AccountAssetPartialInherit(models.Model):
                     ),
                     'analytic_distribution': asset.analytic_distribution,
                     'analytic_account_id': asset.analytic_account_id.id,
+                    'business_unit_id': asset.business_unit_id.id,
                     'project_site_id': asset.project_site_id.id,
                     'currency_id': asset.currency_id.id,
                     'amount_currency': -amount,
@@ -123,6 +124,7 @@ class AccountAssetPartialInherit(models.Model):
                     'balance': -amount,
                     'analytic_distribution': asset.analytic_distribution,
                     'analytic_account_id': asset.analytic_account_id.id,
+                    'business_unit_id': asset.business_unit_id.id,
                     'project_site_id': asset.project_site_id.id,
                     'currency_id': asset.currency_id.id,
                     'amount_currency': -asset.company_id.currency_id._convert(
