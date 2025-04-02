@@ -206,6 +206,9 @@ class SalesOrderLine(models.Model):
                                       domain=[('analytic_account_type', '=',
                                                'project_site')],
                                       required=False, )
+    business_unit_id = fields.Many2one(comodel_name="account.analytic.account",
+                                       domain=[('plan_id.name', '=ilike', 'Business Unit')],
+                                       string="Business Unit", required=False, )
     budget_id = fields.Many2one(comodel_name="crossovered.budget",
                                 string="Budget", required=False, )
     budget_line_id = fields.Many2one(comodel_name="crossovered.budget.lines",
@@ -275,5 +278,6 @@ class SalesOrderLine(models.Model):
         res.update({
             'budget_id': self.budget_id.id,
             'analytic_account_id': self.cost_center_id.id,
+            'business_unit_id': self.business_unit_id.id,
             'project_site_id': self.project_site_id.id})
         return res

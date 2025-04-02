@@ -203,8 +203,8 @@ class DefeExpWizard(models.Model):
             ps.name AS project_site_name,
             ps.code AS project_site_code,
             MIN(l.date) AS accounting_date,
-            l.deferred_start_date AS first_date,
             MAX(l.date) AS last_date,
+            deferred_data.first_date,
             aj.name AS journal_name
         FROM 
             account_move_line l
@@ -215,6 +215,14 @@ class DefeExpWizard(models.Model):
             LEFT JOIN res_partner r ON r.id = l.partner_id
             LEFT JOIN account_analytic_account cc ON cc.id = l.analytic_account_id
             LEFT JOIN account_analytic_account ps ON ps.id = l.project_site_id
+            LEFT JOIN LATERAL (
+                SELECT MIN(sub_l.deferred_start_date) AS first_date
+                FROM account_move_line sub_l
+                INNER JOIN account_move_deferred_rel amdr 
+                    ON amdr.original_move_id = sub_l.move_id
+                WHERE amdr.deferred_move_id = l.move_id
+                AND sub_l.deferred_start_date IS NOT NULL
+            ) deferred_data ON true
         WHERE 
             ac.code LIKE %(ac_code_pattern)s
             and l.company_id =  %(company_id)s
@@ -222,7 +230,7 @@ class DefeExpWizard(models.Model):
             AND l.tax_line_id IS NULL
             AND aj.name::text LIKE %(deferred_journal)s
         GROUP BY 
-            ac.id, l.name, debit_ac.name, debit_ac.code, r.name, cc.id, ps.id, aj.name, l.deferred_start_date
+            ac.id, l.name, debit_ac.name, debit_ac.code, r.name, cc.id, ps.id, aj.name, deferred_data.first_date
         HAVING 
             MIN(l.date) <= %(end_date)s
         order by ac.id,l.name"""
@@ -398,7 +406,9 @@ class DefeExpWizard(models.Model):
         col += 1
         worksheet.write(row, col, _('Expense Account'), header_format)
         col += 1
-        worksheet.write(row, col, _('Accounting Date/Start Date'), header_format)
+        worksheet.write(row, col, _('Accounting Date'), header_format)
+        col += 1
+        worksheet.write(row, col, _('Start Date'), header_format)
         col += 1
         worksheet.write(row, col, _('End Date'), header_format)
         col += 1
@@ -419,8 +429,6 @@ class DefeExpWizard(models.Model):
         worksheet.write(row, col, _('Remaining Count'), header_format)
         row += 1
         for line in report_data:
-            # if line['partner_name'] == "Beth Evans":
-            #     print("ReportData11", line)
             col = 0
             if line["account_name"]:
                 if line["account_code"]:
@@ -507,6 +515,9 @@ class DefeExpWizard(models.Model):
             col += 1
             worksheet.write(row, col,
                             line["accounting_date"], date_format)
+            col += 1
+            worksheet.write(row, col,
+                            line["first_date"], date_format)
             col += 1
             worksheet.write(row, col,
                             line["last_date"], date_format)

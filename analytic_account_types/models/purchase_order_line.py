@@ -289,6 +289,9 @@ class PurchaseOrderLine(models.Model):
     project_site_id = fields.Many2one(comodel_name="account.analytic.account",
                                       string="Project/Site", domain=[
             ('analytic_account_type', '=', 'project_site')], required=False, )
+    business_unit_id = fields.Many2one(comodel_name="account.analytic.account",
+                                       domain=[('plan_id.name', '=ilike', 'Business Unit')],
+                                       string="Business Unit",required=False, )
     type_id = fields.Many2one(comodel_name="account.analytic.account",
                               string="Type",
                               domain=[('analytic_account_type', '=', 'type')],

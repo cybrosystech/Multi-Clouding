@@ -15,6 +15,14 @@ class AccountAnalyticLine(models.Model):
         index=True,
         check_company=True,
     )
+    business_unit_id = fields.Many2one(
+        'account.analytic.account',
+        'Business Unit',
+        domain=[('plan_id.name', '=ilike', 'Business Unit')],
+        ondelete='restrict',
+        index=True,
+        check_company=True,
+    )
     project_site_id = fields.Many2one(comodel_name="account.analytic.account",
                                       string="Project/Site",
                                       domain=[('analytic_account_type', '=',
