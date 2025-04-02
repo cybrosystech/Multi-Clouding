@@ -103,7 +103,6 @@ def _action_validate(self):
                     # Find the analytic account record
                     analytic_account = self.env[
                         'account.analytic.account'].browse(int(analytic_id))
-
                     if analytic_account.analytic_account_type == 'project_site':
                         # Update project_site_id field
                         line.project_site_id = analytic_account.id
@@ -119,6 +118,9 @@ def _action_validate(self):
                     elif analytic_account.analytic_account_type == 'co_location':
                         # Update analytic_account_id field
                         line.co_location_id = analytic_account.id
+                    elif analytic_account.plan_id.name and 'business unit' in analytic_account.plan_id.name.lower():
+                        line.business_unit_id = analytic_account.id
+
     move.line_ids.analytic_line_ids.unlink()
     move.line_ids._create_analytic_lines()
 

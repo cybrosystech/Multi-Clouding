@@ -8,13 +8,16 @@ class AccountMoveLine(models.Model):
                                      string="Co location", domain=[(
             'analytic_account_type', '=', 'co_location')], required=False, )
 
-    @api.onchange('project_site_id', 'analytic_account_id')
+    @api.onchange('project_site_id', 'analytic_account_id','business_unit_id')
     def onchange_project_site(self):
         analytic_dist = {}
         analytic_distributions = ''
         if self.analytic_account_id:
             analytic_distributions = analytic_distributions + ',' + str(
                 self.analytic_account_id.id)
+        if self.business_unit_id:
+            analytic_distributions = analytic_distributions + ',' + str(
+                self.business_unit_id.id)
         if self.project_site_id:
             analytic_distributions = analytic_distributions + ',' + str(
                 self.project_site_id.id)

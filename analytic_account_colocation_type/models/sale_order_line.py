@@ -3,37 +3,6 @@ from odoo.fields import Command
 from odoo.tools import frozendict
 
 
-class SaleOrder(models.Model):
-    _inherit = 'sale.order'
-
-    # @api.model_create_multi
-    # def create(self, vals_list):
-    #     order = super(SaleOrder, self).create(vals_list)
-    #     for line in order.order_line.filtered(lambda x: x.project_site_id):
-    #         line.onchange_project_site()
-    #
-    #     return order
-    #
-    # def write(self, vals_list):
-    #     order = super(SaleOrder, self).write(vals_list)
-    #     if self.order_line:
-    #         for line in self.order_line.filtered(lambda x: x.project_site_id):
-    #             line.onchange_project_site()
-    #     return order
-    #
-    # def copy(self, default=None):
-    #     if default is None:
-    #         default = {}
-    #     # Call the original copy method
-    #     order = super(SaleOrder, self).copy(default=default)
-    #
-    #     # Trigger onchange for the field you want
-    #     # Example: Assuming 'field_name' is the field you want to trigger onchange for
-    #     # order.order_line.filtered(lambda x: x.project_site_id).onchange_project_site()
-    #     for line in order.order_line.filtered(lambda x: x.project_site_id):
-    #         line.onchange_project_site()
-    #     return order
-
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
@@ -48,6 +17,7 @@ class SaleOrderLine(models.Model):
             'budget_id': self.budget_id.id,
             'analytic_account_id': self.cost_center_id.id,
             'project_site_id': self.project_site_id.id,
+            'business_unit_id': self.business_unit_id.id,
             'type_id': self.type_id.id,
             'location_id': self.location_id.id,
             'co_location_id': self.co_location_id.id,
@@ -56,13 +26,16 @@ class SaleOrderLine(models.Model):
         })
         return res
 
-    @api.onchange('project_site_id', 'cost_center_id')
+    @api.onchange('project_site_id', 'cost_center_id','business_unit_id')
     def onchange_project_site(self):
         analytic_dist = {}
         analytic_distributions = ''
         if self.cost_center_id:
             analytic_distributions = analytic_distributions + ',' + str(
                 self.cost_center_id.id)
+        if self.business_unit_id:
+            analytic_distributions = analytic_distributions + ',' + str(
+                self.business_unit_id.id)
         if self.project_site_id:
             analytic_distributions = analytic_distributions + ',' + str(
                 self.project_site_id.id)
@@ -122,6 +95,7 @@ class SaleAdvancePaymentInv(models.TransientModel):
                 line['record'].type_id.id,
                 line['record'].location_id.id,
                 line['record'].co_location_id.id,
+                line["record"].business_unit_id.id,
             ])
             for fixed_tax in fixed_taxes:
                 # Fixed taxes cannot be set as taxes on down payments as they always amounts to 100%
@@ -141,7 +115,7 @@ class SaleAdvancePaymentInv(models.TransientModel):
                 ])
 
         downpayment_line_map = {}
-        for tax_id, analytic_distribution, price_subtotal, proejct_site, cost_center, type, location, co_location in down_payment_values:
+        for tax_id, analytic_distribution, price_subtotal, proejct_site, cost_center, type, location, co_location,business_unit in down_payment_values:
             grouping_key = frozendict({
                 'tax_id': tuple(sorted(tax_id.ids)),
                 'analytic_distribution': analytic_distribution,
@@ -150,6 +124,7 @@ class SaleAdvancePaymentInv(models.TransientModel):
                 'type_id': type,
                 'location_id': location,
                 'co_location_id': co_location,
+                'business_unit_id': business_unit,
             })
             downpayment_line_map.setdefault(grouping_key, {
                 **base_downpayment_lines_values,

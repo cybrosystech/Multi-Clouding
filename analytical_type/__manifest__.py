@@ -1,25 +1,13 @@
 {
     'name': 'Analytical Type',
-    'summary': """
-    """,
-
-    'description': """
-    """,
-
+    'summary': """ Module for bank reconcilation customizations""",
+    'description': """  Module for bank reconcilation customizations """,
     'author': "",
     'website': "",
     'category': 'Accounting',
     'version': '1.0',
     'depends': ['account_accountant'],
-    'data': [
-
-    ],
-    'assets': {
-        'web.assets_backend': [
-            # '/analytical_type/static/src/**/*',
-        ]
-    },
-    "license": 'AGPL-3',
+    'data': [],
     'installable': True,
     'auto_install': False,
     'application': False,

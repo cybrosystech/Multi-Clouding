@@ -15,13 +15,13 @@ class AccountAsset(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         asset = super(AccountAsset, self).create(vals_list)
-        if asset.project_site_id or asset.analytic_account_id:
+        if asset.project_site_id or asset.analytic_account_id or asset.business_unit_id:
             asset.onchange_project_site()
         return asset
 
     def write(self, vals_list):
         asset = super().write(vals_list)
-        if vals_list.get('analytic_account_id') or vals_list.get('project_site_id'):
+        if vals_list.get('analytic_account_id') or vals_list.get('project_site_id') or  vals_list.get('business_unit_id'):
             self.onchange_project_site()
         return asset
 
@@ -36,13 +36,16 @@ class AccountAsset(models.Model):
         asset.onchange_project_site()
         return asset
 
-    @api.onchange('project_site_id', 'analytic_account_id')
+    @api.onchange('project_site_id', 'analytic_account_id','business_unit_id')
     def onchange_project_site(self):
         analytic_dist = {}
         analytic_distributions = ''
         if self.analytic_account_id:
             analytic_distributions = analytic_distributions + ',' + str(
                 self.analytic_account_id.id)
+        if self.business_unit_id:
+            analytic_distributions = analytic_distributions + ',' + str(
+                self.business_unit_id.id)
         if self.project_site_id:
             analytic_distributions = analytic_distributions + ',' + str(
                 self.project_site_id.id)
@@ -64,4 +67,5 @@ class AccountAsset(models.Model):
                 if mv.state !='posted':
                     for line in  mv.line_ids:
                         line.project_site_id = self.project_site_id.id
-                        line.analytic_account_id = self.analytic_account_id
+                        line.analytic_account_id = self.analytic_account_id.id
+                        line.business_unit_id = self.business_unit_id.id
