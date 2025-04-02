@@ -17,6 +17,10 @@ class CrossOveredBudgetLines(models.Model):
                                       domain=[('analytic_account_type', '=',
                                                'project_site')],
                                       required=False, )
+    business_unit_id = fields.Many2one(comodel_name="account.analytic.account",
+                                      string="Business unit",
+                                       domain=[('plan_id.name', '=ilike', 'Business Unit')],
+                                       required=False )
     type_id = fields.Many2one(comodel_name="account.analytic.account",
                               string="Type",
                               domain=[('analytic_account_type', '=', 'type')],
@@ -62,6 +66,8 @@ class CrossOveredBudgetLines(models.Model):
                 computed_name += ' - ' + record.type_id.name
             if record.location_id:
                 computed_name += ' - ' + record.location_id.name
+            if record.business_unit_id:
+                computed_name += ' - ' + record.business_unit_id.name
             record.name = computed_name
 
     def _compute_practical_amount(self):

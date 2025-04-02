@@ -21,6 +21,11 @@ class AccountAsset(models.Model):
         required=True, domain=[
             ('analytic_account_type', '=',
              'cost_center')], )
+    business_unit_id = fields.Many2one(
+        comodel_name="account.analytic.account",
+        domain=[('plan_id.name', '=ilike', 'Business Unit')],
+        string="Business Unit",
+       )
     site_address = fields.Char(string='Site Address',
                                compute='compute_site_address')
     is_admin = fields.Boolean(string="Is Admin", compute='compute_is_admin')
@@ -73,6 +78,9 @@ class AccountAsset(models.Model):
             self.account_depreciation_id = model.account_depreciation_id
             self.account_depreciation_expense_id = model.account_depreciation_expense_id
             self.journal_id = model.journal_id
+            self.analytic_account_id = model.analytic_account_id.id
+            self.project_site_id = model.project_site_id.id
+            self.business_unit_id = model.business_unit_id.id
 
     @api.constrains('original_move_line_ids')
     def check_assets(self):

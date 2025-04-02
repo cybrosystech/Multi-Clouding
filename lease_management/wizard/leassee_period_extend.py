@@ -74,10 +74,10 @@ class LeaseePeriodExtend(models.TransientModel):
         if contract.child_ids:
             raise UserError('The lease has already been extended; go to the latest child lease for further extension.')
         self.action_create_extend_log()
-        last_installment = self.env['leasee.installment'].search([
-            ('leasee_contract_id', '=', self.leasee_contract_id.id),
-            ('amount', '>', 0.0),
-        ], order='date desc', limit=1)
+        # last_installment = self.env['leasee.installment'].search([
+        #     ('leasee_contract_id', '=', self.leasee_contract_id.id),
+        #     ('amount', '>', 0.0),
+        # ], order='date desc', limit=1)
         if self.inception_date:
             new_contract = contract.with_context(lease_extension=True).copy({
                 'name': contract.name,
@@ -145,7 +145,7 @@ class LeaseePeriodExtend(models.TransientModel):
             'credit': 0,
             'debit': amount,
             'display_type': 'product',
-
+            'business_unit_id': contract.business_unit_id.id,
             'analytic_account_id': contract.analytic_account_id.id,
             'project_site_id': contract.project_site_id.id,
             'type_id': contract.type_id.id,
@@ -156,7 +156,7 @@ class LeaseePeriodExtend(models.TransientModel):
             'debit': 0,
             'credit': amount,
             'display_type': 'product',
-
+            'business_unit_id': contract.business_unit_id.id,
             'analytic_account_id': contract.analytic_account_id.id,
             'project_site_id': contract.project_site_id.id,
             'type_id': contract.type_id.id,

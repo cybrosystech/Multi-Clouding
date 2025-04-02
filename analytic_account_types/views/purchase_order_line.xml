@@ -60,8 +60,10 @@
                 <xpath expr="//notebook/page[@name='products']/field[@name='order_line']/tree/field[@name='analytic_distribution']" position="before">
                     <field name="cost_center_id" readonly="state not in ['draft','to_approve','sent']"  invisible="parent.is_admin == True"  column_invisible="parent.is_admin == True" options="{'no_quick_create': True, 'no_create_edit': True}" />
                     <field name="project_site_id" readonly="state not in ['draft','to_approve','sent']"  required="1" invisible="parent.is_admin == True"  column_invisible="parent.is_admin == True" options="{'no_quick_create': True, 'no_create_edit': True}" />
+                    <field name="business_unit_id" readonly="state not in ['draft','to_approve','sent']"  invisible="parent.is_admin == True"  column_invisible="parent.is_admin == True" options="{'no_quick_create': True, 'no_create_edit': True}" />
                     <field name="cost_center_id" readonly="state not in ['draft','to_approve','sent']"  invisible="parent.is_admin == False"  column_invisible="parent.is_admin == False"/>
                     <field name="project_site_id" readonly="state not in ['draft','to_approve','sent']"  required="1" invisible="parent.is_admin == False"  column_invisible="parent.is_admin == False"/>
+                    <field name="business_unit_id" readonly="state not in ['draft','to_approve','sent']"  invisible="parent.is_admin == False"  column_invisible="parent.is_admin == False"/>
                 </xpath>
                 <xpath expr="//notebook/page[@name='products']/field[@name='order_line']/tree/field[@name='analytic_distribution']" position="after">
                     <field name="type_id" column_invisible="1" invisible="1"/>

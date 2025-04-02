@@ -61,6 +61,7 @@ class AccountAsset(models.Model):
                 'currency_id': current_currency.id,
                 'amount_currency': -asset.value_residual,
                 'project_site_id': asset.project_site_id.id,
+                'business_unit_id': asset.business_unit_id.id,
                 'location_id': asset.location_id.id,
             })
 

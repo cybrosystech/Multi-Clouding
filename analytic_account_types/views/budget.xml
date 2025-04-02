@@ -19,6 +19,7 @@
                 <xpath expr="//notebook/page[@name='budget_lines']/field[@name='crossovered_budget_line']/tree/field[@name='analytic_account_id']"
                        position="after">
                     <field name="project_site_id"/>
+                    <field name="business_unit_id"/>
                     <field name="type_id"/>
                     <field name="location_id"/>
                 </xpath>

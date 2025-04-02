@@ -9,6 +9,8 @@
                 <xpath expr="//field[@name='account_id']" position="after">
                     <field name="project_site_id" invisible="1"
                            column_invisible="1"/>
+                                   <field name="business_unit_id" invisible="1"
+                           column_invisible="1"/>
                     <field name="type_id" invisible="1" column_invisible="1"/>
                     <field name="location_id" invisible="1"
                            column_invisible="1"/>
@@ -24,6 +26,7 @@
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='account_id']" position="after">
                     <field name="project_site_id" invisible="1" column_invisible="1"/>
+                    <field name="business_unit_id" invisible="1" column_invisible="1"/>
                     <field name="type_id" invisible="1" column_invisible="1"/>
                     <field name="location_id" invisible="1" column_invisible="1"/>
                 </xpath>

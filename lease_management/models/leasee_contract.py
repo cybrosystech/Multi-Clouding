@@ -172,6 +172,9 @@ class LeaseeContract(models.Model):
                                       domain=[('analytic_account_type', '=',
                                                'project_site')],
                                       required=True, )
+    business_unit_id = fields.Many2one(comodel_name="account.analytic.account",
+                                       domain=[('plan_id.name', '=ilike', 'Business Unit')],
+                                       string="Business Unit", required=False, )
     parent_id = fields.Many2one(comodel_name="leasee.contract", string="",
                                 required=False, copy=False, index=True)
     child_ids = fields.One2many(comodel_name="leasee.contract",
@@ -288,7 +291,7 @@ class LeaseeContract(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         lease = super(LeaseeContract, self).create(vals_list)
-        if lease.project_site_id or lease.analytic_account_id:
+        if lease.project_site_id or lease.analytic_account_id or lease.business_unit_id:
             lease.onchange_project_site()
         return lease
 
@@ -313,13 +316,16 @@ class LeaseeContract(models.Model):
         lease.onchange_project_site()
         return lease
 
-    @api.onchange('project_site_id', 'analytic_account_id')
+    @api.onchange('project_site_id', 'analytic_account_id','business_unit_id')
     def onchange_project_site(self):
         analytic_dist = {}
         analytic_distributions = ''
         if self.analytic_account_id:
             analytic_distributions = analytic_distributions + ',' + str(
                 self.analytic_account_id.id)
+        if self.business_unit_id:
+            analytic_distributions = analytic_distributions + ',' + str(
+                self.business_unit_id.id)
         if self.project_site_id:
             analytic_distributions = analytic_distributions + ',' + str(
                 self.project_site_id.id)
@@ -364,7 +370,7 @@ class LeaseeContract(models.Model):
             'initial_journal_id': self.leasee_template_id.initial_journal_id.id,
             'analytic_account_id': self.leasee_template_id.analytic_account_id.id,
             'project_site_id': self.leasee_template_id.project_site_id.id,
-
+            'business_unit_id': self.leasee_template_id.business_unit_id.id,
             'analytic_distribution': self.analytic_distribution,
             'incentives_account_id': self.leasee_template_id.incentives_account_id.id,
             'incentives_product_id': self.leasee_template_id.incentives_product_id.id,
@@ -374,7 +380,8 @@ class LeaseeContract(models.Model):
     def write(self, vals):
         super(LeaseeContract, self).write(vals)
         if vals.get('analytic_account_id') or vals.get(
-                'project_site_id'):
+                'project_site_id') or vals.get(
+                'business_unit_id'):
             self.onchange_project_site()
 
         if 'installment_ids' in vals and self.state == 'draft':
@@ -386,6 +393,7 @@ class LeaseeContract(models.Model):
                 rec.update({
                     'analytic_account_id': self.analytic_account_id.id,
                     'project_site_id': self.project_site_id.id,
+                    'business_unit_id': self.business_unit_id.id,
                     'analytic_distribution': self.analytic_distribution,
                 })
 
@@ -393,6 +401,7 @@ class LeaseeContract(models.Model):
             self.asset_id.update({
                 'analytic_account_id': self.analytic_account_id.id,
                 'project_site_id': self.project_site_id.id,
+                'business_unit_id': self.business_unit_id.id,
                 'analytic_distribution': self.analytic_distribution,
             })
 
@@ -820,6 +829,7 @@ class LeaseeContract(models.Model):
                     'analytic_distribution': self.analytic_distribution,
                     'analytic_account_id': self.analytic_account_id.id,
                     'project_site_id': self.project_site_id.id,
+                    'business_unit_id': self.business_unit_id.id,
                     'prorata_computation_type': self.prorata_computation_type,
                     'state': 'draft',
                     'prorata_date': self.commencement_date,
@@ -837,6 +847,7 @@ class LeaseeContract(models.Model):
                     'analytic_distribution': self.analytic_distribution,
                     'analytic_account_id': self.analytic_account_id.id,
                     'project_site_id': self.project_site_id.id,
+                    'business_unit_id': self.business_unit_id.id,
                     'prorata_computation_type': self.prorata_computation_type,
                     'state': 'draft',
                     'prorata_date': self.commencement_date,
@@ -923,6 +934,7 @@ class LeaseeContract(models.Model):
                     'quantity': 1,
                     'analytic_account_id': self.analytic_account_id.id,
                     'project_site_id': self.project_site_id.id,
+                    'business_unit_id': self.business_unit_id.id,
                     'analytic_distribution': self.analytic_distribution,
                 }))
             if direct_cost:
@@ -938,6 +950,7 @@ class LeaseeContract(models.Model):
                     'quantity': 1,
                     'analytic_account_id': self.analytic_account_id.id,
                     'project_site_id': self.project_site_id.id,
+                    'business_unit_id': self.business_unit_id.id,
                     'analytic_distribution': self.analytic_distribution,
                 }))
 
@@ -964,6 +977,7 @@ class LeaseeContract(models.Model):
                 line.write({
                     'analytic_account_id': self.analytic_account_id.id,
                     'project_site_id': self.project_site_id.id,
+                    'business_unit_id': self.business_unit_id.id,
                     'analytic_distribution': self.analytic_distribution,
 
                 })
@@ -982,6 +996,7 @@ class LeaseeContract(models.Model):
                 'quantity': 1,
                 'analytic_account_id': self.analytic_account_id.id,
                 'project_site_id': self.project_site_id.id,
+                'business_unit_id': self.business_unit_id.id,
                 'analytic_distribution': self.analytic_distribution,
 
             })]
@@ -1008,6 +1023,7 @@ class LeaseeContract(models.Model):
                 line.write({
                     'analytic_account_id': self.analytic_account_id.id,
                     'project_site_id': self.project_site_id.id,
+                    'business_unit_id': self.business_unit_id.id,
                     'analytic_distribution': self.analytic_distribution,
                 })
 
@@ -1043,6 +1059,7 @@ class LeaseeContract(models.Model):
             'amount_currency': self.rou_value - (self.initial_direct_cost),
             'analytic_account_id': self.analytic_account_id.id,
             'project_site_id': self.project_site_id.id,
+            'business_unit_id': self.business_unit_id.id,
             'analytic_distribution': self.analytic_distribution,
             'currency_id': self.leasee_currency_id.id
         }), (0, 0, {
@@ -1059,6 +1076,7 @@ class LeaseeContract(models.Model):
                     self.lease_liability - short_lease_liability_amount),
             'analytic_account_id': self.analytic_account_id.id,
             'project_site_id': self.project_site_id.id,
+            'business_unit_id': self.business_unit_id.id,
             'analytic_distribution': self.analytic_distribution,
             'currency_id': self.leasee_currency_id.id
         })]
@@ -1079,6 +1097,7 @@ class LeaseeContract(models.Model):
                 'amount_currency': -short_amount if short_amount > 0 else short_amount,
                 'analytic_account_id': self.analytic_account_id.id,
                 'project_site_id': self.project_site_id.id,
+                'business_unit_id': self.business_unit_id.id,
                 'analytic_distribution': self.analytic_distribution,
                 'currency_id': self.leasee_currency_id.id,
                 'display_type': 'product',
@@ -1098,6 +1117,7 @@ class LeaseeContract(models.Model):
                 'amount_currency': self.incentives_received,
                 'analytic_account_id': self.analytic_account_id.id,
                 'project_site_id': self.project_site_id.id,
+                'business_unit_id': self.business_unit_id.id,
                 'analytic_distribution': self.analytic_distribution,
                 'currency_id': self.leasee_currency_id.id
             }))
@@ -1114,6 +1134,7 @@ class LeaseeContract(models.Model):
                 'amount_currency': -self.estimated_cost_dismantling,
                 'analytic_account_id': self.analytic_account_id.id,
                 'project_site_id': self.project_site_id.id,
+                'business_unit_id': self.business_unit_id.id,
                 'analytic_distribution': self.analytic_distribution,
                 'display_type': 'product',
 
@@ -1134,6 +1155,7 @@ class LeaseeContract(models.Model):
                     'analytic_distribution': self.analytic_distribution,
                     'analytic_account_id': self.analytic_account_id.id,
                     'project_site_id': self.project_site_id.id,
+                    'business_unit_id': self.business_unit_id.id,
                     'currency_id': self.leasee_currency_id.id
                 }))
 
@@ -1351,6 +1373,7 @@ class LeaseeContract(models.Model):
                 'amount_currency': -base_amount,
                 'analytic_account_id': self.analytic_account_id.id,
                 'project_site_id': self.project_site_id.id,
+                'business_unit_id': self.business_unit_id.id,
                 'type_id': self.type_id.id,
                 'location_id': self.location_id.id,
                 'currency_id': self.leasee_currency_id.id
@@ -1363,6 +1386,7 @@ class LeaseeContract(models.Model):
                 'amount_currency': base_amount,
                 'analytic_account_id': self.analytic_account_id.id,
                 'project_site_id': self.project_site_id.id,
+                'business_unit_id': self.business_unit_id.id,
                 'type_id': self.type_id.id,
                 'location_id': self.location_id.id,
                 'currency_id': self.leasee_currency_id.id
@@ -1546,6 +1570,7 @@ class LeaseeContract(models.Model):
             'quantity': 1,
             'analytic_account_id': self.analytic_account_id.id,
             'project_site_id': self.project_site_id.id,
+            'business_unit_id': self.business_unit_id.id,
             'analytic_distribution': self.analytic_distribution,
             'display_type': 'product',
 
@@ -1556,6 +1581,7 @@ class LeaseeContract(models.Model):
             line.write({
                 'analytic_account_id': self.analytic_account_id.id,
                 'project_site_id': self.project_site_id.id,
+                'business_unit_id': self.business_unit_id.id,
                 'analytic_distribution': self.analytic_distribution,
             })
 
@@ -1706,6 +1732,7 @@ class LeaseeContract(models.Model):
             'move_id': invoice.id,
             'analytic_account_id': contract.analytic_account_id.id,
             'project_site_id': contract.project_site_id.id,
+            'business_unit_id': self.business_unit_id.id,
             'analytic_distribution': self.analytic_distribution,
             'tax_ids': [(4, tax_id) for tax_id in
                         contract.installment_product_id.supplier_taxes_id.ids],
@@ -1716,6 +1743,7 @@ class LeaseeContract(models.Model):
             line.write({
                 'analytic_account_id': contract.analytic_account_id.id,
                 'project_site_id': contract.project_site_id.id,
+                'business_unit_id': self.business_unit_id.id,
                 'analytic_distribution': self.analytic_distribution,
             })
         install.installment_invoice_id = invoice.id
@@ -1946,6 +1974,7 @@ class LeaseeContract(models.Model):
                 'move_id': move.id,
                 'analytic_account_id': self.analytic_account_id.id,
                 'project_site_id': self.project_site_id.id,
+                'business_unit_id': self.business_unit_id.id,
                 'analytic_distribution': self.analytic_distribution,
                 'currency_id': self.leasee_currency_id.id
             }), (0, 0, {
@@ -1957,6 +1986,7 @@ class LeaseeContract(models.Model):
                 'move_id': move.id,
                 'analytic_account_id': self.analytic_account_id.id,
                 'project_site_id': self.project_site_id.id,
+                'business_unit_id': self.business_unit_id.id,
                 'analytic_distribution': self.analytic_distribution,
                 'currency_id': self.leasee_currency_id.id
             })]
@@ -2028,9 +2058,9 @@ class LeaseeContract(models.Model):
                 'credit': -amount if amount < 0 else 0,
                 'amount_currency': base_amount if base_amount > 0 else -base_amount,
                 'display_type': 'product',
-
                 'analytic_account_id': self.analytic_account_id.id,
                 'project_site_id': self.project_site_id.id,
+                'business_unit_id': self.business_unit_id.id,
                 'analytic_distribution': self.analytic_distribution,
                 'currency_id': self.leasee_currency_id.id
             }),
@@ -2043,6 +2073,7 @@ class LeaseeContract(models.Model):
                          'amount_currency': -base_amount,
                          'analytic_account_id': self.analytic_account_id.id,
                          'project_site_id': self.project_site_id.id,
+                         'business_unit_id': self.business_unit_id.id,
                          'analytic_distribution': self.analytic_distribution,
                          'currency_id': self.leasee_currency_id.id
                      })]
@@ -2171,6 +2202,7 @@ class LeaseeContract(models.Model):
                 'move_id': move.id,
                 'analytic_account_id': contract.analytic_account_id.id,
                 'project_site_id': contract.project_site_id.id,
+                'business_unit_id': self.business_unit_id.id,
                 'analytic_distribution': contract.analytic_distribution,
                 'currency_id': self.leasee_currency_id.id,
             }), (0, 0, {
@@ -2182,6 +2214,7 @@ class LeaseeContract(models.Model):
                 'move_id': move.id,
                 'analytic_account_id': contract.analytic_account_id.id,
                 'project_site_id': contract.project_site_id.id,
+                'business_unit_id': self.business_unit_id.id,
                 'analytic_distribution': contract.analytic_distribution,
                 'currency_id': self.leasee_currency_id.id,
             })]
@@ -2260,6 +2293,7 @@ class LeaseeContract(models.Model):
                 'move_id': new_invoice.id,
                 'analytic_account_id': invoice_line.analytic_account_id.id,
                 'project_site_id': invoice_line.project_site_id.id,
+                'business_unit_id': self.business_unit_id.id,
                 'analytic_distribution': invoice_line.analytic_distribution,
                 'tax_ids': [(4, tax_id) for tax_id in invoice_line.tax_ids.ids],
             }
@@ -2427,6 +2461,7 @@ class LeaseeContract(models.Model):
                 'move_id': move.id,
                 'analytic_account_id': self.analytic_account_id.id,
                 'project_site_id': self.project_site_id.id,
+                'business_unit_id': self.business_unit_id.id,
                 'analytic_distribution': self.analytic_distribution,
                 'currency_id': self.leasee_currency_id.id
             }),
@@ -2439,6 +2474,7 @@ class LeaseeContract(models.Model):
                                  'move_id': move.id,
                                  'analytic_account_id': self.analytic_account_id.id,
                                  'project_site_id': self.project_site_id.id,
+                                 'business_unit_id': self.business_unit_id.id,
                                  'analytic_distribution': self.analytic_distribution,
                                  'currency_id': self.leasee_currency_id.id
                              })]
