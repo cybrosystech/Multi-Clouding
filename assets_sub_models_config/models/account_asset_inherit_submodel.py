@@ -56,5 +56,8 @@ class AccountAssetSubModel(models.Model):
             self.account_depreciation_id = model.account_depreciation_id
             self.account_depreciation_expense_id = model.account_depreciation_expense_id
             self.journal_id = model.journal_id
+            self.analytic_account_id = model.analytic_account_id.id
+            self.project_site_id = model.project_site_id.id
+            self.business_unit_id = model.business_unit_id.id
             return {'domain': {
                 'asset_sub_model_id': [('asset_model_id', '=', model.id)]}}
