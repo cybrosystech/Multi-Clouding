@@ -32,6 +32,9 @@ class Product(models.Model):
                                                   string="Expense Account",
                                                   domain=ACCOUNT_DOMAIN,
                                                   help="Keep this field empty to use the default value from the product category. If anglo-saxon accounting with automated valuation method is configured, the expense account on the product category will be used.")
+    business_unit_id = fields.Many2one(comodel_name="account.analytic.account",
+                                       domain=[('plan_id.name', '=ilike', 'Business Unit')],
+                                       string="Business Unit", required=False, )
 
     @api.onchange('categ_id')
     def onchange_category(self):
@@ -41,6 +44,7 @@ class Product(models.Model):
         self.property_account_creditor_price_difference = self.categ_id.property_account_creditor_price_difference_categ.id
         self.cip_account_id = self.categ_id.cip_account_id.id
         self.asset_account_id = self.categ_id.asset_account_id.id
+        self.business_unit_id= self.categ_id.business_unit_id.id
 
     class Product(models.Model):
         _inherit = 'product.product'
@@ -53,6 +57,8 @@ class Product(models.Model):
             self.property_account_creditor_price_difference = self.categ_id.property_account_creditor_price_difference_categ.id
             self.cip_account_id = self.categ_id.cip_account_id.id
             self.asset_account_id = self.categ_id.asset_account_id.id
+            self.business_unit_id = self.categ_id.business_unit_id.id
+
 
 
 

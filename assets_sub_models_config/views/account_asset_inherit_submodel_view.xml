@@ -15,7 +15,23 @@
                 <field name="value_residual_original"
                        string="Depreciable value original"/>
             </xpath>
+            <xpath expr="//sheet/notebook[1]/page[@name='main_page']/group[1]/group[3]/div[hasclass('o_row')]"
+                   position="replace">
+                <div class="o_row">
+                    <field name="method_number" required="1" readonly="state not in [ 'model']" class="oe_inline"/>
+                    <field name="method_period" required="1" readonly="state not in ['model']" nolabel="1"/>
+                </div>
+            </xpath>
+            <xpath expr="//sheet/notebook[1]/page[@name='main_page']/group[1]/group[1]/field[@name='model_id']"
+                   position="attributes">
+                <attribute name="required">state != 'model'</attribute>
+            </xpath>
+            <xpath expr="//sheet/notebook[1]/page[@name='main_page']/group[1]/group[3]/field[@name='prorata_date']"
+                   position="replace">
+                <field name="prorata_date" invisible="prorata_computation_type == 'none'" readonly="state != 'draft'"
+                       required="state != 'model'"/>
+            </xpath>
+
         </field>
     </record>
-
 </odoo>
