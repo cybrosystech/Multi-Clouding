@@ -14,3 +14,6 @@ class Product(models.Model):
                                      domain="[('deprecated', '=', False)]",
                                      string="CIP Account",
                                      )
+    business_unit_id = fields.Many2one(comodel_name="account.analytic.account",
+                                       domain=[('plan_id.name', '=ilike', 'Business Unit')],
+                                       string="Business Unit", required=False, )

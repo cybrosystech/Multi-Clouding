@@ -12,7 +12,7 @@
     'website': "",
     'category': 'Accounting',
     'version': '17.0.1.0.0',
-    'depends': ['base','account', 'lease_management'],
+    'depends': ['base','product','account','stock_account','lease_management'],
     'data':
         [
             "data/security.xml",

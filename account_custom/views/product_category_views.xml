@@ -8,11 +8,36 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='property_account_expense_categ_id']" position="after">
                 <field name="asset_account_id"/>
-                                <field name="cip_account_id"/>
+                <field name="cip_account_id"/>
 
             </xpath>
+                            <group name="account_property" position="after">
+                    <group name="analytic_accounts" >
+                        <group >
+                            <field name="business_unit_id"/>
+                        </group>
+                    </group>
+                </group>
+
         </field>
     </record>
+
+                <record id="view_category_property_form" model="ir.ui.view">
+            <field name="name">product.category.property.form.inherit</field>
+            <field name="model">product.category</field>
+            <field name="inherit_id" ref="product.product_category_form_view"/>
+            <field name="arch" type="xml">
+                <group name="first" position="after">
+                    <group name="account_property" >
+                        <group string="Account Properties" groups="account.group_account_readonly">
+                            <field name="property_account_income_categ_id"/>
+                            <field name="property_account_expense_categ_id"/>
+                        </group>
+                    </group>
+                </group>
+            </field>
+        </record>
+
 
     </data>
 </odoo>
