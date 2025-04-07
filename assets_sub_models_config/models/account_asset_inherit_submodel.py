@@ -15,6 +15,13 @@ class AccountAssetSubModel(models.Model):
 
     asset_sub_model_id = fields.Many2one('assets.sub.model', tracking=True,
                                          domain="[('id','in',asset_sub_models_ids)]")
+    prorata_date = fields.Date(
+        string='Prorata Date',
+        compute='_compute_prorata_date', store=True, readonly=False,
+        help='Starting date of the period used in the prorata calculation of the first depreciation',
+        required=False, precompute=True,
+        copy=True,
+    )
 
     @api.depends('model_id')
     def compute_asset_sub_models_ids(self):
@@ -50,14 +57,15 @@ class AccountAssetSubModel(models.Model):
             self.prorata_computation_type = model.prorata_computation_type
             if not self.env.context.get('auto_create_asset'):
                 self.prorata_date = fields.Date.today()
-            if model.analytic_distribution:
-                self.analytic_distribution = model.analytic_distribution
+                self.analytic_account_id = model.analytic_account_id.id
+                self.project_site_id = model.project_site_id.id
+                self.business_unit_id = model.business_unit_id.id
+                if model.analytic_distribution:
+                    self.analytic_distribution = model.analytic_distribution
             self.account_asset_id = model.account_asset_id.id
             self.account_depreciation_id = model.account_depreciation_id
             self.account_depreciation_expense_id = model.account_depreciation_expense_id
             self.journal_id = model.journal_id
-            self.analytic_account_id = model.analytic_account_id.id
-            self.project_site_id = model.project_site_id.id
-            self.business_unit_id = model.business_unit_id.id
+
             return {'domain': {
                 'asset_sub_model_id': [('asset_model_id', '=', model.id)]}}

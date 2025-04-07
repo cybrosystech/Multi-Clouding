@@ -116,3 +116,10 @@ class AccountMoveLine(models.Model):
     def _can_use_stock_accounts(self):
         return self.product_id.type == 'product' and self.product_id.categ_id.property_valuation == 'real_time' and  (self.purchase_line_id or self.purchase_order_id)
 
+    @api.onchange('product_id')
+    def onchange_product_id(self):
+        if self.product_id and self.product_id.business_unit_id:
+            self.business_unit_id = self.product_id.business_unit_id.id
+        else:
+            self.business_unit_id = False
+
