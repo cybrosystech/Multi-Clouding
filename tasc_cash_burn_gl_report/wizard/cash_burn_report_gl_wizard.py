@@ -299,12 +299,10 @@ class CashBurnReportGLWizard(models.Model):
         col += 1
         row += 1
         for line in report_data:
-            print("lineeeeeeee",line)
 
             if line.payment_id:
                 bank_account_line = line.line_ids.filtered(
                     lambda x: x.account_id.account_type == 'asset_current')
-                print("bank_account_line",bank_account_line)
                 if len(bank_account_line) > 1:
                     bank_account_line = bank_account_line.filtered(
                         lambda x: 'Bank Clearing' in x.account_id.name)
@@ -330,7 +328,6 @@ class CashBurnReportGLWizard(models.Model):
                                 proportion = item.price_total / total
                                 inv_amount = round(amount * proportion,rec.currency_id.decimal_places)
                                 final_amount = round(company_currency_amount* proportion, rec.company_id.currency_id.decimal_places)
-                                print("bank_account_line",bank_account_line)
                                 if bank_account_line.debit:
                                     debit_amount = final_amount
                                     credit_amount = 0.0
@@ -368,7 +365,6 @@ class CashBurnReportGLWizard(models.Model):
                                                                               x: x.account_id.account_type not in [
                                         'asset_receivable',
                                         'liability_payable'])
-                                    print("bank_account_line1", bank_account_line)
 
                                     if bank_account_line.debit:
                                         debit_amount=exch["amount"]
@@ -421,7 +417,6 @@ class CashBurnReportGLWizard(models.Model):
                                 final_amount = round(
                                     company_currency_amount * proportion,
                                     rec.company_id.currency_id.decimal_places)
-                                print("bank_account_line3",bank_account_line)
 
                                 if bank_account_line.debit:
                                     debit_amount =final_amount
@@ -460,7 +455,6 @@ class CashBurnReportGLWizard(models.Model):
                                         x: x.account_id.account_type not in [
                                         'asset_receivable',
                                         'liability_payable'])
-                                print("bank_account_line4",bank_account_line)
 
                                 if bank_account_line.debit:
                                     debit_amount = exch["amount"]
@@ -520,14 +514,10 @@ class CashBurnReportGLWizard(models.Model):
                             amount =order_line_amount
                             exchange_rate =0
                             if purchase_id.currency_id.id != purchase_id.company_id.currency_id.id:
-                                if line.credit != 0:
-                                    exchange_rate = abs(
-                                        line.credit) / abs(
-                                        line.amount_currency)
-                                else:
-                                    exchange_rate = abs(
-                                        line.debit) / abs(
-                                        line.amount_currency)
+                                company_value = purchase_id.company_id.currency_id._convert(order_line.price_total, purchase_id.currency_id,
+                                                                          order_line.order_id.company_id,
+                                                                          order_line.order_id.date_order)
+                                exchange_rate = company_value / order_line.price_total
                                 amount = purchase_id.company_id.currency_id.round(
                                     exchange_rate * amount)
 
@@ -544,8 +534,6 @@ class CashBurnReportGLWizard(models.Model):
                                     lambda x: 'Bank Clearing' in x.account_id.name)
                             credit_amount = 0
                             debit_amount = 0
-                            print("bank_account_line5", bank_account_line)
-
                             if bank_account_line.credit:
                                 credit_amount = amount
                                 debit_amount = 0
@@ -977,14 +965,11 @@ class CashBurnReportGLWizard(models.Model):
                                                 credit_amount = 0
                                                 debit_amount = 0
                                                 if purchase_id.currency_id.id != purchase_id.company_id.currency_id.id:
-                                                    if line.credit != 0:
-                                                        exchange_rate = abs(
-                                                            line.credit) / abs(
-                                                            line.amount_currency)
-                                                    else:
-                                                        exchange_rate = abs(
-                                                            line.debit) / abs(
-                                                            line.amount_currency)
+                                                    company_value = purchase_id.company_id.currency_id._convert(
+                                                        order_line.price_total, purchase_id.currency_id,
+                                                        order_line.order_id.company_id,
+                                                        order_line.order_id.date_order)
+                                                    exchange_rate = company_value / order_line.price_total
                                                     amount = purchase_id.company_id.currency_id.round(
                                                         exchange_rate * amount)
 
@@ -1000,8 +985,6 @@ class CashBurnReportGLWizard(models.Model):
                                                         lambda x: 'Bank Clearing' in x.account_id.name)
                                                 credit_amount = 0
                                                 debit_amount = 0
-                                                print("bank_account_line6", bank_account_line)
-
                                                 if bank_account_line.credit:
                                                     credit_amount = amount
                                                     debit_amount = 0
