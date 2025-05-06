@@ -10,9 +10,261 @@
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='original_value']"
                        position="before">
+                    <field name="model_id"
+                           string="Asset Model"
+                           domain="[('state', '=', 'model'),('is_accrual', '=', False)]"
+                           invisible="is_accrual == True"
+                           options="{'no_quick_create': True}"
+                           required="state != 'model'"
+                           context="{
+                                    'default_state': 'model',
+                                    'default_account_asset_id': account_asset_id,
+                                    'default_account_depreciation_id': account_depreciation_id,
+                                    'default_account_depreciation_expense_id': account_depreciation_expense_id
+                                }" readonly="state != 'draft'"/>
+                    <field name="model_id"
+                           string="Asset Model"
+                           domain="[('state', '=', 'model'),('is_accrual', '=', True)]"
+                           invisible="is_accrual == False"
+                           options="{'no_quick_create': True}"
+                           required="state != 'model'"
+                           context="{
+                                    'default_state': 'model',
+                                    'default_is_accrual': True,
+                                    'default_account_asset_id': account_asset_id,
+                                    'default_account_depreciation_id': account_depreciation_id,
+                                    'default_account_depreciation_expense_id': account_depreciation_expense_id
+                                }" readonly="state != 'draft'"/>
                     <field name="sequence_number"
                     />
                 </xpath>
+                <xpath expr="//group[1]/group[1]"
+                       position="inside">
+                    <field name="is_accrual" invisible="state != 'model'"/>
+                </xpath>
+                <xpath expr="//group[1]/group[2]/field[@name='account_depreciation_id']"
+                       position="replace">
+                    <field
+                            invisible="is_accrual == True"
+                            name="account_depreciation_id"
+                            domain="[
+                                ('company_id', '=', company_id),
+                                ('account_type', 'in', (
+                                    'asset_fixed',
+                                    'asset_non_current',
+                                    'asset_current')
+                                ),
+                            ]"
+                            context="{
+                                'default_account_type': 'asset_non_current',
+                                'hide_model_on_account': state == 'model' and not id,
+                                'account_type_domain': [('account_type', 'in', (
+                                    'asset_fixed',
+                                    'asset_non_current'))]}"
+                            required="1"
+                            readonly="state == 'close'"/>
+
+                </xpath>
+                <xpath expr="//group[1]/group[2]/field[@name='account_depreciation_id']"
+                       position="after">
+                    <field
+                            string="Accrual Account"
+                            name="account_depreciation_id"
+                            domain="[
+                                            ('company_id', '=', company_id),
+                                           ('deprecated', '=', False),
+                                        ]"
+                            context="{'hide_model_on_account': state == 'model' and not id,}"
+                            required="1"
+                            invisible="is_accrual == False"
+                            readonly="state == 'close'"/>
+
+                </xpath>
+                <xpath expr="//group[1]/group[2]/field[@name='account_asset_id']"
+                       position="after">
+                    <field
+                            name="account_asset_id"
+                            domain="[
+                                    ('company_id', '=', company_id),
+                                ]"
+                            context="{'hide_model_on_account': state == 'model' and not id,}"
+                            groups="base.group_no_one"
+                            invisible="not display_account_asset_id or is_accrual == False"
+                            readonly="state == 'close'"/>
+
+                </xpath>
+                <xpath expr="//group[1]/group[2]/field[@name='account_depreciation_expense_id']"
+                       position="after">
+                    <field
+                            invisible="is_accrual == False"
+                            name="account_depreciation_expense_id"
+                            domain="[
+                                    ('company_id', '=', company_id),
+                                ]"
+                            context="{
+                                    'default_tax_ids': [],
+                                    'hide_model_on_account': state == 'model' and not id,
+                                    }"
+                            required="1"
+                            readonly="state == 'close'"/>
+
+                </xpath>
+                <xpath expr="//group[1]/group[2]/field[@name='account_depreciation_expense_id']"
+                       position="replace">
+                    <field
+                            invisible="is_accrual == True"
+                            name="account_depreciation_expense_id"
+                            domain="[
+                                    ('company_id', '=', company_id),
+                                    ('account_type', 'in', (
+                                        'expense_depreciation',
+                                        'expense')
+                                    ),
+                                ]"
+                            context="{
+                                    'default_account_type': 'expense_depreciation',
+                                    'default_tax_ids': [],
+                                    'hide_model_on_account': state == 'model' and not id,
+                                    'account_type_domain': [('account_type', 'in', (
+                                        'expense_depreciation',
+                                        'expense'))]}"
+                            required="1"
+                            readonly="state == 'close'"/>
+
+                </xpath>
+                <xpath expr="//group[1]/group[2]/field[@name='account_asset_id']"
+                       position="replace">
+                    <field
+                            name="account_asset_id"
+                            domain="[
+                                    ('company_id', '=', company_id),
+                                    ('account_type', 'in', (
+                                        'asset_fixed',
+                                        'asset_non_current',
+                                        'asset_current')
+                                    ),
+                                ]"
+                            context="{
+                                    'default_account_type': 'asset_fixed',
+                                    'hide_model_on_account': state == 'model' and not id,
+                                    'account_type_domain': [('account_type', 'in', (
+                                        'asset_fixed',
+                                        'asset_non_current'))]}"
+                            groups="base.group_no_one"
+                            invisible="not display_account_asset_id or is_accrual == True"
+                            readonly="state == 'close'"/>
+
+                </xpath>
+                <xpath expr="//page[@name='main_page']/group[1]/group[4]/field[@name='account_depreciation_id']"
+                       position="replace">
+                    <field
+                            name="account_depreciation_id"
+                            domain="[
+                                            ('company_id', '=', company_id),
+                                            ('account_type', 'in', (
+                                                'asset_fixed',
+                                                'asset_non_current',
+                                                'asset_current')
+                                            ),
+                                           ('deprecated', '=', False),
+                                        ]"
+                            context="{
+                                            'default_account_type': 'asset_non_current',
+                                            'hide_model_on_account': state == 'model' and not id,
+                                            'account_type_domain': [('account_type', 'in', (
+                                                'asset_fixed',
+                                                'asset_non_current'))]}"
+                            required="1"
+                            invisible="is_accrual == True"
+                            readonly="state == 'close'"/>
+
+                </xpath>
+                <xpath expr="//page[@name='main_page']/group[1]/group[4]/field[@name='account_depreciation_id']"
+                       position="after">
+                    <field
+                            name="account_depreciation_id"
+                            string="Accrual Account"
+                            domain="[('company_id', '=', company_id),]"
+                            context="{'hide_model_on_account': state == 'model' and not id,}"
+                            required="1"
+                            invisible="is_accrual == False"
+                            readonly="state == 'close'"/>
+
+                </xpath>
+                <xpath expr="//page[@name='main_page']/group[1]/group[4]/field[@name='account_asset_id']"
+                       position="replace">
+                    <field
+                            name="account_asset_id"
+                            domain="[
+                                            ('company_id', '=', company_id),
+                                            ('account_type', 'in', (
+                                                'asset_fixed',
+                                                'asset_non_current',
+                                                'asset_current')
+                                            ),
+                                        ]"
+                            context="{
+                                            'default_account_type': 'asset_fixed',
+                                            'hide_model_on_account': state == 'model' and not id,
+                                            'account_type_domain': [('account_type', 'in', (
+                                                'asset_fixed',
+                                                'asset_non_current'))]}"
+                            invisible="not display_account_asset_id or is_accrual == True"
+                            readonly="state == 'close'"/>
+
+                </xpath>
+                <xpath expr="//page[@name='main_page']/group[1]/group[4]/field[@name='account_asset_id']"
+                       position="after">
+                    <field
+                            name="account_asset_id"
+                            domain="[
+                                            ('company_id', '=', company_id),
+                                        ]"
+                            context="{
+                                            'hide_model_on_account': state == 'model' and not id,
+                                            }"
+                            invisible="not display_account_asset_id or is_accrual == False"
+                            readonly="state == 'close'"/>
+
+                </xpath>
+                <xpath expr="//page[@name='main_page']/group[1]/group[4]/field[@name='account_depreciation_expense_id']"
+                       position="replace">
+                    <field
+                            name="account_depreciation_expense_id"
+                            domain="[
+                                            ('company_id', '=', company_id),
+                                            ('account_type', 'in', (
+                                                'expense_depreciation',
+                                                'expense')
+                                            ),
+                                            ('deprecated', '=', False)
+                                        ]"
+                            context="{
+                                            'default_account_type': 'expense_depreciation',
+                                            'hide_model_on_account': state == 'model' and not id,
+                                            'account_type_domain': [('account_type', 'in', (
+                                                'expense_depreciation',
+                                                'expense'))]}"
+                            required="1"
+                            invisible="is_accrual == True"
+                            readonly="state == 'close'"/>
+
+                </xpath>
+                <xpath expr="//page[@name='main_page']/group[1]/group[4]/field[@name='account_depreciation_expense_id']"
+                       position="after">
+                    <field
+                            name="account_depreciation_expense_id"
+                            domain="[
+                                            ('company_id', '=', company_id)
+                                        ]"
+
+                            required="1"
+                            invisible="is_accrual == False"
+                            readonly="state == 'close'"/>
+
+                </xpath>
+
+
                 <xpath expr="//button[@name='set_to_cancelled']"
                        position="replace">
                     <button name="set_to_cancelled" string="Cancel Asset"
@@ -37,5 +289,83 @@
                 </xpath>
             </field>
         </record>
+
+
+        <record model="ir.actions.act_window" id="action_account_asset_accrual_form">
+            <field name="name">Accruals</field>
+            <field name="res_model">account.asset</field>
+            <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'tree', 'view_id': ref('account_asset.view_account_asset_tree')}),
+            (0, 0, {'view_mode': 'kanban'}),
+            (0, 0, {'view_mode': 'activity'}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('account_asset.view_account_asset_form')})]"/>
+            <field name="domain">[('state', '!=', 'model'), ('parent_id', '=', False),('is_accrual','=',True)]</field>
+            <field name="context">{
+                'default_is_accrual': True,
+                }
+            </field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create new asset
+                </p>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="account_asset.action_account_asset_form">
+            <field name="name">Assets</field>
+            <field name="res_model">account.asset</field>
+            <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'tree', 'view_id': ref('account_asset.view_account_asset_tree')}),
+            (0, 0, {'view_mode': 'kanban'}),
+            (0, 0, {'view_mode': 'activity'}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('account_asset.view_account_asset_form')})]"/>
+            <field name="domain">[('state', '!=', 'model'), ('parent_id', '=', False),('is_accrual','=',False)]</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create new asset
+                </p>
+            </field>
+        </record>
+        <record model="ir.actions.act_window" id="account_asset.action_account_asset_model_form">
+            <field name="name">Asset Models</field>
+            <field name="res_model">account.asset</field>
+            <field name="view_mode">tree,kanban,form</field>
+            <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'tree', 'view_id': ref('account_asset.view_account_asset_model_tree')}),
+            (0, 0, {'view_mode': 'kanban'}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('account_asset.view_account_asset_form')})]"/>
+            <field name="search_view_id" ref="account_asset.view_account_asset_model_search"/>
+            <field name="domain">[('state', '=', 'model'),('is_accrual', '=', False)]</field>
+            <field name="context">{'default_state': 'model'}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create new asset model
+                </p>
+            </field>
+        </record>
+        <record model="ir.actions.act_window" id="action_account_asset_accrual_model_form">
+            <field name="name">Accrual Models</field>
+            <field name="res_model">account.asset</field>
+            <field name="view_mode">tree,kanban,form</field>
+            <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'tree', 'view_id': ref('account_asset.view_account_asset_model_tree')}),
+            (0, 0, {'view_mode': 'kanban'}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_account_asset_form')})]"/>
+            <field name="search_view_id" ref="account_asset.view_account_asset_model_search"/>
+            <field name="domain">[('state', '=', 'model'),('is_accrual', '=', True)]</field>
+            <field name="context">{'default_state': 'model','default_is_accrual': True}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create new Accrual model
+                </p>
+            </field>
+        </record>
+
+        <menuitem parent="account.menu_finance_entries_management" id="menu_action_account_asset_accrual_form"
+                  action="action_account_asset_accrual_form" sequence="101" groups="account.group_account_readonly"/>
+        <menuitem parent="account.account_management_menu" sequence="1"
+                  id="menu_action_account_asset_accrual_model_form" action="action_account_asset_accrual_model_form"
+                  groups="account.group_account_manager"/>
+
     </data>
 </odoo>

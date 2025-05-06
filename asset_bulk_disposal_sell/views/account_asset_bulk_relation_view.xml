@@ -8,8 +8,8 @@
                 <field name="company_id" invisible="True" column_invisible="True"/>
                 <field name="asset_id"/>
                 <field name="action"/>
-                <field name="partial_bool" invisible="action == 'dispose'"/>
-                <field name="partial_amount"  invisible="partial_bool == False"/>
+                <field name="partial_bool" invisible="1"/>
+                <field name="partial_amount"  invisible="1"/>
                 <field name="invoice_id" options="{'no_create': True}" required="action == 'sell'"/>
                 <field name="invoice_line_id" options="{'no_create': True}"
                 invisible="select_invoice_line_id == False" required="select_invoice_line_id == True"/>

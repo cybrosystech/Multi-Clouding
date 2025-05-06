@@ -4,7 +4,6 @@
 
         <record id="assets_report_depreciation_schedule" model="account.report">
             <field name="name">Tasc Depreciation Schedule</field>
-            <field name="filter_hierarchy">optional</field>
             <field name="filter_unfold_all" eval="True"/>
             <field name="filter_period_comparison" eval="False"/>
             <field name="custom_handler_model_id"

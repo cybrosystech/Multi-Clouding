@@ -2,7 +2,6 @@
 from odoo import models, fields, api, _,SUPERUSER_ID
 from odoo.exceptions import ValidationError, UserError
 
-
 class PurchaseOrder(models.Model):
     _inherit = 'purchase.order'
 

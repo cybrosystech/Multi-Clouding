@@ -53,11 +53,13 @@ class AccountAssetPartialInherit(models.Model):
         ('other_capex', 'Other CAPEX'),
         ('transferred_capex', 'Transferred CAPEX')])
     partial_disposal = fields.Boolean(copy=False)
-    disposal_amount = fields.Float(default=0, readonly=True)
-    asset_net = fields.Float(default=0, readonly=True)
+    disposal_amount = fields.Float(default=0, readonly=True,copy=False)
+    asset_net = fields.Float(default=0, readonly=True,copy=False)
     serial_no = fields.Char(string="Serial Number", help="Serial Number")
     currency_id = fields.Many2one(related='', store=True, readonly=False,
                                   default=_get_default_currency)
+    salvage_value = fields.Monetary(string='Not Depreciable Value',
+                                    help="It is the amount you plan to have that you cannot depreciate.",copy=False)
 
     def set_to_close(self, invoice_line_ids, partial, partial_amount, date=None
                      ):
@@ -98,6 +100,7 @@ class AccountAssetPartialInherit(models.Model):
             These lines are used to generate the disposal move
         :param disposal_date: the date of the disposal
         """
+        print("_get_disposal_moves4444444444")
 
         def get_line(asset, amount, account):
             if asset.currency_id.id != asset.company_id.currency_id.id:
@@ -163,7 +166,6 @@ class AccountAssetPartialInherit(models.Model):
                             'depreciation_value')) + asset.already_depreciated_amount_import,
                         -initial_amount,
                     ))
-
                     depreciation_account = asset.account_depreciation_id
                     for invoice_line in invoice_line_ids:
                         dict_invoice[invoice_line.account_id] = copysign(
@@ -392,49 +394,43 @@ class AccountAssetPartialInherit(models.Model):
                     posted_depreciation_moves.mapped('depreciation_value'))
                 )
 
-    def update_depreciation(self, value_residual,
-                            asset, asset_sequence):
+    def update_depreciation(self, value_residual, asset, asset_sequence):
         posted_depreciation_move_ids = asset.depreciation_move_ids.filtered(
-            lambda x: x.state == 'posted').sorted(
-            key=lambda l: l.date)
+            lambda x: x.state == 'posted').sorted(key=lambda l: l.date)
+
         period = len(posted_depreciation_move_ids) - asset_sequence
         depreciation_date = posted_depreciation_move_ids[-1].date
+        previous_depreciation_date = depreciation_date
         newline_vals_list = []
         move_vals = []
         asset_remaining_value = value_residual
         asset_depreciated_value = round(value_residual / abs(period), 2)
         amount1 = 0
         amount = asset_depreciated_value
-        for asset_len in range(len(posted_depreciation_move_ids) + 1,
-                               asset_sequence + 1):
-            move_ref = asset.name + ' (%s/%s)' % (
-                asset_len,
-                asset_sequence)
+        for asset_len in range(len(posted_depreciation_move_ids) + 1, asset_sequence + 1):
+            move_ref = asset.name + ' (%s/%s)' % (asset_len, asset_sequence)
+            # Calculate depreciation date and asset number of days
+            depreciation_date = depreciation_date + relativedelta(months=1)
+            asset_number_days = (depreciation_date - previous_depreciation_date).days
             if asset_len == asset_sequence:
                 amount = asset_remaining_value
-                depreciation_date = depreciation_date + relativedelta(
-                    months=1)
-                asset_remaining_value = round(
-                    (asset_remaining_value - amount), 2)
-                amount1 = amount1 + amount
+                asset_remaining_value = round((asset_remaining_value - amount), 2)
+                amount1 += amount
             else:
-                amount1 = amount1 + amount
-                depreciation_date = depreciation_date + relativedelta(
-                    months=1)
-                asset_remaining_value = round(
-                    (asset_remaining_value - asset_depreciated_value), 2)
-            move_vals.append(self.env[
-                'account.move']._prepare_move_for_asset_depreciation({
+                amount1 += amount
+                asset_remaining_value = round((asset_remaining_value - asset_depreciated_value), 2)
+            move_vals.append(self.env['account.move']._prepare_move_for_asset_depreciation({
                 'amount': amount,
                 'asset_id': asset,
                 'move_ref': move_ref,
+                'depreciation_beginning_date': previous_depreciation_date,
                 'date': depreciation_date,
                 'asset_remaining_value': asset_remaining_value,
                 'asset_depreciated_value': amount1,
+                'asset_number_days': asset_number_days,
             }))
+            previous_depreciation_date = depreciation_date  # move forward
         for newline_vals in move_vals:
-            # no need of amount field, as it is computed and we don't want to trigger its inverse function
-            del (newline_vals['amount_total'])
             newline_vals_list.append(newline_vals)
         self.env['account.move'].create(newline_vals_list)
         return value_residual

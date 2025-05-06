@@ -43,9 +43,17 @@
                 <xpath expr="//notebook/page[@name='products']/field[@name='order_line']/tree/field[@name='product_packaging_qty']"
                        position="replace">
                     <field name="product_packaging_qty"
+                           optional="hide"
                            invisible="not product_id or not product_packaging_id"
                            groups="product.group_stock_packaging"
                            />
+                </xpath>
+                <xpath expr="//notebook/page[@name='products']/field[@name='order_line']/tree/field[@name='product_packaging_id']"
+                       position="replace">
+                    <field name="product_packaging_id" invisible="not product_id"
+                           context="{'default_product_id': product_id, 'tree_view_ref':'product.product_packaging_tree_view', 'form_view_ref':'product.product_packaging_form_view'}"
+                           groups="product.group_stock_packaging" optional="hide"/>
+
                 </xpath>
 
                 <xpath expr="//notebook/page[@name='products']/field[@name='order_line']/tree/field[@name='taxes_id']"
@@ -68,12 +76,12 @@
                 <xpath expr="//notebook/page[@name='products']/field[@name='order_line']/tree/field[@name='analytic_distribution']" position="after">
                     <field name="type_id" column_invisible="1" invisible="1"/>
                     <field name="location_id" invisible="1" column_invisible="1"/>
-                    <field name="budget_id" optional="show" readonly="state not in ['draft']"/>
-                    <field name="budget_line_id" optional="show" readonly="state not in ['draft']"/>
-                    <field name="remaining_amount" optional="show" readonly="1"/>
+                    <field name="budget_id" optional="hide" readonly="state not in ['draft']"/>
+                    <field name="budget_line_id" optional="hide" readonly="state not in ['draft']"/>
+                    <field name="remaining_amount" optional="hide" readonly="1"/>
                     <field name="local_subtotal" optional="hide" readonly="1" />
-                    <field name="t_budget" optional="hide"/>
-                    <field name="site_status" optional="hide"/>
+                    <field name="t_budget" />
+                    <field name="site_status" />
                 </xpath>
                 <xpath expr="//notebook" position="inside">
                     <page string="Out Budget Amounts" name="budget_amounts">

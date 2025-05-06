@@ -1,164 +1,172 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <record id="assets_report_depreciation_schedule_grouped"
-                model="account.report">
-            <field name="name">Tasc Depreciation Schedule Grouped</field>
-            <field name="filter_hierarchy">never</field>
+
+        <record id="assets_report_depreciation_schedule_lease" model="account.report">
+            <field name="name">Tasc Depreciation Lease</field>
+            <field name="filter_hierarchy">optional</field>
             <field name="filter_unfold_all" eval="True"/>
             <field name="filter_period_comparison" eval="False"/>
             <field name="custom_handler_model_id"
-                   ref="model_account_asset_report_depreciation_schedule_grouped_handler"/>
+                   ref="model_account_asset_report_depreciation_lease_schedule_handler"/>
             <field name="load_more_limit" eval="80"/>
             <field name="column_ids">
-                <record id="depreciation_schedule_grouped_asset_model"
+                <record id="depreciation_schedule_lease_asset_model"
                         model="account.report.column">
                     <field name="name">Asset Model</field>
                     <field name="expression_label">asset_model</field>
                     <field name="figure_type">string</field>
                 </record>
-                <record id="depreciation_schedule_grouped_status"
+                <record id="depreciation_schedule_lease_status"
                         model="account.report.column">
                     <field name="name">Status</field>
                     <field name="expression_label">status</field>
                     <field name="figure_type">string</field>
                 </record>
-                <record id="depreciation_schedule_grouped_acquisition_date"
+                <record id="depreciation_schedule_lease_acquisition_date"
                         model="account.report.column">
                     <field name="name">Acquisition Date</field>
                     <field name="expression_label">acquisition_date</field>
                     <field name="figure_type">date</field>
                 </record>
-                <record id="depreciation_schedule_grouped_project_site"
+                <record id="depreciation_schedule_lease_project_site"
                         model="account.report.column">
                     <field name="name">Project/Site</field>
                     <field name="expression_label">project_site</field>
                     <field name="figure_type">string</field>
                 </record>
-                <record id="depreciation_schedule_grouped_co_location"
+                <record id="depreciation_schedule_lease_co_location"
                         model="account.report.column">
                     <field name="name">Co Location</field>
                     <field name="expression_label">co_location</field>
                     <field name="figure_type">string</field>
                 </record>
-                <record id="depreciation_schedule_grouped_capex_type"
+                <record id="depreciation_schedule_lease_capex_type"
                         model="account.report.column">
                     <field name="name">Capex Type</field>
                     <field name="expression_label">capex_type</field>
                     <field name="figure_type">string</field>
                 </record>
-                <record id="depreciation_schedule_grouped_asset_sequence_number"
+                <record id="depreciation_schedule_lease_asset_sequence_number"
                         model="account.report.column">
                     <field name="name">Asset Sequence Number</field>
                     <field name="expression_label">asset_sequence_number</field>
                     <field name="figure_type">string</field>
                 </record>
-                <record id="depreciation_schedule_grouped_asset_serial_number"
+                <record id="depreciation_schedule_lease_asset_serial_number"
                         model="account.report.column">
                     <field name="name">Serial Number</field>
                     <field name="expression_label">serial_no</field>
                     <field name="figure_type">string</field>
                 </record>
-                <record id="depreciation_schedule_grouped_asset_additional_info"
+                <record id="depreciation_schedule_lease_asset_additional_info"
                         model="account.report.column">
                     <field name="name">Additional Info</field>
                     <field name="expression_label">additional_info</field>
                     <field name="figure_type">string</field>
                 </record>
-                <record id="depreciation_schedule_grouped_first_depreciation"
+                <record id="depreciation_schedule_lease_first_depreciation"
                         model="account.report.column">
                     <field name="name">First Depreciation</field>
                     <field name="expression_label">first_depreciation</field>
                     <field name="figure_type">date</field>
                 </record>
-                <record id="depreciation_schedule_grouped_last_depreciation"
+                <record id="depreciation_schedule_lease_last_depreciation"
                         model="account.report.column">
                     <field name="name">Last Depreciation</field>
-                    <field name="expression_label">last_depreciation_date
-                    </field>
+                    <field name="expression_label">last_depreciation_date</field>
                     <field name="figure_type">date</field>
                 </record>
-                <record id="depreciation_schedule_grouped_first_method"
+                <record id="depreciation_schedule_lease_first_method"
                         model="account.report.column">
                     <field name="name">Method</field>
                     <field name="expression_label">method</field>
                     <field name="figure_type">string</field>
                 </record>
-                <record id="depreciation_schedule_grouped_duration_rate"
+                <record id="depreciation_schedule_lease_duration_rate"
                         model="account.report.column">
                     <field name="name">Duration / Rate</field>
                     <field name="expression_label">duration_rate</field>
                     <field name="figure_type">string</field>
                 </record>
-                <record id="depreciation_schedule_grouped_date_from"
+                <record id="depreciation_schedule_lease_date_from"
                         model="account.report.column">
                     <field name="name">date from</field>
                     <field name="expression_label">assets_date_from</field>
                 </record>
-                <record id="depreciation_schedule_grouped_assets_plus"
+                <record id="depreciation_schedule_lease_assets_plus"
                         model="account.report.column">
                     <field name="name">+</field>
                     <field name="expression_label">assets_plus</field>
                 </record>
-                <record id="depreciation_schedule_grouped_assets_minus"
+                <record id="depreciation_schedule_lease_assets_minus"
                         model="account.report.column">
                     <field name="name">-</field>
                     <field name="expression_label">assets_minus</field>
                 </record>
-                <record id="depreciation_schedule_grouped_assets_date_to"
+                <record id="depreciation_schedule_leasel_assets_date_to"
                         model="account.report.column">
                     <field name="name">date to</field>
                     <field name="expression_label">assets_date_to</field>
                 </record>
-                <record id="depreciation_schedule_depre_grouped_date_from"
+                <record id="depreciation_schedule_lease_depre_date_from"
                         model="account.report.column">
                     <field name="name">date from</field>
                     <field name="expression_label">depre_date_from</field>
                 </record>
-                <record id="depreciation_schedule_depre_grouped_plus"
+                <record id="depreciation_schedule_lease_depre_plus"
                         model="account.report.column">
                     <field name="name">+</field>
                     <field name="expression_label">depre_plus</field>
                 </record>
-                <record id="depreciation_schedule_depre_grouped_minus"
+                <record id="depreciation_schedule_lease_depre_minus"
                         model="account.report.column">
                     <field name="name">-</field>
                     <field name="expression_label">depre_minus</field>
                 </record>
-                <record id="depreciation_schedule_depre_grouped_date_to"
+                <record id="depreciation_schedule_lease_depre_date_to"
                         model="account.report.column">
                     <field name="name">date to</field>
                     <field name="expression_label">depre_date_to</field>
                 </record>
-                <record id="depreciation_schedule_grouped_balance"
+                <record id="depreciation_schedule_lease_depre_for_the_year"
+                        model="account.report.column">
+                    <field name="name">Depreciation Expense</field>
+                    <field name="expression_label">depre_for_year</field>
+                </record>
+                <record id="depreciation_schedule_lease_balance"
                         model="account.report.column">
                     <field name="name">book_value</field>
                     <field name="expression_label">balance</field>
                 </record>
-                <record id="depreciation_schedule_grouped_fixed_asset_account"
+
+                <record id="depreciation_schedule_lease_fixed_asset_account"
                         model="account.report.column">
                     <field name="name">Fixed Asset Account</field>
                     <field name="expression_label">fixed_asset_account</field>
                     <field name="figure_type">string</field>
                 </record>
-                <record id="depreciation_schedule_grouped_currency"
+                <record id="depreciation_schedule_lease_currency"
                         model="account.report.column">
                     <field name="name">Currency</field>
                     <field name="expression_label">currency</field>
                     <field name="figure_type">string</field>
                 </record>
             </field>
+
         </record>
-        <record id="action_account_report_assets_grouped_custom"
+
+
+        <record id="action_account_report_lease_assets_custom"
                 model="ir.actions.client">
-            <field name="name">Tasc Depreciation Schedule Grouped</field>
+            <field name="name">Tasc Depreciation Lease</field>
             <field name="tag">account_report</field>
             <field name="context"
-                   eval="{'report_id': ref('depreciation_schedule_custom.assets_report_depreciation_schedule_grouped')}"/>
+                   eval="{'report_id': ref('depreciation_schedule_custom.assets_report_depreciation_schedule_lease')}"/>
         </record>
-        <menuitem id="menu_action_account_report_assets_grouped_custom"
-                  name="TASC  Depreciation Schedule Grouped"
-                  action="action_account_report_assets_grouped_custom"
+        <menuitem id="menu_action_account_report_assets_custom"
+                  name="TASC  Depreciation Lease"
+                  action="action_account_report_lease_assets_custom"
                   parent="cash_flow_statement_report.tasc_dynamic_reports"/>
     </data>
 </odoo>

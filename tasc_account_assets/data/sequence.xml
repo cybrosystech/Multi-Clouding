@@ -10,5 +10,16 @@
             <field name="number_increment">1</field>
             <field name="implementation">no_gap</field>
         </record>
+
+        <record id="seq_account_asset_accrual" model="ir.sequence">
+            <field name="name">Accrual Sequence</field>
+            <field name="code">account.asset.accrual</field>
+            <field name="prefix"></field>
+            <field name="padding">1</field>
+            <field name="company_id" eval="False"/>
+            <field name="number_increment">1</field>
+            <field name="implementation">no_gap</field>
+        </record>
+
     </data>
 </odoo>

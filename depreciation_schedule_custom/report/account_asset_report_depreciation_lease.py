@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+# Part of Odoo. See LICENSE file for full copyright and licensing details.
+
+# -*- coding: utf-8 -*-
+# Part of Odoo. See LICENSE file for full copyright and licensing details.
 import io
 from odoo import fields, models, _
 from odoo.tools import format_date, get_lang, profile
@@ -7,10 +12,10 @@ from collections import defaultdict
 MAX_NAME_LENGTH = 50
 
 
-class AssetsReportGroupedCustomHandler(models.AbstractModel):
-    _name = 'account.asset.report.depreciation.schedule.grouped.handler'
+class AssetsReportCustomHandler(models.AbstractModel):
+    _name = 'account.asset.report.depreciation.lease.schedule.handler'
     _inherit = 'account.report.custom.handler'
-    _description = 'Depreciation Schedule Grouped Report Custom Handler'
+    _description = 'Depreciation Schedule Lease Report Custom Handler'
 
     def _get_custom_display_config(self):
         return {
@@ -24,22 +29,22 @@ class AssetsReportGroupedCustomHandler(models.AbstractModel):
                                  all_column_groups_expression_totals,
                                  warnings=None):
         report = self._with_context_company2code2account(report)
-
         lines, totals_by_column_group = self._generate_report_lines_without_grouping(
             report, options)
         if options["available_variants"][0][
-            "name"] == 'Tasc Depreciation Schedule Grouped':
+            "name"] == 'Tasc Depreciation Schedule' or options["available_variants"][0][
+            "name"] == 'Tasc Depreciation Schedule':
 
             if self.env.context.get('is_xlsx'):
                 # add the groups by account
 
-                options['assets_groupby_account'] = True
-                if options['assets_groupby_account']:
-                    lines = self._group_by_account(report, lines, options)
+                # options['assets_groupby_account'] = True
+                # if options['assets_groupby_account']:
+                #     lines = self._group_by_account(report, lines, options)
                 # else:
-                # lines = report._regroup_lines_by_name_prefix(options, lines,
-                #                                              '_report_expand_unfoldable_line_assets_report_prefix_group',
-                #                                              0)
+                lines = report._regroup_lines_by_name_prefix(options, lines,
+                                                             '_report_expand_unfoldable_line_assets_report_prefix_group',
+                                                             0)
         else:
             # add the groups by account
 
@@ -102,7 +107,7 @@ class AssetsReportGroupedCustomHandler(models.AbstractModel):
         column_names = [
             'assets_date_from', 'assets_plus', 'assets_minus', 'assets_date_to',
             'depre_date_from',
-            'depre_plus', 'depre_minus', 'depre_date_to', 'balance'
+            'depre_plus', 'depre_minus', 'depre_date_to', 'depre_for_year', 'balance'
         ]
         totals_by_column_group = defaultdict(
             lambda: dict.fromkeys(column_names, 0.0))
@@ -193,7 +198,9 @@ class AssetsReportGroupedCustomHandler(models.AbstractModel):
             {"name": _("Characteristics"), "colspan": 15},
             {"name": _("Assets"), "colspan": 4},
             {"name": _("Depreciation"), "colspan": 4},
-            {"name": _("Book Value"), "colspan": 1}
+            {"name": _("Book Value"), "colspan": 1},
+            {"name": _(""), "colspan": 1}
+
         ]
 
         # Group by account by default
@@ -237,6 +244,8 @@ class AssetsReportGroupedCustomHandler(models.AbstractModel):
                 parent_lines += [al]
 
         for al in parent_lines:
+            if al.get('parent_id'):
+                continue
             # Compute the depreciation rate string
             if al['asset_method'] == 'linear' and al[
                 'asset_method_number']:  # some assets might have 0 depreciations because they dont lose value
@@ -244,10 +253,6 @@ class AssetsReportGroupedCustomHandler(models.AbstractModel):
                     al['asset_method_period'])
                 months = total_months % 12
                 years = total_months // 12
-                # asset_depreciation_rate = " ".join(part for part in [
-                #     years and _("%s y", years),
-                #     months and _("%s m", months),
-                # ] if part)
                 asset_depreciation_rate = " ".join(_("%s m", total_months))
             elif al['asset_method'] == 'linear':
                 asset_depreciation_rate = '0.00 %'
@@ -263,6 +268,7 @@ class AssetsReportGroupedCustomHandler(models.AbstractModel):
             # Get the main values of the board for the asset
             depreciation_opening = al['depreciated_before']
             depreciation_add = al['depreciated_during']
+            depreciation_for_the_year = al['depreciated_for_the_year']
             depreciation_minus = 0.0
 
             asset_disposal_value = al['asset_disposal_value'] if al[
@@ -280,6 +286,7 @@ class AssetsReportGroupedCustomHandler(models.AbstractModel):
             for child in children_lines[al['asset_id']]:
                 depreciation_opening += child['depreciated_before']
                 depreciation_add += child['depreciated_during']
+                depreciation_for_the_year += child['depreciated_for_the_year']
 
                 opening = (child['asset_acquisition_date'] or child[
                     'asset_date']) < fields.Date.to_date(
@@ -295,31 +302,19 @@ class AssetsReportGroupedCustomHandler(models.AbstractModel):
                 al['asset_currency_id'])
 
             # Manage the closing of the asset
-            if al["partial_disposal"]:
-                if (
-                        al['asset_state'] == 'close'
-                        and al['asset_disposal_date']
-                        and al['asset_disposal_date'] <= fields.Date.to_date(
-                    options['date']['date_to'])
-                ):
-                    depreciation_add -= asset_disposal_value
-                    depreciation_minus += depreciation_closing - asset_disposal_value
-                    depreciation_closing = 0.0
-                    asset_minus += asset_closing
-                    asset_closing = 0.0
-            else:
-                if (
-                        al['asset_state'] == 'close'
-                        and al['asset_disposal_date']
-                        and al['asset_disposal_date'] <= fields.Date.to_date(
-                    options['date']['date_to'])
-                        and abs(depreciation_closing - (asset_closing - asset_salvage_value)) <= 0.01
-                ):
-                    depreciation_add -= asset_disposal_value
-                    depreciation_minus += depreciation_closing - asset_disposal_value
-                    depreciation_closing = 0.0
-                    asset_minus += asset_closing
-                    asset_closing = 0.0
+            if (
+                    al['asset_state'] == 'close'
+                    and al['asset_disposal_date']
+                    and al['asset_disposal_date'] <= fields.Date.to_date(
+                options['date']['date_to'])
+                    and al_currency.compare_amounts(depreciation_closing,
+                                                    asset_closing - asset_salvage_value) == 0
+            ):
+                depreciation_add -= asset_disposal_value
+                depreciation_minus += depreciation_closing - asset_disposal_value
+                depreciation_closing = 0.0
+                asset_minus += asset_closing
+                asset_closing = 0.0
 
             # Manage negative assets (credit notes)
             if al['asset_original_value'] < 0:
@@ -357,6 +352,62 @@ class AssetsReportGroupedCustomHandler(models.AbstractModel):
                 status = 'To Approve'
             else:
                 status = ''
+
+            balance = asset_closing - depreciation_closing
+
+            if al["asset_currency_id"] != self.env.company.currency_id.id:
+                asset_id = self.env['account.asset'].browse(al["asset_id"])
+                asset_opening = asset_id.currency_id._convert(
+                    asset_opening,
+                    self.env.company.currency_id,
+                    self.env.company,
+                    asset_id.acquisition_date)
+                asset_add = asset_id.currency_id._convert(
+                    asset_add,
+                    self.env.company.currency_id,
+                    self.env.company,
+                    asset_id.acquisition_date)
+                asset_minus = asset_id.currency_id._convert(
+                    asset_minus,
+                    self.env.company.currency_id,
+                    self.env.company,
+                    asset_id.acquisition_date)
+                asset_closing = asset_id.currency_id._convert(
+                    asset_closing,
+                    self.env.company.currency_id,
+                    self.env.company,
+                    asset_id.acquisition_date)
+                depreciation_minus = asset_id.currency_id._convert(
+                    depreciation_minus,
+                    self.env.company.currency_id,
+                    self.env.company,
+                    asset_id.acquisition_date)
+                depreciation_opening = asset_id.currency_id._convert(
+                    depreciation_opening,
+                    self.env.company.currency_id,
+                    self.env.company,
+                    asset_id.acquisition_date)
+                depreciation_add = asset_id.currency_id._convert(
+                    depreciation_add,
+                    self.env.company.currency_id,
+                    self.env.company,
+                    asset_id.acquisition_date)
+                depreciation_closing = asset_id.currency_id._convert(
+                    depreciation_closing,
+                    self.env.company.currency_id,
+                    self.env.company,
+                    asset_id.acquisition_date)
+                depreciation_for_the_year = asset_id.currency_id._convert(
+                    depreciation_for_the_year,
+                    self.env.company.currency_id,
+                    self.env.company,
+                    asset_id.acquisition_date)
+                balance = asset_id.currency_id._convert(
+                    balance,
+                    self.env.company.currency_id,
+                    self.env.company,
+                    asset_id.acquisition_date)
+
             # Format the data
             columns_by_expr_label = {
                 "acquisition_date": al[
@@ -378,7 +429,8 @@ class AssetsReportGroupedCustomHandler(models.AbstractModel):
                 "depre_plus": depreciation_add,
                 "depre_minus": depreciation_minus,
                 "depre_date_to": depreciation_closing,
-                "balance": asset_closing - depreciation_closing,
+                "depre_for_year": depreciation_for_the_year,
+                "balance": balance,
                 "project_site": al["project_site"],
                 "capex_type": apex_type,
                 "asset_sequence_number": al["sequence_number"],
@@ -500,7 +552,6 @@ class AssetsReportGroupedCustomHandler(models.AbstractModel):
         if forced_account_id:
             account_query = "AND account.id = %(forced_account_id)s"
             query_params['forced_account_id'] = forced_account_id
-        analytical_query = ''
         analytic_account_ids = []
         if options.get('analytic_accounts') and not any(
                 x in options.get('analytic_accounts_list', []) for x in
@@ -510,153 +561,173 @@ class AssetsReportGroupedCustomHandler(models.AbstractModel):
         if options.get('analytic_accounts_list'):
             analytic_account_ids += [[str(account_id) for account_id in
                                       options.get('analytic_accounts_list')]]
-        if analytic_account_ids:
-            analytical_query = 'AND asset.analytic_distribution ?| array[%(analytic_account_ids)s]'
-            query_params['analytic_account_ids'] = analytic_account_ids
-
-        lang = self.env.user.lang or get_lang(self.env).code
 
         if self.env.context.get('is_xlsx'):
             sql = f"""SELECT 
-                                asset.id AS asset_id, 
-                                asset.parent_id AS parent_id, 
-                                asset.name AS asset_name, 
-                                asset.serial_no as serial_no, 
-                                asset.original_value AS asset_original_value, 
-                                asset.partial_disposal AS partial_disposal,
-                                asset.currency_id AS asset_currency_id, 
-                                COALESCE(asset.salvage_value, 0) as asset_salvage_value, 
-                                MIN(move.date) AS asset_date, 
-                                asset.disposal_date AS asset_disposal_date, 
-                                asset.acquisition_date AS asset_acquisition_date, 
-                                asset.method AS asset_method, 
-                                COALESCE(project_sites.name ->> 'en_US', '') as project_site, 
-                                COALESCE(co_locations.name ->> 'en_US', '') as co_location, 
-                                asset.capex_type as capex_type, 
-                                asset.sequence_number as sequence_number, 
-                                asset.additional_info as additional_info, 
-                                asset.method_number AS asset_method_number, 
-                                asset.method_period AS asset_method_period, 
-                                asset.method_progress_factor AS asset_method_progress_factor, 
-                                asset.state AS asset_state, 
-                                asset.company_id AS company_id, 
-                                account.code AS account_code, 
-                                COALESCE(account.name ->> 'en_US', '') as account_name, 
-                                account.id AS account_id, 
-                                model.name as asset_model_name,
-                                currency.name as currency_name,
-                                  COALESCE(SUM(move.depreciation_value) FILTER (WHERE move.date < %(date_from)s AND {move_filter}), 0) + COALESCE(asset.already_depreciated_amount_import, 0) AS depreciated_before,
-                               COALESCE(SUM(move.depreciation_value) FILTER (WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter}), 0) AS depreciated_during,
-                               COALESCE(SUM(move.depreciation_value) FILTER (WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND (move.asset_number_days IS NULL OR  move.ref ILIKE '%%Disposal%%')), 0) AS asset_disposal_value,
-                             COALESCE(
-                            SUM(move.depreciation_value) FILTER (
-                              WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.ref NOT ILIKE '%%Disposal%%'
-                            ), 0
-                          ) AS depreciated_for_the_year, 
-                                (
-                                SELECT MAX(move_sub.date)
-                                FROM account_move move_sub
-                                WHERE move_sub.asset_id = asset.id
-                              ) AS last_depreciation_date
-                              FROM 
-                                account_asset asset 
-                                LEFT JOIN account_account account ON asset.account_asset_id = account.id 
-                                LEFT JOIN account_analytic_account project_sites ON asset.project_site_id = project_sites.id 
-                                LEFT JOIN account_analytic_account co_locations ON asset.co_location = co_locations.id 
-                                LEFT JOIN account_move move ON move.asset_id = asset.id 
-                                LEFT JOIN account_asset model ON model.id = asset.model_id
-                                LEFT JOIN res_currency as currency ON asset.currency_id = currency.id
-                              WHERE 
-                                asset.active 
-                                AND (asset.disposal_date >=  %(date_from)s OR asset.disposal_date IS NULL)
-                                AND asset.company_id in %(company_ids)s
-                                AND asset.state NOT IN ('model', 'draft', 'cancelled') 
-                                AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
-                                AND asset.active = 't'
-                                AND (account.name ->> 'en_US') NOT ILIKE '%%Lease%%'
-                                AND NOT EXISTS (
-                                  SELECT 1 FROM leasee_contract lc WHERE lc.asset_id = asset.id
-                              )
-                              GROUP BY 
-                                asset.id, 
-                                account.id, 
-                                currency.id,
-                                project_sites.id, 
-                                co_locations.id, 
-                                model.name
-                              """
+                        asset.id AS asset_id, 
+                        asset.parent_id AS parent_id, 
+                        asset.name AS asset_name, 
+                        asset.serial_no as serial_no, 
+                        asset.original_value AS asset_original_value, 
+                        asset.currency_id AS asset_currency_id, 
+                        COALESCE(asset.salvage_value, 0) as asset_salvage_value, 
+                        MIN(move.date) AS asset_date, 
+                        asset.disposal_date AS asset_disposal_date, 
+                        asset.acquisition_date AS asset_acquisition_date, 
+                        asset.method AS asset_method, 
+                        COALESCE(project_sites.name ->> 'en_US', '') as project_site, 
+                        COALESCE(co_locations.name ->> 'en_US', '') as co_location, 
+                        asset.capex_type as capex_type, 
+                        asset.sequence_number as sequence_number, 
+                        asset.additional_info as additional_info, 
+                        asset.method_number AS asset_method_number, 
+                        asset.method_period AS asset_method_period, 
+                        asset.method_progress_factor AS asset_method_progress_factor, 
+                        asset.state AS asset_state, 
+                        asset.company_id AS company_id, 
+                        account.code AS account_code, 
+                        COALESCE(account.name ->> 'en_US', '') as account_name, 
+                        account.id AS account_id, 
+                        model.name as asset_model_name,
+                        currency.name as currency_name,
+                        COALESCE(
+                          SUM(move.depreciation_value) FILTER (
+                            WHERE move.date <  %(date_from)s AND {move_filter}
+                          ), 0
+                        ) + COALESCE(asset.already_depreciated_amount_import, 0) AS depreciated_before, 
+                        COALESCE(
+                          SUM(move.depreciation_value) FILTER (
+                            WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} 
+                          ), 0
+                        ) AS depreciated_during, 
+                         COALESCE(
+                        SUM(move.depreciation_value) FILTER (
+                          WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.ref NOT ILIKE '%%Disposal%%'
+                        ), 0
+                      ) AS depreciated_for_the_year, 
+                        COALESCE(
+                          SUM(move.depreciation_value) FILTER (
+                            WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND  (move.asset_number_days IS NULL OR  move.ref ILIKE '%%Disposal%%')
+                          ), 0
+                        ) AS asset_disposal_value ,
+                        (
+                        SELECT MAX(move_sub.date)
+                        FROM account_move move_sub
+                        WHERE move_sub.asset_id = asset.id
+                      ) AS last_depreciation_date
+                      FROM 
+                        account_asset asset 
+                        LEFT JOIN account_account account ON asset.account_asset_id = account.id 
+                        LEFT JOIN account_analytic_account project_sites ON asset.project_site_id = project_sites.id 
+                        LEFT JOIN account_analytic_account co_locations ON asset.co_location = co_locations.id 
+                        LEFT JOIN account_move move ON move.asset_id = asset.id 
+                        LEFT JOIN account_asset model ON model.id = asset.model_id
+                        LEFT JOIN res_currency as currency ON asset.currency_id = currency.id
+                      WHERE 
+                        asset.active 
+                        AND (asset.disposal_date >=  %(date_from)s OR asset.disposal_date IS NULL)
+                        AND asset.company_id in %(company_ids)s
+                        AND asset.state NOT IN ('model', 'draft', 'cancelled') 
+                        AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
+                        AND asset.active = 't'
+                        AND EXISTS (
+                                  SELECT 1
+                                  FROM leasee_contract lc
+                                  WHERE lc.asset_id = asset.id OR lc.asset_id = asset.parent_id
+                                )
+                      GROUP BY 
+                        asset.id, 
+                        account.id, 
+                        currency.id,
+                        project_sites.id, 
+                        co_locations.id, 
+                        model.name
+                        """
             self._cr.execute(sql, query_params)
             results = self._cr.dictfetchall()
             return results
         else:
+
             sql = f"""SELECT 
-                      asset.id AS asset_id, 
-                      asset.parent_id AS parent_id, 
-                      asset.name AS asset_name, 
-                      asset.serial_no as serial_no, 
-                      asset.original_value AS asset_original_value, 
-                      asset.partial_disposal AS partial_disposal,
-                      asset.currency_id AS asset_currency_id, 
-                      COALESCE(asset.salvage_value, 0) as asset_salvage_value, 
-                      MIN(move.date) AS asset_date, 
-                      asset.disposal_date AS asset_disposal_date, 
-                      asset.acquisition_date AS asset_acquisition_date, 
-                      asset.method AS asset_method, 
-                      COALESCE(project_sites.name ->> 'en_US', '') as project_site, 
-                      COALESCE(co_locations.name ->> 'en_US', '') as co_location, 
-                      asset.capex_type as capex_type, 
-                      asset.sequence_number as sequence_number, 
-                      asset.additional_info as additional_info, 
-                      asset.method_number AS asset_method_number, 
-                      asset.method_period AS asset_method_period, 
-                      asset.method_progress_factor AS asset_method_progress_factor, 
-                      asset.state AS asset_state, 
-                      asset.company_id AS company_id, 
-                      account.code AS account_code, 
-                      COALESCE(account.name ->> 'en_US', '') as account_name, 
-                      account.id AS account_id, 
-                      model.name as asset_model_name,
-                      currency.name as currency_name,
-                       COALESCE(SUM(move.depreciation_value) FILTER (WHERE move.date < %(date_from)s AND {move_filter}), 0) + COALESCE(asset.already_depreciated_amount_import, 0) AS depreciated_before,
-                               COALESCE(SUM(move.depreciation_value) FILTER (WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter}), 0) AS depreciated_during,
-                               COALESCE(SUM(move.depreciation_value) FILTER (WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND (move.asset_number_days IS NULL OR  move.ref ILIKE '%%Disposal%%')), 0) AS asset_disposal_value,
-                             COALESCE(
+                          asset.id AS asset_id, 
+                          asset.parent_id AS parent_id, 
+                          asset.name AS asset_name, 
+                          asset.serial_no as serial_no, 
+                          asset.original_value AS asset_original_value, 
+                          asset.currency_id AS asset_currency_id, 
+                          COALESCE(asset.salvage_value, 0) as asset_salvage_value, 
+                          MIN(move.date) AS asset_date, 
+                          asset.disposal_date AS asset_disposal_date, 
+                          asset.acquisition_date AS asset_acquisition_date, 
+                          asset.method AS asset_method, 
+                          COALESCE(project_sites.name ->> 'en_US', '') as project_site, 
+                          COALESCE(co_locations.name ->> 'en_US', '') as co_location, 
+                          asset.capex_type as capex_type, 
+                          asset.sequence_number as sequence_number, 
+                          asset.additional_info as additional_info, 
+                          asset.method_number AS asset_method_number, 
+                          asset.method_period AS asset_method_period, 
+                          asset.method_progress_factor AS asset_method_progress_factor, 
+                          asset.state AS asset_state, 
+                          asset.company_id AS company_id, 
+                          account.code AS account_code, 
+                          COALESCE(account.name ->> 'en_US', '') as account_name, 
+                          account.id AS account_id, 
+                          model.name as asset_model_name,
+                          currency.name as currency_name,
+                          COALESCE(
                             SUM(move.depreciation_value) FILTER (
-                              WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.ref NOT ILIKE '%%Disposal%%'
+                              WHERE move.date <  %(date_from)s AND {move_filter}
                             ), 0
-                          ) AS depreciated_for_the_year, 
-                      	  (
-		SELECT MAX(move_sub.date)
-		FROM account_move move_sub
-		WHERE move_sub.asset_id = asset.id
-	  ) AS last_depreciation_date
-                    FROM 
-                      account_asset asset 
-                      LEFT JOIN account_account account ON asset.account_asset_id = account.id 
-                      LEFT JOIN account_analytic_account project_sites ON asset.project_site_id = project_sites.id 
-                      LEFT JOIN account_analytic_account co_locations ON asset.co_location = co_locations.id 
-                      LEFT JOIN account_move move ON move.asset_id = asset.id 
-                      LEFT JOIN account_asset model ON model.id = asset.model_id
-                      LEFT JOIN res_currency currency ON asset.currency_id= currency.id
-                    WHERE 
-                      asset.active 
-                      AND (asset.disposal_date >=  %(date_from)s OR asset.disposal_date IS NULL)
-                      AND asset.company_id in %(company_ids)s
-                      AND asset.state NOT IN ('model', 'draft', 'cancelled') 
-                      AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
-                      AND asset.active = 't'
-                      AND (account.name ->> 'en_US') NOT ILIKE '%%Lease%%'
-                      AND NOT EXISTS (
-                          SELECT 1 FROM leasee_contract lc WHERE lc.asset_id = asset.id
-                      )
-                    GROUP BY 
-                      asset.id, 
-                      account.id, 
-                      currency.id,
-                      project_sites.id, 
-                      co_locations.id, 
-                      model.name
-                    LIMIT 100;"""
+                          ) + COALESCE(asset.already_depreciated_amount_import, 0) AS depreciated_before, 
+                          COALESCE(
+                            SUM(move.depreciation_value) FILTER (
+                              WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter}
+                            ), 0
+                          ) AS depreciated_during, 
+                           COALESCE(
+                                                SUM(move.depreciation_value) FILTER (
+                                                  WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.ref NOT ILIKE '%%Disposal%%'
+                                                ), 0
+                                              ) AS depreciated_for_the_year, 
+                          COALESCE(
+                            SUM(move.depreciation_value) FILTER (
+                              WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND (move.asset_number_days IS NULL OR  move.ref ILIKE '%%Disposal%%')
+                            ), 0
+                          ) AS asset_disposal_value ,
+                          	  (
+    		SELECT MAX(move_sub.date)
+    		FROM account_move move_sub
+    		WHERE move_sub.asset_id = asset.id
+    	  ) AS last_depreciation_date
+                        FROM 
+                          account_asset asset 
+                          LEFT JOIN account_account account ON asset.account_asset_id = account.id 
+                          LEFT JOIN account_analytic_account project_sites ON asset.project_site_id = project_sites.id 
+                          LEFT JOIN account_analytic_account co_locations ON asset.co_location = co_locations.id 
+                          LEFT JOIN account_move move ON move.asset_id = asset.id 
+                          LEFT JOIN account_asset model ON model.id = asset.model_id
+                          LEFT JOIN res_currency currency ON asset.currency_id= currency.id
+                        WHERE 
+                          asset.active 
+                          AND (asset.disposal_date >=  %(date_from)s OR asset.disposal_date IS NULL)
+                          AND asset.company_id in %(company_ids)s
+                          AND asset.state NOT IN ('model', 'draft', 'cancelled') 
+                          AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
+                          AND asset.active = 't'
+                          AND EXISTS (
+                                  SELECT 1
+                                  FROM leasee_contract lc
+                                  WHERE lc.asset_id = asset.id OR lc.asset_id = asset.parent_id
+                                )
+                        GROUP BY 
+                          asset.id, 
+                          account.id, 
+                          currency.id,
+                          project_sites.id, 
+                          co_locations.id, 
+                          model.name
+                        LIMIT 100;"""
             self._cr.execute(sql, query_params)
             results = self._cr.dictfetchall()
             return results
