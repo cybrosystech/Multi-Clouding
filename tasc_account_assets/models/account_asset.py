@@ -6,6 +6,20 @@ from odoo.tools.sql import column_exists, create_column
 class AccountAsset(models.Model):
     _inherit = 'account.asset'
 
+    is_accrual = fields.Boolean(string="Is Accrual")
+    account_depreciation_id = fields.Many2one(
+        comodel_name='account.account',
+        string='Depreciation Account',
+        check_company=True,
+        help="Account used in the depreciation entries, to decrease the asset value."
+    )
+    account_depreciation_expense_id = fields.Many2one(
+        comodel_name='account.account',
+        string='Expense Account',
+        check_company=True,
+        help="Account used in the periodical entries, to record a part of the asset as expense.",
+    )
+
     def _auto_init(self):
         if not column_exists(self.env.cr, "account_asset", "value_residual"):
             create_column(self.env.cr, "account_asset", "value_residual",
@@ -24,15 +38,22 @@ class AccountAsset(models.Model):
     @api.model
     def create(self, vals):
         res = super(AccountAsset, self).create(vals)
-        if res.model_id:
-            if res.model_id.name.lower() != 'ground lease':
-                sequence_number = self.env['ir.sequence'].next_by_code(
-                    'account.asset')
-                res.sequence_number = sequence_number
+        # if res.model_id:
+        #     if res.model_id.name.lower() != 'ground lease':
+        #         sequence_number = self.env['ir.sequence'].next_by_code(
+        #             'account.asset')
+        #         res.sequence_number = sequence_number
+        # else:
+        #     sequence_number = self.env['ir.sequence'].next_by_code(
+        #         'account.asset')
+        if res.is_accrual:
+            sequence_number = self.env['ir.sequence'].next_by_code('account.asset.accrual')
+        elif res.model_id and res.model_id.name.lower() != 'ground lease':
+            sequence_number = self.env['ir.sequence'].next_by_code('account.asset')
         else:
-            sequence_number = self.env['ir.sequence'].next_by_code(
-                'account.asset')
-            res.sequence_number = sequence_number
+            sequence_number = self.env['ir.sequence'].next_by_code('account.asset')
+
+        res.sequence_number = sequence_number
         return res
 
     @api.model
@@ -107,6 +128,34 @@ class AccountAsset(models.Model):
         date = fields.Datetime.now()
         schedule = self.env.ref(
             'tasc_account_assets.action_set_depreciable_value')
+        schedule.update({
+            'nextcall': date + timedelta(seconds=15)
+        })
+
+    @api.model
+    def set_asset_model(self, limit):
+        asset_ids = self.env['account.asset'].search(
+            [('model_id', '=', False),
+             ('company_id', '=', self.env.company.id),('parent_id','!=',False)], order='id ASC',
+            limit=limit)
+        for asset in asset_ids:
+            asset.model_id = asset.parent_id.model_id.id
+        asset_ids = self.env['account.asset'].search(
+            [('model_id', '=', False),
+             ('company_id', '=', self.env.company.id),('parent_id','!=',False)])
+        if asset_ids:
+            date = fields.Datetime.now()
+            schedule = self.env.ref(
+                'tasc_account_assets.action_set_asset_model_cron_update')
+            schedule.update({
+                'nextcall': date + timedelta(seconds=15)
+            })
+
+    @api.model
+    def set_asset_model_cron_update(self):
+        date = fields.Datetime.now()
+        schedule = self.env.ref(
+            'tasc_account_assets.action_set_asset_model')
         schedule.update({
             'nextcall': date + timedelta(seconds=15)
         })

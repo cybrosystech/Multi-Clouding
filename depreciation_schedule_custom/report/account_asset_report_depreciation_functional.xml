@@ -129,7 +129,7 @@
                     <field name="name">date to</field>
                     <field name="expression_label">depre_date_to</field>
                 </record>
-                <record id="depreciation_schedule_depre_for_the_year"
+                <record id="depreciation_schedule_fun_depre_for_the_year"
                         model="account.report.column">
                     <field name="name">Depreciation Expense</field>
                     <field name="expression_label">depre_for_year</field>
@@ -139,6 +139,7 @@
                     <field name="name">book_value</field>
                     <field name="expression_label">balance</field>
                 </record>
+
                 <record id="depreciation_schedule_functional_fixed_asset_account"
                         model="account.report.column">
                     <field name="name">Fixed Asset Account</field>

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <record id="mass_allocation_view_form" model="ir.ui.view">
+            <field name="name">mass.allocation.view.form</field>
+            <field name="model">mass.allocation</field>
+            <field name="arch" type="xml">
+                <form string="">
+                    <header>
+                        <button string="Generate Entry "
+                                name="action_generate_mass_entry"
+                                type="object" class="btn-secondary"
+                                invisible="mass_allocation_move_id or not mass_allocation_line_ids"
+                        />
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button string="Mass Allocation Entry "
+                                name="view_mass_entry"
+                                type="object" class="btn-secondary"
+                                invisible="not mass_allocation_move_id"
+                        />
+                        </div>
+                        <group>
+                            <group>
+                                <field name="name" readonly="mass_allocation_move_id"/>
+                                <field name="date_from"  readonly="mass_allocation_move_id"/>
+                                <field name="business_unit_id"  readonly="mass_allocation_move_id"/>
+                                <field name="account_ids" widget="many2many_tags"  readonly="mass_allocation_move_id"/>
+                                <field name="mass_allocation_move_id" invisible="1"/>
+                            </group>
+                            <group>
+                                <field name="state"  readonly="mass_allocation_move_id"/>
+                                <field name="date_to"  readonly="mass_allocation_move_id"/>
+                                <field name="company_id"
+                                        readonly="mass_allocation_move_id"
+                                />
+                                <button string="Generate "
+                                        name="action_generate_mass_allocation_lines"
+                                        type="object" class="btn-secondary"
+                                        invisible="mass_allocation_move_id"
+                                />
+                            </group>
+                        </group>
+
+                        <notebook>
+                            <page name="allocation_lines" string="Mass Allocation Lines">
+                                <field name="mass_allocation_line_ids"  readonly="mass_allocation_move_id">
+                                    <tree editable="bottom"  create="false" delete="false">
+                                        <field name="mass_allocation_id"
+                                               invisible="1"
+                                               column_invisible="1"/>
+                                        <field name="business_unit_id"/>
+                                        <field name="account_id"/>
+                                        <field name="balance"/>
+                                        <field name="common_cost"/>
+                                        <field name="real_estate"/>
+                                        <field name="energy"
+                                        />
+                                        <field name="managed_services"
+                                        />
+                                        <field name="total"
+                                        />
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="mass_allocation_view_tree" model="ir.ui.view">
+            <field name="name">mass.allocation.view.tree</field>
+            <field name="model">mass.allocation</field>
+            <field name="arch" type="xml">
+                <tree string="">
+                    <field name="name"/>
+                    <field name="state"/>
+                    <field name="business_unit_id"/>
+                    <field name="company_id"/>
+                    <field name="mass_allocation_move_id" invisible="1"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_mass_allocation"
+                model="ir.actions.act_window">
+            <field name="name">Mass Allocation</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">mass.allocation</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                </p>
+            </field>
+        </record>
+
+        <menuitem id="menu_mass_allocation"
+                  name="Mass Allocation"
+                  parent="account.menu_finance_entries_management"
+                  action="action_mass_allocation"
+        />
+    </data>
+</odoo>
