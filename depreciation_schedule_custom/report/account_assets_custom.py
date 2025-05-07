@@ -585,6 +585,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                                 AND asset.state NOT IN ('model', 'draft', 'cancelled') 
                                 AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
                                 AND asset.active = 't'
+                                AND COALESCE(asset.is_accrual, false) = false
                                 AND (account.name ->> 'en_US') NOT ILIKE '%%Lease%%'
                               GROUP BY 
                                 asset.id, 
@@ -662,6 +663,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                       AND asset.state NOT IN ('model', 'draft', 'cancelled') 
                       AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
                       AND asset.active = 't'
+                      AND COALESCE(asset.is_accrual, false) = false
                       AND (account.name ->> 'en_US') NOT ILIKE '%%Lease%%'
                     GROUP BY 
                       asset.id, 
@@ -859,6 +861,7 @@ class AccountReport(models.Model):
                             AND asset.state NOT IN ('model', 'draft', 'cancelled') 
                             AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
                             AND asset.active = 't'
+                            AND COALESCE(asset.is_accrual, false) = false
                             AND (account.name ->> 'en_US') NOT ILIKE '%%Lease%%'
                             AND NOT EXISTS (
                               SELECT 1
@@ -932,6 +935,7 @@ class AccountReport(models.Model):
                             AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
                             AND (account.name ->> 'en_US') ILIKE '%%Lease%%'
                             AND asset.active = 't'
+                            AND COALESCE(asset.is_accrual, false) = false
                             AND EXISTS (
                                   SELECT 1
                                   FROM leasee_contract lc
@@ -1003,6 +1007,7 @@ class AccountReport(models.Model):
                             AND asset.state NOT IN ('model', 'draft', 'cancelled') 
                             AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
                             AND asset.active = 't'
+                            AND COALESCE(asset.is_accrual, false) = false
                           GROUP BY 
                             asset.id, 
                             account.id, 
@@ -1156,7 +1161,6 @@ class AccountReport(models.Model):
                                 and abs(depreciation_closing - (asset_closing - asset_salvage_value)) <= 0.01
                         ):
                             _logger.info("closing")
-
                             depreciation_add -= asset_disposal_value
                             depreciation_minus += depreciation_closing - asset_disposal_value
                             depreciation_closing = 0.0

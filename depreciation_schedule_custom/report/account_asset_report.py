@@ -85,6 +85,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                AND (asset.disposal_date >= %(date_from)s OR asset.disposal_date IS NULL)
                AND (asset.state not in ('model', 'draft', 'cancelled') OR (asset.state = 'draft' AND %(include_draft)s))
                AND asset.active = 't'
+               AND COALESCE(asset.is_accrual, false) = false
                AND reversal.id IS NULL
                {prefix_query}
                {account_query}
