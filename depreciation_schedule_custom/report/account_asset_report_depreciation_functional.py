@@ -33,7 +33,8 @@ class AssetsReportCustomHandler(models.AbstractModel):
             report, options)
         if options["available_variants"][0][
             "name"] == 'Tasc Depreciation Schedule' or options["available_variants"][0][
-            "name"] == 'Tasc Depreciation Schedule Functional' :
+            "name"] == 'Tasc Depreciation Schedule Functional' or options["available_variants"][0][
+            "name"] == 'Tasc Depreciation Lease' :
 
             if self.env.context.get('is_xlsx'):
                 # add the groups by account
@@ -300,19 +301,31 @@ class AssetsReportCustomHandler(models.AbstractModel):
                 al['asset_currency_id'])
 
             # Manage the closing of the asset
-            if (
-                    al['asset_state'] == 'close'
-                    and al['asset_disposal_date']
-                    and al['asset_disposal_date'] <= fields.Date.to_date(
-                options['date']['date_to'])
-                    and al_currency.compare_amounts(depreciation_closing,
-                                                    asset_closing - asset_salvage_value) == 0
-            ):
-                depreciation_add -= asset_disposal_value
-                depreciation_minus += depreciation_closing - asset_disposal_value
-                depreciation_closing = 0.0
-                asset_minus += asset_closing
-                asset_closing = 0.0
+            if al["partial_disposal"]:
+                if (
+                        al['asset_state'] == 'close'
+                        and al['asset_disposal_date']
+                        and al['asset_disposal_date'] <= fields.Date.to_date(
+                    options['date']['date_to'])
+                ):
+                    depreciation_add -= asset_disposal_value
+                    depreciation_minus += depreciation_closing - asset_disposal_value
+                    depreciation_closing = 0.0
+                    asset_minus += asset_closing
+                    asset_closing = 0.0
+            else:
+                if (
+                        al['asset_state'] == 'close'
+                        and al['asset_disposal_date']
+                        and al['asset_disposal_date'] <= fields.Date.to_date(options['date']['date_to'])
+                        and abs(depreciation_closing - (asset_closing - asset_salvage_value)) <= 0.01
+                ):
+                    depreciation_add -= asset_disposal_value
+                    depreciation_minus += depreciation_closing - asset_disposal_value
+                    depreciation_closing = 0.0
+                    asset_minus += asset_closing
+                    asset_closing = 0.0
+
 
             # Manage negative assets (credit notes)
             if al['asset_original_value'] < 0:
@@ -441,7 +454,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                 "currency": al["currency_name"],
                 "serial_no": al["serial_no"],
                 "additional_info": al["additional_info"],
-                "last_depreciation_date": al["last_depreciation_date"]
+                "last_depreciation_date": al["last_depreciation_date"],
             }
 
             lines.append(
@@ -568,6 +581,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                                             asset.name AS asset_name, 
                                             asset.serial_no as serial_no, 
                                             asset.original_value AS asset_original_value, 
+                                            asset.partial_disposal AS partial_disposal,
                                             asset.currency_id AS asset_currency_id, 
                                             COALESCE(asset.salvage_value, 0) as asset_salvage_value, 
                                             MIN(move.date) AS asset_date, 
@@ -591,22 +605,22 @@ class AssetsReportCustomHandler(models.AbstractModel):
                                             currency.name as currency_name,
                                             COALESCE(
                                               SUM(move.depreciation_value) FILTER (
-                                                WHERE move.date <  %(date_from)s AND move.state = 'posted' AND {move_filter}
+                                                WHERE move.date <  %(date_from)s AND {move_filter}
                                               ), 0
                                             ) + COALESCE(asset.already_depreciated_amount_import, 0) AS depreciated_before, 
                                             COALESCE(
                                               SUM(move.depreciation_value) FILTER (
-                                                WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.state = 'posted'
+                                                WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} 
                                               ), 0
                                             ) AS depreciated_during, 
                                              COALESCE(
                                             SUM(move.depreciation_value) FILTER (
-                                              WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.state = 'posted' AND move.ref NOT ILIKE '%%Disposal%%'
+                                              WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.ref NOT ILIKE '%%Disposal%%'
                                             ), 0
                                           ) AS depreciated_for_the_year, 
                                             COALESCE(
                                               SUM(move.depreciation_value) FILTER (
-                                                WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.state = 'posted'
+                                                WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND  (move.asset_number_days IS NULL OR  move.ref ILIKE '%%Disposal%%')
                                               ), 0
                                             ) AS asset_disposal_value ,
                                             (
@@ -629,6 +643,10 @@ class AssetsReportCustomHandler(models.AbstractModel):
                                             AND asset.state NOT IN ('model', 'draft', 'cancelled') 
                                             AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
                                             AND asset.active = 't'
+                                            AND (account.name ->> 'en_US') NOT ILIKE '%%Lease%%'
+                                            AND NOT EXISTS (
+                                              SELECT 1 FROM leasee_contract lc WHERE lc.asset_id = asset.id
+                                          )
                                           GROUP BY 
                                             asset.id, 
                                             account.id, 
@@ -648,6 +666,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                       asset.name AS asset_name, 
                       asset.serial_no as serial_no, 
                       asset.original_value AS asset_original_value, 
+                      asset.partial_disposal AS partial_disposal,
                       asset.currency_id AS asset_currency_id, 
                       COALESCE(asset.salvage_value, 0) as asset_salvage_value, 
                       MIN(move.date) AS asset_date, 
@@ -671,22 +690,22 @@ class AssetsReportCustomHandler(models.AbstractModel):
                       currency.name as currency_name,
                       COALESCE(
                         SUM(move.depreciation_value) FILTER (
-                          WHERE move.date <  %(date_from)s AND move.state = 'posted' AND {move_filter}
+                          WHERE move.date <  %(date_from)s AND {move_filter}
                         ), 0
                       ) + COALESCE(asset.already_depreciated_amount_import, 0) AS depreciated_before, 
                       COALESCE(
                         SUM(move.depreciation_value) FILTER (
-                          WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.state = 'posted'
+                          WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} 
                         ), 0
                       ) AS depreciated_during, 
                        COALESCE(
                                             SUM(move.depreciation_value) FILTER (
-                                              WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.state = 'posted' AND move.ref NOT ILIKE '%%Disposal%%'
+                                              WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.ref NOT ILIKE '%%Disposal%%'
                                             ), 0
                                           ) AS depreciated_for_the_year, 
                       COALESCE(
                         SUM(move.depreciation_value) FILTER (
-                          WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.state = 'posted'
+                          WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND (move.asset_number_days IS NULL OR  move.ref ILIKE '%%Disposal%%')
                         ), 0
                       ) AS asset_disposal_value ,
                       	  (
@@ -709,6 +728,10 @@ class AssetsReportCustomHandler(models.AbstractModel):
                       AND asset.state NOT IN ('model', 'draft', 'cancelled') 
                       AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
                       AND asset.active = 't'
+                      AND (account.name ->> 'en_US') NOT ILIKE '%%Lease%%'
+                      AND NOT EXISTS (
+                          SELECT 1 FROM leasee_contract lc WHERE lc.asset_id = asset.id
+                      )
                     GROUP BY 
                       asset.id, 
                       account.id, 

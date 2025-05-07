@@ -13,3 +13,5 @@ from . import in_out_budget
 from . import account_group
 from . import account_account
 from . import stock_move
+from . import res_company
+

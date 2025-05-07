@@ -299,9 +299,14 @@ class CashBurnReportGLWizard(models.Model):
         col += 1
         row += 1
         for line in report_data:
+
             if line.payment_id:
                 bank_account_line = line.line_ids.filtered(
                     lambda x: x.account_id.account_type == 'asset_current')
+                if len(bank_account_line) > 1:
+                    bank_account_line = bank_account_line.filtered(
+                        lambda x: 'Bank Clearing' in x.account_id.name)
+
                 if line.payment_id.reconciled_bill_ids or line.payment_id.reconciled_invoice_ids:
                     if line.payment_id.reconciled_bill_ids:
                         for rec in line.payment_id.reconciled_bill_ids:
@@ -360,6 +365,7 @@ class CashBurnReportGLWizard(models.Model):
                                                                               x: x.account_id.account_type not in [
                                         'asset_receivable',
                                         'liability_payable'])
+
                                     if bank_account_line.debit:
                                         debit_amount=exch["amount"]
                                         credit_amount=0
@@ -411,6 +417,7 @@ class CashBurnReportGLWizard(models.Model):
                                 final_amount = round(
                                     company_currency_amount * proportion,
                                     rec.company_id.currency_id.decimal_places)
+
                                 if bank_account_line.debit:
                                     debit_amount =final_amount
                                     credit_amount = 0.0
@@ -448,6 +455,7 @@ class CashBurnReportGLWizard(models.Model):
                                         x: x.account_id.account_type not in [
                                         'asset_receivable',
                                         'liability_payable'])
+
                                 if bank_account_line.debit:
                                     debit_amount = exch["amount"]
                                     credit_amount = 0
@@ -506,24 +514,24 @@ class CashBurnReportGLWizard(models.Model):
                             amount =order_line_amount
                             exchange_rate =0
                             if purchase_id.currency_id.id != purchase_id.company_id.currency_id.id:
-                                if line.credit != 0:
-                                    exchange_rate = abs(
-                                        line.credit) / abs(
-                                        line.amount_currency)
-                                else:
-                                    exchange_rate = abs(
-                                        line.debit) / abs(
-                                        line.amount_currency)
+                                company_value = purchase_id.company_id.currency_id._convert(order_line.price_total, purchase_id.currency_id,
+                                                                          order_line.order_id.company_id,
+                                                                          order_line.order_id.date_order)
+                                exchange_rate = company_value / order_line.price_total
                                 amount = purchase_id.company_id.currency_id.round(
                                     exchange_rate * amount)
 
                             payble_account_line = line.line_ids.filtered(
                                 lambda
-                                    x: x.account_id.account_type != 'asset_current')
+                                    x: x.account_id.account_type != 'asset_current'
+                                       or 'Bank Clearing' not in x.account_id.name)
 
                             bank_acct_line = line.line_ids.filtered(
                                 lambda
                                     x: x.account_id.account_type == 'asset_current')
+                            if len(bank_acct_line) > 1:
+                                bank_acct_line = bank_acct_line.filtered(
+                                    lambda x: 'Bank Clearing' in x.account_id.name)
                             credit_amount = 0
                             debit_amount = 0
                             if bank_account_line.credit:
@@ -551,8 +559,12 @@ class CashBurnReportGLWizard(models.Model):
                     else:
                         bank_acct_line = line.line_ids.filtered(
                             lambda x: x.account_id.account_type == 'asset_current')
+                        if len(bank_acct_line) > 1:
+                            bank_acct_line = bank_acct_line.filtered(
+                                lambda x: 'Bank Clearing' in x.account_id.name)
                         payble_account_line = line.line_ids.filtered(
-                            lambda x: x.account_id.account_type != 'asset_current')
+                            lambda x: x.account_id.account_type != 'asset_current' or  'Bank Clearing' not in x.account_id.name)
+
                         self.add_row(worksheet, row,
                                      STYLE_LINE_Data, date_format,
                                      line.date, line.name, line.ref,
@@ -953,24 +965,24 @@ class CashBurnReportGLWizard(models.Model):
                                                 credit_amount = 0
                                                 debit_amount = 0
                                                 if purchase_id.currency_id.id != purchase_id.company_id.currency_id.id:
-                                                    if line.credit != 0:
-                                                        exchange_rate = abs(
-                                                            line.credit) / abs(
-                                                            line.amount_currency)
-                                                    else:
-                                                        exchange_rate = abs(
-                                                            line.debit) / abs(
-                                                            line.amount_currency)
+                                                    company_value = purchase_id.company_id.currency_id._convert(
+                                                        order_line.price_total, purchase_id.currency_id,
+                                                        order_line.order_id.company_id,
+                                                        order_line.order_id.date_order)
+                                                    exchange_rate = company_value / order_line.price_total
                                                     amount = purchase_id.company_id.currency_id.round(
                                                         exchange_rate * amount)
 
                                                 payble_account_line = line.line_ids.filtered(
                                                     lambda
-                                                        x: x.account_id.account_type != 'asset_current')
+                                                        x: x.account_id.account_type != 'asset_current' or 'Bank Clearing' not in x.account_id.name)
 
                                                 bank_acct_line = line.line_ids.filtered(
                                                     lambda
                                                         x: x.account_id.account_type == 'asset_current')
+                                                if len(bank_acct_line) > 1:
+                                                    bank_acct_line = bank_acct_line.filtered(
+                                                        lambda x: 'Bank Clearing' in x.account_id.name)
                                                 credit_amount = 0
                                                 debit_amount = 0
                                                 if bank_account_line.credit:
@@ -1003,9 +1015,13 @@ class CashBurnReportGLWizard(models.Model):
                                             bank_acct_line = line.line_ids.filtered(
                                                 lambda
                                                     x: x.account_id.account_type == 'asset_current')
+                                            if len(bank_acct_line) > 1:
+                                                bank_acct_line = bank_acct_line.filtered(
+                                                    lambda x: 'Bank Clearing' in x.account_id.name)
                                             payble_account_line = line.line_ids.filtered(
                                                 lambda
-                                                    x: x.account_id.account_type != 'asset_current')
+                                                    x: x.account_id.account_type != 'asset_current'
+                                                       or 'Bank Clearing' not in x.account_id.name)
                                             self.add_row(worksheet, row,
                                                          STYLE_LINE_Data,
                                                          date_format,

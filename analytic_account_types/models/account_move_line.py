@@ -9,7 +9,6 @@ from markupsafe import escape
 from collections import defaultdict
 
 
-
 class AccountMove(models.Model):
     _inherit = 'account.move'
     # /////////// Start of Approval Cycle According To In Budget or Out Budget in Po Configuration //////////////
@@ -21,7 +20,7 @@ class AccountMove(models.Model):
         comodel_name="purchase.approval.cycle", inverse_name="move_id",
         string="", required=False, )
     out_budget = fields.Boolean(string="Out Budget", compute="check_out_budget",
-                                 copy=False)
+                                copy=False)
     show_approve_button = fields.Boolean(string="",
                                          compute='check_show_approve_button',
                                          copy=False)
@@ -44,16 +43,10 @@ class AccountMove(models.Model):
 
     @api.depends_context('uid')
     def _compute_is_admin(self):
-        # is_admin = (
-        #         self.env.user.id == SUPERUSER_ID or
-        #         self.env.user.has_group('base.group_erp_manager') or
-        #         self.env.user.has_group('base.group_system')
-        # )
         env = self.env
         is_admin = env.su or env.user.has_group('base.group_erp_manager') or env.user.has_group('base.group_system')
         for record in self:
             record.is_admin = is_admin
-
 
     @api.depends('line_ids.balance')
     def _compute_depreciation_value(self):
@@ -68,17 +61,19 @@ class AccountMove(models.Model):
                             'amount_currency')
                     )
                     # Special case of closing entry - only disposed assets of type 'purchase' should match this condition
+
                     if any(
                             line.account_id == asset.account_asset_id
+                            and float_compare(-line.amount_currency, asset.original_value,
+                                              precision_rounding=asset.currency_id.rounding) == 0
                             for line in move.line_ids
-                    ):
+                    ) and len(move.line_ids) > 2:
                         asset_depreciation = (
                                 asset.original_value
                                 - asset.salvage_value
-                                - (
-                                    move.line_ids[
-                                        1].amount_currency
-                                ) * (-1 if asset.original_value < 0 else 1)
+                                - move.line_ids[
+                                    1].amount_currency
+                                * (-1 if asset.original_value < 0 else 1)
                         )
                 else:
                     asset_depreciation = sum(
@@ -166,7 +161,6 @@ class AccountMove(models.Model):
             else:
                 rec.show_confirm_button = has_purchase_or_sales
 
-
     @api.depends('invoice_line_ids.purchase_line_id')
     def check_if_from_purchase(self):
         invoice_lines = self.env['account.move.line'].search_read(
@@ -190,7 +184,6 @@ class AccountMove(models.Model):
 
         for rec in self:
             rec.is_from_sales = rec.id in move_ids_with_sales
-
 
     @api.depends('purchase_approval_cycle_ids', 'state',
                  'purchase_approval_cycle_ids.is_approved',
@@ -569,7 +562,6 @@ class AccountMove(models.Model):
             'analytic_distribution': analytic_distribution,
             'project_site_id': project_site_id.id if project_site_id else False,
             'business_unit_id': asset.business_unit_id.id if asset.business_unit_id else False,
-
             'analytic_account_id': analytic_account_id.id if analytic_account_id.id else False,
             'currency_id': current_currency.id,
             'amount_currency': -amount_currency,
@@ -621,9 +613,9 @@ class AccountMoveLine(models.Model):
                                            'project_site')],
                                       required=False, store=True)
     business_unit_id = fields.Many2one(comodel_name="account.analytic.account",
-                                      string="Business Unit",
-                                      domain=[('plan_id.name', '=ilike', 'Business Unit')],
-                                      required=False, store=True)
+                                       string="Business Unit",
+                                       domain=[('plan_id.name', '=ilike', 'Business Unit')],
+                                       required=False, store=True)
     type_id = fields.Many2one(comodel_name="account.analytic.account",
                               string="Type",
                               domain=[('analytic_account_type', '=', 'type')],
@@ -632,13 +624,13 @@ class AccountMoveLine(models.Model):
                                   string="Location", domain=[
             ('analytic_account_type', '=', 'location')], required=False, )
     budget_id = fields.Many2one(comodel_name="crossovered.budget",
-                                string="Budget", required=False, index=True,copy=False)
+                                string="Budget", required=False, index=True, copy=False)
     budget_line_id = fields.Many2one(comodel_name="crossovered.budget.lines",
                                      string="Budget Line", required=False,
-                                     index=True,copy=False)
+                                     index=True, copy=False)
 
     remaining_amount = fields.Float(string="Remaining Amount", required=False,
-                                    compute='get_budget_remaining_amount',store=True
+                                    compute='get_budget_remaining_amount', store=True
                                     )
     local_subtotal = fields.Float(compute='compute_local_subtotal', store=True)
     site_status = fields.Selection(
@@ -647,7 +639,85 @@ class AccountMoveLine(models.Model):
     t_budget = fields.Selection(
         [('capex', 'CAPEX'), ('opex', 'OPEX'), ],
         string='T.Budget')
+    account_id = fields.Many2one(
+        comodel_name='account.account',
+        string='Account',
+        compute='_compute_account_id', store=True, readonly=False, precompute=True,
+        inverse='_inverse_account_id',
+        index=True,  # covered by account_move_line_account_id_date_idx defined in init()
+        auto_join=True,
+        ondelete="cascade",
+        domain="[('deprecated', '=', False), ('account_type', '!=', 'off_balance')]",
+        check_company=True,
+        tracking=True,
+    )
 
+    @api.onchange('t_budget', 'project_site_id', 'site_status', 'product_id')
+    def onchange_t_budget(self):
+        journals = self.env['account.journal'].search([
+            '|',
+            ('name', 'ilike', 'Inventory Valuation'),
+            ('name', 'ilike', 'Vendor Bills')
+        ])
+        if self.journal_id.id in journals.ids:
+            if self.purchase_line_id:
+                if self.product_id.detailed_type == 'product':
+                    self.account_id = self.product_id.categ_id.property_stock_account_input_categ_id.id
+                elif self.product_id.detailed_type == 'consu' or self.product_id.detailed_type == 'service':
+                    if self.t_budget == 'opex':
+                        if self.project_site_id and "warehouse" in self.project_site_id.name.lower():
+                            self.account_id = self.product_id.inventory_account_id.id
+                        else:
+                            self.account_id = self.product_id.property_account_expense_id.id
+                    elif self.t_budget == 'capex':
+                        if self.project_site_id and "warehouse" in self.project_site_id.name.lower():
+                            self.account_id = self.product_id.inventory_account_id.id
+                        elif self.project_site_id and "warehouse" not in self.project_site_id.name.lower():
+                            if self.site_status == 'off_air':
+                                self.account_id = self.product_id.cip_account_id.id
+                            elif self.site_status == 'on_air':
+                                self.account_id = self.product_id.asset_account_id.id
+                            else:
+                                self.account_id = self.product_id.asset_account_id.id
+                        else:
+                            if self.site_status == 'off_air':
+                                self.account_id = self.product_id.cip_account_id.id
+                            elif self.site_status == 'on_air':
+                                self.account_id = self.product_id.asset_account_id.id
+                            else:
+                                self.account_id = self.product_id.asset_account_id.id
+                    else:
+                        self.account_id = self.product_id.property_account_expense_id.id
+                else:
+                    self.account_id = self.product_id.property_account_expense_id.id
+            else:
+                if self.product_id.detailed_type in ['product', 'consu']:
+                    if self.t_budget == 'opex':
+                        if self.project_site_id and "warehouse" in self.project_site_id.name.lower():
+                            self.account_id = self.product_id.inventory_account_id.id
+                        else:
+                            self.account_id = self.product_id.property_account_expense_id.id
+                    elif self.t_budget == 'capex':
+                        if self.project_site_id and "warehouse" in self.project_site_id.name.lower():
+                            self.account_id = self.product_id.inventory_account_id.id
+                        elif self.project_site_id and "warehouse" not in self.project_site_id.name.lower():
+                            if self.site_status == 'off_air':
+                                self.account_id = self.product_id.cip_account_id.id
+                            elif self.site_status == 'on_air':
+                                self.account_id = self.product_id.asset_account_id.id
+                            else:
+                                self.account_id = self.product_id.asset_account_id.id
+                        else:
+                            if self.site_status == 'off_air':
+                                self.account_id = self.product_id.cip_account_id.id
+                            elif self.site_status == 'on_air':
+                                self.account_id = self.product_id.asset_account_id.id
+                            else:
+                                self.account_id = self.product_id.asset_account_id.id
+                    else:
+                        self.account_id = self.product_id.property_account_expense_id.id
+                else:
+                    self.account_id = self.product_id.property_account_expense_id.id
 
     @api.onchange('analytic_distribution')
     def _inverse_analytic_distribution(self):

@@ -23,6 +23,7 @@ class AccountAssetInherit(models.Model):
         self.prorata_date = Date
 
     def _recompute_board(self, start_depreciation_date=False):
+        print("_recompute_board3")
         self.ensure_one()
         # All depreciation moves that are posted
         posted_depreciation_move_ids = self.depreciation_move_ids.filtered(
@@ -63,6 +64,7 @@ class AccountAssetInherit(models.Model):
                     period_end_depreciation_date = final_depreciation_date
 
                 if not float_is_zero(amount, precision_rounding=self.currency_id.rounding):
+                    print("ffffffffffff")
                     # For deferred revenues, we should invert the amounts.
                     depreciation_move_values.append(self.env['account.move']._prepare_move_for_asset_depreciation({
                         'amount': amount,
@@ -71,6 +73,7 @@ class AccountAssetInherit(models.Model):
                         'date': period_end_depreciation_date,
                         'asset_number_days': days,
                     }))
+                    print("fffffffffjjjjjjj")
 
                 if period_end_depreciation_date == period_end_fiscalyear_date:
                     start_yearly_period = self.company_id.compute_fiscalyear_dates(period_end_depreciation_date).get('date_from') + relativedelta(years=1)

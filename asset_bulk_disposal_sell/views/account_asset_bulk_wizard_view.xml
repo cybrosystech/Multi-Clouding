@@ -11,9 +11,9 @@
                         <field name="asset_id"/>
                         <field name="action"/>
                         <field name="partial_bool"
-                               invisible="action == 'dispose'"/>
+                               invisible="1"/>
                         <field name="partial_amount"
-                               invisible="partial_bool == False"/>
+                               invisible="1"/>
                         <field name="invoice_id" options="{'no_create': True}"
                                required="action == 'sell'"/>
                         <field name="invoice_line_id"

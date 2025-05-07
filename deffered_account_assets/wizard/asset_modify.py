@@ -9,12 +9,6 @@ def modify(self):
     """ Modifies the duration of asset for calculating depreciation
     and maintains the history of old values, in the chatter.
     """
-    # if self.date <= self.asset_id.company_id._get_user_fiscal_lock_date():
-    #     if not self.accounting_date or  (self.accounting_date  and self.accounting_date <= self.asset_id.company_id._get_user_fiscal_lock_date()):
-    #         raise UserError(
-    #             _("You can't re-evaluate the asset before the lock date."))
-
-
     old_values = {
         'method_number': self.asset_id.method_number,
         'method_period': self.asset_id.method_period,
@@ -113,6 +107,7 @@ def modify(self):
             'prorata_computation_type': 'daily_computation' if self.asset_id.prorata_computation_type == 'daily_computation' else 'constant_periods',
             'original_value': self._get_increase_original_value(
                 residual_increase, salvage_increase),
+            'model_id': self.asset_id.model_id.id,
             'account_asset_id': self.account_asset_id.id,
             'account_depreciation_id': self.account_depreciation_id.id,
             'account_depreciation_expense_id': self.account_depreciation_expense_id.id,
