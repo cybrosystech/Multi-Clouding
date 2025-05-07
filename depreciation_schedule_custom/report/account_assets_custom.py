@@ -1128,7 +1128,8 @@ class AccountReport(models.Model):
                     asset_closing = asset_opening + asset_add - asset_minus
                     depreciation_closing = depreciation_opening + depreciation_add - depreciation_minus
                     al_currency = self.env['res.currency'].browse(i['asset_currency_id'])
-
+                    if i['asset_name'] in ['Leasee/3390','Leasee/0003']:
+                        _logger.info("asset %s", i['asset_name'])
                     # Manage the closing of the asset
                     if i["partial_disposal"]:
                         if (
@@ -1143,12 +1144,19 @@ class AccountReport(models.Model):
                             asset_minus += asset_closing
                             asset_closing = 0.0
                     else:
+                        if i['asset_name'] in ['Leasee/3390', 'Leasee/0003']:
+                            _logger.info("depreciation_closing %s",depreciation_closing)
+                            _logger.info("asset_closing %s",asset_closing)
+                            _logger.info("asset_salvage_value %s",asset_salvage_value)
+                            _logger.info("ccccccc %s",abs(depreciation_closing - (asset_closing - asset_salvage_value)) <= 0.01)
                         if (
                                 i['asset_state'] == 'close'
                                 and i['asset_disposal_date']
                                 and i['asset_disposal_date'] <= fields.Date.to_date(options['date']['date_to'])
                                 and abs(depreciation_closing - (asset_closing - asset_salvage_value)) <= 0.01
                         ):
+                            _logger.info("closing")
+
                             depreciation_add -= asset_disposal_value
                             depreciation_minus += depreciation_closing - asset_disposal_value
                             depreciation_closing = 0.0
