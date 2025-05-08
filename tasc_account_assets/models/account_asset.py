@@ -19,6 +19,8 @@ class AccountAsset(models.Model):
         check_company=True,
         help="Account used in the periodical entries, to record a part of the asset as expense.",
     )
+    additional_info = fields.Char(string="Additional Info",
+                                  help="Additional Info")
 
     def _auto_init(self):
         if not column_exists(self.env.cr, "account_asset", "value_residual"):
