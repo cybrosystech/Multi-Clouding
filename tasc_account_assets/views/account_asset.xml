@@ -182,7 +182,6 @@
                                                domain="[('state', '=', 'model'),('is_accrual', '=', True)]"
                                                invisible="is_accrual == False"
                                                options="{'no_quick_create': True}"
-                                               required="state != 'model'"
                                                context="{
                                     'default_state': 'model',
                                     'default_is_accrual': True,
@@ -244,10 +243,10 @@
                                                required="method in ('degressive', 'degressive_then_linear')"/>
                                         <label for="method_number" string="Duration"/>
                                         <div class="o_row">
-                                            <field name="method_number" required="1" readonly="state not in [ 'model']"
+                                            <field name="method_number" required="1" readonly="state not in ['draft','model']"
                                                    invisible="method_period in ('day')"
                                                    class="oe_inline"/>
-                                            <field name="method_period" required="1" readonly="state not in ['model']"
+                                            <field name="method_period" required="1" readonly="state not in ['draft','model']"
                                                    invisible="method_period in ('day')"
                                                    nolabel="1"/>
                                         </div>
@@ -357,32 +356,32 @@
                                     </tree>
                                 </field>
                             </page>
-                            <page string="Bills" name="related_items">
-                                <field
-                                        name="original_move_line_ids"
-                                        readonly="state == 'posted'"
-                                        domain="[
-                                    ('parent_state', '=', 'posted'),
-                                    ('company_id', '=', company_id),
-                                    ('account_id.account_type', 'in', ('asset_fixed', 'asset_non_current', 'asset_current')),
-                                    ('move_id.move_type', 'in', ('in_invoice', 'in_refund', 'in_receipt', 'entry')),
-                                    ('move_id.asset_id', '=', False),
-                                ]"
-                                        class="original_move_line_ids_field"
-                                        context="{'disable_preview': 1, 'tree_view_ref': 'account_asset.view_move_line_tree_asset'}">
-                                    <tree create="0" no_open="1">
-                                        <field name="date"/>
-                                        <field name="move_name" string="Journal Entry" widget="open_move_widget"/>
-                                        <field name="account_id"/>
-                                        <!--                                                        <field name='vehicle_id' optional='hidden'/>-->
+<!--                            <page string="Bills" name="related_items">-->
+<!--                                <field-->
+<!--                                        name="original_move_line_ids"-->
+<!--                                        readonly="state == 'posted'"-->
+<!--                                        domain="[-->
+<!--                                    ('parent_state', '=', 'posted'),-->
+<!--                                    ('company_id', '=', company_id),-->
+<!--                                    ('account_id.account_type', 'in', ('asset_fixed', 'asset_non_current', 'asset_current')),-->
+<!--                                    ('move_id.move_type', 'in', ('in_invoice', 'in_refund', 'in_receipt', 'entry')),-->
+<!--                                    ('move_id.asset_id', '=', False),-->
+<!--                                ]"-->
+<!--                                        class="original_move_line_ids_field"-->
+<!--                                        context="{'disable_preview': 1, 'tree_view_ref': 'account_asset.view_move_line_tree_asset'}">-->
+<!--                                    <tree create="0" no_open="1">-->
+<!--                                        <field name="date"/>-->
+<!--                                        <field name="move_name" string="Journal Entry" widget="open_move_widget"/>-->
+<!--                                        <field name="account_id"/>-->
+<!--                                        &lt;!&ndash;                                                        <field name='vehicle_id' optional='hidden'/>&ndash;&gt;-->
 
-                                        <field name="name"/>
-                                        <field name="debit" widget="monetary"/>
-                                        <field name="credit" widget="monetary"/>
-                                        <field name="company_currency_id" column_invisible="True"/>
-                                    </tree>
-                                </field>
-                            </page>
+<!--                                        <field name="name"/>-->
+<!--                                        <field name="debit" widget="monetary"/>-->
+<!--                                        <field name="credit" widget="monetary"/>-->
+<!--                                        <field name="company_currency_id" column_invisible="True"/>-->
+<!--                                    </tree>-->
+<!--                                </field>-->
+<!--                            </page>-->
                             <page name="asset_approval_cycle" string="Approval Cycle">
                                 <field name="life_cycle_id" invisible="1"/>
                                 <field name="asset_approval_cycle_ids">
