@@ -23,7 +23,6 @@ class AccountAssetInherit(models.Model):
         self.prorata_date = Date
 
     def _recompute_board(self, start_depreciation_date=False):
-        print("_recompute_board3")
         self.ensure_one()
         # All depreciation moves that are posted
         posted_depreciation_move_ids = self.depreciation_move_ids.filtered(
@@ -42,7 +41,11 @@ class AccountAssetInherit(models.Model):
 
         depreciation_move_values = []
         if not float_is_zero(self.value_residual, precision_rounding=self.currency_id.rounding):
+            i = 0
             while not self.currency_id.is_zero(residual_amount) and start_depreciation_date < final_depreciation_date:
+                i+=1
+                move_ref = _("%s: Depreciation", self.name) if not self.is_accrual else _("%s: Accrual", self.name) + " - "+ self.sequence_number + " - "+ str(i)
+
                 period_end_depreciation_date = self._get_end_period_date(start_depreciation_date)
                 period_end_fiscalyear_date = self.company_id.compute_fiscalyear_dates(period_end_depreciation_date).get('date_to')
                 lifetime_left = self._get_delta_days(start_depreciation_date, last_day_asset)
@@ -64,16 +67,15 @@ class AccountAssetInherit(models.Model):
                     period_end_depreciation_date = final_depreciation_date
 
                 if not float_is_zero(amount, precision_rounding=self.currency_id.rounding):
-                    print("ffffffffffff")
                     # For deferred revenues, we should invert the amounts.
                     depreciation_move_values.append(self.env['account.move']._prepare_move_for_asset_depreciation({
                         'amount': amount,
                         'asset_id': self,
+                        'move_ref':move_ref,
                         'depreciation_beginning_date': start_depreciation_date,
                         'date': period_end_depreciation_date,
                         'asset_number_days': days,
                     }))
-                    print("fffffffffjjjjjjj")
 
                 if period_end_depreciation_date == period_end_fiscalyear_date:
                     start_yearly_period = self.company_id.compute_fiscalyear_dates(period_end_depreciation_date).get('date_from') + relativedelta(years=1)
