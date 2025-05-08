@@ -533,7 +533,9 @@ class AssetsReportCustomHandler(models.AbstractModel):
         self.env['account.move.line'].check_access_rights('read')
         self.env['account.asset'].check_access_rights('read')
 
-        move_filter = f"""move.state {"!= 'cancel'" if options.get('all_entries') else "= 'posted'"}"""
+        # move_filter = f"""move.state {"!= 'cancel'" if options.get('all_entries') else "= 'posted'"}"""
+        move_filter = f"""move.state {"in ('cancel','to_approve','draft','posted')" if options.get('all_entries') else "in ('posted','cancel')"}"""
+
         query_params = {
             'date_to': options['date']['date_to'],
             'date_from': options['date']['date_from'],

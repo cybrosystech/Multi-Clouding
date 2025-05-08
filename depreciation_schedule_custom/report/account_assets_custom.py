@@ -878,6 +878,8 @@ class AccountReport(models.Model):
                           """
             elif options["available_variants"][0][
                 "name"] == 'Tasc Depreciation Lease':
+                move_filter = f"""move.state {"in ('cancel','to_approve','draft','posted')" if options.get('all_entries') else "in ('posted','cancel')"}"""
+
                 sql = f"""SELECT 
                             asset.id AS asset_id, 
                             asset.parent_id AS parent_id, 
@@ -1114,11 +1116,13 @@ class AccountReport(models.Model):
                     asset_add = 0.0 if opening else i['asset_original_value']
                     asset_minus = 0.0
                     asset_salvage_value = i.get('asset_salvage_value', 0.0)
+                    print("asset", i['asset_name'])
 
                     # Add the main values of the board for all the sub assets (gross increases)
                     children_lines = defaultdict(list)
                     children_lines = [d for d in results if
                                       d.get('parent_id') == i['asset_id']]
+                    print("children_lines",children_lines)
                     for child in children_lines:
                         depreciation_opening += child['depreciated_before']
                         depreciation_add += child['depreciated_during']
@@ -1152,6 +1156,7 @@ class AccountReport(models.Model):
                                 and i['asset_disposal_date'] <= fields.Date.to_date(options['date']['date_to'])
                                 and abs(depreciation_closing - (asset_closing - asset_salvage_value)) <= 0.01
                         ):
+                            print("closing")
                             depreciation_add -= asset_disposal_value
                             depreciation_minus += depreciation_closing - asset_disposal_value
                             depreciation_closing = 0.0
