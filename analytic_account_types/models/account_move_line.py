@@ -587,7 +587,7 @@ class AccountMove(models.Model):
             'journal_id': asset.journal_id.id,
             'line_ids': [(0, 0, move_line_1), (0, 0, move_line_2)],
             'asset_id': asset.id,
-            'ref': _("%s: Depreciation", asset.name) if not asset.is_accrual else _("%s: Accrual", asset.name),
+            'ref': vals["move_ref"] if vals.get('move_ref') else _("%s: Depreciation", asset.name) if not asset.is_accrual else _("%s: Accrual", asset.name),
             'asset_depreciation_beginning_date': vals[
                 'depreciation_beginning_date'],
             'asset_number_days': vals['asset_number_days'],
