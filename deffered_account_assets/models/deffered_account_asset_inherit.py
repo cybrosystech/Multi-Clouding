@@ -1,7 +1,7 @@
 from odoo import fields, models, _, api
 from dateutil.relativedelta import relativedelta
 from odoo.tools import float_compare, float_is_zero, float_round
-
+from odoo.tools.misc import formatLang
 DAYS_PER_MONTH = 30
 DAYS_PER_YEAR = DAYS_PER_MONTH * 12
 
@@ -44,7 +44,12 @@ class AccountAssetInherit(models.Model):
             i = 0
             while not self.currency_id.is_zero(residual_amount) and start_depreciation_date < final_depreciation_date:
                 i+=1
-                move_ref = _("%s: Depreciation", self.name) if not self.is_accrual else _("%s: Accrual", self.name) + " - "+ self.sequence_number + " - ("+ str(i)+"/"+str(self.method_number)+") - ("+str(self.original_value)+"/"+str(self.method_number)+")"
+                env = self.env
+                formatted_value = formatLang(env, self.original_value, currency_obj=self.currency_id)
+                move_ref = (_("%s: Depreciation", self.name) if not self.is_accrual else _("%s: Accrual", self.name)) \
+                           + " - " + self.sequence_number \
+                           + " - (" + str(i) + "/" + str(self.method_number) + ")" \
+                           + " - (" + formatted_value + "/" + str(self.method_number) + ")"
 
                 period_end_depreciation_date = self._get_end_period_date(start_depreciation_date)
                 period_end_fiscalyear_date = self.company_id.compute_fiscalyear_dates(period_end_depreciation_date).get('date_to')
