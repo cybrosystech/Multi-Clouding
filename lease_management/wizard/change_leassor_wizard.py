@@ -78,7 +78,7 @@ class ChangeLeasorWizard(models.TransientModel):
                 ('leasee_contract_id', '=', contract.id),
                 ('move_type', '=', 'in_invoice'),
                 ('state', '=', 'draft'),
-            ]).filtered(lambda m: m.date >= self.change_date)
+            ]).filtered(lambda m: m.invoice_date >= self.change_date)
             bills.sudo().unlink()
 
             if self.leasor_type == 'single':
@@ -96,7 +96,7 @@ class ChangeLeasorWizard(models.TransientModel):
                     ('leasee_contract_id', '=', contract.id),
                     ('move_type', '=', 'in_invoice'),
                     ('state', '=', 'draft'),
-                ]).filtered(lambda m: m.date >= self.change_date)
+                ]).filtered(lambda m: m.invoice_date >= self.change_date)
                 bills.unlink()
                 installments = self.env['leasee.installment'].search([
                     ('leasee_contract_id', '=', contract.id),
@@ -134,7 +134,7 @@ class ChangeLeasorWizard(models.TransientModel):
                         ('move_type', '=', 'in_invoice'),
                         ('state', '=', 'draft'),
                         ('partner_id', '=', line.partner_id.id),
-                    ]).filtered(lambda m: m.date >= self.change_date)
+                    ]).filtered(lambda m:  m.invoice_date >= self.change_date)
                     bills.sudo().unlink()
             removed_lines.sudo().unlink()
             changed_bills = 0
