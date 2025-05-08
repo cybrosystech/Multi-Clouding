@@ -643,6 +643,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                                             AND asset.state NOT IN ('model', 'draft', 'cancelled') 
                                             AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
                                             AND asset.active = 't'
+                                            AND COALESCE(asset.is_accrual, false) = false
                                             AND (account.name ->> 'en_US') NOT ILIKE '%%Lease%%'
                                             AND NOT EXISTS (
                                               SELECT 1 FROM leasee_contract lc WHERE lc.asset_id = asset.id
@@ -728,6 +729,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                       AND asset.state NOT IN ('model', 'draft', 'cancelled') 
                       AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
                       AND asset.active = 't'
+                      AND COALESCE(asset.is_accrual, false) = false
                       AND (account.name ->> 'en_US') NOT ILIKE '%%Lease%%'
                       AND NOT EXISTS (
                           SELECT 1 FROM leasee_contract lc WHERE lc.asset_id = asset.id
