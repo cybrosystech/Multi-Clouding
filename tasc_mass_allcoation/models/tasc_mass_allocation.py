@@ -21,9 +21,13 @@ class MassAllocation(models.Model):
         ('cancel', 'Cancelled'), ('to_approve', 'To Approve'),
     ], string='Status', required=True, copy=False, tracking=True,
         default='posted')
+    plan_id = fields.Many2one(
+        'account.analytic.plan',
+        string='Plan',
+        required=True,
+    )
     business_unit_id = fields.Many2one(comodel_name="account.analytic.account",
-                                       domain=[('plan_id.name', '=ilike', 'Business Unit')],
-                                       string="Business Unit", required=True, )
+                                       string="Business Unit")
 
     account_ids = fields.Many2many('account.account', string="Account")
     company_id = fields.Many2one('res.company', 'Company', default=lambda self: self.env.company)
@@ -42,13 +46,17 @@ class MassAllocation(models.Model):
 
         domain = [
             ('company_id', '=', self.company_id.id),
-            ('business_unit_id', '=', self.business_unit_id.id),
             ('parent_state', '=', self.state),
             ('date', '>=', self.date_from),
             ('date', '<=', self.date_to),
             ('journal_id', '!=', journal_id.id),
             ('mass_allocation_id', '=', False)
         ]
+        if self.business_unit_id:
+            domain.append(('business_unit_id', '=', self.business_unit_id.id))
+        else:
+            domain.append(('business_unit_id', '=',False))
+
         if self.account_ids:
             domain.append(('account_id', 'in', self.account_ids.ids))
 
@@ -64,7 +72,7 @@ class MassAllocation(models.Model):
         for line in move_lines:
             self.env['mass.allocation.line'].create({
                 'mass_allocation_id': self.id,
-                'business_unit_id': line['business_unit_id'][0],
+                'business_unit_id': line['business_unit_id'][0] if line['business_unit_id'] else False,
                 'account_id': line['account_id'][0],
                 'balance': line['balance'],
             })
@@ -87,13 +95,17 @@ class MassAllocation(models.Model):
         ########################start##########################
         domain = [
             ('company_id', '=', self.company_id.id),
-            ('business_unit_id', '=', self.business_unit_id.id),
             ('parent_state', '=', self.state),
             ('date', '>=', self.date_from),
             ('date', '<=', self.date_to),
             ('journal_id', '!=', journal_id.id),
             ('mass_allocation_id', '=', False)
         ]
+        if self.business_unit_id:
+            domain.append(('business_unit_id', '=', self.business_unit_id.id))
+        else:
+            domain.append(('business_unit_id', '=', False))
+
         if self.account_ids:
             domain.append(('account_id', 'in', self.account_ids.ids))
         move_lines = self.env['account.move.line'].read_group(
