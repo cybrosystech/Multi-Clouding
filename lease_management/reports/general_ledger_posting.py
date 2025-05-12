@@ -130,19 +130,30 @@ class GeneralLedgerPostingWizard(models.TransientModel):
         # Sorting for better performance
         query += " ORDER BY aml.account_id"
         # Execute the query
-        self.env.cr.execute(query, params)
-        res = self.env.cr.dictfetchall()
-        return res
+        # self.env.cr.execute(query, params)
+        # res = self.env.cr.dictfetchall()
+        # return res
+        return query,params
 
     def print_report_xlsx(self):
-        report_data = self.get_report_data()
-        headers = list(report_data[0].keys())
+        query, params = self.get_report_data()
+        self.env.cr.execute(query, params)
+        # headers = list(report_data[0].keys())
+        headers = [desc.name for desc in self.env.cr.description]
 
         # Use StringIO for text buffer
         csv_buffer = StringIO()
         writer = csv.DictWriter(csv_buffer, fieldnames=headers)
         writer.writeheader()
-        writer.writerows(report_data)
+        # writer.writerows(report_data)
+
+        while True:
+            row = self.env.cr.fetchone()
+            if not row:
+                break
+            row_dict = dict(zip(headers, row))
+            writer.writerow(row_dict)
+
 
         # Encode the string data to bytes
         csv_data = csv_buffer.getvalue().encode('utf-8')
