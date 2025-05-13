@@ -16,9 +16,10 @@ def _create_payment_vals_from_batch(self, batch_result):
         elif batch_result['payment_values']['partner_id']:
             partner_id = self.env['res.partner'].browse(
                 batch_result['payment_values']['partner_id'])
+
             bank_ids = partner_id.bank_ids \
                 .filtered(lambda x: x.company_id.id in (
-                False, batch_result['move_id'].company_id.id))._origin
+                False, batch_result['move_id'].company_id.id if batch_result.get('move_id') else False))._origin
             if bank_ids:
                 bankid = bank_ids[:1]
                 partner_bank_id = bankid.id
@@ -116,7 +117,6 @@ def _create_payments(self):
     edit_mode = self.can_edit_wizard and (
             len(first_batch_result['lines']) == 1 or self.group_payment)
     to_process = []
-
     if edit_mode:
         payment_vals = self._create_payment_vals_from_wizard(first_batch_result)
         to_process.append({
