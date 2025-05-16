@@ -601,7 +601,6 @@ class TascTrialBalanceDetailReporttWizard(models.TransientModel):
         for entry in res_u:
             if entry['key'] in ['ending_balance', 'initial_balance', 'sum']:
                 balances[entry['key']] = entry['balance']
-
         for c_account  in candidates_account_ids:
             col = 0
             worksheet.write(row, col,c_account.code ,
@@ -619,12 +618,15 @@ class TascTrialBalanceDetailReporttWizard(models.TransientModel):
             worksheet.write(row, col, '',
                             STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, balances["initial_balance"] *-1,
+            value_init = balances['initial_balance'] if balances['initial_balance'] is not None else 0
+            worksheet.write(row, col, value_init *-1,
                             STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, balances['sum']*-1,
+            value = balances['sum'] if balances['sum'] is not None else 0
+            worksheet.write(row, col, value*-1,
                             STYLE_LINE_Data)
             col += 1
-            worksheet.write(row, col, balances['ending_balance']*-1,
+            value_ending = balances['ending_balance'] if balances['ending_balance'] is not None else 0
+            worksheet.write(row, col, value_ending*-1,
                             STYLE_LINE_Data)
         row += 1
