@@ -586,10 +586,20 @@ class TascTrialBalanceQuickConsolReporttWizard(models.TransientModel):
               code), entries in report_data.items():
             col = 0
             code = (account_id, account_name, cc_name,
+                                        code)[3] if (account_id, account_name, cc_name,
+                                        code)[3] else ''
+            ac_det = ''
+            if  (account_id, account_name, cc_name,
+                                        code)[3]:
+                ac_det+= (account_id, account_name, cc_name,
                                         code)[3]
-            worksheet.write(row, col,(account_id, account_name, cc_name,
-                                        code)[3]+"|"+(account_id, account_name, cc_name,
-                                        code)[2]+"|"+ project_site.name ,
+            if (account_id, account_name, cc_name,
+                                        code)[2]:
+                ac_det+="|"+(account_id, account_name, cc_name,
+                                        code)[2]
+            if project_site.name:
+                ac_det+="|"+ project_site.name
+            worksheet.write(row, col,ac_det,
                             STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, (account_id, account_name, cc_name,
@@ -614,8 +624,15 @@ class TascTrialBalanceQuickConsolReporttWizard(models.TransientModel):
 
         for c_account in candidates_account_ids:
             col = 0
+            c_acc_det = ''
+            if c_account.code:
+                c_acc_det+=c_account.code
+            if cost_center_id.name:
+                c_acc_det+=  "|" + cost_center_id.name
+            if project_site.name:
+                c_acc_det+= project_site.name
             worksheet.write(row, col,
-                            c_account.code + "|" + cost_center_id.name + "|" + project_site.name,
+                            c_acc_det,
                             STYLE_LINE_Data)
             col += 1
             worksheet.write(row, col, c_account.name,
