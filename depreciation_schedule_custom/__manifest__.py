@@ -15,6 +15,7 @@
             'report/account_asset_report_depreciation_functional.xml',
             'report/account_assets_custom_report_grouped_view.xml',
             'report/account_asset_report_depreciation_lease.xml',
+            'report/account_asset_report_accrual_expense.xml'
         ],
     'installable': True,
     'auto_install': False,
