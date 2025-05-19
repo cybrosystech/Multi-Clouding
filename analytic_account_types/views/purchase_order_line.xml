@@ -6,6 +6,9 @@
             <field name="model">purchase.order</field>
             <field name="inherit_id" ref="purchase.purchase_order_form"/>
             <field name="arch" type="xml">
+                 <xpath expr="//div[@name='reminder']" position="after">
+                     <field name="po_description" readonly="state in ['cancel', 'done', 'purchase','to_approve']"/>
+                </xpath>
                 <xpath expr="//button[@name='button_confirm'][1]" position="attributes">
                     <attribute name="invisible"> state != 'draft' or show_button_confirm == False</attribute>
                 </xpath>
@@ -81,6 +84,7 @@
                     <field name="remaining_amount" optional="hide" readonly="1"/>
                     <field name="local_subtotal" optional="hide" readonly="1" />
                     <field name="t_budget" />
+                    <field name="t_budget_name" />
                     <field name="site_status" />
                 </xpath>
                 <xpath expr="//notebook" position="inside">

@@ -136,6 +136,7 @@
                     <field name="local_subtotal" optional="hide"
                            readonly="1"/>
                     <field name="t_budget" />
+                    <field name="t_budget_name" />
                     <field name="site_status" />
                 </xpath>
 
@@ -160,6 +161,7 @@
                     <field name="remaining_amount" optional="hide"
                            readonly="1"/>
                       <field name="t_budget" />
+                      <field name="t_budget_name" />
                     <field name="site_status" />
                 </xpath>
                 <xpath expr="//notebook" position="inside">
@@ -203,6 +205,7 @@
                      <field name="project_site_id"/>
                      <field name="business_unit_id"/>
                       <field name="t_budget" />
+                      <field name="t_budget_name" />
                     <field name="site_status" />
                  </field>
              </field>

@@ -22,6 +22,7 @@ class PurchaseOrder(models.Model):
         selection_add=[('to_approve', 'To Approve'), ('sent',), ],
         ondelete={'to_approve': 'set default', 'draft': 'set default', })
     is_admin = fields.Boolean(string="Is Admin", compute='compute_is_admin')
+    po_description = fields.Char(string="PO Description")
 
     @api.depends_context('uid')
     def compute_is_admin(self):
@@ -311,6 +312,7 @@ class PurchaseOrderLine(models.Model):
     t_budget = fields.Selection(
         [('capex', 'CAPEX'), ('opex', 'OPEX'), ],
         string='T.Budget')
+    t_budget_name = fields.Char(string="T.Budget Name")
 
 
     @api.onchange('budget_id')
@@ -389,4 +391,5 @@ class PurchaseOrderLine(models.Model):
             'sequence': self.sequence,
             'site_status':self.site_status,
             't_budget':self.t_budget,
+            't_budget_name':self.t_budget_name,
         }

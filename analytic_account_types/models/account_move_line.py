@@ -639,6 +639,7 @@ class AccountMoveLine(models.Model):
     t_budget = fields.Selection(
         [('capex', 'CAPEX'), ('opex', 'OPEX'), ],
         string='T.Budget')
+    t_budget_name = fields.Char(string="T.Budget Name")
     account_id = fields.Many2one(
         comodel_name='account.account',
         string='Account',
