@@ -365,29 +365,53 @@ class CashBurnReportGLWizard(models.Model):
                                                                               x: x.account_id.account_type not in [
                                         'asset_receivable',
                                         'liability_payable'])
-
-                                    if bank_account_line.debit:
-                                        debit_amount=exch["amount"]
-                                        credit_amount=0
+                                    if len(exch_line.ids) > 1:
+                                        for exc in exch_line:
+                                            if bank_account_line.debit:
+                                                debit_amount = exch["amount"]
+                                                credit_amount = 0
+                                            else:
+                                                debit_amount = 0
+                                                credit_amount = exch["amount"]
+                                            self.add_row(worksheet, row,
+                                                         STYLE_LINE_Data, date_format,
+                                                         line.date, line.name, exch_move_id.ref,
+                                                         exc.name, exch_move_id.name,
+                                                         line.journal_id,
+                                                         exc.analytic_account_id,
+                                                         exc.project_site_id,
+                                                         exc.account_id,
+                                                         bank_account_line.account_id,
+                                                         exch_move_id.partner_id,
+                                                         exch_move_id.currency_id,
+                                                         exch["amount"],
+                                                         debit_amount,
+                                                         credit_amount
+                                                         )
+                                            row += 1
                                     else:
-                                        debit_amount = 0
-                                        credit_amount = exch["amount"]
-                                    self.add_row(worksheet, row,
-                                                 STYLE_LINE_Data, date_format,
-                                                 line.date, line.name, exch_move_id.ref,
-                                                 exch_line.name, exch_move_id.name,
-                                                 line.journal_id,
-                                                 exch_line.analytic_account_id,
-                                                 exch_line.project_site_id,
-                                                 exch_line.account_id,
-                                                 bank_account_line.account_id,
-                                                 exch_move_id.partner_id,
-                                                 exch_move_id.currency_id,
-                                                 exch["amount"],
-                                                 debit_amount,
-                                                 credit_amount
-                                                 )
-                                    row += 1
+                                        if bank_account_line.debit:
+                                            debit_amount=exch["amount"]
+                                            credit_amount=0
+                                        else:
+                                            debit_amount = 0
+                                            credit_amount = exch["amount"]
+                                        self.add_row(worksheet, row,
+                                                     STYLE_LINE_Data, date_format,
+                                                     line.date, line.name, exch_move_id.ref,
+                                                     exch_line.name, exch_move_id.name,
+                                                     line.journal_id,
+                                                     exch_line.analytic_account_id,
+                                                     exch_line.project_site_id,
+                                                     exch_line.account_id,
+                                                     bank_account_line.account_id,
+                                                     exch_move_id.partner_id,
+                                                     exch_move_id.currency_id,
+                                                     exch["amount"],
+                                                     debit_amount,
+                                                     credit_amount
+                                                     )
+                                        row += 1
                     else:
                         for rec in line.payment_id.reconciled_invoice_ids:
                             s = rec.invoice_payments_widget
@@ -455,30 +479,55 @@ class CashBurnReportGLWizard(models.Model):
                                         x: x.account_id.account_type not in [
                                         'asset_receivable',
                                         'liability_payable'])
-
-                                if bank_account_line.debit:
-                                    debit_amount = exch["amount"]
-                                    credit_amount = 0
+                                if len(exch_line.ids) >1:
+                                    for exc in exch_line:
+                                        if bank_account_line.debit:
+                                            debit_amount = exch["amount"]
+                                            credit_amount = 0
+                                        else:
+                                            debit_amount = 0
+                                            credit_amount = exch["amount"]
+                                        self.add_row(worksheet, row,
+                                                     STYLE_LINE_Data, date_format,
+                                                     line.date, line.name,
+                                                     exch_move_id.ref,
+                                                     exc.name, exch_move_id.name,
+                                                     line.journal_id,
+                                                     exc.analytic_account_id,
+                                                     exc.project_site_id,
+                                                     exc.account_id,
+                                                     bank_account_line.account_id,
+                                                     exch_move_id.partner_id,
+                                                     exch_move_id.currency_id,
+                                                     exch["amount"],
+                                                     debit_amount,
+                                                     credit_amount
+                                                     )
+                                        row += 1
                                 else:
-                                    debit_amount = 0
-                                    credit_amount = exch["amount"]
-                                self.add_row(worksheet, row,
-                                             STYLE_LINE_Data, date_format,
-                                             line.date, line.name,
-                                             exch_move_id.ref,
-                                             exch_line.name, exch_move_id.name,
-                                             line.journal_id,
-                                             exch_line.analytic_account_id,
-                                             exch_line.project_site_id,
-                                             exch_line.account_id,
-                                             bank_account_line.account_id,
-                                             exch_move_id.partner_id,
-                                             exch_move_id.currency_id,
-                                             exch["amount"],
-                                             debit_amount,
-                                             credit_amount
-                                             )
-                                row += 1
+                                    if bank_account_line.debit:
+                                        debit_amount = exch["amount"]
+                                        credit_amount = 0
+                                    else:
+                                        debit_amount = 0
+                                        credit_amount = exch["amount"]
+                                    self.add_row(worksheet, row,
+                                                 STYLE_LINE_Data, date_format,
+                                                 line.date, line.name,
+                                                 exch_move_id.ref,
+                                                 exch_line.name, exch_move_id.name,
+                                                 line.journal_id,
+                                                 exch_line.analytic_account_id,
+                                                 exch_line.project_site_id,
+                                                 exch_line.account_id,
+                                                 bank_account_line.account_id,
+                                                 exch_move_id.partner_id,
+                                                 exch_move_id.currency_id,
+                                                 exch["amount"],
+                                                 debit_amount,
+                                                 credit_amount
+                                                 )
+                                    row += 1
                     if line.payment_id.reconciled_statement_line_ids:
                         reconciled_entry =line.payment_id.reconciled_statement_line_ids.mapped('move_id')
                         bank_line = reconciled_entry.line_ids.filtered(
@@ -673,30 +722,57 @@ class CashBurnReportGLWizard(models.Model):
                                                         x: x.account_id.account_type not in [
                                                         'asset_receivable',
                                                         'liability_payable'])
-                                                if bank_line_id.debit:
-                                                    debit_amount = exch["amount"]
-                                                    credit_amount = 0
+                                                if len(exch_line.ids)>1:
+                                                    for exc in exch_line:
+                                                        if bank_line_id.debit:
+                                                            debit_amount = exch["amount"]
+                                                            credit_amount = 0
+                                                        else:
+                                                            debit_amount = 0
+                                                            credit_amount = exch["amount"]
+                                                        self.add_row(worksheet, row,
+                                                                     STYLE_LINE_Data,
+                                                                     date_format,
+                                                                     line.date, line.name,
+                                                                     line.ref,
+                                                                     exc.name, mv.name,
+                                                                     line.journal_id,
+                                                                     exc.analytic_account_id,
+                                                                     exc.project_site_id,
+                                                                     exc.account_id,
+                                                                     bank_line_id.account_id,
+                                                                     line.partner_id,
+                                                                     line.currency_id,
+                                                                     exch["amount"],
+                                                                     debit_amount,
+                                                                     credit_amount
+                                                                     )
+                                                        row += 1
                                                 else:
-                                                    debit_amount = 0
-                                                    credit_amount = exch["amount"]
-                                                self.add_row(worksheet, row,
-                                                             STYLE_LINE_Data,
-                                                             date_format,
-                                                             line.date, line.name,
-                                                             line.ref,
-                                                             exch_line.name, mv.name,
-                                                             line.journal_id,
-                                                             exch_line.analytic_account_id,
-                                                             exch_line.project_site_id,
-                                                             exch_line.account_id,
-                                                             bank_line_id.account_id,
-                                                             line.partner_id,
-                                                             line.currency_id,
-                                                             exch["amount"],
-                                                             debit_amount,
-                                                             credit_amount
-                                                             )
-                                                row += 1
+                                                    if bank_line_id.debit:
+                                                        debit_amount = exch["amount"]
+                                                        credit_amount = 0
+                                                    else:
+                                                        debit_amount = 0
+                                                        credit_amount = exch["amount"]
+                                                    self.add_row(worksheet, row,
+                                                                 STYLE_LINE_Data,
+                                                                 date_format,
+                                                                 line.date, line.name,
+                                                                 line.ref,
+                                                                 exch_line.name, mv.name,
+                                                                 line.journal_id,
+                                                                 exch_line.analytic_account_id,
+                                                                 exch_line.project_site_id,
+                                                                 exch_line.account_id,
+                                                                 bank_line_id.account_id,
+                                                                 line.partner_id,
+                                                                 line.currency_id,
+                                                                 exch["amount"],
+                                                                 debit_amount,
+                                                                 credit_amount
+                                                                 )
+                                                    row += 1
                             else:
                                 if mv.payment_id:
                                     if mv.payment_id.reconciled_bill_ids or mv.payment_id.reconciled_invoice_ids:
@@ -791,41 +867,77 @@ class CashBurnReportGLWizard(models.Model):
                                                                         x: x.account_id.account_type not in [
                                                                         'asset_receivable',
                                                                         'liability_payable'])
+                                                                if len(exch_line.ids)>1:
+                                                                    for exc in exch_line:
+                                                                        if bank_line_id.credit:
+                                                                            debit_amount = 0
+                                                                            credit_amount = \
+                                                                                exch[
+                                                                                    "amount"]
+                                                                        else:
+                                                                            debit_amount = \
+                                                                                exch[
+                                                                                    "amount"]
+                                                                            credit_amount = 0
 
-                                                                if bank_line_id.credit:
-                                                                    debit_amount = 0
-                                                                    credit_amount = \
+                                                                        self.add_row(
+                                                                            worksheet,
+                                                                            row,
+                                                                            STYLE_LINE_Data,
+                                                                            date_format,
+                                                                            line.date,
+                                                                            line.name,
+                                                                            line.ref,
+                                                                            exc.name,
+                                                                            mv.name,
+                                                                            line.journal_id,
+                                                                            exc.analytic_account_id,
+                                                                            exc.project_site_id,
+                                                                            exc.account_id,
+                                                                            bank_line_id.account_id,
+                                                                            line.partner_id,
+                                                                            line.currency_id,
+                                                                            exch[
+                                                                                "amount"],
+                                                                            debit_amount,
+                                                                            credit_amount
+                                                                        )
+                                                                        row += 1
+                                                                else:
+                                                                    if bank_line_id.credit:
+                                                                        debit_amount = 0
+                                                                        credit_amount = \
+                                                                            exch[
+                                                                                "amount"]
+                                                                    else:
+                                                                        debit_amount = \
                                                                         exch[
                                                                             "amount"]
-                                                                else:
-                                                                    debit_amount = \
-                                                                    exch[
-                                                                        "amount"]
-                                                                    credit_amount = 0
+                                                                        credit_amount = 0
 
-                                                                self.add_row(
-                                                                    worksheet,
-                                                                    row,
-                                                                    STYLE_LINE_Data,
-                                                                    date_format,
-                                                                    line.date,
-                                                                    line.name,
-                                                                    line.ref,
-                                                                    exch_line.name,
-                                                                    mv.name,
-                                                                    line.journal_id,
-                                                                    exch_line.analytic_account_id,
-                                                                    exch_line.project_site_id,
-                                                                    exch_line.account_id,
-                                                                    bank_line_id.account_id,
-                                                                    line.partner_id,
-                                                                    line.currency_id,
-                                                                    exch[
-                                                                        "amount"],
-                                                                    debit_amount,
-                                                                    credit_amount
-                                                                    )
-                                                                row += 1
+                                                                    self.add_row(
+                                                                        worksheet,
+                                                                        row,
+                                                                        STYLE_LINE_Data,
+                                                                        date_format,
+                                                                        line.date,
+                                                                        line.name,
+                                                                        line.ref,
+                                                                        exch_line.name,
+                                                                        mv.name,
+                                                                        line.journal_id,
+                                                                        exch_line.analytic_account_id,
+                                                                        exch_line.project_site_id,
+                                                                        exch_line.account_id,
+                                                                        bank_line_id.account_id,
+                                                                        line.partner_id,
+                                                                        line.currency_id,
+                                                                        exch[
+                                                                            "amount"],
+                                                                        debit_amount,
+                                                                        credit_amount
+                                                                        )
+                                                                    row += 1
                                         else:
                                             for m in mv.payment_id.reconciled_invoice_ids:
                                                 s = m.invoice_payments_widget
@@ -919,40 +1031,74 @@ class CashBurnReportGLWizard(models.Model):
                                                                         x: x.account_id.account_type not in [
                                                                         'asset_receivable',
                                                                         'liability_payable'])
-
-                                                                if bank_line_id.credit:
-                                                                    debit_amount = 0
-                                                                    credit_amount = \
+                                                                if len(exch_line.ids) > 1:
+                                                                    for exc  in exch_line:
+                                                                        if bank_line_id.credit:
+                                                                            debit_amount = 0
+                                                                            credit_amount = \
+                                                                                exch[
+                                                                                    "amount"]
+                                                                        else:
+                                                                            debit_amount = \
+                                                                                exch[
+                                                                                    "amount"]
+                                                                            credit_amount = 0
+                                                                        self.add_row(
+                                                                            worksheet,
+                                                                            row,
+                                                                            STYLE_LINE_Data,
+                                                                            date_format,
+                                                                            line.date,
+                                                                            line.name,
+                                                                            line.ref,
+                                                                            exc.name,
+                                                                            mv.name,
+                                                                            line.journal_id,
+                                                                            exc.analytic_account_id,
+                                                                            exc.project_site_id,
+                                                                            exc.account_id,
+                                                                            bank_line_id.account_id,
+                                                                            line.partner_id,
+                                                                            line.currency_id,
+                                                                            exch[
+                                                                                "amount"],
+                                                                            debit_amount,
+                                                                            credit_amount
+                                                                        )
+                                                                else:
+                                                                    if bank_line_id.credit:
+                                                                        debit_amount = 0
+                                                                        credit_amount = \
+                                                                            exch[
+                                                                                "amount"]
+                                                                    else:
+                                                                        debit_amount = \
                                                                         exch[
                                                                             "amount"]
-                                                                else:
-                                                                    debit_amount = \
-                                                                    exch[
-                                                                        "amount"]
-                                                                    credit_amount = 0
-                                                                self.add_row(
-                                                                    worksheet,
-                                                                    row,
-                                                                    STYLE_LINE_Data,
-                                                                    date_format,
-                                                                    line.date,
-                                                                    line.name,
-                                                                    line.ref,
-                                                                    exch_line.name,
-                                                                    mv.name,
-                                                                    line.journal_id,
-                                                                    exch_line.analytic_account_id,
-                                                                    exch_line.project_site_id,
-                                                                    exch_line.account_id,
-                                                                    bank_line_id.account_id,
-                                                                    line.partner_id,
-                                                                    line.currency_id,
-                                                                    exch[
-                                                                        "amount"],
-                                                                    debit_amount,
-                                                                    credit_amount
-                                                                    )
-                                                                row += 1
+                                                                        credit_amount = 0
+                                                                    self.add_row(
+                                                                        worksheet,
+                                                                        row,
+                                                                        STYLE_LINE_Data,
+                                                                        date_format,
+                                                                        line.date,
+                                                                        line.name,
+                                                                        line.ref,
+                                                                        exch_line.name,
+                                                                        mv.name,
+                                                                        line.journal_id,
+                                                                        exch_line.analytic_account_id,
+                                                                        exch_line.project_site_id,
+                                                                        exch_line.account_id,
+                                                                        bank_line_id.account_id,
+                                                                        line.partner_id,
+                                                                        line.currency_id,
+                                                                        exch[
+                                                                            "amount"],
+                                                                        debit_amount,
+                                                                        credit_amount
+                                                                        )
+                                                                    row += 1
                                     else:
                                         if mv.payment_id.purchase_order_id:
                                             total_price = sum(
@@ -1052,31 +1198,60 @@ class CashBurnReportGLWizard(models.Model):
                                             lambda x: x.account_id.account_type not in [
                                                 'asset_receivable',
                                                 'liability_payable'])
-                                        amt = exch_line.credit if exch_line.credit else exch_line.debit
+                                        if len(exch_line.ids) > 1:
+                                            for exc in exch_line:
+                                                amt = exc.credit if exc.credit else exc.debit
 
-                                        if bank_line_id.credit !=0:
-                                            credit_amount = amt
+                                                if bank_line_id.credit != 0:
+                                                    credit_amount = amt
+                                                else:
+                                                    debit_amount = amt
+                                                invoice_amount = 0
+                                                self.add_row(worksheet, row,
+                                                             STYLE_LINE_Data,
+                                                             date_format,
+                                                             line.date, line.name,
+                                                             line.ref,
+                                                             exc.name, mv.name,
+                                                             line.journal_id,
+                                                             exc.analytic_account_id,
+                                                             exc.project_site_id,
+                                                             exc.account_id,
+                                                             bank_line_id.account_id,
+                                                             line.partner_id,
+                                                             line.currency_id,
+                                                             invoice_amount,
+                                                             debit_amount,
+                                                             credit_amount
+                                                             )
+                                                row += 1
+
                                         else:
-                                            debit_amount = amt
-                                        invoice_amount = 0
-                                        self.add_row(worksheet, row,
-                                                     STYLE_LINE_Data,
-                                                     date_format,
-                                                     line.date, line.name,
-                                                     line.ref,
-                                                     exch_line.name, mv.name,
-                                                     line.journal_id,
-                                                     exch_line.analytic_account_id,
-                                                     exch_line.project_site_id,
-                                                     exch_line.account_id,
-                                                     bank_line_id.account_id,
-                                                     line.partner_id,
-                                                     line.currency_id,
-                                                     invoice_amount,
-                                                     debit_amount,
-                                                     credit_amount
-                                                     )
-                                        row += 1
+                                            amt = exch_line.credit if exch_line.credit else exch_line.debit
+
+                                            if bank_line_id.credit !=0:
+                                                credit_amount = amt
+                                            else:
+                                                debit_amount = amt
+                                            invoice_amount = 0
+                                            self.add_row(worksheet, row,
+                                                         STYLE_LINE_Data,
+                                                         date_format,
+                                                         line.date, line.name,
+                                                         line.ref,
+                                                         exch_line.name, mv.name,
+                                                         line.journal_id,
+                                                         exch_line.analytic_account_id,
+                                                         exch_line.project_site_id,
+                                                         exch_line.account_id,
+                                                         bank_line_id.account_id,
+                                                         line.partner_id,
+                                                         line.currency_id,
+                                                         invoice_amount,
+                                                         debit_amount,
+                                                         credit_amount
+                                                         )
+                                            row += 1
                         if open_balance_line_ids:
                             for ob in open_balance_line_ids:
                                 amount = ob.credit if ob.credit else ob.debit
@@ -1149,3 +1324,4 @@ class CashBurnReportGLWizard(models.Model):
                                      l.credit
                                      )
                         row += 1
+

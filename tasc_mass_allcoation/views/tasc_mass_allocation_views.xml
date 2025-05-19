@@ -25,13 +25,14 @@
                             <group>
                                 <field name="name" readonly="mass_allocation_move_id"/>
                                 <field name="date_from"  readonly="mass_allocation_move_id"/>
-                                <field name="business_unit_id"  readonly="mass_allocation_move_id"/>
-                                <field name="account_ids" widget="many2many_tags"  readonly="mass_allocation_move_id"/>
+                                <field name="plan_id" readonly="mass_allocation_move_id"/>
+                                <field name="business_unit_id"  readonly="mass_allocation_move_id"  domain="[('plan_id', '=', plan_id)]"/>
                                 <field name="mass_allocation_move_id" invisible="1"/>
                             </group>
                             <group>
                                 <field name="state"  readonly="mass_allocation_move_id"/>
                                 <field name="date_to"  readonly="mass_allocation_move_id"/>
+                                <field name="account_ids" widget="many2many_tags"  readonly="mass_allocation_move_id"/>
                                 <field name="company_id"
                                         readonly="mass_allocation_move_id"
                                 />
