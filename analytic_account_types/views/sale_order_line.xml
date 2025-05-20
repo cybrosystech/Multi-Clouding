@@ -46,6 +46,7 @@
                     <field name="remaining_amount" optional="hide" readonly="1" />
                     <field name="local_subtotal" readonly="1"  optional="hide"/>
                     <field name="t_budget" />
+                    <field name="t_budget_name" />
                     <field name="site_status"/>
                 </xpath>
 

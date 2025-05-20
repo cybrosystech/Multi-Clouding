@@ -722,7 +722,8 @@ class AccountReport(models.Model):
         if options["available_variants"][0][
             "name"] == 'Tasc Depreciation Schedule' or options["available_variants"][0][
             "name"] == 'Tasc Depreciation Schedule Functional' or options["available_variants"][0][
-            "name"] == 'Tasc Depreciation Lease':
+            "name"] == 'Tasc Depreciation Lease' or  options["available_variants"][0][
+            "name"] == 'Tasc Accrual Expense' :
             options['buttons'] = [
                 {'name': _('PDF'), 'sequence': 10, 'action': 'export_file',
                  'action_param': 'export_to_pdf', 'file_export_type': _('PDF'),
@@ -874,6 +875,71 @@ class AccountReport(models.Model):
                             currency.id,
                             project_sites.id, 
                             co_locations.id, 
+                            model.name
+                          """
+            elif options["available_variants"][0]["name"] == 'Tasc Accrual Expense':
+                sql = f"""SELECT 
+                            asset.id AS asset_id, 
+                            asset.parent_id AS parent_id, 
+                            asset.name AS asset_name, 
+                            asset.original_value AS asset_original_value, 
+                            asset.partial_disposal AS partial_disposal,
+                            asset.currency_id AS asset_currency_id, 
+                            COALESCE(asset.salvage_value, 0) as asset_salvage_value, 
+                            MIN(move.date) AS asset_date, 
+                            asset.disposal_date AS asset_disposal_date, 
+                            asset.acquisition_date AS asset_acquisition_date, 
+                            asset.method AS asset_method, 
+                            COALESCE(project_sites.name ->> 'en_US', '') as project_site, 
+                            asset.sequence_number as sequence_number, 
+                            asset.method_number AS asset_method_number, 
+                            asset.method_period AS asset_method_period, 
+                            asset.method_progress_factor AS asset_method_progress_factor, 
+                            asset.state AS asset_state, 
+                            asset.company_id AS company_id, 
+                            account.code AS account_code, 
+                            COALESCE(account.name ->> 'en_US', '') as account_name, 
+                            account.id AS account_id, 
+                             exp_account.code AS expense_account_code, 
+                            COALESCE(exp_account.name ->> 'en_US', '') as expense_account_name, 
+                            exp_account.id AS expense_account_id, 
+                            model.name as asset_model_name,
+                            currency.name as currency_name,
+                             COALESCE(SUM(move.depreciation_value) FILTER (WHERE move.date < %(date_from)s AND {move_filter}), 0) + COALESCE(asset.already_depreciated_amount_import, 0) AS depreciated_before,
+                               COALESCE(SUM(move.depreciation_value) FILTER (WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter}), 0) AS depreciated_during,
+                               COALESCE(SUM(move.depreciation_value) FILTER (WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND  (move.asset_number_days IS NULL OR  move.ref ILIKE '%%Disposal%%')), 0) AS asset_disposal_value,
+                             COALESCE(
+                            SUM(move.depreciation_value) FILTER (
+                              WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.ref NOT ILIKE '%%Disposal%%'
+                            ), 0
+                          ) AS depreciated_for_the_year, 
+                            (
+                            SELECT MAX(move_sub.date)
+                            FROM account_move move_sub
+                            WHERE move_sub.asset_id = asset.id
+                          ) AS last_depreciation_date
+                          FROM 
+                            account_asset asset 
+                            LEFT JOIN account_account account ON asset.account_depreciation_id = account.id 
+                            LEFT JOIN account_account exp_account ON asset.account_depreciation_expense_id = exp_account.id 
+                            LEFT JOIN account_analytic_account project_sites ON asset.project_site_id = project_sites.id 
+                            LEFT JOIN account_move move ON move.asset_id = asset.id 
+                            LEFT JOIN account_asset model ON model.id = asset.model_id
+                            LEFT JOIN res_currency as currency ON asset.currency_id = currency.id
+                          WHERE 
+                            asset.active 
+                            AND (asset.disposal_date >=  %(date_from)s OR asset.disposal_date IS NULL)
+                            AND asset.company_id in %(company_ids)s
+                            AND asset.state NOT IN ('model', 'draft', 'cancelled') 
+                            AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
+                            AND asset.active = 't'
+                            AND COALESCE(asset.is_accrual, false) = true
+                          GROUP BY 
+                            asset.id, 
+                            account.id, 
+                            exp_account.id, 
+                            currency.id,
+                            project_sites.id, 
                             model.name
                           """
             elif options["available_variants"][0][
@@ -1083,325 +1149,637 @@ class AccountReport(models.Model):
                     x_offset += colspan
                 y_offset += 1
                 j += 1
-                for i in sub:
-                    if i.get('parent_id'):
-                        continue
-                    if i['asset_method'] == 'linear' and i[
-                        'asset_method_number']:  # some assets might have 0 depreciations because they dont lose value
-                        total_months = int(i['asset_method_number']) * int(i['asset_method_period'])
-                        months = total_months % 12
-                        years = total_months // 12
-                        asset_depreciation_rate = " ".join(part for part in [
-                            years and _("%s y", years),
-                            months and _("%s m", months),
-                        ] if part)
-                    elif i['asset_method'] == 'linear':
-                        asset_depreciation_rate = '0.00 %'
-                    else:
-                        asset_depreciation_rate = ('{:.2f} %').format(float(i['asset_method_progress_factor']) * 100)
 
-                    # Manage the opening of the asset
-                    opening = (i['asset_acquisition_date'] or i['asset_date']) < fields.Date.to_date(
-                        options['date']['date_from'])
-                    # Get the main values of the board for the asset
-                    depreciation_opening = i['depreciated_before']
-                    depreciation_add = i['depreciated_during']
-                    depreciated_for_the_year = i['depreciated_for_the_year']
-                    depreciation_minus = 0.0
+                if options["available_variants"][0]["name"] == 'Tasc Accrual Expense':
+                    for i in sub:
+                        if i.get('parent_id'):
+                            continue
+                        if i['asset_method'] == 'linear' and i[
+                            'asset_method_number']:  # some assets might have 0 depreciations because they dont lose value
+                            total_months = int(i['asset_method_number']) * int(i['asset_method_period'])
+                            months = total_months % 12
+                            years = total_months // 12
+                            asset_depreciation_rate = " ".join(part for part in [
+                                years and _("%s y", years),
+                                months and _("%s m", months),
+                            ] if part)
+                        elif i['asset_method'] == 'linear':
+                            asset_depreciation_rate = '0.00 %'
+                        else:
+                            asset_depreciation_rate = ('{:.2f} %').format(
+                                float(i['asset_method_progress_factor']) * 100)
 
-                    asset_disposal_value = i['asset_disposal_value'] if i['asset_disposal_date'] and i[
-                        'asset_disposal_date'] <= fields.Date.to_date(options['date']['date_to']) else 0.0
-
-                    asset_opening = i['asset_original_value'] if opening else 0.0
-                    asset_add = 0.0 if opening else i['asset_original_value']
-                    asset_minus = 0.0
-                    asset_salvage_value = i.get('asset_salvage_value', 0.0)
-                    print("asset", i['asset_name'])
-
-                    # Add the main values of the board for all the sub assets (gross increases)
-                    children_lines = defaultdict(list)
-                    children_lines = [d for d in results if
-                                      d.get('parent_id') == i['asset_id']]
-                    print("children_lines",children_lines)
-                    for child in children_lines:
-                        depreciation_opening += child['depreciated_before']
-                        depreciation_add += child['depreciated_during']
-                        depreciated_for_the_year += child['depreciated_for_the_year']
-
-                        opening = (child['asset_acquisition_date'] or child['asset_date']) < fields.Date.to_date(
+                        # Manage the opening of the asset
+                        opening = (i['asset_acquisition_date'] or i['asset_date']) < fields.Date.to_date(
                             options['date']['date_from'])
-                        asset_opening += child['asset_original_value'] if opening else 0.0
-                        asset_add += 0.0 if opening else child['asset_original_value']
+                        # Get the main values of the board for the asset
+                        depreciation_opening = i['depreciated_before']
+                        depreciation_add = i['depreciated_during']
+                        depreciated_for_the_year = i['depreciated_for_the_year']
+                        depreciation_minus = 0.0
 
-                    # Compute the closing values
-                    asset_closing = asset_opening + asset_add - asset_minus
-                    depreciation_closing = depreciation_opening + depreciation_add - depreciation_minus
-                    al_currency = self.env['res.currency'].browse(i['asset_currency_id'])
-                    # Manage the closing of the asset
-                    if i["partial_disposal"]:
-                        if (
-                                i['asset_state'] == 'close'
-                                and i['asset_disposal_date']
-                                and i['asset_disposal_date'] <= fields.Date.to_date(options['date']['date_to'])
-                        ):
-                            depreciation_add -= asset_disposal_value
-                            depreciation_minus += depreciation_closing - asset_disposal_value
-                            depreciation_closing = 0.0
-                            asset_minus += asset_closing
-                            asset_closing = 0.0
-                    else:
-                        if (
-                                i['asset_state'] == 'close'
-                                and i['asset_disposal_date']
-                                and i['asset_disposal_date'] <= fields.Date.to_date(options['date']['date_to'])
-                                and abs(depreciation_closing - (asset_closing - asset_salvage_value)) <= 0.01
-                        ):
-                            print("closing")
-                            depreciation_add -= asset_disposal_value
-                            depreciation_minus += depreciation_closing - asset_disposal_value
-                            depreciation_closing = 0.0
-                            asset_minus += asset_closing
-                            asset_closing = 0.0
+                        asset_disposal_value = i['asset_disposal_value'] if i['asset_disposal_date'] and i[
+                            'asset_disposal_date'] <= fields.Date.to_date(options['date']['date_to']) else 0.0
 
+                        asset_opening = i['asset_original_value'] if opening else 0.0
+                        asset_add = 0.0 if opening else i['asset_original_value']
+                        asset_minus = 0.0
+                        asset_salvage_value = i.get('asset_salvage_value', 0.0)
 
-                    # Manage negative assets (credit notes)
-                    if i['asset_original_value'] < 0:
-                        asset_add, asset_minus = -asset_minus, -asset_add
-                        depreciation_add, depreciation_minus = -depreciation_minus, -depreciation_add
+                        # Add the main values of the board for all the sub assets (gross increases)
+                        children_lines = defaultdict(list)
+                        children_lines = [d for d in results if
+                                          d.get('parent_id') == i['asset_id']]
+                        for child in children_lines:
+                            depreciation_opening += child['depreciated_before']
+                            depreciation_add += child['depreciated_during']
+                            depreciated_for_the_year += child['depreciated_for_the_year']
 
-                    if i["capex_type"] == 'replacement_capex':
-                        apex_type = 'Replacement CAPEX'
-                    elif i["capex_type"] == 'tenant_capex':
-                        apex_type = 'Tenant upgrade CAPEX'
-                    elif i["capex_type"] == 'expansion_capex':
-                        apex_type = 'Expansion CAPEX'
-                    elif i["capex_type"] == '5g_capex':
-                        apex_type = '5G CAPEX'
-                    elif i["capex_type"] == 'other_capex':
-                        apex_type = 'Other CAPEX'
-                    elif i["capex_type"] == 'transferred_capex':
-                        apex_type = 'Transferred CAPEX'
-                    else:
-                        apex_type = ''
+                            opening = (child['asset_acquisition_date'] or child['asset_date']) < fields.Date.to_date(
+                                options['date']['date_from'])
+                            asset_opening += child['asset_original_value'] if opening else 0.0
+                            asset_add += 0.0 if opening else child['asset_original_value']
 
-                    if i["asset_state"] == 'draft':
-                        status = 'Draft'
-                    elif i["asset_state"] == 'model':
-                        status = 'Model'
-                    elif i["asset_state"] == 'open':
-                        status = 'Running'
-                    elif i["asset_state"] == 'paused':
-                        status = 'On Hold'
-                    elif i["asset_state"] == 'close':
-                        status = 'Closed'
-                    elif i["asset_state"] == 'cancelled':
-                        status = 'Cancelled'
-                    elif i["asset_state"] == 'to_approve':
-                        status = 'To Approve'
-                    else:
-                        status = ''
+                        # Compute the closing values
+                        asset_closing = asset_opening + asset_add - asset_minus
+                        depreciation_closing = depreciation_opening + depreciation_add - depreciation_minus
+                        al_currency = self.env['res.currency'].browse(i['asset_currency_id'])
+                        # Manage the closing of the asset
+                        if i["partial_disposal"]:
+                            if (
+                                    i['asset_state'] == 'close'
+                                    and i['asset_disposal_date']
+                                    and i['asset_disposal_date'] <= fields.Date.to_date(options['date']['date_to'])
+                            ):
+                                depreciation_add -= asset_disposal_value
+                                depreciation_minus += depreciation_closing - asset_disposal_value
+                                depreciation_closing = 0.0
+                                asset_minus += asset_closing
+                                asset_closing = 0.0
+                        else:
+                            if (
+                                    i['asset_state'] == 'close'
+                                    and i['asset_disposal_date']
+                                    and i['asset_disposal_date'] <= fields.Date.to_date(options['date']['date_to'])
+                                    and abs(depreciation_closing - (asset_closing - asset_salvage_value)) <= 0.01
+                            ):
+                                depreciation_add -= asset_disposal_value
+                                depreciation_minus += depreciation_closing - asset_disposal_value
+                                depreciation_closing = 0.0
+                                asset_minus += asset_closing
+                                asset_closing = 0.0
 
-                    x_offset = 0
-                    if i['asset_name']:
-                        sheet.write(y_offset, x_offset, i['asset_name'],
-                                    date_default_col1_style)
-                    else:
-                        sheet.write(y_offset, x_offset, '',
-                                    date_default_col1_style)
+                        # Manage negative assets (credit notes)
+                        if i['asset_original_value'] < 0:
+                            asset_add, asset_minus = -asset_minus, -asset_add
+                            depreciation_add, depreciation_minus = -depreciation_minus, -depreciation_add
 
-                    x_offset += 1
-                    if i['asset_model_name']:
+                        if i["asset_state"] == 'draft':
+                            status = 'Draft'
+                        elif i["asset_state"] == 'model':
+                            status = 'Model'
+                        elif i["asset_state"] == 'open':
+                            status = 'Running'
+                        elif i["asset_state"] == 'paused':
+                            status = 'On Hold'
+                        elif i["asset_state"] == 'close':
+                            status = 'Closed'
+                        elif i["asset_state"] == 'cancelled':
+                            status = 'Cancelled'
+                        elif i["asset_state"] == 'to_approve':
+                            status = 'To Approve'
+                        else:
+                            status = ''
+
+                        x_offset = 0
+                        if i['asset_name']:
+                            sheet.write(y_offset, x_offset, i['asset_name'],
+                                        date_default_col1_style)
+                        else:
+                            sheet.write(y_offset, x_offset, '',
+                                        date_default_col1_style)
+
+                        x_offset += 1
+                        # if i['asset_model_name']:
+                        #     sheet.write(y_offset, x_offset,
+                        #                 i['asset_model_name'],
+                        #                 date_default_col1_style)
+                        # else:
+                        #     sheet.write(y_offset, x_offset,
+                        #                 '',
+                        #                 date_default_col1_style)
+                        # x_offset += 1
                         sheet.write(y_offset, x_offset,
-                                    i['asset_model_name'],
-                                    date_default_col1_style)
-                    else:
+                                    status,
+                                    default_style)
+                        x_offset += 1
                         sheet.write(y_offset, x_offset,
-                                    '',
+                                    i['asset_acquisition_date'] and format_date(
+                                        self.env,
+                                        i["asset_acquisition_date"]) or "",
                                     date_default_col1_style)
-                    x_offset += 1
-                    sheet.write(y_offset, x_offset,
-                                status,
-                                default_style)
-                    x_offset += 1
-                    sheet.write(y_offset, x_offset,
-                                i['asset_acquisition_date'] and format_date(
-                                    self.env,
-                                    i["asset_acquisition_date"]) or "",
-                                date_default_col1_style)
-                    x_offset += 1
-                    if i['account_code'] and i["account_name"]:
+                        x_offset += 1
+                        if i['account_code'] and i["account_name"]:
+                            sheet.write(y_offset, x_offset,
+                                        i['account_code'] + i['account_name'],
+                                        date_default_col1_style)
+                        elif i["account_name"]:
+                            sheet.write(y_offset, x_offset,
+                                        i['account_name'],
+                                        date_default_col1_style)
+                        else:
+                            sheet.write(y_offset, x_offset,
+                                        '',
+                                        date_default_col1_style)
+                        x_offset += 1
+                        if i['expense_account_code'] and i["expense_account_name"]:
+                            sheet.write(y_offset, x_offset,
+                                        i['expense_account_code'] + i['expense_account_name'],
+                                        date_default_col1_style)
+                        elif i["expense_account_name"]:
+                            sheet.write(y_offset, x_offset,
+                                        i['expense_account_name'],
+                                        date_default_col1_style)
+                        else:
+                            sheet.write(y_offset, x_offset,
+                                        '',
+                                        date_default_col1_style)
+                        x_offset += 1
+
                         sheet.write(y_offset, x_offset,
-                                    i['account_code'] + i['account_name'],
+                                    i['project_site'] if i["project_site"] else '',
                                     date_default_col1_style)
-                    elif i["account_name"]:
+                        x_offset += 1
+                        # sheet.write(y_offset, x_offset,
+                        #             i['co_location'] if i['co_location'] else '',
+                        #             date_default_col1_style)
+                        # x_offset += 1
                         sheet.write(y_offset, x_offset,
-                                    i['account_name'],
+                                    i['currency_name'] if i['currency_name'] else '',
                                     date_default_col1_style)
-                    else:
+                        x_offset += 1
+                        # sheet.write(y_offset, x_offset,
+                        #             apex_type,
+                        #             date_default_col1_style)
+                        # x_offset += 1
                         sheet.write(y_offset, x_offset,
-                                    '',
+                                    i['sequence_number'] if i['sequence_number'] else '',
                                     date_default_col1_style)
-                    x_offset += 1
+                        x_offset += 1
+                        # sheet.write(y_offset, x_offset,
+                        #             i['serial_no'] if i['serial_no'] else '',
+                        #             date_default_col1_style)
+                        # x_offset += 1
+                        # sheet.write(y_offset, x_offset,
+                        #             i['additional_info'] if i['additional_info'] else '',
+                        #             date_default_col1_style)
+                        # x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    i['asset_date'] and format_date(
+                                        self.env, i["asset_date"]) or "",
+                                    date_default_col1_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    i['last_depreciation_date'] and format_date(
+                                        self.env, i["last_depreciation_date"]) or "",
+                                    date_default_col1_style)
+                        x_offset += 1
 
-                    sheet.write(y_offset, x_offset,
-                                i['project_site'] if i["project_site"] else '',
-                                date_default_col1_style)
-                    x_offset += 1
-                    sheet.write(y_offset, x_offset,
-                                i['co_location'] if i['co_location'] else '',
-                                date_default_col1_style)
-                    x_offset += 1
-                    sheet.write(y_offset, x_offset,
-                                i['currency_name'] if i['currency_name'] else '',
-                                date_default_col1_style)
-                    x_offset += 1
-                    sheet.write(y_offset, x_offset,
-                                apex_type,
-                                date_default_col1_style)
-                    x_offset += 1
-                    sheet.write(y_offset, x_offset,
-                                i['sequence_number'] if i['sequence_number'] else '',
-                                date_default_col1_style)
-                    x_offset += 1
-                    sheet.write(y_offset, x_offset,
-                                i['serial_no'] if i['serial_no'] else '',
-                                date_default_col1_style)
-                    x_offset += 1
-                    sheet.write(y_offset, x_offset,
-                                i['additional_info'] if i['additional_info'] else '',
-                                date_default_col1_style)
-                    x_offset += 1
-                    sheet.write(y_offset, x_offset,
-                                i['asset_date'] and format_date(
-                                    self.env, i["asset_date"]) or "",
-                                date_default_col1_style)
-                    x_offset += 1
-                    sheet.write(y_offset, x_offset,
-                                i['last_depreciation_date'] and format_date(
-                                    self.env, i["last_depreciation_date"]) or "",
-                                date_default_col1_style)
-                    x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    (i["asset_method"] == "linear" and _(
+                                        "Linear")) or (
+                                            i[
+                                                "asset_method"] == "degressive" and _(
+                                        "Declining")) or _("Dec. then Straight"),
+                                    date_default_col1_style)
+                        x_offset += 1
 
-                    sheet.write(y_offset, x_offset,
-                                (i["asset_method"] == "linear" and _(
-                                    "Linear")) or (
-                                        i[
-                                            "asset_method"] == "degressive" and _(
-                                    "Declining")) or _("Dec. then Straight"),
-                                date_default_col1_style)
-                    x_offset += 1
+                        if i['asset_method'] == 'linear' and i[
+                            'asset_method_number']:  # some assets might have 0 depreciations because they dont lose value
+                            total_months = int(i['asset_method_number']) * int(
+                                i['asset_method_period'])
+                            asset_depreciation_rate = " ".join(
+                                _("%s m", total_months))
+                        elif i['asset_method'] == 'linear':
+                            asset_depreciation_rate = '0.00 %'
+                        else:
+                            asset_depreciation_rate = ('{:.2f} %').format(
+                                float(i['asset_method_progress_factor']) * 100)
+                        asset_id = self.env['account.asset'].browse(
+                            i["asset_id"])
+                        balance = asset_closing - depreciation_closing
 
-                    if i['asset_method'] == 'linear' and i[
-                        'asset_method_number']:  # some assets might have 0 depreciations because they dont lose value
-                        total_months = int(i['asset_method_number']) * int(
-                            i['asset_method_period'])
-                        asset_depreciation_rate = " ".join(
-                            _("%s m", total_months))
-                    elif i['asset_method'] == 'linear':
-                        asset_depreciation_rate = '0.00 %'
-                    else:
-                        asset_depreciation_rate = ('{:.2f} %').format(
-                            float(i['asset_method_progress_factor']) * 100)
-                    asset_id = self.env['account.asset'].browse(
-                        i["asset_id"])
-                    balance = asset_closing - depreciation_closing
-
-                    if i[
-                        "asset_currency_id"] != self.env.company.currency_id.id and (options["available_variants"][0][
-                                                                                         "name"] == 'Tasc Depreciation Schedule Functional' or
-                                                                                     options["available_variants"][0][
-                                                                                         "name"] == 'Tasc Depreciation Lease'):
-                        asset_opening = asset_id.currency_id._convert(
-                            asset_opening,
-                            self.env.company.currency_id,
-                            self.env.company,
-                            asset_id.acquisition_date)
-                        asset_add = asset_id.currency_id._convert(
-                            asset_add,
-                            self.env.company.currency_id,
-                            self.env.company,
-                            asset_id.acquisition_date)
-                        asset_minus = asset_id.currency_id._convert(
-                            asset_minus,
-                            self.env.company.currency_id,
-                            self.env.company,
-                            asset_id.acquisition_date)
-                        asset_closing = asset_id.currency_id._convert(
-                            asset_closing,
-                            self.env.company.currency_id,
-                            self.env.company,
-                            asset_id.acquisition_date)
-                        depreciation_minus = asset_id.currency_id._convert(
-                            depreciation_minus,
-                            self.env.company.currency_id,
-                            self.env.company,
-                            asset_id.acquisition_date)
-                        depreciation_opening = asset_id.currency_id._convert(
-                            depreciation_opening,
-                            self.env.company.currency_id,
-                            self.env.company,
-                            asset_id.acquisition_date)
-                        depreciation_add = asset_id.currency_id._convert(
-                            depreciation_add,
-                            self.env.company.currency_id,
-                            self.env.company,
-                            asset_id.acquisition_date)
-                        depreciation_closing = asset_id.currency_id._convert(
-                            depreciation_closing,
-                            self.env.company.currency_id,
-                            self.env.company,
-                            asset_id.acquisition_date)
-                        balance = asset_id.currency_id._convert(
-                            balance,
-                            self.env.company.currency_id,
-                            self.env.company,
-                            asset_id.acquisition_date)
-
-                    sheet.write(y_offset, x_offset,
-                                asset_depreciation_rate,
-                                date_default_col1_style)
-                    x_offset += 1
-                    sheet.write(y_offset, x_offset,
+                        if i[
+                            "asset_currency_id"] != self.env.company.currency_id.id and  options["available_variants"][0][
+                                    "name"] == 'Tasc Accrual Expense':
+                            asset_opening = asset_id.currency_id._convert(
                                 asset_opening,
-                                default_style)
-                    x_offset += 1
-                    sheet.write(y_offset, x_offset,
+                                self.env.company.currency_id,
+                                self.env.company,
+                                asset_id.acquisition_date)
+                            asset_add = asset_id.currency_id._convert(
                                 asset_add,
-                                default_style)
-                    x_offset += 1
-                    sheet.write(y_offset, x_offset,
+                                self.env.company.currency_id,
+                                self.env.company,
+                                asset_id.acquisition_date)
+                            asset_minus = asset_id.currency_id._convert(
                                 asset_minus,
-                                default_style)
-                    x_offset += 1
-                    sheet.write(y_offset, x_offset,
+                                self.env.company.currency_id,
+                                self.env.company,
+                                asset_id.acquisition_date)
+                            asset_closing = asset_id.currency_id._convert(
                                 asset_closing,
-                                default_style)
-                    x_offset += 1
-                    sheet.write(y_offset, x_offset,
-                                depreciation_opening,
-                                default_style)
-                    x_offset += 1
-                    sheet.write(y_offset, x_offset,
-                                depreciation_add,
-                                default_style)
-                    x_offset += 1
-                    sheet.write(y_offset, x_offset,
+                                self.env.company.currency_id,
+                                self.env.company,
+                                asset_id.acquisition_date)
+                            depreciation_minus = asset_id.currency_id._convert(
                                 depreciation_minus,
-                                default_style)
-                    x_offset += 1
-                    sheet.write(y_offset, x_offset,
+                                self.env.company.currency_id,
+                                self.env.company,
+                                asset_id.acquisition_date)
+                            depreciation_opening = asset_id.currency_id._convert(
+                                depreciation_opening,
+                                self.env.company.currency_id,
+                                self.env.company,
+                                asset_id.acquisition_date)
+                            depreciation_add = asset_id.currency_id._convert(
+                                depreciation_add,
+                                self.env.company.currency_id,
+                                self.env.company,
+                                asset_id.acquisition_date)
+                            depreciation_closing = asset_id.currency_id._convert(
                                 depreciation_closing,
-                                default_style)
-                    x_offset += 1
-                    sheet.write(y_offset, x_offset,
+                                self.env.company.currency_id,
+                                self.env.company,
+                                asset_id.acquisition_date)
+                            balance = asset_id.currency_id._convert(
                                 balance,
-                                default_style)
-                    x_offset += 1
-                    sheet.write(y_offset, x_offset, depreciated_for_the_year
-                                ,
-                                default_style)
-                    x_offset += 1
-                    y_offset += 1
+                                self.env.company.currency_id,
+                                self.env.company,
+                                asset_id.acquisition_date)
+
+                        sheet.write(y_offset, x_offset,
+                                    asset_depreciation_rate,
+                                    date_default_col1_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    asset_opening,
+                                    default_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    asset_add,
+                                    default_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    asset_minus,
+                                    default_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    asset_closing,
+                                    default_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    depreciation_opening,
+                                    default_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    depreciation_add,
+                                    default_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    depreciation_minus,
+                                    default_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    depreciation_closing,
+                                    default_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    balance,
+                                    default_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset, depreciated_for_the_year
+                                    ,
+                                    default_style)
+                        x_offset += 1
+                        y_offset += 1
+                else:
+                    for i in sub:
+                        if i.get('parent_id'):
+                            continue
+                        if i['asset_method'] == 'linear' and i[
+                            'asset_method_number']:  # some assets might have 0 depreciations because they dont lose value
+                            total_months = int(i['asset_method_number']) * int(i['asset_method_period'])
+                            months = total_months % 12
+                            years = total_months // 12
+                            asset_depreciation_rate = " ".join(part for part in [
+                                years and _("%s y", years),
+                                months and _("%s m", months),
+                            ] if part)
+                        elif i['asset_method'] == 'linear':
+                            asset_depreciation_rate = '0.00 %'
+                        else:
+                            asset_depreciation_rate = ('{:.2f} %').format(float(i['asset_method_progress_factor']) * 100)
+
+                        # Manage the opening of the asset
+                        opening = (i['asset_acquisition_date'] or i['asset_date']) < fields.Date.to_date(
+                            options['date']['date_from'])
+                        # Get the main values of the board for the asset
+                        depreciation_opening = i['depreciated_before']
+                        depreciation_add = i['depreciated_during']
+                        depreciated_for_the_year = i['depreciated_for_the_year']
+                        depreciation_minus = 0.0
+
+                        asset_disposal_value = i['asset_disposal_value'] if i['asset_disposal_date'] and i[
+                            'asset_disposal_date'] <= fields.Date.to_date(options['date']['date_to']) else 0.0
+
+                        asset_opening = i['asset_original_value'] if opening else 0.0
+                        asset_add = 0.0 if opening else i['asset_original_value']
+                        asset_minus = 0.0
+                        asset_salvage_value = i.get('asset_salvage_value', 0.0)
+                        # Add the main values of the board for all the sub assets (gross increases)
+                        children_lines = defaultdict(list)
+                        children_lines = [d for d in results if
+                                          d.get('parent_id') == i['asset_id']]
+                        for child in children_lines:
+                            depreciation_opening += child['depreciated_before']
+                            depreciation_add += child['depreciated_during']
+                            depreciated_for_the_year += child['depreciated_for_the_year']
+
+                            opening = (child['asset_acquisition_date'] or child['asset_date']) < fields.Date.to_date(
+                                options['date']['date_from'])
+                            asset_opening += child['asset_original_value'] if opening else 0.0
+                            asset_add += 0.0 if opening else child['asset_original_value']
+
+                        # Compute the closing values
+                        asset_closing = asset_opening + asset_add - asset_minus
+                        depreciation_closing = depreciation_opening + depreciation_add - depreciation_minus
+                        al_currency = self.env['res.currency'].browse(i['asset_currency_id'])
+                        # Manage the closing of the asset
+                        if i["partial_disposal"]:
+                            if (
+                                    i['asset_state'] == 'close'
+                                    and i['asset_disposal_date']
+                                    and i['asset_disposal_date'] <= fields.Date.to_date(options['date']['date_to'])
+                            ):
+                                depreciation_add -= asset_disposal_value
+                                depreciation_minus += depreciation_closing - asset_disposal_value
+                                depreciation_closing = 0.0
+                                asset_minus += asset_closing
+                                asset_closing = 0.0
+                        else:
+                            if (
+                                    i['asset_state'] == 'close'
+                                    and i['asset_disposal_date']
+                                    and i['asset_disposal_date'] <= fields.Date.to_date(options['date']['date_to'])
+                                    and abs(depreciation_closing - (asset_closing - asset_salvage_value)) <= 0.01
+                            ):
+                                depreciation_add -= asset_disposal_value
+                                depreciation_minus += depreciation_closing - asset_disposal_value
+                                depreciation_closing = 0.0
+                                asset_minus += asset_closing
+                                asset_closing = 0.0
+
+
+                        # Manage negative assets (credit notes)
+                        if i['asset_original_value'] < 0:
+                            asset_add, asset_minus = -asset_minus, -asset_add
+                            depreciation_add, depreciation_minus = -depreciation_minus, -depreciation_add
+
+                        if i["capex_type"] == 'replacement_capex':
+                            apex_type = 'Replacement CAPEX'
+                        elif i["capex_type"] == 'tenant_capex':
+                            apex_type = 'Tenant upgrade CAPEX'
+                        elif i["capex_type"] == 'expansion_capex':
+                            apex_type = 'Expansion CAPEX'
+                        elif i["capex_type"] == '5g_capex':
+                            apex_type = '5G CAPEX'
+                        elif i["capex_type"] == 'other_capex':
+                            apex_type = 'Other CAPEX'
+                        elif i["capex_type"] == 'transferred_capex':
+                            apex_type = 'Transferred CAPEX'
+                        else:
+                            apex_type = ''
+
+                        if i["asset_state"] == 'draft':
+                            status = 'Draft'
+                        elif i["asset_state"] == 'model':
+                            status = 'Model'
+                        elif i["asset_state"] == 'open':
+                            status = 'Running'
+                        elif i["asset_state"] == 'paused':
+                            status = 'On Hold'
+                        elif i["asset_state"] == 'close':
+                            status = 'Closed'
+                        elif i["asset_state"] == 'cancelled':
+                            status = 'Cancelled'
+                        elif i["asset_state"] == 'to_approve':
+                            status = 'To Approve'
+                        else:
+                            status = ''
+
+                        x_offset = 0
+                        if i['asset_name']:
+                            sheet.write(y_offset, x_offset, i['asset_name'],
+                                        date_default_col1_style)
+                        else:
+                            sheet.write(y_offset, x_offset, '',
+                                        date_default_col1_style)
+
+                        x_offset += 1
+                        if i['asset_model_name']:
+                            sheet.write(y_offset, x_offset,
+                                        i['asset_model_name'],
+                                        date_default_col1_style)
+                        else:
+                            sheet.write(y_offset, x_offset,
+                                        '',
+                                        date_default_col1_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    status,
+                                    default_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    i['asset_acquisition_date'] and format_date(
+                                        self.env,
+                                        i["asset_acquisition_date"]) or "",
+                                    date_default_col1_style)
+                        x_offset += 1
+                        if i['account_code'] and i["account_name"]:
+                            sheet.write(y_offset, x_offset,
+                                        i['account_code'] + i['account_name'],
+                                        date_default_col1_style)
+                        elif i["account_name"]:
+                            sheet.write(y_offset, x_offset,
+                                        i['account_name'],
+                                        date_default_col1_style)
+                        else:
+                            sheet.write(y_offset, x_offset,
+                                        '',
+                                        date_default_col1_style)
+                        x_offset += 1
+
+                        sheet.write(y_offset, x_offset,
+                                    i['project_site'] if i["project_site"] else '',
+                                    date_default_col1_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    i['co_location'] if i['co_location'] else '',
+                                    date_default_col1_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    i['currency_name'] if i['currency_name'] else '',
+                                    date_default_col1_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    apex_type,
+                                    date_default_col1_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    i['sequence_number'] if i['sequence_number'] else '',
+                                    date_default_col1_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    i['serial_no'] if i['serial_no'] else '',
+                                    date_default_col1_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    i['additional_info'] if i['additional_info'] else '',
+                                    date_default_col1_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    i['asset_date'] and format_date(
+                                        self.env, i["asset_date"]) or "",
+                                    date_default_col1_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    i['last_depreciation_date'] and format_date(
+                                        self.env, i["last_depreciation_date"]) or "",
+                                    date_default_col1_style)
+                        x_offset += 1
+
+                        sheet.write(y_offset, x_offset,
+                                    (i["asset_method"] == "linear" and _(
+                                        "Linear")) or (
+                                            i[
+                                                "asset_method"] == "degressive" and _(
+                                        "Declining")) or _("Dec. then Straight"),
+                                    date_default_col1_style)
+                        x_offset += 1
+
+                        if i['asset_method'] == 'linear' and i[
+                            'asset_method_number']:  # some assets might have 0 depreciations because they dont lose value
+                            total_months = int(i['asset_method_number']) * int(
+                                i['asset_method_period'])
+                            asset_depreciation_rate = " ".join(
+                                _("%s m", total_months))
+                        elif i['asset_method'] == 'linear':
+                            asset_depreciation_rate = '0.00 %'
+                        else:
+                            asset_depreciation_rate = ('{:.2f} %').format(
+                                float(i['asset_method_progress_factor']) * 100)
+                        asset_id = self.env['account.asset'].browse(
+                            i["asset_id"])
+                        balance = asset_closing - depreciation_closing
+
+                        if i[
+                            "asset_currency_id"] != self.env.company.currency_id.id and (options["available_variants"][0][
+                                                                                             "name"] == 'Tasc Depreciation Schedule Functional' or
+                                                                                         options["available_variants"][0][
+                                                                                             "name"] == 'Tasc Depreciation Lease' or options["available_variants"][0][
+                                                                                             "name"] == 'Tasc Accrual Expense'):
+                            asset_opening = asset_id.currency_id._convert(
+                                asset_opening,
+                                self.env.company.currency_id,
+                                self.env.company,
+                                asset_id.acquisition_date)
+                            asset_add = asset_id.currency_id._convert(
+                                asset_add,
+                                self.env.company.currency_id,
+                                self.env.company,
+                                asset_id.acquisition_date)
+                            asset_minus = asset_id.currency_id._convert(
+                                asset_minus,
+                                self.env.company.currency_id,
+                                self.env.company,
+                                asset_id.acquisition_date)
+                            asset_closing = asset_id.currency_id._convert(
+                                asset_closing,
+                                self.env.company.currency_id,
+                                self.env.company,
+                                asset_id.acquisition_date)
+                            depreciation_minus = asset_id.currency_id._convert(
+                                depreciation_minus,
+                                self.env.company.currency_id,
+                                self.env.company,
+                                asset_id.acquisition_date)
+                            depreciation_opening = asset_id.currency_id._convert(
+                                depreciation_opening,
+                                self.env.company.currency_id,
+                                self.env.company,
+                                asset_id.acquisition_date)
+                            depreciation_add = asset_id.currency_id._convert(
+                                depreciation_add,
+                                self.env.company.currency_id,
+                                self.env.company,
+                                asset_id.acquisition_date)
+                            depreciation_closing = asset_id.currency_id._convert(
+                                depreciation_closing,
+                                self.env.company.currency_id,
+                                self.env.company,
+                                asset_id.acquisition_date)
+                            balance = asset_id.currency_id._convert(
+                                balance,
+                                self.env.company.currency_id,
+                                self.env.company,
+                                asset_id.acquisition_date)
+
+                        sheet.write(y_offset, x_offset,
+                                    asset_depreciation_rate,
+                                    date_default_col1_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    asset_opening,
+                                    default_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    asset_add,
+                                    default_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    asset_minus,
+                                    default_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    asset_closing,
+                                    default_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    depreciation_opening,
+                                    default_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    depreciation_add,
+                                    default_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    depreciation_minus,
+                                    default_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    depreciation_closing,
+                                    default_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset,
+                                    balance,
+                                    default_style)
+                        x_offset += 1
+                        sheet.write(y_offset, x_offset, depreciated_for_the_year
+                                    ,
+                                    default_style)
+                        x_offset += 1
+                        y_offset += 1
 
         self._add_options_xlsx_sheet(workbook, reports_options)
 
@@ -1420,7 +1798,8 @@ class AccountReport(models.Model):
         if options["available_variants"][0][
             "name"] == 'Tasc Depreciation Schedule' or options["available_variants"][0][
             "name"] == 'Tasc Depreciation Schedule Grouped' or options["available_variants"][0][
-            "name"] == 'Tasc Depreciation Schedule Grouped':
+            "name"] == 'Tasc Depreciation Schedule Grouped' or options["available_variants"][0][
+            "name"] == 'Tasc Accrual Expense':
             def write_with_colspan(sheet, x, y, value, colspan, style):
                 if colspan == 1:
                     sheet.write(y, x, value, style)

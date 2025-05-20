@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="assets_report_accrual_expense" model="account.report">
+            <field name="name">Tasc Accrual Expense</field>
+            <field name="filter_hierarchy">optional</field>
+            <field name="filter_unfold_all" eval="True"/>
+            <field name="filter_period_comparison" eval="False"/>
+            <field name="custom_handler_model_id"
+                   ref="model_account_asset_report_accrual_expense_schedule_handler"/>
+            <field name="load_more_limit" eval="80"/>
+            <field name="column_ids">
+
+                <record id="depreciation_schedule_accrual_status"
+                        model="account.report.column">
+                    <field name="name">Status</field>
+                    <field name="expression_label">status</field>
+                    <field name="figure_type">string</field>
+                </record>
+                <record id="depreciation_schedule_accrual_acquisition_date"
+                        model="account.report.column">
+                    <field name="name">Acquisition Date</field>
+                    <field name="expression_label">acquisition_date</field>
+                    <field name="figure_type">date</field>
+                </record>
+                <record id="depreciation_schedule_accrual_project_site"
+                        model="account.report.column">
+                    <field name="name">Project/Site</field>
+                    <field name="expression_label">project_site</field>
+                    <field name="figure_type">string</field>
+                </record>
+
+
+                <record id="depreciation_schedule_accrual_asset_sequence_number"
+                        model="account.report.column">
+                    <field name="name">Asset Sequence Number</field>
+                    <field name="expression_label">asset_sequence_number</field>
+                    <field name="figure_type">string</field>
+                </record>
+
+                <record id="depreciation_schedule_accrual_first_depreciation"
+                        model="account.report.column">
+                    <field name="name">First Depreciation</field>
+                    <field name="expression_label">first_depreciation</field>
+                    <field name="figure_type">date</field>
+                </record>
+                <record id="depreciation_schedule_accrual_last_depreciation"
+                        model="account.report.column">
+                    <field name="name">Last Depreciation</field>
+                    <field name="expression_label">last_depreciation_date</field>
+                    <field name="figure_type">date</field>
+                </record>
+                <record id="depreciation_schedule_accrual_first_method"
+                        model="account.report.column">
+                    <field name="name">Method</field>
+                    <field name="expression_label">method</field>
+                    <field name="figure_type">string</field>
+                </record>
+                <record id="depreciation_schedule_accrual_duration_rate"
+                        model="account.report.column">
+                    <field name="name">Duration / Rate</field>
+                    <field name="expression_label">duration_rate</field>
+                    <field name="figure_type">string</field>
+                </record>
+                <record id="depreciation_schedule_accrual_date_from"
+                        model="account.report.column">
+                    <field name="name">date from</field>
+                    <field name="expression_label">assets_date_from</field>
+                </record>
+                <record id="depreciation_schedule_accrual_assets_plus"
+                        model="account.report.column">
+                    <field name="name">+</field>
+                    <field name="expression_label">assets_plus</field>
+                </record>
+                <record id="depreciation_schedule_accrual_assets_minus"
+                        model="account.report.column">
+                    <field name="name">-</field>
+                    <field name="expression_label">assets_minus</field>
+                </record>
+                <record id="depreciation_schedule_accrual_assets_date_to"
+                        model="account.report.column">
+                    <field name="name">date to</field>
+                    <field name="expression_label">assets_date_to</field>
+                </record>
+                <record id="depreciation_schedule_accrual_depre_date_from"
+                        model="account.report.column">
+                    <field name="name">date from</field>
+                    <field name="expression_label">depre_date_from</field>
+                </record>
+                <record id="depreciation_schedule_accrual_depre_plus"
+                        model="account.report.column">
+                    <field name="name">+</field>
+                    <field name="expression_label">depre_plus</field>
+                </record>
+                <record id="depreciation_schedule_accrual_depre_minus"
+                        model="account.report.column">
+                    <field name="name">-</field>
+                    <field name="expression_label">depre_minus</field>
+                </record>
+                <record id="depreciation_schedule_accrual_depre_date_to"
+                        model="account.report.column">
+                    <field name="name">date to</field>
+                    <field name="expression_label">depre_date_to</field>
+                </record>
+                <record id="depreciation_schedule_accrual_depre_for_the_year"
+                        model="account.report.column">
+                    <field name="name">Depreciation Expense</field>
+                    <field name="expression_label">depre_for_year</field>
+                </record>
+                <record id="depreciation_schedule_accrual_balance"
+                        model="account.report.column">
+                    <field name="name">book_value</field>
+                    <field name="expression_label">balance</field>
+                </record>
+
+                <record id="depreciation_schedule_accrual_accrual_account"
+                        model="account.report.column">
+                    <field name="name">Accrual Account</field>
+                    <field name="expression_label">accrual_account</field>
+                    <field name="figure_type">string</field>
+                </record>
+                <record id="depreciation_schedule_accrual_expense_account"
+                        model="account.report.column">
+                    <field name="name">Expense Account</field>
+                    <field name="expression_label">expense_account</field>
+                    <field name="figure_type">string</field>
+                </record>
+                <record id="depreciation_schedule_accrual_currency"
+                        model="account.report.column">
+                    <field name="name">Currency</field>
+                    <field name="expression_label">currency</field>
+                    <field name="figure_type">string</field>
+                </record>
+            </field>
+        </record>
+
+
+        <record id="action_account_asset_report_accrual_expense"
+                model="ir.actions.client">
+            <field name="name">Tasc Accrual Expense</field>
+            <field name="tag">account_report</field>
+            <field name="context"
+                   eval="{'report_id': ref('depreciation_schedule_custom.assets_report_accrual_expense')}"/>
+        </record>
+        <menuitem id="menu_action_account_report_accrual_expense"
+                  name="TASC Accrual Expense"
+                  action="action_account_asset_report_accrual_expense"
+                  parent="cash_flow_statement_report.tasc_dynamic_reports"/>
+    </data>
+</odoo>

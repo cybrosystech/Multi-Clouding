@@ -231,6 +231,7 @@ class SalesOrderLine(models.Model):
     t_budget = fields.Selection(
         [('capex', 'CAPEX'), ('opex', 'OPEX'), ],
         string='T.Budget')
+    t_budget_name = fields.Char(string="T.Budget Name")
 
     @api.depends('price_subtotal')
     def compute_local_subtotal(self):

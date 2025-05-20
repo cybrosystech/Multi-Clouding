@@ -639,6 +639,7 @@ class AccountMoveLine(models.Model):
     t_budget = fields.Selection(
         [('capex', 'CAPEX'), ('opex', 'OPEX'), ],
         string='T.Budget')
+    t_budget_name = fields.Char(string="T.Budget Name")
     account_id = fields.Many2one(
         comodel_name='account.account',
         string='Account',
@@ -659,65 +660,66 @@ class AccountMoveLine(models.Model):
             ('name', 'ilike', 'Inventory Valuation'),
             ('name', 'ilike', 'Vendor Bills')
         ])
-        if self.journal_id.id in journals.ids:
-            if self.purchase_line_id:
-                if self.product_id.detailed_type == 'product':
-                    self.account_id = self.product_id.categ_id.property_stock_account_input_categ_id.id
-                elif self.product_id.detailed_type == 'consu' or self.product_id.detailed_type == 'service':
-                    if self.t_budget == 'opex':
-                        if self.project_site_id and "warehouse" in self.project_site_id.name.lower():
-                            self.account_id = self.product_id.inventory_account_id.id
+        if self.product_id:
+            if self.journal_id.id in journals.ids:
+                if self.purchase_line_id:
+                    if self.product_id.detailed_type == 'product':
+                        self.account_id = self.product_id.categ_id.property_stock_account_input_categ_id.id
+                    elif self.product_id.detailed_type == 'consu' or self.product_id.detailed_type == 'service':
+                        if self.t_budget == 'opex':
+                            if self.project_site_id and "warehouse" in self.project_site_id.name.lower():
+                                self.account_id = self.product_id.inventory_account_id.id
+                            else:
+                                self.account_id = self.product_id.property_account_expense_id.id
+                        elif self.t_budget == 'capex':
+                            if self.project_site_id and "warehouse" in self.project_site_id.name.lower():
+                                self.account_id = self.product_id.inventory_account_id.id
+                            elif self.project_site_id and "warehouse" not in self.project_site_id.name.lower():
+                                if self.site_status == 'off_air':
+                                    self.account_id = self.product_id.cip_account_id.id
+                                elif self.site_status == 'on_air':
+                                    self.account_id = self.product_id.asset_account_id.id
+                                else:
+                                    self.account_id = self.product_id.asset_account_id.id
+                            else:
+                                if self.site_status == 'off_air':
+                                    self.account_id = self.product_id.cip_account_id.id
+                                elif self.site_status == 'on_air':
+                                    self.account_id = self.product_id.asset_account_id.id
+                                else:
+                                    self.account_id = self.product_id.asset_account_id.id
                         else:
                             self.account_id = self.product_id.property_account_expense_id.id
-                    elif self.t_budget == 'capex':
-                        if self.project_site_id and "warehouse" in self.project_site_id.name.lower():
-                            self.account_id = self.product_id.inventory_account_id.id
-                        elif self.project_site_id and "warehouse" not in self.project_site_id.name.lower():
-                            if self.site_status == 'off_air':
-                                self.account_id = self.product_id.cip_account_id.id
-                            elif self.site_status == 'on_air':
-                                self.account_id = self.product_id.asset_account_id.id
-                            else:
-                                self.account_id = self.product_id.asset_account_id.id
-                        else:
-                            if self.site_status == 'off_air':
-                                self.account_id = self.product_id.cip_account_id.id
-                            elif self.site_status == 'on_air':
-                                self.account_id = self.product_id.asset_account_id.id
-                            else:
-                                self.account_id = self.product_id.asset_account_id.id
                     else:
                         self.account_id = self.product_id.property_account_expense_id.id
                 else:
-                    self.account_id = self.product_id.property_account_expense_id.id
-            else:
-                if self.product_id.detailed_type in ['product', 'consu']:
-                    if self.t_budget == 'opex':
-                        if self.project_site_id and "warehouse" in self.project_site_id.name.lower():
-                            self.account_id = self.product_id.inventory_account_id.id
+                    if self.product_id.detailed_type in ['product', 'consu']:
+                        if self.t_budget == 'opex':
+                            if self.project_site_id and "warehouse" in self.project_site_id.name.lower():
+                                self.account_id = self.product_id.inventory_account_id.id
+                            else:
+                                self.account_id = self.product_id.property_account_expense_id.id
+                        elif self.t_budget == 'capex':
+                            if self.project_site_id and "warehouse" in self.project_site_id.name.lower():
+                                self.account_id = self.product_id.inventory_account_id.id
+                            elif self.project_site_id and "warehouse" not in self.project_site_id.name.lower():
+                                if self.site_status == 'off_air':
+                                    self.account_id = self.product_id.cip_account_id.id
+                                elif self.site_status == 'on_air':
+                                    self.account_id = self.product_id.asset_account_id.id
+                                else:
+                                    self.account_id = self.product_id.asset_account_id.id
+                            else:
+                                if self.site_status == 'off_air':
+                                    self.account_id = self.product_id.cip_account_id.id
+                                elif self.site_status == 'on_air':
+                                    self.account_id = self.product_id.asset_account_id.id
+                                else:
+                                    self.account_id = self.product_id.asset_account_id.id
                         else:
                             self.account_id = self.product_id.property_account_expense_id.id
-                    elif self.t_budget == 'capex':
-                        if self.project_site_id and "warehouse" in self.project_site_id.name.lower():
-                            self.account_id = self.product_id.inventory_account_id.id
-                        elif self.project_site_id and "warehouse" not in self.project_site_id.name.lower():
-                            if self.site_status == 'off_air':
-                                self.account_id = self.product_id.cip_account_id.id
-                            elif self.site_status == 'on_air':
-                                self.account_id = self.product_id.asset_account_id.id
-                            else:
-                                self.account_id = self.product_id.asset_account_id.id
-                        else:
-                            if self.site_status == 'off_air':
-                                self.account_id = self.product_id.cip_account_id.id
-                            elif self.site_status == 'on_air':
-                                self.account_id = self.product_id.asset_account_id.id
-                            else:
-                                self.account_id = self.product_id.asset_account_id.id
                     else:
                         self.account_id = self.product_id.property_account_expense_id.id
-                else:
-                    self.account_id = self.product_id.property_account_expense_id.id
 
     @api.onchange('analytic_distribution')
     def _inverse_analytic_distribution(self):
