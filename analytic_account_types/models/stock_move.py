@@ -9,3 +9,5 @@ class StockMove(models.Model):
     t_budget = fields.Selection(
         [('capex', 'CAPEX'), ('opex', 'OPEX'), ],
         string='T.Budget')
+    t_budget_name = fields.Char(string="T.Budget Name")
+
