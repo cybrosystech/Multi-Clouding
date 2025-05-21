@@ -653,6 +653,21 @@ class AccountMoveLine(models.Model):
         tracking=True,
     )
 
+    @api.onchange('name')
+    def _onchange_name_predictive(self):
+        if ((
+                self.move_id.quick_edit_mode or self.move_id.move_type == 'in_invoice') and self.name and self.display_type == 'product'
+                and not self.env.context.get('disable_onchange_name_predictive', False)):
+            if not self.product_id:
+                predicted_product_id = self._predict_product()
+                if predicted_product_id:
+                    # We only update the price_unit, tax_ids and name in case they evaluate to False
+                    protected_fields = ['price_unit', 'tax_ids', 'name']
+                    to_protect = [self._fields[fname] for fname in protected_fields if self[fname]]
+                    with self.env.protecting(to_protect, self):
+                        self.product_id = predicted_product_id
+
+
     @api.onchange('t_budget', 'project_site_id', 'site_status', 'product_id')
     def onchange_t_budget(self):
         journals = self.env['account.journal'].search([
