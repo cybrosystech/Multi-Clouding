@@ -11,9 +11,15 @@ class StockMove(models.Model):
             rslt['credit_line_vals']['project_site_id'] = self.purchase_line_id.project_site_id.id
             rslt['credit_line_vals']['business_unit_id'] = self.purchase_line_id.business_unit_id.id
             rslt['credit_line_vals']['analytic_distribution'] = self.purchase_line_id.analytic_distribution
+            rslt['credit_line_vals']['t_budget'] = self.purchase_line_id.t_budget
+            rslt['credit_line_vals']['t_budget_name'] = self.purchase_line_id.t_budget_name
+            rslt['credit_line_vals']['site_status'] = self.purchase_line_id.site_status
             rslt['debit_line_vals']['analytic_account_id'] = self.purchase_line_id.cost_center_id.id
             rslt['debit_line_vals']['project_site_id'] = self.purchase_line_id.project_site_id.id
             rslt['debit_line_vals']['business_unit_id'] = self.purchase_line_id.business_unit_id.id
             rslt['debit_line_vals']['analytic_distribution'] = self.purchase_line_id.analytic_distribution
+            rslt['debit_line_vals']['t_budget'] = self.purchase_line_id.t_budget
+            rslt['debit_line_vals']['t_budget_name'] = self.purchase_line_id.t_budget_name
+            rslt['debit_line_vals']['site_status'] = self.purchase_line_id.site_status
         return rslt
 
