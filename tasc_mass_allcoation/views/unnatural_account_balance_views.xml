@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <record id="unnatural_account_balance_view_form" model="ir.ui.view">
+            <field name="name">unnatural.account.balance.view.form</field>
+            <field name="model">unnatural.account.balance</field>
+            <field name="arch" type="xml">
+                <form string="">
+                    <header>
+                        <button string="Generate Entry "
+                                name="action_generate_unnatural_entry"
+                                type="object" class="btn-secondary"
+                                invisible="unnatural_balance_move_id or not unnatural_account_balance_line_ids"
+                        />
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button string="Unnatural Account Balance Entry "
+                                name="view_unnatural_account_balance_entry"
+                                type="object" class="btn-secondary"
+                                invisible="not unnatural_balance_move_id"
+                        />
+                             <button string="Reversal of Unnatural Account Balance Entry "
+                                name="view_reversed_unnatural_account_balance_entry"
+                                type="object" class="btn-secondary"
+                                invisible="not reversed_unnatural_balance_move_id"
+                        />
+                        </div>
+                        <group>
+                            <group>
+                                <field name="name" readonly="unnatural_balance_move_id"/>
+                                <field name="date_period"  readonly="unnatural_balance_move_id"/>
+                                <span style="white-space: nowrap;">Account Type</span>
+                                <field name="unnatural_balance_move_id" invisible="1"/>
+                                <field name="reversed_unnatural_balance_move_id" invisible="1"/>
+                            </group>
+                            <group>
+                                <field name="account_id"  readonly="unnatural_balance_move_id"/>
+                                <field name="company_id"
+                                        readonly="unnatural_balance_move_id"
+                                />
+                                        <field name="asset"
+                                        />
+                                        <field name="liability"
+                                        />
+                                        <field name="equity"
+                                        />
+                                <button string="Generate"
+                                        name="action_generate_unnatural_balance_lines"
+                                        type="object" class="btn-secondary"
+                                        invisible="unnatural_balance_move_id"
+                                />
+                            </group>
+                        </group>
+
+                        <notebook>
+                            <page name="unnatural_lines" string="Unnatural account Lines">
+                                <field name="unnatural_account_balance_line_ids"  readonly="unnatural_balance_move_id">
+                                    <tree editable="bottom"  create="false" >
+                                        <field name="unnatural_account_balance_id"
+                                               invisible="1"
+                                               column_invisible="1"/>
+                                        <field name="account_id"/>
+                                        <field name="cost_center_id"/>
+                                        <field name="project_site_id"/>
+                                        <field name="balance"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="unnatural_account_balance_view_tree" model="ir.ui.view">
+            <field name="name">unnatural.account.balance.view.tree</field>
+            <field name="model">unnatural.account.balance</field>
+            <field name="arch" type="xml">
+                <tree string="">
+                    <field name="name"/>
+                    <field name="company_id"/>
+                    <field name="unnatural_balance_move_id" invisible="1"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_unnatural_account_balance"
+                model="ir.actions.act_window">
+            <field name="name">Unnatural Account Balance</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">unnatural.account.balance</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                </p>
+            </field>
+        </record>
+
+        <menuitem id="menu_unnatural_account_balance"
+                  name="Unnatural Account Balance"
+                  parent="account.menu_finance_entries_management"
+                  action="action_unnatural_account_balance"
+        />
+    </data>
+</odoo>

@@ -23,6 +23,7 @@
                                    readonly="1"/>
                         </group>
                     </group>
+
                     <footer>
                         <button name="action_bulk_sale_dispose"
                                 string="Sale/Dispose"
