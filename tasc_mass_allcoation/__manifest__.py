@@ -14,6 +14,7 @@
         [
             'security/ir.model.access.csv',
             'views/tasc_mass_allocation_views.xml',
+            'views/unnatural_account_balance_views.xml',
         ],
     'installable': True,
     'auto_install': False,

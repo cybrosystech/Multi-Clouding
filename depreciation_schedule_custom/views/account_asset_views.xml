@@ -11,6 +11,8 @@
                        position="inside">
                     <field name="additional_info"
                     />
+                    <field name="additional_info2"
+                    />
                 </xpath>
             </field>
         </record>
