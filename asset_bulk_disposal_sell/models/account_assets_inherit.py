@@ -28,24 +28,12 @@ class AccountAssetBulkSaleDisposal(models.Model):
 
 
     def asset_bulk_sale_dispose(self):
-        abc = []
-        for rec in self:
-            if rec.leasee_contract_ids:
-                asset_bulk = self.env['asset.sell.disposal.lines'].create({
-                    'asset_id': rec.id,
-                    'from_leasee_contract': True,
-                    'action': 'dispose',
-                })
-            else:
-                asset_bulk = self.env['asset.sell.disposal.lines'].create({
-                    'asset_id': rec.id,
-                    'action': 'dispose',
-                })
-            abc.append(asset_bulk.id)
         dd = self.env['asset.bulk.wizard'].create({
-            'asset_sell_disposal_ids': [(6,0,abc)]
+            'asset_ids': self.ids,
         })
-        # view = self.env.ref('asset_bulk_disposal_sell.asset_sell_bulk_form')
+        if not dd:
+            raise ValueError("Failed to create asset.bulk.revaluate record.")
+
         return {
             'name': 'Asset Bulk sale',
             'view_mode': 'form',

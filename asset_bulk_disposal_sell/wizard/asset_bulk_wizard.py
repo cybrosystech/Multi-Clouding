@@ -7,6 +7,49 @@ class AssetBulkWizard(models.TransientModel):
 
     asset_sell_disposal_ids = fields.One2many('asset.sell.disposal.lines',
                                               'asset_bulk_wizard_id')
+    asset_ids = fields.Many2many('account.asset')
+    company_id = fields.Many2one('res.company',
+                                 default=lambda self: self.env.company)
+    gain_account_id = fields.Many2one('account.account',
+                                      domain="[('deprecated', '=', False), ('company_id', '=', company_id)]",
+                                      help="Account used to write the journal item in case of gain",
+                                      readonly=False)
+    loss_account_id = fields.Many2one('account.account',
+                                      domain="[('deprecated', '=', False), ('company_id', '=', company_id)]",
+                                      help="Account used to write the journal item in case of loss",
+                                      readonly=False)
+    contract_end_date = fields.Date(required=False, )
+
+    def action_generate(self):
+        abc = []
+        for rec in self.asset_ids:
+            if rec.leasee_contract_ids:
+                asset_bulk = self.env['asset.sell.disposal.lines'].create({
+                    'asset_id': rec.id,
+                    'from_leasee_contract': True,
+                    'action': 'dispose',
+                    'contract_end_date': self.contract_end_date if self.contract_end_date else fields.Date.today(),
+                    'gain_account_id': self.gain_account_id.id if self.gain_account_id else self.company_id.gain_account_id.id,
+                    'loss_account_id': self.loss_account_id.id if self.loss_account_id else self.company_id.loss_account_id.id,
+
+                })
+            else:
+                asset_bulk = self.env['asset.sell.disposal.lines'].create({
+                    'asset_id': rec.id,
+                    'action': 'dispose',
+                    'contract_end_date': self.contract_end_date if self.contract_end_date else fields.Date.today(),
+                    'gain_account_id': self.gain_account_id.id if self.gain_account_id else self.company_id.gain_account_id.id,
+                    'loss_account_id': self.loss_account_id.id if self.loss_account_id else self.company_id.loss_account_id.id,
+                })
+            abc.append(asset_bulk.id)
+        self.asset_sell_disposal_ids= [(6, 0, abc)]
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': self._name,
+            'view_mode': 'form',
+            'res_id': self.id,
+            'target': 'new',
+        }
 
     def split_list(self, lst, limit):
         return [lst[i:i + limit] for i in range(0, len(lst), limit)]
