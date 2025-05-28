@@ -506,4 +506,109 @@ Check the installation of htop in server2 from server1
 
 .. code-block:: console
 
-   $ ansible lab -m shell -a "dpkg -l | grep -i apache2" -i inventories/hosts
+   $ ansible lab -m shell -a "dpkg -l | grep -i htop" -i inventories/hosts
+
+**********************
+Install & Setup Odoo18
+**********************
+
+- Create a shell script to install and setup odoo18 
+
+.. code-block:: console
+
+   $ sudo nano install_odoo18.sh
+
+Add the following
+
+.. code-block:: bash
+
+   #!/bin/bash
+
+   # Exit on any error
+   set -e
+
+   echo "=== Updating system packages ==="
+   sudo apt update
+   sudo apt upgrade -y
+
+   echo "=== Securing the server ==="
+   sudo apt install -y openssh-server fail2ban
+   sudo systemctl start fail2ban
+   sudo systemctl enable fail2ban
+   sudo systemctl status fail2ban
+
+   echo "=== Installing required packages and libraries ==="
+   sudo apt install -y python3-pip python3-dev libxml2-dev libxslt1-dev zlib1g-dev \
+   libsasl2-dev libldap2-dev build-essential libssl-dev libffi-dev libmysqlclient-dev \
+   libjpeg-dev libjpeg8-dev liblcms2-dev libblas-dev libatlas-base-dev \
+   libpq-dev npm node-less git python3-venv xfonts-75dpi
+
+   echo "=== Creating symlink for Node.js (if needed) ==="
+   if [ ! -f /usr/bin/node ]; then
+     sudo ln -s /usr/bin/nodejs /usr/bin/node
+   fi
+
+   echo "=== Installing Less and Clean CSS ==="
+   sudo npm install -g less less-plugin-clean-css
+
+   echo "=== Installing PostgreSQL and creating Odoo DB user ==="
+   sudo apt install -y postgresql
+   sudo -u postgres createuser --createdb --username postgres --no-createrole --superuser --pwprompt odoo
+
+   echo "=== Creating system user for Odoo ==="
+   sudo adduser --system --home=/opt/odoo --group odoo
+
+   echo "=== Cloning Odoo 18 Community Edition ==="
+   sudo su - odoo -s /bin/bash -c "git clone https://github.com/odoo/odoo.git --depth 1 --branch 18.0 --single-branch /opt/odoo"
+
+   echo "=== Setting up Python virtual environment ==="
+   sudo python3 -m venv /opt/odoo/venv310
+   source /opt/odoo/venv310/bin/activate
+   pip install -r /opt/odoo/requirements.txt
+   deactivate
+
+   echo "=== Installing wkhtmltopdf and OpenSSL dependencies ==="
+   cd /tmp
+   wget https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.bionic_amd64.deb
+   wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+   sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb || true
+   sudo dpkg -i wkhtmltox_0.12.5-1.bionic_amd64.deb || true
+   sudo apt install -f -y
+
+   echo "=== Creating log directory ==="
+   sudo mkdir -p /var/log/odoo
+   sudo chown odoo:root /var/log/odoo
+
+   echo "=== Creating Odoo configuration file ==="
+   sudo bash -c 'cat > /etc/odoo.conf <<EOF
+   [options]
+   admin_passwd = cool
+   db_host = False
+   db_port = False
+   db_user = odoo
+   db_password = cool
+   addons_path = /opt/odoo/addons, /opt/odoo/custom_addons
+   default_productivity_apps = True
+   logfile = /var/log/odoo/odoo.log
+   EOF'
+   sudo chmod 640 /etc/odoo.conf
+   sudo chown odoo: /etc/odoo.conf
+
+   echo "=== Creating systemd service ==="
+   sudo bash -c 'cat > /etc/systemd/system/odoo.service <<EOF
+   [Unit]
+   Description=Odoo 18
+   Documentation=http://www.odoo.com
+   [Service]
+   Type=simple
+   User=odoo
+   ExecStart=/opt/odoo/venv310/bin/python3 /opt/odoo/odoo-bin -c /etc/odoo.conf
+   [Install]
+   WantedBy=multi-user.target
+   EOF'
+
+   echo "=== Reloading systemd and starting Odoo ==="
+   sudo systemctl daemon-reload
+   sudo systemctl enable odoo
+   sudo systemctl start odoo
+   sudo systemctl status odoo
