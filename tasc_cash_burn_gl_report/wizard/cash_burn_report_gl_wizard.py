@@ -246,6 +246,14 @@ class CashBurnReportGLWizard(models.Model):
                         accountable_net,
                         STYLE_LINE_Data)
 
+    def extract_amount(self,amount_str):
+        parts = amount_str.split('\xa0')
+        for part in parts:
+            try:
+                return float(part.replace(',', '').strip())
+            except ValueError:
+                continue
+        raise ValueError(f"Could not extract numeric amount from: {amount_str}")
 
     def add_xlsx_sheet(self, report_data, workbook, STYLE_LINE_Data,
                        header_format, STYLE_LINE_HEADER, date_format):
@@ -313,7 +321,7 @@ class CashBurnReportGLWizard(models.Model):
                             s = rec.invoice_payments_widget
                             total = sum(rec.invoice_line_ids.mapped('price_total'))
                             company_currency_amount = next(
-                                (float(item['amount_company_currency'].split('\xa0')[-1].replace(',', '')) for item in s['content'] if
+                                (self.extract_amount(item['amount_company_currency']) for item in s['content'] if
                                  item['amount_company_currency'] and self.clean_ref(
                                      item['ref']) == self.clean_ref(line.payment_id.name)),
                                 0)
@@ -418,8 +426,7 @@ class CashBurnReportGLWizard(models.Model):
                             total = sum(
                                 rec.invoice_line_ids.mapped('price_total'))
                             company_currency_amount = next(
-                                (float(item['amount_company_currency'].split(
-                                    '\xa0')[-1].replace(',', '')) for item in
+                                (self.extract_amount(item['amount_company_currency']) for item in
                                  s['content'] if
                                  item[
                                      'amount_company_currency'] and self.clean_ref(
@@ -659,9 +666,7 @@ class CashBurnReportGLWizard(models.Model):
                                     order='id ASC')
                                 total = sum(move_line.mapped('price_total'))
                                 company_currency_amount = next(
-                                    (
-                                    float(item['amount_company_currency'].split(
-                                        '\xa0')[-1].replace(',', '')) for item
+                                    (self.extract_amount(item['amount_company_currency']) for item
                                     in
                                     s['content'] if
                                     item[
@@ -792,11 +797,7 @@ class CashBurnReportGLWizard(models.Model):
                                                     move_line.mapped(
                                                         'price_total'))
                                                 company_currency_amount = next(
-                                                    (
-                                                        float(item[
-                                                                  'amount_company_currency'].split(
-                                                            '\xa0')[-1].replace(
-                                                            ',', '')) for item
+                                                    (self.extract_amount(item['amount_company_currency']) for item
                                                         in
                                                         s['content'] if
                                                         item[
@@ -954,11 +955,7 @@ class CashBurnReportGLWizard(models.Model):
                                                     move_line.mapped(
                                                         'price_total'))
                                                 company_currency_amount = next(
-                                                    (
-                                                        float(item[
-                                                            'amount_company_currency'].split(
-                                                            '\xa0')[-1].replace(
-                                                            ',', '')) for item
+                                                    (self.extract_amount(item['amount_company_currency']) for item
                                                         in
                                                         s['content'] if
                                                         item[
