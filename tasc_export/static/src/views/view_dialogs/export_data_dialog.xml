@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates id="template" xml:space="preserve">
+    <t t-inherit="web.ExportDataDialog" t-inherit-mode="extension">
+          <xpath expr="//div[@class='o_import_compat']" position="replace">
+                <div class="o_import_compat" t-if="state.isAdmin">
+                    <CheckBox className="'o_import_compat'" id="'o-update-data'" value="state.isCompatible"
+                              onChange.bind="onToggleCompatibleExport">
+                        I want to update data (import-compatible export)
+                    </CheckBox>
+                </div>
+          </xpath>
+    </t>
+</templates>
