@@ -28,6 +28,12 @@ class PurchaseOrder(models.Model):
         tracking=True,
     )
 
+    @api.onchange('partner_id')
+    def _onchange_partner_id(self):
+        self.supplier_representative = self.partner_id.name
+        self.supplier_email = self.partner_id.email
+        self.supplier_phone = self.partner_id.phone
+
     @api.depends('state', 'invoice_ids.payment_state')
     def _compute_payment_state(self):
         for rec in self:

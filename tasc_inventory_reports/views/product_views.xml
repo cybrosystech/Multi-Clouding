@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="product_product_stock_tree_inherit_tasc_inventory_reports">
+            <field name="name">product.product.stock.tree.inherit.tasc.inventory.reports</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="stock.product_product_stock_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//button[@name='action_view_orderpoints']"
+                       position="before">
+                    <button name="action_view_tasc_stock_moves" string="TASC History" type="object" class="btn-link"
+                            icon="fa-history"/>
+
+                </xpath>
+                <xpath expr="//button[@name='%(stock.action_view_quants)d']"
+                       position="replace">
+                    <button name="%(stock.action_view_quants)d" string="Locations" type="action" class="btn-link"
+                            groups="stock.group_stock_multi_locations"
+                            icon="fa-cubes" context="{'search_default_product_id': id, 'default_product_id': id}"
+                            invisible="1"/>
+                </xpath>
+                <xpath expr="//button[@name='%(stock.action_view_quants)d']"
+                       position="after">
+                    <button name="action_view_tasc_stock_locations" string="TASC Locations" type="object"
+                            class="btn-link"
+                            icon="fa-cubes"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

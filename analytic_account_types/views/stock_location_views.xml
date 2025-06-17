@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+    <record id="view_location_form_analytic_account_types" model="ir.ui.view">
+        <field name="name">stock.location.form.inherit.analytic.account.types</field>
+        <field name="model">stock.location</field>
+        <field name="inherit_id" ref="stock.view_location_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form/sheet/group" position='inside'>
+                <group>
+                    <field name="project_site_id"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+    </data>
+</odoo>

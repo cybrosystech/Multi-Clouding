@@ -1,0 +1,1 @@
+from . import asset_product_label_report

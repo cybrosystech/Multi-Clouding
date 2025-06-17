@@ -21,6 +21,7 @@
                 </xpath>
                 <xpath expr="//field[@name='code']" position="after">
                     <field name="site_status"/>
+                    <field name="is_inventory"/>
                 </xpath>
             </field>
 

@@ -14,7 +14,7 @@ class AccountAsset(models.Model):
                                       string="Project/Site",
                                       domain=[('analytic_account_type', '=',
                                                'project_site')],
-                                      required=True, )
+                                      required=True, tracking=True)
     analytic_account_id = fields.Many2one(
         comodel_name="account.analytic.account",
         string="Cost Center",
@@ -29,6 +29,8 @@ class AccountAsset(models.Model):
     site_address = fields.Char(string='Site Address',
                                compute='compute_site_address')
     is_admin = fields.Boolean(string="Is Admin", compute='compute_is_admin')
+    barcode = fields.Char(string="Barcode", tracking=True)
+    sn = fields.Char(string="SN", tracking=True)
 
     @api.depends_context('uid')
     def compute_is_admin(self):

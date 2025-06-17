@@ -4,14 +4,13 @@
     'summary': """
             Customizations related to analytic accounts.
         """,
-
     'description': """
     """,
     'author': "",
     'website': "",
     'category': 'Accounting',
     'version': '17.0.1.0.0',
-    'depends': ['stock','sale', 'purchase', 'account', 'account_accountant',
+    'depends': ['web','product','stock','sale', 'purchase', 'account', 'account_accountant',
                 'analytic','analytic_enterprise', 'account_reports', 'account_budget',
                 'account_asset'],
     'data': [
@@ -31,6 +30,9 @@
         'views/account_asset_views.xml',
         'views/account_move_line.xml',
         'views/stock_move_views.xml',
+        'views/stock_location_views.xml',
+        'reports/product_template.xml',
+        'reports/product_report.xml',
     ],
     "license": 'AGPL-3',
     'installable': True,

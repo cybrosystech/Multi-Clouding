@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="tasc_location_report_view_search" model="ir.ui.view">
+        <field name='name'>tasc.location.report.search</field>
+        <field name='model'>tasc.location.report</field>
+        <field name='arch' type='xml'>
+            <search string="TASC Location Report">
+                <field name="product_id"/>
+                <field name="categ_id"/>
+                <field name="location_id"/>
+                <field name="project_site_id"/>
+                <field name="package_id"/>
+                <field name="lot_id"/>
+                <group expand="0" string="Group By">
+                    <filter name='group_by_product' string="By Product" context="{'group_by':'product_id'}"/>
+                    <filter name='group_by_location_id' string="By Location"
+                            context="{'group_by':'location_id'}"/>
+                    <filter name='group_by_project_site' string="By Project/Site"
+                            context="{'group_by':'project_site_id'}"/>
+                    <filter name='group_by_package_id' string="By Package" context="{'group_by':'package_id'}"/>
+                    <filter name='group_by_lot_id' string="By Lot" context="{'group_by':'lot_id'}"/>
+                    <filter name='group_by_categ_id' string="By Product Category" context="{'group_by':'categ_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="tasc_location_report_view_tree" model="ir.ui.view">
+        <field name="name">tasc.location.report.tree</field>
+        <field name="model">tasc.location.report</field>
+        <field name="arch" type="xml">
+            <tree string="TASC Locations">
+                <field name="product_id"/>
+                <field name="categ_id"/>
+                <field name="location_id"/>
+                <field name="project_site_id"/>
+                <field name="package_id"/>
+                <field name="lot_id"/>
+                <field name="quantity"/>
+                <field name="reserved_quantity"/>
+                <button name="action_view_stock_moves" string="History" type="object" class="btn-link"
+                        icon="fa-history"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="tasc_location_report_view_form" model="ir.ui.view">
+        <field name="name">tasc.location.report.form</field>
+        <field name="model">tasc.location.report</field>
+        <field name="arch" type="xml">
+            <form string="TASC Locations form">
+                <sheet>
+                    <group>
+                        <field name="product_id"/>
+                        <field name="location_id"/>
+                        <field name="categ_id"/>
+                        <field name="project_site_id"/>
+                        <field name="package_id"/>
+                        <field name="lot_id"/>
+                        <field name="quantity"/>
+                        <field name="reserved_quantity"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_tasc_location_report" model="ir.actions.act_window">
+        <field name="name">TASC Location</field>
+        <field name="res_model">tasc.location.report</field>
+        <field name="view_mode">tree,form,pivot</field>
+        <field name="view_id" ref="tasc_location_report_view_tree"/>
+    </record>
+
+    <menuitem id="menu_tasc_location_report"
+              name="TASC Location"
+              action="action_tasc_location_report"
+              parent="stock.menu_warehouse_report"/>
+</odoo>

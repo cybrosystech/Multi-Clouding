@@ -36,7 +36,6 @@
                     <field name="business_unit_id"/>
                     <field name="analytic_distribution"  widget="analytic_distribution"/>
                 </xpath>
-
             </field>
         </record>
 

@@ -418,6 +418,9 @@ class AccountMove(models.Model):
                                 move_line.quantity, unit_uom, False)
                         else:
                             units_quantity = 1
+                        i = 0
+                        rec = self.env['stock.valuation.layer'].search(
+                            [('account_move_id', '=', move_line.move_id.id)])
                         while units_quantity > 0:
                             if units_quantity > 1:
                                 original_value = float_round(
@@ -428,6 +431,12 @@ class AccountMove(models.Model):
                                     precision_rounding=move_line.company_currency_id.rounding)
                             else:
                                 original_value = amount_left
+
+                            if len(rec.stock_move_id.move_line_ids) > 1:
+                                sn = rec.stock_move_id.move_line_ids[i].lot_id.name
+                            else:
+                                sn = rec.stock_move_id.move_line_ids[0].lot_id.name
+
                             vals = {
                                 'name': move_line.name,
                                 'company_id': move_line.company_id.id,
@@ -442,7 +451,10 @@ class AccountMove(models.Model):
                                 'original_value': original_value,
                                 'prorata_date': move.date,
                                 'accounting_date': move.date,
+                                'barcode': move_line.product_id.barcode,
+                                'sn': sn,
                             }
+                            i+=1
                             model_id = move_line.account_id.asset_model
                             if model_id:
                                 vals.update({
@@ -456,10 +468,12 @@ class AccountMove(models.Model):
             else:
                 # to create asset based on the account configured in move lines and restricted if there already asset ex
                 if not move.asset_id:
+                    print("yyyyyyy")
                     for move_line in move.line_ids.filtered(
                             lambda line: not (move.move_type in (
                                     'out_invoice',
                                     'out_refund') and line.account_id.internal_group == 'asset')):
+                        print("jjjjjjjj")
                         if (
                                 move_line.account_id
                                 and (move_line.account_id.can_create_asset)
@@ -467,6 +481,7 @@ class AccountMove(models.Model):
                                 and not move.reversed_entry_id
                                 and not move_line.asset_ids
                         ):
+                            print("kkkkkkkkkkk")
                             if not move_line.name:
                                 raise UserError(
                                     _('Journal Items of {account} should have a label in order to generate an asset').format(
@@ -480,6 +495,10 @@ class AccountMove(models.Model):
                                     move_line.quantity, unit_uom, False)
                             else:
                                 units_quantity = 1
+                            i = 0
+                            rec = self.env['stock.valuation.layer'].search(
+                                [('account_move_id', '=', move_line.move_id.id)])
+                            units_quantity = abs(units_quantity)
                             while units_quantity > 0:
                                 if units_quantity > 1:
                                     original_value = float_round(
@@ -490,6 +509,12 @@ class AccountMove(models.Model):
                                         precision_rounding=move_line.company_currency_id.rounding)
                                 else:
                                     original_value = amount_left
+
+
+                                if len(rec.stock_move_id.move_line_ids) > 1:
+                                    sn = rec.stock_move_id.move_line_ids[i].lot_id.name
+                                else:
+                                    sn = rec.stock_move_id.move_line_ids[0].lot_id.name
                                 vals = {
                                     'name': move_line.name,
                                     'company_id': move_line.company_id.id,
@@ -504,7 +529,10 @@ class AccountMove(models.Model):
                                     'original_value': original_value,
                                     'prorata_date': move.date,
                                     'accounting_date': move.date,
+                                    'barcode': move_line.product_id.barcode,
+                                    'sn': sn,
                                 }
+                                i += 1
                                 model_id = move_line.account_id.asset_model
                                 if model_id:
                                     vals.update({
