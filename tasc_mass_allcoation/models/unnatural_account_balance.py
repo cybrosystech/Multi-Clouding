@@ -27,6 +27,13 @@ class UnnaturalAccountBalance(models.Model):
     unnatural_balance_move_id = fields.Many2one('account.move', string="Unnatural account balance Entry", copy=False)
     reversed_unnatural_balance_move_id = fields.Many2one('account.move', string="Reversed Unnatural account balance Entry", copy=False)
 
+    def unlink(self):
+        for record in self:
+            if record.unnatural_balance_move_id or record.reversed_unnatural_balance_move_id:
+                raise UserError(
+                    "You cannot delete this record because an unnatural balance entry has already been created.")
+            super(UnnaturalAccountBalance, record).unlink()
+
     @api.constrains('date_period')
     def _check_date_after_lock(self):
         for rec in self:
