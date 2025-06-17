@@ -15,7 +15,6 @@ class UnnaturalAccountBalance(models.Model):
         required=1
     )
     date_period = fields.Date(string="Date", required=1)
-    account_id = fields.Many2one('account.account', string="Counter Account",required=True)
     company_id = fields.Many2one('res.company', 'Company', default=lambda self: self.env.company)
     asset = fields.Boolean(string="Assets")
     liability = fields.Boolean(string="Liability")
@@ -28,6 +27,19 @@ class UnnaturalAccountBalance(models.Model):
     unnatural_balance_move_id = fields.Many2one('account.move', string="Unnatural account balance Entry", copy=False)
     reversed_unnatural_balance_move_id = fields.Many2one('account.move', string="Reversed Unnatural account balance Entry", copy=False)
 
+    def unlink(self):
+        for record in self:
+            if record.unnatural_balance_move_id or record.reversed_unnatural_balance_move_id:
+                raise UserError(
+                    "You cannot delete this record because an unnatural balance entry has already been created.")
+            super(UnnaturalAccountBalance, record).unlink()
+
+    @api.constrains('date_period')
+    def _check_date_after_lock(self):
+        for rec in self:
+            lock_date = rec.company_id.fiscalyear_lock_date
+            if rec.date_period and lock_date and  rec.date_period <= lock_date:
+                raise ValidationError("Date must be after the fiscal year lock date (%s)" %lock_date)
 
     def action_generate_unnatural_balance_lines(self):
         if self.unnatural_account_balance_line_ids:
@@ -39,8 +51,6 @@ class UnnaturalAccountBalance(models.Model):
             internal_groups.append('asset')
         if self.liability:
             internal_groups.append('liability')
-        if self.equity:
-            internal_groups.append('equity')
 
         query = """
             SELECT
@@ -54,14 +64,14 @@ class UnnaturalAccountBalance(models.Model):
                 aml.company_id = %s
                 AND aml.parent_state != 'cancel'
                 AND aml.date <= %s
-                AND aa.account_type != 'asset_fixed'
+                AND aa.account_type not in ('asset_fixed', 'asset_cash', 'asset_non_current')
                 AND aa.internal_group IN %s
             GROUP BY
                 aml.account_id, aa.internal_group
             HAVING
                 (aa.internal_group = 'asset' AND SUM(aml.balance) < 0)
                 OR
-                (aa.internal_group IN ('liability', 'equity') AND SUM(aml.balance) > 0)
+                (aa.internal_group IN ('liability') AND SUM(aml.balance) > 0)
         """
         self.env.cr.execute(query, (self.company_id.id, end_date,tuple(internal_groups)))
         res = self.env.cr.fetchall()
@@ -121,14 +131,13 @@ class UnnaturalAccountBalance(models.Model):
                 'debit': abs(rec.balance) if rec.balance <0 else 0 ,
                 'credit': abs(rec.balance) if rec.balance >0 else 0,
             }))
-        diff = sum(self.unnatural_account_balance_line_ids.mapped('balance'))
-        invoice_lines.append((0, 0, {
-            'analytic_account_id': cost_center.id,
-            'project_site_id': project_site.id,
-            'account_id': self.account_id.id,
-            'debit': abs(diff) if diff > 0 else 0,
-            'credit': abs(diff) if diff < 0 else 0,
-        }))
+            invoice_lines.append((0, 0, {
+                'analytic_account_id': cost_center.id,
+                'project_site_id': project_site.id,
+                'account_id': rec.counter_account_id.id,
+                'debit': abs(rec.balance) if rec.balance >0 else 0,
+                'credit': abs(rec.balance) if rec.balance <0 else 0,
+            }))
         end_date = self.date_period + relativedelta(day=31)
 
         invoice = self.env['account.move'].create({
@@ -148,9 +157,6 @@ class UnnaturalAccountBalance(models.Model):
         reverse_move.action_post()
         self.reversed_unnatural_balance_move_id = reverse_move.id
 
-
-        # if move_lines_to_update:
-        #     move_lines_to_update.write({'mass_allocation_id': self.id})
         action = {
             "type": "ir.actions.act_window",
             "view_mode": "form",
@@ -167,6 +173,7 @@ class UnnaturalAccountBalanceLine(models.Model):
     unnatural_account_balance_id = fields.Many2one('unnatural.account.balance')
     balance = fields.Float(string="Balance")
     account_id = fields.Many2one('account.account', string="Account")
+    counter_account_id = fields.Many2one('account.account', string="Counter Account",required=True)
     cost_center_id = fields.Many2one('account.analytic.account',string="Cost Center")
     project_site_id = fields.Many2one('account.analytic.account',string="Project Site")
 

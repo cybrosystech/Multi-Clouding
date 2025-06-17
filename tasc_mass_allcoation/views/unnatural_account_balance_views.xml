@@ -35,16 +35,14 @@
                                 <field name="reversed_unnatural_balance_move_id" invisible="1"/>
                             </group>
                             <group>
-                                <field name="account_id"  readonly="unnatural_balance_move_id"/>
                                 <field name="company_id"
-                                        readonly="unnatural_balance_move_id"
+                                        readonly="1"
                                 />
                                         <field name="asset"
                                         />
                                         <field name="liability"
                                         />
-                                        <field name="equity"
-                                        />
+                                        <field name="equity" invisible="1"/>
                                 <button string="Generate"
                                         name="action_generate_unnatural_balance_lines"
                                         type="object" class="btn-secondary"
@@ -61,6 +59,7 @@
                                                invisible="1"
                                                column_invisible="1"/>
                                         <field name="account_id"/>
+                                        <field name="counter_account_id"/>
                                         <field name="cost_center_id"/>
                                         <field name="project_site_id"/>
                                         <field name="balance"/>
