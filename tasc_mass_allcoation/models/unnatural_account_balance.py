@@ -27,6 +27,12 @@ class UnnaturalAccountBalance(models.Model):
     unnatural_balance_move_id = fields.Many2one('account.move', string="Unnatural account balance Entry", copy=False)
     reversed_unnatural_balance_move_id = fields.Many2one('account.move', string="Reversed Unnatural account balance Entry", copy=False)
 
+    @api.constrains('date_period')
+    def _check_date_after_lock(self):
+        for rec in self:
+            lock_date = rec.company_id.fiscalyear_lock_date
+            if rec.date_period and lock_date and  rec.date_period < lock_date:
+                raise ValidationError("Date must be after the fiscal year lock date (%s)" %lock_date)
 
     def action_generate_unnatural_balance_lines(self):
         if self.unnatural_account_balance_line_ids:
