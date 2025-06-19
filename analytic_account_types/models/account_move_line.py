@@ -468,12 +468,10 @@ class AccountMove(models.Model):
             else:
                 # to create asset based on the account configured in move lines and restricted if there already asset ex
                 if not move.asset_id:
-                    print("yyyyyyy")
                     for move_line in move.line_ids.filtered(
                             lambda line: not (move.move_type in (
                                     'out_invoice',
                                     'out_refund') and line.account_id.internal_group == 'asset')):
-                        print("jjjjjjjj")
                         if (
                                 move_line.account_id
                                 and (move_line.account_id.can_create_asset)
@@ -481,7 +479,6 @@ class AccountMove(models.Model):
                                 and not move.reversed_entry_id
                                 and not move_line.asset_ids
                         ):
-                            print("kkkkkkkkkkk")
                             if not move_line.name:
                                 raise UserError(
                                     _('Journal Items of {account} should have a label in order to generate an asset').format(
@@ -710,14 +707,14 @@ class AccountMoveLine(models.Model):
                         self.account_id = self.product_id.categ_id.property_stock_account_input_categ_id.id
                     elif self.product_id.detailed_type == 'consu' or self.product_id.detailed_type == 'service':
                         if self.t_budget == 'opex':
-                            if self.project_site_id and "warehouse" in self.project_site_id.name.lower():
+                            if self.project_site_id and self.project_site_id.is_inventory:
                                 self.account_id = self.product_id.inventory_account_id.id
                             else:
                                 self.account_id = self.product_id.property_account_expense_id.id
                         elif self.t_budget == 'capex':
-                            if self.project_site_id and "warehouse" in self.project_site_id.name.lower():
+                            if self.project_site_id and self.project_site_id.is_inventory:
                                 self.account_id = self.product_id.inventory_account_id.id
-                            elif self.project_site_id and "warehouse" not in self.project_site_id.name.lower():
+                            elif self.project_site_id and not self.project_site_id.is_inventory:
                                 if self.site_status == 'off_air':
                                     self.account_id = self.product_id.cip_account_id.id
                                 elif self.site_status == 'on_air':
@@ -738,14 +735,14 @@ class AccountMoveLine(models.Model):
                 else:
                     if self.product_id.detailed_type in ['product', 'consu']:
                         if self.t_budget == 'opex':
-                            if self.project_site_id and "warehouse" in self.project_site_id.name.lower():
+                            if self.project_site_id and self.project_site_id.is_inventory:
                                 self.account_id = self.product_id.inventory_account_id.id
                             else:
                                 self.account_id = self.product_id.property_account_expense_id.id
                         elif self.t_budget == 'capex':
-                            if self.project_site_id and "warehouse" in self.project_site_id.name.lower():
+                            if self.project_site_id and self.project_site_id.is_inventory:
                                 self.account_id = self.product_id.inventory_account_id.id
-                            elif self.project_site_id and "warehouse" not in self.project_site_id.name.lower():
+                            elif self.project_site_id and not self.project_site_id.is_inventory:
                                 if self.site_status == 'off_air':
                                     self.account_id = self.product_id.cip_account_id.id
                                 elif self.site_status == 'on_air':

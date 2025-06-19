@@ -11,14 +11,14 @@ class StockMove(models.Model):
                 account_id = debit_account_id
             else:
                 if self.t_budget == 'opex':
-                    if self.project_site_id and "warehouse" in self.project_site_id.name.lower():
+                    if self.project_site_id and self.project_site_id.is_inventory:
                         account_id = self.product_id.inventory_account_id.id
                     else:
                         account_id = self.product_id.property_account_expense_id.id
                 elif self.t_budget == 'capex':
-                    if self.project_site_id and "warehouse" in self.project_site_id.name.lower():
+                    if self.project_site_id and self.project_site_id.is_inventory:
                         account_id = self.product_id.inventory_account_id.id
-                    elif self.project_site_id and "warehouse" not in self.project_site_id.name.lower():
+                    elif self.project_site_id and not self.project_site_id.is_inventory:
                         if self.site_status == 'off_air':
                             account_id = self.product_id.cip_account_id.id
                         elif self.site_status == 'on_air':
@@ -52,14 +52,14 @@ class StockMove(models.Model):
             rslt['debit_line_vals']['account_id'] = account_id
         else:
             if self.t_budget == 'opex':
-                if self.project_site_id and "warehouse" in self.project_site_id.name.lower():
+                if self.project_site_id and self.project_site_id.is_inventory:
                     account_id = self.product_id.inventory_account_id.id
                 else:
                     account_id = self.product_id.property_account_expense_id.id
             elif self.t_budget == 'capex':
-                if self.project_site_id and "warehouse" in self.project_site_id.name.lower():
+                if self.project_site_id and self.project_site_id.is_inventory:
                     account_id = self.product_id.inventory_account_id.id
-                elif self.project_site_id and "warehouse" not in self.project_site_id.name.lower():
+                elif self.project_site_id and not self.project_site_id.is_inventory:
                     if self.site_status == 'off_air':
                         account_id = self.product_id.cip_account_id.id
                     elif self.site_status == 'on_air':
