@@ -5,6 +5,6 @@ class AccountAsset(models.Model):
     _inherit = 'account.asset'
 
     additional_info = fields.Char(string="Additional Info",
-                                  help="Additional Info")
+                                  help="Additional Info", tracking=True)
     additional_info2 = fields.Char(string="Additional Info2",
-                                  help="Additional Info2")
+                                  help="Additional Info2", tracking=True)

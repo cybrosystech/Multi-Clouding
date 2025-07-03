@@ -68,12 +68,3 @@ class StockMoveLine(models.Model):
                                                'project_site')],
                                       )
 
-    def write(self, vals):
-        res = super(StockMoveLine, self).write(vals)
-        if 'lot_id' in vals and self:
-            self.project_site_id = self.move_id.project_site_id.id if self.move_id.project_site_id else False
-            self.source_project_site_id = self.move_id.source_project_site_id.id if self.move_id.source_project_site_id else False
-        return res
-
-
-    #testinggggggg############################

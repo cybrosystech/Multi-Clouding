@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+     <record id="asset_barcode_tree" model="ir.ui.view">
+        <field name="name">asset.barcode.tree</field>
+        <field name="model">asset.barcode</field>
+        <field name="arch" type="xml">
+            <tree js_class="button_in_tree" create="false">
+                <field name="barcode"/>
+                <field name="quantity_scanned"/>
+                <field name="total_quantity"/>
+                <field name="difference"/>
+                <field name="sn_not_in_far"/>
+                <field name="sn_in_far_pending"/>
+                <field name="create_date" invisible="1" column_invisible="1"/>
+                <field name="is_validated" widget="boolean_toggle"/>
+                <button name="action_view" type="object" string="view"/>
+            </tree>
+        </field>
+     </record>
+    <record id="asset_barcode_search" model="ir.ui.view">
+        <field name="name">asset.barcode.search</field>
+        <field name="model">asset.barcode</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="barcode"/>
+                <field name="create_date"/>
+                <filter name="active" string="Active" domain="[('active','=',True)]"/>
+                <filter name="archived" string="Archived" domain="[('active','=',False)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_create_date" string="Creation Date" context="{'group_by': 'create_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="asset_barcode_form" model="ir.ui.view">
+        <field name="name">asset.barcode.form</field>
+        <field name="model">asset.barcode</field>
+        <field name="arch" type="xml">
+            <form js_class="asset_barcode">
+                <header>
+                    <button type='object' name='action_open_scanner' string="Scan Barcode"/>
+                </header>
+                <sheet>
+                    <group >
+                        <field name="barcode"/>
+                        <field name="quantity_scanned"/>
+                        <field name="total_quantity"/>
+                        <field name="difference"/>
+                    </group>
+                   <notebook>
+                    <page string="Asset Lines" name="asset_barcode_line_ids">
+                        <field
+                                name="asset_barcode_line_ids"
+                                mode="tree,form">
+                            <form>
+                                <field name="asset_id"/>
+                                <field name="asset_model_id"/>
+                                <field name="seq_number"/>
+                                <field name="serial_number"/>
+                                <field name="barcode"/>
+                                <field name="asset_barcode_id" invisible="1" column_invisible="1"/>
+                            </form>
+                            <tree>
+                                <field name="asset_id"/>
+                                <field name="asset_model_id"/>
+                                <field name="seq_number"/>
+                                <field name="serial_number"/>
+                                <field name="barcode"/>
+                                <field name="asset_barcode_id" invisible="1" column_invisible="1"/>
+                            </tree>
+                        </field>
+                    </page>
+                </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="asset_barcode_action" model="ir.actions.act_window">
+        <field name="name">Asset barcode action</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">asset.barcode</field>
+        <field name="view_mode">tree,form</field>
+            <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'tree','view_id': ref('tasc_stock_barcode.asset_barcode_tree')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('tasc_stock_barcode.asset_barcode_form')})]"/>
+    </record>
+</odoo>

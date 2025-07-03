@@ -5,6 +5,10 @@ from odoo.exceptions import ValidationError, UserError
 class PurchaseOrder(models.Model):
     _inherit = 'purchase.order'
 
+    @api.model
+    def _default_picking_type(self):
+        return self._get_picking_type(self.env.context.get('company_id') or self.env.company.id)
+
     budget_collect_ids = fields.One2many(comodel_name="budget.collect",
                                          inverse_name="purchase_id", string="",
                                          required=False, )
@@ -22,7 +26,21 @@ class PurchaseOrder(models.Model):
         selection_add=[('to_approve', 'To Approve'), ('sent',), ],
         ondelete={'to_approve': 'set default', 'draft': 'set default', })
     is_admin = fields.Boolean(string="Is Admin", compute='compute_is_admin')
-    po_description = fields.Char(string="PO Description")
+    po_description = fields.Char(string="PO Description", tracking=True)
+    partner_ref = fields.Char('Vendor Reference', copy=False,
+                              help="Reference of the sales order or bid sent by the vendor. "
+                                   "It's used to do the matching when you receive the "
+                                   "products as this reference is usually written on the "
+                                   "delivery order sent by your vendor.", tracking=True)
+    currency_id = fields.Many2one('res.currency', 'Currency', required=True,
+                                  default=lambda self: self.env.company.currency_id.id, tracking=True)
+    payment_term_id = fields.Many2one('account.payment.term', 'Payment Terms',
+                                      domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]",
+                                      tracking=True)
+    date_approve = fields.Datetime('Confirmation Date', readonly=True, index=True, copy=False, tracking=True)
+    picking_type_id = fields.Many2one('stock.picking.type', 'Deliver To', required=True, default=_default_picking_type,
+                                      domain="['|', ('warehouse_id', '=', False), ('warehouse_id.company_id', '=', company_id)]",
+                                      help="This will determine operation type of incoming shipment", tracking=True)
 
     @api.depends_context('uid')
     def compute_is_admin(self):
