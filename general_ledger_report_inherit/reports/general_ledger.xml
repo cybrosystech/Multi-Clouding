@@ -25,6 +25,24 @@
                 <field name="expression_label">cost_center</field>
                 <field name="figure_type">string</field>
             </record>
+            <record id="general_ledger_report_t_budget"
+                    model="account.report.column">
+                <field name="name">T-Budget</field>
+                <field name="expression_label">t_budget</field>
+                <field name="figure_type">string</field>
+            </record>
+            <record id="general_ledger_report_t_budget_name"
+                    model="account.report.column">
+                <field name="name">T-Budget Name</field>
+                <field name="expression_label">t_budget_name</field>
+                <field name="figure_type">string</field>
+            </record>
+            <record id="general_ledger_report_site_status"
+                    model="account.report.column">
+                <field name="name">Site Status</field>
+                <field name="expression_label">site_status</field>
+                <field name="figure_type">string</field>
+            </record>
             <record id="general_ledger_report_accounting_date"
                     model="account.report.column">
                 <field name="name">Accounting Date</field>
