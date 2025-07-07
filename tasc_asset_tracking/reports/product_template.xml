@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <template id="report_simple_label_asset">
+        <div class="o_label_sheet o_label_dymo" t-att-style="padding_page">
+            <div class="o_label_full" t-att-style="table_style">
+                <div class="text-start o_label_small_barcode">
+                    <t t-if="barcode">
+                        <div t-out="barcode" style="padding:0"
+                             t-options="{'widget': 'barcode', 'quiet': 0, 'symbology': 'auto', 'img_style': barcode_size}"/>
+                        <div class="o_label_name" style="height:1.7em;background-color: transparent;">
+                            <span t-out="barcode"/>
+                        </div>
+                        <div class="o_label_right_column">
+                            <small class="text-nowrap" t-out="serial_no"/>
+                        </div>
+
+                    </t>
+                </div>
+            </div>
+        </div>
+    </template>
+
+
+    <template id="report_productlabel_asset">
+        <t t-call="web.html_container">
+            <t t-set="barcode_size" t-value="'width:45.5mm;height:7.5mm'"/>
+            <t t-set="table_style" t-value="'width:100%;height:32mm;'"/>
+            <t t-set="padding_page" t-value="'padding: 2mm'"/>
+
+            <t t-foreach="data" t-as="item">
+                <t t-set="barcode" t-value="item['barcode']"/>
+                <t t-set="serial_no" t-value="item['serial_no']"/>
+                <t t-call="tasc_asset_tracking.report_simple_label_asset"/>
+
+            </t>
+
+        </t>
+    </template>
+
+    <template id="report_label_asset">
+        <t t-call="web.basic_layout">
+            <div class="page">
+                <t t-call="tasc_asset_tracking.report_productlabel_asset"/>
+            </div>
+        </t>
+    </template>
+
+</odoo>

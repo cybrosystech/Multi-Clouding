@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="tasc_move_history_view_search" model="ir.ui.view">
+        <field name='name'>tasc.move.history.search</field>
+        <field name='model'>tasc.move.history</field>
+        <field name='arch' type='xml'>
+            <search string="TASC Move History">
+                <field name="product_id"/>
+                <field name="location_dest_id"/>
+                <field name="project_site_id"/>
+                <field name="package_id"/>
+                <field name="lot_id"/>
+                <group expand="0" string="Group By">
+                    <filter name='group_by_product' string="By Product" context="{'group_by':'product_id'}"/>
+                    <filter name='group_by_location_dest_id' string="By Location"
+                            context="{'group_by':'location_dest_id'}"/>
+                    <filter name='group_by_project_site' string="By Project/Site"
+                            context="{'group_by':'project_site_id'}"/>
+                    <filter name='group_by_package_id' string="By Package" context="{'group_by':'package_id'}"/>
+                    <filter name='group_by_lot_id' string="By Lot" context="{'group_by':'lot_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="tasc_move_history_view_tree" model="ir.ui.view">
+        <field name="name">tasc.move.history.tree</field>
+        <field name="model">tasc.move.history</field>
+        <field name="arch" type="xml">
+            <tree string="TASC Move History">
+                <field name="product_id"/>
+                <field name="location_dest_id"/>
+                <field name="project_site_id"/>
+                <field name="package_id"/>
+                <field name="lot_id"/>
+                <field name="quantity"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="tasc_move_history_view_form" model="ir.ui.view">
+        <field name="name">tasc.move.history.form</field>
+        <field name="model">tasc.move.history</field>
+        <field name="arch" type="xml">
+            <form string="TASC Moves History form">
+                <sheet>
+                    <group>
+                        <field name="product_id"/>
+                        <field name="location_dest_id"/>
+                        <field name="project_site_id"/>
+                        <field name="package_id"/>
+                        <field name="lot_id"/>
+                        <field name="quantity"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_tasc_moves_history" model="ir.actions.act_window">
+        <field name="name">TASC Moves History</field>
+        <field name="res_model">tasc.move.history</field>
+        <field name="view_mode">tree,form,pivot</field>
+        <field name="view_id" ref="tasc_move_history_view_tree"/>
+    </record>
+
+     <menuitem id="menu_tasc_moves_history"
+                  name="TASC Moves History"
+                  action="action_tasc_moves_history"
+                  parent="stock.menu_warehouse_report"/>
+</odoo>

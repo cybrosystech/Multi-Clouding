@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="account_view_landed_cost_form_inherited" model="ir.ui.view">
+        <field name="name">account.view.landed.cost.form.inherited</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id"
+               ref="stock_landed_costs.account_view_move_form_inherited"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='invoice_line_ids']/tree/field[@name='product_type']"
+                   position="replace">
+                <field name="product_type" column_invisible="True"
+                       groups="stock.group_stock_manager,stock.group_stock_user"/>
+            </xpath>
+
+            <xpath expr="//button[@name='action_view_landed_costs']"
+                   position="replace">
+                <button string="Landed Costs" type="object"
+                        name="action_view_landed_costs"
+                        class="oe_stat_button" icon="fa-plus-square"
+                        invisible="1" column_invisible="1"/>
+            </xpath>
+
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <t groups="stock.group_stock_manager,stock.group_stock_user">
+                    <field name="landed_costs_ids" invisible="1"/>
+                    <button string="Landed Costs" type="object"
+                            name="action_view_landed_costs"
+                            class="oe_stat_button" icon="fa-plus-square"
+                            invisible="not landed_costs_ids"/>
+                </t>
+            </xpath>
+
+            <field name="state" position="before">
+                <t groups="stock.group_stock_manager,stock.group_stock_user">
+                    <field name="landed_costs_visible" invisible="1"/>
+                    <button name="button_create_landed_costs"
+                            class="oe_highlight" string="Create Landed Costs"
+                            data-hotkey="l" type="object"
+                            groups="account.group_account_invoice"
+                            invisible="not landed_costs_visible"/>
+                </t>
+            </field>
+
+            <xpath expr="//button[@name='button_create_landed_costs']"
+                   position="replace">
+                <button name="button_create_landed_costs" class="oe_highlight"
+                        string="Create Landed Costs" data-hotkey="l"
+                        type="object" column_invisible="1" invisible="1"/>
+            </xpath>
+            <xpath expr="//field[@name='invoice_line_ids']/tree/field[@name='is_landed_costs_line']"
+                   position="replace">
+                <field name="is_landed_costs_line" string="Landed Costs"
+                       column_invisible="parent.move_type != 'in_invoice'"
+                       readonly="product_type != 'service'" optional="show"
+                       groups="stock.group_stock_manager,stock.group_stock_user"/>
+            </xpath>
+            <xpath expr="//field[@name='line_ids']/tree/field[@name='is_landed_costs_line']"
+                   position="replace">
+                <field name="is_landed_costs_line" column_invisible="True"
+                       groups="stock.group_stock_manager,stock.group_stock_user"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

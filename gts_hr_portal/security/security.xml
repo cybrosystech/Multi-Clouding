@@ -209,7 +209,7 @@
             <field name="name">Hr Department All Access</field>
             <field ref="hr.model_hr_department" name="model_id"/>
             <field name="domain_force">
-                [('create_uid','=',user.id),('company_id', 'in', company_ids +
+                ['|',('create_uid','=',user.id),('company_id', 'in', company_ids +
                 [False])]
             </field>
             <field name="groups"

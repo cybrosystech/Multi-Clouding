@@ -418,6 +418,9 @@ class AccountMove(models.Model):
                                 move_line.quantity, unit_uom, False)
                         else:
                             units_quantity = 1
+                        i = 0
+                        rec = self.env['stock.valuation.layer'].search(
+                            [('account_move_id', '=', move_line.move_id.id)])
                         while units_quantity > 0:
                             if units_quantity > 1:
                                 original_value = float_round(
@@ -428,6 +431,12 @@ class AccountMove(models.Model):
                                     precision_rounding=move_line.company_currency_id.rounding)
                             else:
                                 original_value = amount_left
+
+                            if len(rec.stock_move_id.move_line_ids) > 1:
+                                sn = rec.stock_move_id.move_line_ids[i].lot_id.name
+                            else:
+                                sn = rec.stock_move_id.move_line_ids[0].lot_id.name
+
                             vals = {
                                 'name': move_line.name,
                                 'company_id': move_line.company_id.id,
@@ -442,7 +451,10 @@ class AccountMove(models.Model):
                                 'original_value': original_value,
                                 'prorata_date': move.date,
                                 'accounting_date': move.date,
+                                'barcode': move_line.product_id.barcode,
+                                'sn': sn,
                             }
+                            i+=1
                             model_id = move_line.account_id.asset_model
                             if model_id:
                                 vals.update({
@@ -480,6 +492,10 @@ class AccountMove(models.Model):
                                     move_line.quantity, unit_uom, False)
                             else:
                                 units_quantity = 1
+                            i = 0
+                            rec = self.env['stock.valuation.layer'].search(
+                                [('account_move_id', '=', move_line.move_id.id)])
+                            units_quantity = abs(units_quantity)
                             while units_quantity > 0:
                                 if units_quantity > 1:
                                     original_value = float_round(
@@ -490,6 +506,12 @@ class AccountMove(models.Model):
                                         precision_rounding=move_line.company_currency_id.rounding)
                                 else:
                                     original_value = amount_left
+
+
+                                if len(rec.stock_move_id.move_line_ids) > 1:
+                                    sn = rec.stock_move_id.move_line_ids[i].lot_id.name
+                                else:
+                                    sn = rec.stock_move_id.move_line_ids[0].lot_id.name
                                 vals = {
                                     'name': move_line.name,
                                     'company_id': move_line.company_id.id,
@@ -504,7 +526,10 @@ class AccountMove(models.Model):
                                     'original_value': original_value,
                                     'prorata_date': move.date,
                                     'accounting_date': move.date,
+                                    'barcode': move_line.product_id.barcode,
+                                    'sn': sn,
                                 }
+                                i += 1
                                 model_id = move_line.account_id.asset_model
                                 if model_id:
                                     vals.update({
@@ -682,14 +707,14 @@ class AccountMoveLine(models.Model):
                         self.account_id = self.product_id.categ_id.property_stock_account_input_categ_id.id
                     elif self.product_id.detailed_type == 'consu' or self.product_id.detailed_type == 'service':
                         if self.t_budget == 'opex':
-                            if self.project_site_id and "warehouse" in self.project_site_id.name.lower():
+                            if self.project_site_id and self.project_site_id.is_inventory:
                                 self.account_id = self.product_id.inventory_account_id.id
                             else:
                                 self.account_id = self.product_id.property_account_expense_id.id
                         elif self.t_budget == 'capex':
-                            if self.project_site_id and "warehouse" in self.project_site_id.name.lower():
+                            if self.project_site_id and self.project_site_id.is_inventory:
                                 self.account_id = self.product_id.inventory_account_id.id
-                            elif self.project_site_id and "warehouse" not in self.project_site_id.name.lower():
+                            elif self.project_site_id and not self.project_site_id.is_inventory:
                                 if self.site_status == 'off_air':
                                     self.account_id = self.product_id.cip_account_id.id
                                 elif self.site_status == 'on_air':
@@ -710,14 +735,14 @@ class AccountMoveLine(models.Model):
                 else:
                     if self.product_id.detailed_type in ['product', 'consu']:
                         if self.t_budget == 'opex':
-                            if self.project_site_id and "warehouse" in self.project_site_id.name.lower():
+                            if self.project_site_id and self.project_site_id.is_inventory:
                                 self.account_id = self.product_id.inventory_account_id.id
                             else:
                                 self.account_id = self.product_id.property_account_expense_id.id
                         elif self.t_budget == 'capex':
-                            if self.project_site_id and "warehouse" in self.project_site_id.name.lower():
+                            if self.project_site_id and self.project_site_id.is_inventory:
                                 self.account_id = self.product_id.inventory_account_id.id
-                            elif self.project_site_id and "warehouse" not in self.project_site_id.name.lower():
+                            elif self.project_site_id and not self.project_site_id.is_inventory:
                                 if self.site_status == 'off_air':
                                     self.account_id = self.product_id.cip_account_id.id
                                 elif self.site_status == 'on_air':

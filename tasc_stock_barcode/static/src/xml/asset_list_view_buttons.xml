@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+   <t t-name="tasc_stock_barcode.ListView.Buttons" t-inherit="web.ListView.Buttons">
+       <xpath expr="//div[hasclass('o_list_buttons')]" position="after">
+           <button type="button" class="btn btn-primary" style="margin-left: 10px;"  t-on-click="OnScanBrcodeClick">
+               Scan Barcode
+           </button>
+           <button type="button" class="btn btn-primary" style="margin-left: 15px;"  t-on-click="OnValidateClick">
+               Audit Complete
+           </button>
+       </xpath>
+   </t>
+</templates>

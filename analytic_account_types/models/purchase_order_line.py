@@ -5,6 +5,10 @@ from odoo.exceptions import ValidationError, UserError
 class PurchaseOrder(models.Model):
     _inherit = 'purchase.order'
 
+    @api.model
+    def _default_picking_type(self):
+        return self._get_picking_type(self.env.context.get('company_id') or self.env.company.id)
+
     budget_collect_ids = fields.One2many(comodel_name="budget.collect",
                                          inverse_name="purchase_id", string="",
                                          required=False, )
@@ -22,7 +26,21 @@ class PurchaseOrder(models.Model):
         selection_add=[('to_approve', 'To Approve'), ('sent',), ],
         ondelete={'to_approve': 'set default', 'draft': 'set default', })
     is_admin = fields.Boolean(string="Is Admin", compute='compute_is_admin')
-    po_description = fields.Char(string="PO Description")
+    po_description = fields.Char(string="PO Description", tracking=True)
+    partner_ref = fields.Char('Vendor Reference', copy=False,
+                              help="Reference of the sales order or bid sent by the vendor. "
+                                   "It's used to do the matching when you receive the "
+                                   "products as this reference is usually written on the "
+                                   "delivery order sent by your vendor.", tracking=True)
+    currency_id = fields.Many2one('res.currency', 'Currency', required=True,
+                                  default=lambda self: self.env.company.currency_id.id, tracking=True)
+    payment_term_id = fields.Many2one('account.payment.term', 'Payment Terms',
+                                      domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]",
+                                      tracking=True)
+    date_approve = fields.Datetime('Confirmation Date', readonly=True, index=True, copy=False, tracking=True)
+    picking_type_id = fields.Many2one('stock.picking.type', 'Deliver To', required=True, default=_default_picking_type,
+                                      domain="['|', ('warehouse_id', '=', False), ('warehouse_id.company_id', '=', company_id)]",
+                                      help="This will determine operation type of incoming shipment", tracking=True)
 
     @api.depends_context('uid')
     def compute_is_admin(self):
@@ -288,7 +306,7 @@ class PurchaseOrderLine(models.Model):
             ('analytic_account_type', '=', 'cost_center')], required=False, )
     project_site_id = fields.Many2one(comodel_name="account.analytic.account",
                                       string="Project/Site", domain=[
-            ('analytic_account_type', '=', 'project_site')], required=False, )
+            ('analytic_account_type', '=', 'project_site')], required=False)
     business_unit_id = fields.Many2one(comodel_name="account.analytic.account",
                                        domain=[('plan_id.name', '=ilike', 'Business Unit')],
                                        string="Business Unit",required=False, )
@@ -313,7 +331,6 @@ class PurchaseOrderLine(models.Model):
         [('capex', 'CAPEX'), ('opex', 'OPEX'), ],
         string='T.Budget')
     t_budget_name = fields.Char(string="T.Budget Name")
-
 
     @api.onchange('budget_id')
     def onchange_budget_id(self):
@@ -353,9 +370,54 @@ class PurchaseOrderLine(models.Model):
             if rec.budget_line_id:
                 rec.remaining_amount = rec.budget_line_id.remaining_amount - order_lines_without_inv - invoices_budget
 
+    @api.onchange('product_id')
+    def _onchange_product_id(self):
+        self.product_uom = self.product_id.uom_id
+
     def _prepare_account_move_line(self, move=False):
         res = super(PurchaseOrderLine, self)._prepare_account_move_line()
-        res.update({'budget_id': self.budget_id.id, })
+        if self.product_id.detailed_type == 'product':
+            account_id = self.product_id.categ_id.property_stock_account_input_categ_id.id
+        elif self.product_id.detailed_type == 'consu' or self.product_id.detailed_type == 'service':
+            if self.t_budget == 'opex':
+                if self.project_site_id and self.project_site_id.is_inventory:
+                    account_id = self.product_id.inventory_account_id.id
+                else:
+                    account_id = self.product_id.property_account_expense_id.id
+            elif self.t_budget == 'capex':
+                if self.project_site_id and self.project_site_id.is_inventory:
+                    account_id = self.product_id.inventory_account_id.id
+                elif self.project_site_id and self.project_site_id.is_inventory:
+                    if self.site_status == 'off_air':
+                        account_id = self.product_id.cip_account_id.id
+                    elif self.site_status == 'on_air':
+                        account_id = self.product_id.asset_account_id.id
+                    else:
+                        account_id = self.product_id.asset_account_id.id
+                else:
+                    if self.site_status == 'off_air':
+                        account_id = self.product_id.cip_account_id.id
+                    elif self.site_status == 'on_air':
+                        account_id = self.product_id.asset_account_id.id
+                    else:
+                        account_id = self.product_id.asset_account_id.id
+            else:
+                account_id = self.product_id.property_account_expense_id.id
+        else:
+            account_id = self.product_id.property_account_expense_id.id
+
+        res.update({'budget_id': self.budget_id.id,
+                    'analytic_account_id': self.cost_center_id.id,
+                    'project_site_id': self.project_site_id.id,
+                    'business_unit_id': self.business_unit_id.id,
+                    't_budget': self.t_budget,
+                    'site_status': self.site_status,
+                    't_budget_name':self.t_budget_name,
+                    'type_id': self.type_id.id,
+                    'location_id': self.location_id.id,
+                    'co_location_id': self.co_location_id.id,
+                    'account_id': account_id})
+
         return res
 
     def _prepare_stock_move_vals(self, picking, price_unit, product_uom_qty, product_uom):
@@ -392,4 +454,5 @@ class PurchaseOrderLine(models.Model):
             'site_status':self.site_status,
             't_budget':self.t_budget,
             't_budget_name':self.t_budget_name,
+            'project_site_id': self.project_site_id.id,
         }

@@ -14,7 +14,7 @@ class AccountAsset(models.Model):
                                       string="Project/Site",
                                       domain=[('analytic_account_type', '=',
                                                'project_site')],
-                                      required=True, )
+                                      required=True, tracking=True)
     analytic_account_id = fields.Many2one(
         comodel_name="account.analytic.account",
         string="Cost Center",
@@ -29,6 +29,37 @@ class AccountAsset(models.Model):
     site_address = fields.Char(string='Site Address',
                                compute='compute_site_address')
     is_admin = fields.Boolean(string="Is Admin", compute='compute_is_admin')
+    barcode = fields.Char(string="Barcode", tracking=True)
+    sn = fields.Char(string="SN", tracking=True)
+    model_id = fields.Many2one('account.asset', string='Model', change_default=True,
+                               domain="[('company_id', '=', company_id)]", tracking=True)
+    original_value = fields.Monetary(string="Original Value", compute='_compute_value', store=True, readonly=False, tracking=True)
+    acquisition_date = fields.Date(
+        compute='_compute_acquisition_date', store=True, precompute=True,
+        readonly=False,
+        copy=True, tracking=True)
+    currency_id = fields.Many2one('res.currency', related='company_id.currency_id', store=True, tracking=True)
+    method = fields.Selection(
+        selection=[
+            ('linear', 'Straight Line'),
+            ('degressive', 'Declining'),
+            ('degressive_then_linear', 'Declining then Straight Line')
+        ],
+        string='Method',
+        default='linear',
+        help="Choose the method to use to compute the amount of depreciation lines.\n"
+             "  * Straight Line: Calculated on basis of: Gross Value / Duration\n"
+             "  * Declining: Calculated on basis of: Residual Value * Declining Factor\n"
+             "  * Declining then Straight Line: Like Declining but with a minimum depreciation value equal to the straight line value.", tracking=True)
+    method_number = fields.Integer(string='Duration', default=5, help="The number of depreciations needed to depreciate your asset", tracking=True)
+    prorata_date = fields.Date(
+        string='Prorata Date',
+        compute='_compute_prorata_date', store=True, readonly=False,
+        help='Starting date of the period used in the prorata calculation of the first depreciation',
+        required=True, precompute=True,
+        copy=True, tracking=True)
+    accounting_date = fields.Date(string='Accounting Date', tracking=True)
+
 
     @api.depends_context('uid')
     def compute_is_admin(self):

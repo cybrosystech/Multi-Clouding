@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <record id="view_inherit_view_account_asset_form" model="ir.ui.view">
+            <field name="name">view_inherit_view_account_asset_form</field>
+            <field name="model">account.asset</field>
+            <field name="inherit_id"
+                   ref="account_asset.view_account_asset_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//button[@name='action_save_model']" position="after">
+                    <button name="action_print_label" string="Print Label" type="object"/>
+                </xpath>
+                <xpath expr="//notebook/page[@name='main_page']/group/group[5]"
+                       position="after">
+                    <group string="Asset Tracking">
+                        <field name="employee_id"/>
+                        <field name="department_id"/>
+                        <field name="barcode"/>
+                        <field name="sn"/>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
