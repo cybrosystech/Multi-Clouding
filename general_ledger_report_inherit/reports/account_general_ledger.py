@@ -46,6 +46,9 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
                     account_move_line.partner_id,
                     account_move_line.currency_id,
                     account_move_line.amount_currency,
+                    account_move_line.t_budget,
+                    account_move_line.t_budget_name,
+                    account_move_line.site_status,
                     COALESCE(account_move_line.invoice_date, account_move_line.date)                 AS invoice_date,
                     ROUND(account_move_line.debit * currency_table.rate, currency_table.precision)   AS debit,
                     ROUND(account_move_line.credit * currency_table.rate, currency_table.precision)  AS credit,
@@ -59,6 +62,7 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
                     journal.code                            AS journal_code,
                     {journal_name}                          AS journal_name,
                     full_rec.id                             AS full_rec_name,
+                    {project_site_name}                     AS project_site,
                     {project_site_name}                     AS project_site,
                     {cost_center_name}                      AS cost_center,
                     %s                                      AS column_group_key
@@ -108,6 +112,16 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
             else:
                 aml_result['communication'] = aml_result['name']
 
+            if aml_result['t_budget'] == 'capex':
+                aml_result['t_budget'] = 'CAPEX'
+            if aml_result['t_budget'] == 'opex':
+                aml_result['t_budget'] = 'OPEX'
+
+            if aml_result['site_status'] == 'on_air':
+                aml_result['site_status'] = 'ON AIR'
+            if aml_result['site_status'] == 'off_air':
+                aml_result['site_status'] = 'OFF AIR'
+
             # The same aml can return multiple results when using account_report_cash_basis module, if the receivable/payable
             # is reconciled with multiple payments. In this case, the date shown for the move lines actually corresponds to the
             # reconciliation date. In order to keep distinct lines in this case, we include date in the grouping key.
@@ -122,7 +136,22 @@ class GeneralLedgerCustomHandler(models.AbstractModel):
                 # In case the same move line gives multiple results at the same date, add them.
                 # This does not happen in standard GL report, but could because of custom shadowing of account.move.line,
                 # such as the one done in account_report_cash_basis (if the payable/receivable line is reconciled twice at the same date).
+                t_budget = ''
+                if aml_result['t_budget'] == 'capex':
+                    t_budget = 'CAPEX'
+                if aml_result['t_budget'] == 'opex':
+                    t_budget = 'OPEX'
+
+                site_status = ''
+                if aml_result['site_status'] == 'on_air':
+                    site_status = 'ON AIR'
+                if aml_result['site_status'] == 'off_air':
+                    site_status = 'OFF AIR'
+
                 already_present_result['project_site'] += aml_result['project_site']
+                already_present_result['t_budget'] += t_budget
+                already_present_result['t_budget_name'] += aml_result['t_budget_name']
+                already_present_result['site_status'] += site_status
                 already_present_result['cost_center'] += aml_result['cost_center']
                 already_present_result['debit'] += aml_result['debit']
                 already_present_result['credit'] += aml_result['credit']
