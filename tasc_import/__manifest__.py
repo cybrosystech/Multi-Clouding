@@ -13,13 +13,14 @@
     'company': 'Cybrosys Techno Solutions',
     'maintainer': 'Cybrosys Techno Solutions',
     'website': 'https://www.cybrosys.com',
-    'images': ['static/description/banner.jpg'],
+    'images': [],
     'depends': ['base_import'],
     'data': [
     ],
     'assets': {
         'web.assets_backend': [
             'tasc_import/static/src/**/*.js',
+            'tasc_import/static/src/**/*.xml',
         ],},
     'license': 'AGPL-3',
     'installable': True,
