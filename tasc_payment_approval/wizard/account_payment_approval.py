@@ -1,4 +1,6 @@
-from odoo import api, models, fields
+# -*- coding: utf-8 -*-
+import datetime
+from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
 
@@ -69,7 +71,7 @@ class PaymentApproval(models.Model):
                 next_approvers = rec.payment_approval_cycle_ids.filtered(
                     lambda x: x.approval_seq == int(new_min_seq)).mapped(
                     'user_approve_ids')
-                rec.send_user_notification(next_approvers)
+                rec.with_context(approval_name=rec.batch_name).send_user_notification(next_approvers)
                 rec.state = 'in_approval'
             message = 'Level ' + str(
                 last_approval.approval_seq) + ' Approved by :' + str(
@@ -156,7 +158,7 @@ class PaymentApproval(models.Model):
                     lambda x: x.approval_seq == int(min_seq_approval))
                 user = notification_to_user.user_approve_ids
                 self.state = 'selected'
-                self.send_user_notification(user)
+                self.with_context(approval_name=self.batch_name).send_user_notification(user)
                 self.request_approve_bool = True
 
     def send_user_notification(self, user):
@@ -176,9 +178,29 @@ class PaymentApproval(models.Model):
                         email_template_id.with_context(ctx).send_mail(pay.id,
                                                                       force_send=True,
                                                                       email_values={
+                                                                          'subject': _(
+                                                                              'Payment Approval Reminder - ' + ctx.get(
+                                                                                  'approval_name')) if ctx.get(
+                                                                              'reminder') else _(
+                                                                              'Payment Approval - ' + ctx.get(
+                                                                                  'approval_name')),
                                                                           'email_to': us.email,
                                                                           'model': None,
                                                                           'res_id': None})
+
+    def action_payment_approval_reminder(self):
+        '''Scheduled action function for send payment approval reminder'''
+        today = datetime.datetime.today()
+        payment_approval_ids = self.env['account.payment.approval'].search(
+            [('state', '=', 'in_approval'),
+             ('bank_integration_status', '=', 'pending'),('create_date','!=',today)])
+        for pay_approval in payment_approval_ids:
+            min_seq_approval = min(
+                pay_approval.payment_approval_cycle_ids.mapped('approval_seq'))
+            notification_to_user = pay_approval.payment_approval_cycle_ids.filtered(
+                lambda x: x.approval_seq == int(min_seq_approval))
+            user = notification_to_user.user_approve_ids
+            pay_approval.with_context(reminder=True,approval_name=pay_approval.batch_name).send_user_notification(user)
 
 
 class PaymentApprovalLine(models.Model):
