@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+    <record id="ir_cron_queue_job_garbage_collector" model="ir.cron">
+            <field name="name">Payment Approval reminder</field>
+            <field name="interval_number">2</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field ref="model_account_payment_approval" name="model_id" />
+            <field name="state">code</field>
+            <field name="code">model.action_payment_approval_reminder()</field>
+        </record>
+    </data>
+</odoo>

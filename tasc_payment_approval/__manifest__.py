@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 {
     'name': 'Payment Approval',
     'summary': """Payment Approval""",
@@ -8,11 +9,12 @@
     'website': "",
     'category': 'Accounting',
     'version': '17.0.1.0.0',
-    'depends': ['account', 'analytic_account_types'],
+    'depends': ['account', 'analytic_account_types','lease_management'],
     'data':
         [
             'data/mail_template.xml',
             'security/ir.model.access.csv',
+            'data/account_payment_approval_data.xml',
             'security/security.xml',
             'views/purpose_code_view.xml',
             'views/default_purpose_code_view.xml',
