@@ -195,12 +195,12 @@ class PaymentApproval(models.Model):
             [('state', '=', 'in_approval'),
              ('bank_integration_status', '=', 'pending'),('create_date','!=',today)])
         for pay_approval in payment_approval_ids:
-            min_seq_approval = min(
-                pay_approval.payment_approval_cycle_ids.mapped('approval_seq'))
-            notification_to_user = pay_approval.payment_approval_cycle_ids.filtered(
-                lambda x: x.approval_seq == int(min_seq_approval))
-            user = notification_to_user.user_approve_ids
-            pay_approval.with_context(reminder=True,approval_name=pay_approval.batch_name).send_user_notification(user)
+            new_min_seq = min(pay_approval.payment_approval_cycle_ids.filtered(
+                lambda x: x.is_approved is False).mapped('approval_seq'))
+            next_approvers = pay_approval.payment_approval_cycle_ids.filtered(
+                lambda x: x.approval_seq == int(new_min_seq)).mapped(
+                'user_approve_ids')
+            pay_approval.with_context(reminder=True,approval_name=pay_approval.batch_name).send_user_notification(next_approvers)
 
 
 class PaymentApprovalLine(models.Model):
