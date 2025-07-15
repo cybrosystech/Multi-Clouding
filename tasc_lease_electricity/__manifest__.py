@@ -9,7 +9,6 @@
     'depends': ['base', 'lease_management'],
     'data':
         [
-            'data/lease_management_data.xml',
             'security/ir.model.access.csv',
             'views/lease_electricity_views.xml',
             'views/leasee_contract_template_views.xml',
