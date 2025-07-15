@@ -15,6 +15,7 @@ class AccountMove(models.Model):
     leasor_contract_id = fields.Many2one(comodel_name="leasor.contract", string="", required=False, )
     posting_date = fields.Date()
     is_installment_entry = fields.Boolean(default=False)
+    dimension = fields.Selection([('rent', 'Rent'), ('security', 'Security'), ('electricity', 'Electricity')],string="Lease Type")
 
     def _post(self, soft=True):
         to_post = super(AccountMove, self)._post(soft)
@@ -57,3 +58,11 @@ class AccountMove(models.Model):
                     depreciated += move.depreciation_value
                     move.asset_remaining_value = remaining
                     move.asset_depreciated_value = depreciated
+
+
+
+class AccountMoveLine(models.Model):
+    """Inherits model to add dimension field"""
+    _inherit = 'account.move.line'
+
+    dimension = fields.Selection(related='move_id.dimension',string="Lease Type")

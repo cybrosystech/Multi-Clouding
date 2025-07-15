@@ -217,7 +217,6 @@ class LeaseeContract(models.Model):
     is_admin = fields.Boolean(string="Is Admin", compute='compute_is_admin')
     description = fields.Char()
 
-
     @api.depends_context('uid')
     def compute_is_admin(self):
         is_admin = self.env.user.id == SUPERUSER_ID or \
@@ -1714,6 +1713,7 @@ class LeaseeContract(models.Model):
                 'account.account_payment_term_immediate').id,
             'journal_id': contract.installment_journal_id.id,
             'leasee_contract_id': contract.id,
+            'dimension':'rent',
         })
 
         if invoice.date >= contract.commencement_date and invoice.date <= contract.inception_date:

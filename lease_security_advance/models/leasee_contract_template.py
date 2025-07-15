@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from odoo import models, fields
 
 
@@ -8,3 +9,5 @@ class LeaseContractTemplate(models.Model):
                                                string="Security Expenses")
     security_deferred_account = fields.Many2one('account.account',
                                                 string="Security Deferred Account")
+    security_liability_account_id = fields.Many2one('account.account',
+                                                    string="Security Liability Account")

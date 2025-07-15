@@ -11,6 +11,7 @@
                      readonly="state != 'draft'"/>
                      <field name="leasee_contract_id"
                      readonly="state != 'draft'"/>
+                    <field name="dimension"/>
                 </xpath>
             </field>
         </record>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_leasee_contract_form_inherit_electricity"
+            model="ir.ui.view">
+        <field name="name">leasee.contract.form.inherit.electricity</field>
+        <field name="model">leasee.contract</field>
+        <field name="inherit_id"
+               ref="lease_management.view_leasee_contract_form"/>
+        <field name="arch" type="xml">
+            <button name="action_activate" position="after">
+                <button name="action_electricity" string="Electricity"
+                        class="oe_highlight"
+                        invisible="electricity_button_bool != True or (state!= 'active' and electricity_amount == 0)"
+                        type="object"/>
+            </button>
+            <button name="action_open_bills" position="after">
+                <button class="oe_stat_button" string="Electricity"
+                        name="action_electricity_bills" type="object"
+                        invisible="electricity_bool == False"
+                        icon="fa-external-link">
+                </button>
+            </button>
+            <field name="company_id" position="after">
+                <field name="electricity_id" invisible="1"/>
+                <field name="electricity_amount"/>
+                <field name="pass_through" invisible="electricity_amount == 0"/>
+                <field name="electricity_bool" invisible="1"/>
+                <field name="electricity_button_bool" invisible="1"/>
+            </field>
+            <field name="asset_model_id" position="after">
+                <field name="electricity_expense_account_id" invisible="pass_through"/>
+                <field name="electricity_due_account_id" required="pass_through" invisible="not pass_through"/>
+            </field>
+        </field>
+    </record>
+</odoo>

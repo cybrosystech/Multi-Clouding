@@ -67,6 +67,7 @@ class GeneralLedgerPostingWizard(models.TransientModel):
                 COALESCE(lc.name, SPLIT_PART(aml.name, ':', 1), '') AS lease_no,
                 lc.state AS lease_state,
                 am.state AS move_state,
+                am.dimension AS lease_type,
                 COALESCE(aa.name ->> 'en_US', '') AS dimension_1,
                 COALESCE(ps.name ->> 'en_US', '') AS dimension_2,
                 c.name AS company_name,
@@ -77,7 +78,11 @@ class GeneralLedgerPostingWizard(models.TransientModel):
             JOIN account_move am ON aml.move_id = am.id
             LEFT JOIN account_account a ON aml.account_id = a.id
             LEFT JOIN product_template p ON aml.product_id = p.id
-            LEFT JOIN leasee_contract lc ON am.leasee_contract_id = lc.id
+            LEFT JOIN (
+                SELECT * FROM leasee_contract
+            ) lc ON lc.id = am.leasee_contract_id
+                       OR lc.electricity_id = am.lease_electricity_id
+                       OR lc.security_advance_id = am.lease_security_advance_id
             LEFT JOIN account_analytic_account aa ON aml.analytic_account_id = aa.id
             LEFT JOIN account_analytic_account ps ON aml.project_site_id = ps.id
             LEFT JOIN res_company c ON am.company_id = c.id

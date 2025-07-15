@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import math
 from datetime import timedelta
 from odoo import models, fields, _, api
@@ -246,12 +247,16 @@ class LeaseeContractInheritAdvance(models.Model):
             'invoice_line_ids': invoice_lines,
             'journal_id': self.installment_journal_id.id,
             'lease_security_advance_id': advance_security_id.id,
+            'dimension': 'security',
             # 'auto_post': 'at_date',
         })
         if invoice.date >= self.commencement_date and invoice.date <= self.inception_date:
             invoice.date = self.inception_date
             invoice.invoice_date_due = self.inception_date
             invoice.auto_post = 'at_date'
+        payable_lines = invoice.line_ids.filtered(lambda x: x.account_id.internal_group == 'liability')
+        payable_lines.write({'account_id':instalment.leasee_contract_id.leasee_template_id.security_liability_account_id.id})
+
 
     def action_security_bills(self):
         advance_security_id = self.env['leasee.security.advance'].search(

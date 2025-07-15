@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
-    <record id="view_leasee_contract_template_form"
-            model="ir.ui.view">
-        <field name="name">leasee.contract.template.form.inherit.lease.security.advance</field>
+    <record id="leasee_contract_template_view_form_tasc_lease_electricity" model="ir.ui.view">
+        <field name="name">leasee.contract.template.view.inherit.tasc.lease</field>
         <field name="model">leasee.contract.template</field>
         <field name="inherit_id"
                ref="lease_management.view_leasee_contract_template_form"/>
         <field name="arch" type="xml">
             <field name="prorata_computation_type" position="before">
-                <field name="security_prepaid_account"/>
-                <field name="security_deferred_account"/>
-                <field name="security_liability_account_id"/>
+                <field name="electricity_expense_account_id"/>
+                <field name="electricity_due_account_id"/>
+                <field name="electricity_liability_account_id"/>
             </field>
         </field>
     </record>

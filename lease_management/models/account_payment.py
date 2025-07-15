@@ -12,6 +12,7 @@ class AccountPayment(models.Model):
 
     is_leasee_payment = fields.Boolean(default=False  )
     lease_contract_id = fields.Many2one(comodel_name="leasee.contract", )
+    dimension = fields.Char(string="Lease Type")
 
     def action_post(self):
         super(AccountPayment, self).action_post()
