@@ -9,6 +9,7 @@
         <field name="arch" type="xml">
             <field name="payment_method_line_id" position="after">
                 <field name="purpose_code_id"/>
+                 <field name="dimension" invisible="1"/>
             </field>
         </field>
     </record>

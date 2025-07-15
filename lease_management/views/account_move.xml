@@ -26,15 +26,6 @@
                        position="inside">
                     <field name="dimension" readonly="1"/>
                 </xpath>
-                <xpath expr="//notebook/page[@name='invoice_tab']/field[@name='invoice_line_ids']/tree/field[@name='analytic_distribution']"
-                       position="before">
-                    <field name="dimension" readonly="1"/>
-                </xpath>
-                <xpath expr="//notebook/page[@name='aml_tab']/field[@name='line_ids']/tree/field[@name='analytic_distribution']"
-                       position="before">
-                    <field name="dimension" readonly="1"/>
-                </xpath>
-
             </field>
         </record>
 

@@ -58,11 +58,3 @@ class AccountMove(models.Model):
                     depreciated += move.depreciation_value
                     move.asset_remaining_value = remaining
                     move.asset_depreciated_value = depreciated
-
-
-
-class AccountMoveLine(models.Model):
-    """Inherits model to add dimension field"""
-    _inherit = 'account.move.line'
-
-    dimension = fields.Selection(related='move_id.dimension',string="Lease Type")

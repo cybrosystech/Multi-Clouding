@@ -41,6 +41,7 @@ def _create_payment_vals_from_batch(self, batch_result):
             tasc_ref = ', '.join(tasc_ref)
         else:
             tasc_ref = ''
+
     payment_vals = {
         'date': self.payment_date,
         'amount': batch_values['source_amount_currency'],
@@ -57,6 +58,7 @@ def _create_payment_vals_from_batch(self, batch_result):
         'write_off_line_vals': [],
         'purpose_code_id': self.purpose_code_id.id,
         'tasc_reference': batch_result["tasc_reference"] if batch_result.get("tasc_reference") else tasc_ref,
+        'dimension': batch_result["dimension"] if batch_result.get('dimension') else '',
     }
 
     total_amount, mode = self._get_total_amount_using_same_currency(
@@ -139,6 +141,7 @@ def _create_payments(self):
                         'lines': line,
                         'move_id': line.move_id,
                         'tasc_reference':line.move_id.reference,
+                        'dimension': line.move_id.dimension,
                     })
             batches = new_batches
 
@@ -174,7 +177,9 @@ class AccountPaymentRegister(models.TransientModel):
 
     purpose_code_id = fields.Many2one('purpose.code', string="Purpose Code",
                                       default=_default_purpose_code_id)
-    tasc_reference =  fields. Char(string="Tasc Reference")
+    tasc_reference =  fields.Char(string="Tasc Reference")
+    dimension =  fields.Char(string="Dimension")
+
 
     def _create_payment_vals_from_wizard(self, batch_result):
         vals = super()._create_payment_vals_from_wizard(batch_result)
@@ -185,7 +190,8 @@ class AccountPaymentRegister(models.TransientModel):
         else:
             tasc_ref = ''
         vals.update({'purpose_code_id': self.purpose_code_id.id,
-                     'tasc_reference':tasc_ref if tasc_ref else '',})
+                     'tasc_reference':tasc_ref if tasc_ref else '',
+                     'dimension': move.dimension if move and move.dimension else ''})
         return vals
 
     def _create_payment_vals_from_batch(self, batch_result):
@@ -199,5 +205,6 @@ class AccountPaymentRegister(models.TransientModel):
             else:
                 tasc_ref = ''
         res.update({'purpose_code_id': self.purpose_code_id.id,
-                    'tasc_reference':batch_result["tasc_reference"] if batch_result.get("tasc_reference") else tasc_ref,})
+                    'tasc_reference':batch_result["tasc_reference"] if batch_result.get("tasc_reference") else tasc_ref,
+                    'dimension': batch_result["dimension"] if batch_result.get('dimension') else ''})
         return res
