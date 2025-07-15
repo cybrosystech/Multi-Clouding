@@ -215,6 +215,8 @@ class LeaseeContract(models.Model):
                                         )
     end_date = fields.Date(string="Ending Date",compute='compute_contract_end_date')
     is_admin = fields.Boolean(string="Is Admin", compute='compute_is_admin')
+    description = fields.Char()
+
 
     @api.depends_context('uid')
     def compute_is_admin(self):

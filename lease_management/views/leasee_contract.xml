@@ -83,6 +83,7 @@
                         </div>
                         <group>
                             <group>
+                                <field name="description"/>
                                 <field name="leasee_template_id"
                                        readonly="state != 'draft'"/>
                                 <field name="external_reference_number"
