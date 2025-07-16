@@ -193,7 +193,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                                               'date_to'])
 
         options['custom_columns_subheaders'] = [
-            {"name": _("Characteristics"), "colspan": 15},
+            {"name": _("Characteristics"), "colspan": 16},
             {"name": _("Assets"), "colspan": 4},
             {"name": _("Depreciation"), "colspan": 4},
             {"name": _("Book Value"), "colspan": 1},
@@ -441,6 +441,7 @@ class AssetsReportCustomHandler(models.AbstractModel):
                 "depre_for_year": depreciation_for_the_year,
                 "balance": balance ,
                 "project_site": al["project_site"],
+                "original_project_site": al["first_move_project_site"],
                 "capex_type": apex_type,
                 "asset_sequence_number": al["sequence_number"],
                 "co_location": al["co_location"],
@@ -572,173 +573,254 @@ class AssetsReportCustomHandler(models.AbstractModel):
                                       options.get('analytic_accounts_list')]]
 
         if self.env.context.get('is_xlsx'):
-            sql = f"""SELECT 
-                                            asset.id AS asset_id, 
-                                            asset.parent_id AS parent_id, 
-                                            asset.name AS asset_name, 
-                                            asset.serial_no as serial_no, 
-                                            asset.original_value AS asset_original_value, 
-                                            asset.partial_disposal AS partial_disposal,
-                                            asset.currency_id AS asset_currency_id, 
-                                            COALESCE(asset.salvage_value, 0) as asset_salvage_value, 
-                                            MIN(move.date) AS asset_date, 
-                                            asset.disposal_date AS asset_disposal_date, 
-                                            asset.acquisition_date AS asset_acquisition_date, 
-                                            asset.method AS asset_method, 
-                                            COALESCE(project_sites.name ->> 'en_US', '') as project_site, 
-                                            COALESCE(co_locations.name ->> 'en_US', '') as co_location, 
-                                            asset.capex_type as capex_type, 
-                                            asset.sequence_number as sequence_number, 
-                                            asset.additional_info as additional_info, 
-                                            asset.method_number AS asset_method_number, 
-                                            asset.method_period AS asset_method_period, 
-                                            asset.method_progress_factor AS asset_method_progress_factor, 
-                                            asset.state AS asset_state, 
-                                            asset.company_id AS company_id, 
-                                            account.code AS account_code, 
-                                            COALESCE(account.name ->> 'en_US', '') as account_name, 
-                                            account.id AS account_id, 
-                                            model.name as asset_model_name,
-                                            currency.name as currency_name,
-                                            COALESCE(
-                                              SUM(move.depreciation_value) FILTER (
-                                                WHERE move.date <  %(date_from)s AND {move_filter}
-                                              ), 0
-                                            ) + COALESCE(asset.already_depreciated_amount_import, 0) AS depreciated_before, 
-                                            COALESCE(
-                                              SUM(move.depreciation_value) FILTER (
-                                                WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} 
-                                              ), 0
-                                            ) AS depreciated_during, 
-                                             COALESCE(
-                                            SUM(move.depreciation_value) FILTER (
-                                              WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.ref NOT ILIKE '%%Disposal%%'
-                                            ), 0
-                                          ) AS depreciated_for_the_year, 
-                                            COALESCE(
-                                              SUM(move.depreciation_value) FILTER (
-                                                WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND  (move.asset_number_days IS NULL OR  move.ref ILIKE '%%Disposal%%')
-                                              ), 0
-                                            ) AS asset_disposal_value ,
-                                            (
-                                            SELECT MAX(move_sub.date)
-                                            FROM account_move move_sub
-                                            WHERE move_sub.asset_id = asset.id
-                                          ) AS last_depreciation_date
-                                          FROM 
-                                            account_asset asset 
-                                            LEFT JOIN account_account account ON asset.account_asset_id = account.id 
-                                            LEFT JOIN account_analytic_account project_sites ON asset.project_site_id = project_sites.id 
-                                            LEFT JOIN account_analytic_account co_locations ON asset.co_location = co_locations.id 
-                                            LEFT JOIN account_move move ON move.asset_id = asset.id 
-                                            LEFT JOIN account_asset model ON model.id = asset.model_id
-                                            LEFT JOIN res_currency as currency ON asset.currency_id = currency.id
-                                          WHERE 
-                                            asset.active 
-                                            AND (asset.disposal_date >=  %(date_from)s OR asset.disposal_date IS NULL)
-                                            AND asset.company_id in %(company_ids)s
-                                            AND asset.state NOT IN ('model', 'draft', 'cancelled') 
-                                            AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
-                                            AND asset.active = 't'
-                                            AND COALESCE(asset.is_accrual, false) = false
-                                            AND (account.name ->> 'en_US') NOT ILIKE '%%Lease%%'
-                                            AND NOT EXISTS (
-                                              SELECT 1 FROM leasee_contract lc WHERE lc.asset_id = asset.id
-                                          )
-                                          GROUP BY 
-                                            asset.id, 
-                                            account.id, 
-                                            currency.id,
-                                            project_sites.id, 
-                                            co_locations.id, 
-                                            model.name
+            sql = f"""WITH first_move_sites AS (
+                        WITH first_moves AS (
+                            SELECT asset_id, MIN(id) AS min_move_id
+                            FROM account_move
+                            WHERE asset_id IS NOT NULL
+                            GROUP BY asset_id
+                        )
+                        SELECT
+                            fm.asset_id,
+                            aml.project_site_id
+                        FROM first_moves fm
+                        JOIN LATERAL (
+                            SELECT aml.project_site_id
+                            FROM account_move_line aml
+                            WHERE aml.move_id = fm.min_move_id
+                              AND aml.project_site_id IS NOT NULL
+                            LIMIT 1
+                        ) aml ON true
+                    )
+                    
+                    SELECT 
+                        asset.id AS asset_id, 
+                        asset.parent_id AS parent_id, 
+                        asset.name AS asset_name, 
+                        asset.serial_no AS serial_no, 
+                        asset.original_value AS asset_original_value, 
+                        asset.partial_disposal AS partial_disposal,
+                        asset.currency_id AS asset_currency_id, 
+                        COALESCE(asset.salvage_value, 0) AS asset_salvage_value, 
+                        MIN(move.date) AS asset_date, 
+                        asset.disposal_date AS asset_disposal_date, 
+                        asset.acquisition_date AS asset_acquisition_date, 
+                        asset.method AS asset_method, 
+                        COALESCE(project_sites.name ->> 'en_US', '') AS project_site, 
+                        COALESCE(co_locations.name ->> 'en_US', '') AS co_location, 
+                        asset.capex_type AS capex_type, 
+                        asset.sequence_number AS sequence_number, 
+                        asset.additional_info AS additional_info, 
+                        asset.method_number AS asset_method_number, 
+                        asset.method_period AS asset_method_period, 
+                        asset.method_progress_factor AS asset_method_progress_factor, 
+                        asset.state AS asset_state, 
+                        asset.company_id AS company_id, 
+                        account.code AS account_code, 
+                        COALESCE(account.name ->> 'en_US', '') AS account_name, 
+                        account.id AS account_id, 
+                        model.name AS asset_model_name,
+                        currency.name AS currency_name,
+                        COALESCE(first_move_site.name ->> 'en_US', '') AS first_move_project_site,
+                    
+                        -- Depreciation amounts
+                        COALESCE(SUM(move.depreciation_value) FILTER (
+                            WHERE move.date < %(date_from)s AND {move_filter}
+                        ), 0) + COALESCE(asset.already_depreciated_amount_import, 0) AS depreciated_before,
+                    
+                        COALESCE(SUM(move.depreciation_value) FILTER (
+                            WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter}
+                        ), 0) AS depreciated_during,
+                    
+                        COALESCE(SUM(move.depreciation_value) FILTER (
+                            WHERE move.date BETWEEN %(date_from)s AND %(date_to)s 
+                              AND {move_filter} 
+                              AND (move.asset_number_days IS NULL OR move.ref ILIKE '%%Disposal%%')
+                        ), 0) AS asset_disposal_value,
+                    
+                        COALESCE(SUM(move.depreciation_value) FILTER (
+                            WHERE move.date BETWEEN %(date_from)s AND %(date_to)s 
+                              AND {move_filter} 
+                              AND move.ref NOT ILIKE '%%Disposal%%'
+                        ), 0) AS depreciated_for_the_year,
+                    
+                        (
+                            SELECT MAX(move_sub.date)
+                            FROM account_move move_sub
+                            WHERE move_sub.asset_id = asset.id
+                        ) AS last_depreciation_date
+                    
+                    FROM account_asset asset
+                    
+                    LEFT JOIN account_account account ON asset.account_asset_id = account.id 
+                    LEFT JOIN account_analytic_account project_sites ON asset.project_site_id = project_sites.id 
+                    LEFT JOIN account_analytic_account co_locations ON asset.co_location = co_locations.id 
+                    LEFT JOIN account_move move ON move.asset_id = asset.id 
+                    LEFT JOIN account_asset model ON model.id = asset.model_id
+                    LEFT JOIN res_currency currency ON asset.currency_id = currency.id
+                    LEFT JOIN first_move_sites fms ON fms.asset_id = asset.id
+                    LEFT JOIN account_analytic_account first_move_site ON fms.project_site_id = first_move_site.id
+                    
+                    WHERE 
+                        asset.active = true
+                        AND (asset.disposal_date >= %(date_from)s OR asset.disposal_date IS NULL)
+                        AND asset.company_id IN %(company_ids)s
+                        AND asset.state NOT IN ('model', 'draft', 'cancelled') 
+                        AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
+                        AND COALESCE(asset.is_accrual, false) = false
+                        AND (account.name ->> 'en_US') NOT ILIKE '%%Lease%%'
+                        AND NOT EXISTS (
+                            SELECT 1 FROM leasee_contract lc WHERE lc.asset_id = asset.id
+                        )
+                    
+                    GROUP BY 
+                        asset.id, 
+                        account.id, 
+                        currency.id,
+                        project_sites.id, 
+                        co_locations.id, 
+                        model.name,
+                        first_move_site.name;
+
                                           """
             self._cr.execute(sql, query_params)
             results = self._cr.dictfetchall()
             return results
         else:
 
-            sql = f"""SELECT 
-                      asset.id AS asset_id, 
-                      asset.parent_id AS parent_id, 
-                      asset.name AS asset_name, 
-                      asset.serial_no as serial_no, 
-                      asset.original_value AS asset_original_value, 
-                      asset.partial_disposal AS partial_disposal,
-                      asset.currency_id AS asset_currency_id, 
-                      COALESCE(asset.salvage_value, 0) as asset_salvage_value, 
-                      MIN(move.date) AS asset_date, 
-                      asset.disposal_date AS asset_disposal_date, 
-                      asset.acquisition_date AS asset_acquisition_date, 
-                      asset.method AS asset_method, 
-                      COALESCE(project_sites.name ->> 'en_US', '') as project_site, 
-                      COALESCE(co_locations.name ->> 'en_US', '') as co_location, 
-                      asset.capex_type as capex_type, 
-                      asset.sequence_number as sequence_number, 
-                      asset.additional_info as additional_info, 
-                      asset.method_number AS asset_method_number, 
-                      asset.method_period AS asset_method_period, 
-                      asset.method_progress_factor AS asset_method_progress_factor, 
-                      asset.state AS asset_state, 
-                      asset.company_id AS company_id, 
-                      account.code AS account_code, 
-                      COALESCE(account.name ->> 'en_US', '') as account_name, 
-                      account.id AS account_id, 
-                      model.name as asset_model_name,
-                      currency.name as currency_name,
-                      COALESCE(
-                        SUM(move.depreciation_value) FILTER (
-                          WHERE move.date <  %(date_from)s AND {move_filter}
-                        ), 0
-                      ) + COALESCE(asset.already_depreciated_amount_import, 0) AS depreciated_before, 
-                      COALESCE(
-                        SUM(move.depreciation_value) FILTER (
-                          WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} 
-                        ), 0
-                      ) AS depreciated_during, 
-                       COALESCE(
-                                            SUM(move.depreciation_value) FILTER (
-                                              WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND move.ref NOT ILIKE '%%Disposal%%'
-                                            ), 0
-                                          ) AS depreciated_for_the_year, 
-                      COALESCE(
-                        SUM(move.depreciation_value) FILTER (
-                          WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} AND (move.asset_number_days IS NULL OR  move.ref ILIKE '%%Disposal%%')
-                        ), 0
-                      ) AS asset_disposal_value ,
-                      	  (
-		SELECT MAX(move_sub.date)
-		FROM account_move move_sub
-		WHERE move_sub.asset_id = asset.id
-	  ) AS last_depreciation_date
+            sql=f"""
+                    WITH limited_assets AS (
+                        SELECT asset.id
+                        FROM account_asset asset
+                        WHERE asset.active = true
+                          AND (asset.disposal_date >= %(date_from)s OR asset.disposal_date IS NULL)
+                          AND asset.company_id IN %(company_ids)s
+                          AND asset.state NOT IN ('model', 'draft', 'cancelled')
+                          AND COALESCE(asset.is_accrual, false) = false
+                          AND (
+                              asset.account_asset_id IS NULL OR 
+                              (
+                                  SELECT name ->> 'en_US' 
+                                  FROM account_account 
+                                  WHERE id = asset.account_asset_id
+                              ) NOT ILIKE '%%Lease%%'
+                          )
+                          AND NOT EXISTS (
+                              SELECT 1 FROM leasee_contract lc WHERE lc.asset_id = asset.id
+                          )
+                        ORDER BY asset.id
+                        LIMIT 100
+                    ),
+                    
+                    first_move_sites AS (
+                        WITH first_moves AS (
+                            SELECT asset_id, MIN(id) AS min_move_id
+                            FROM account_move
+                            WHERE asset_id IS NOT NULL
+                            GROUP BY asset_id
+                        )
+                        SELECT
+                            fm.asset_id,
+                            aml.project_site_id
+                        FROM first_moves fm
+                        JOIN LATERAL (
+                            SELECT aml.project_site_id
+                            FROM account_move_line aml
+                            WHERE aml.move_id = fm.min_move_id
+                              AND aml.project_site_id IS NOT NULL
+                            LIMIT 1
+                        ) aml ON true
+                    )
+                    
+                    SELECT 
+                        asset.id AS asset_id, 
+                        asset.parent_id AS parent_id, 
+                        asset.name AS asset_name, 
+                        asset.serial_no AS serial_no, 
+                        asset.original_value AS asset_original_value, 
+                        asset.partial_disposal AS partial_disposal,
+                        asset.currency_id AS asset_currency_id, 
+                        COALESCE(asset.salvage_value, 0) AS asset_salvage_value, 
+                        MIN(move.date) AS asset_date, 
+                        asset.disposal_date AS asset_disposal_date, 
+                        asset.acquisition_date AS asset_acquisition_date, 
+                        asset.method AS asset_method, 
+                        COALESCE(project_sites.name ->> 'en_US', '') AS project_site, 
+                        COALESCE(co_locations.name ->> 'en_US', '') AS co_location, 
+                        asset.capex_type AS capex_type, 
+                        asset.sequence_number AS sequence_number, 
+                        asset.additional_info AS additional_info, 
+                        asset.method_number AS asset_method_number, 
+                        asset.method_period AS asset_method_period, 
+                        asset.method_progress_factor AS asset_method_progress_factor, 
+                        asset.state AS asset_state, 
+                        asset.company_id AS company_id, 
+                        account.code AS account_code, 
+                        COALESCE(account.name ->> 'en_US', '') AS account_name, 
+                        account.id AS account_id, 
+                        model.name AS asset_model_name,
+                        currency.name AS currency_name,
+                        COALESCE(first_move_site.name ->> 'en_US', '') AS first_move_project_site,
+                    
+                        -- Depreciation amounts
+                        COALESCE(
+                            SUM(move.depreciation_value) FILTER (
+                                WHERE move.date < %(date_from)s AND {move_filter}
+                            ), 0
+                        ) + COALESCE(asset.already_depreciated_amount_import, 0) AS depreciated_before,
+                    
+                        COALESCE(
+                            SUM(move.depreciation_value) FILTER (
+                                WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter}
+                            ), 0
+                        ) AS depreciated_during,
+                    
+                        COALESCE(
+                            SUM(move.depreciation_value) FILTER (
+                                WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} 
+                                  AND move.ref NOT ILIKE '%%Disposal%%'
+                            ), 0
+                        ) AS depreciated_for_the_year,
+                    
+                        COALESCE(
+                            SUM(move.depreciation_value) FILTER (
+                                WHERE move.date BETWEEN %(date_from)s AND %(date_to)s AND {move_filter} 
+                                  AND (move.asset_number_days IS NULL OR move.ref ILIKE '%%Disposal%%')
+                            ), 0
+                        ) AS asset_disposal_value,
+                    
+                        (
+                            SELECT MAX(move_sub.date)
+                            FROM account_move move_sub
+                            WHERE move_sub.asset_id = asset.id
+                        ) AS last_depreciation_date
+                    
                     FROM 
-                      account_asset asset 
-                      LEFT JOIN account_account account ON asset.account_asset_id = account.id 
-                      LEFT JOIN account_analytic_account project_sites ON asset.project_site_id = project_sites.id 
-                      LEFT JOIN account_analytic_account co_locations ON asset.co_location = co_locations.id 
-                      LEFT JOIN account_move move ON move.asset_id = asset.id 
-                      LEFT JOIN account_asset model ON model.id = asset.model_id
-                      LEFT JOIN res_currency currency ON asset.currency_id= currency.id
+                        account_asset asset
+                        JOIN limited_assets la ON la.id = asset.id
+                    
+                        LEFT JOIN account_account account ON asset.account_asset_id = account.id 
+                        LEFT JOIN account_analytic_account project_sites ON asset.project_site_id = project_sites.id 
+                        LEFT JOIN account_analytic_account co_locations ON asset.co_location = co_locations.id 
+                        LEFT JOIN account_move move ON move.asset_id = asset.id 
+                        LEFT JOIN account_asset model ON model.id = asset.model_id
+                        LEFT JOIN res_currency currency ON asset.currency_id = currency.id
+                    
+                        LEFT JOIN first_move_sites fms ON fms.asset_id = asset.id
+                        LEFT JOIN account_analytic_account first_move_site ON fms.project_site_id = first_move_site.id
+                    
                     WHERE 
-                      asset.active 
-                      AND (asset.disposal_date >=  %(date_from)s OR asset.disposal_date IS NULL)
-                      AND asset.company_id in %(company_ids)s
-                      AND asset.state NOT IN ('model', 'draft', 'cancelled') 
-                      AND (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
-                      AND asset.active = 't'
-                      AND COALESCE(asset.is_accrual, false) = false
-                      AND (account.name ->> 'en_US') NOT ILIKE '%%Lease%%'
-                      AND NOT EXISTS (
-                          SELECT 1 FROM leasee_contract lc WHERE lc.asset_id = asset.id
-                      )
+                        (asset.acquisition_date <= %(date_to)s OR move.date <= %(date_to)s)
+                    
                     GROUP BY 
-                      asset.id, 
-                      account.id, 
-                      currency.id,
-                      project_sites.id, 
-                      co_locations.id, 
-                      model.name
-                    LIMIT 100;"""
+                        asset.id, 
+                        account.id, 
+                        currency.id,
+                        project_sites.id, 
+                        co_locations.id, 
+                        model.name,
+                        first_move_site.name;
+                """
             self._cr.execute(sql, query_params)
             results = self._cr.dictfetchall()
             return results

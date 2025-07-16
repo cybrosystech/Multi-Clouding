@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-
         <record id="assets_report_depreciation_schedule_functional" model="account.report">
             <field name="name">Tasc Depreciation Schedule Functional</field>
             <field name="filter_hierarchy">optional</field>
@@ -33,6 +32,12 @@
                         model="account.report.column">
                     <field name="name">Project/Site</field>
                     <field name="expression_label">project_site</field>
+                    <field name="figure_type">string</field>
+                </record>
+                 <record id="depreciation_schedule_functional_original_project_site"
+                        model="account.report.column">
+                    <field name="name">Original Project/Site</field>
+                    <field name="expression_label">original_project_site</field>
                     <field name="figure_type">string</field>
                 </record>
                 <record id="depreciation_schedule_functional_co_location"
