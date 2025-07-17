@@ -10,7 +10,7 @@
             <button name="action_activate" position="after">
                 <button name="action_electricity" string="Electricity"
                         class="oe_highlight"
-                        invisible="electricity_button_bool != True or (state!= 'active' and electricity_amount == 0)"
+                        invisible="(state not in ['active','extended','expired'] and electricity_amount !=0 ) or (electricity_amount == 0) or (electricity_id)"
                         type="object"/>
             </button>
             <button name="action_open_bills" position="after">

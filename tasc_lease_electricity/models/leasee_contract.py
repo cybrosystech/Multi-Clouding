@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import logging
 _logger = logging.getLogger(__name__)
 
@@ -7,6 +8,9 @@ from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 from odoo.tools.safe_eval import dateutil
 import dateutil.relativedelta as relativedelta
+
+BATCH_SIZE = 500  # Adjust as needed
+
 
 class LeaseeContract(models.Model):
     """Inherit leasee contract to add electricity details"""
@@ -154,3 +158,98 @@ class LeaseeContract(models.Model):
             electricity_moves.button_cancel()
         return super(LeaseeContract, self).process_termination(
             disposal_date)
+
+
+    def action_set_lease_type(self):
+        self._process_dimension_batch('leasee_contract_id', 'rent', BATCH_SIZE)
+        self._process_dimension_batch('lease_security_advance_id', 'security',
+                                      BATCH_SIZE)
+        self._process_dimension_batch('lease_electricity_id', 'electricity',
+                                      BATCH_SIZE)
+
+
+    def _process_dimension_batch(self, related_field, dimension_value, batch_size):
+        """Method to update security,installment and electricity bills in batches"""
+        domain = [
+            ('dimension', '=', False),
+            (related_field, '!=', False),
+            ('move_type', 'in', ['in_invoice', 'in_refund'])
+        ]
+
+        moves = self.env['account.move'].search(domain, limit=batch_size)
+        _logger.info(f"[Dimension Update] Found {len(moves)} records to update to '{dimension_value}'.")
+
+        for move in moves:
+            try:
+                with self.env.cr.savepoint():
+                    move.dimension = dimension_value
+                    if move.state == 'posted' and move.payment_state != 'not_paid':
+                        raw_widget = move.invoice_payments_widget
+                        if not raw_widget:
+                            continue
+
+                        # Step 2: Parse the JSON safely
+                        try:
+                            widget_data = json.loads(raw_widget)
+                        except Exception as e:
+                            _logger.warning(
+                                f"Failed to parse invoice_payments_widget for move {move.name}: {e}")
+                            continue
+
+                        # Step 3: Extract payment IDs
+                        payment_ids = set()
+                        for section in widget_data.get('content', []):
+                            account_payment_id = section.get('account_payment_id')
+                            if account_payment_id:
+                                payment_ids.add(account_payment_id)
+
+                        if not payment_ids:
+                            _logger.info(
+                                f"No payment IDs found for move {move.name}")
+                            continue
+
+                        # Step 4: Update related payments with the move’s dimension
+                        payments = self.env['account.payment'].browse(payment_ids)
+                        payments_to_update = payments.filtered(
+                            lambda p: not p.dimension)
+                        payments_to_update.write({'dimension': move.dimension})
+
+                        _logger.info(
+                            f"Updated {len(payments_to_update)} payments for move {move.name} with dimension '{move.dimension}'")
+            except Exception as e:
+                _logger.warning(f"[Dimension Update] Failed on {move.name or move.id}: {str(e)}")
+
+
+    def action_update_payable_account(self, batch_size=500):
+        _logger.info("Scheduled batch: Updating payable accounts")
+
+        AccountMoveLine = self.env['account.move.line']
+        ICP = self.env['ir.config_parameter'].sudo()
+
+        # Get last processed record ID
+        last_id = int(ICP.get_param('update_payable_last_id', '0'))
+
+        # Fetch next batch
+        lines = AccountMoveLine.search([
+            ('id', '>', last_id),
+            ('move_id.lease_security_advance_id', '!=', False),
+            ('parent_state', '=', 'draft'),
+            ('account_id.internal_group', '=', 'liability'),
+        ], order='id', limit=batch_size)
+
+        if not lines:
+            _logger.info("✅ All records processed. Resetting progress.")
+            ICP.set_param('update_payable_last_id', '0')  # Reset for next run
+            return
+
+        for line in lines:
+            correct_account = line.move_id.lease_security_advance_id.leasee_contract_id.leasee_template_id.security_liability_account_id
+            if correct_account and line.account_id != correct_account:
+                line.account_id = correct_account.id
+
+        # Save progress
+        max_id = max(lines.mapped('id'))
+        ICP.set_param('update_payable_last_id', str(max_id))
+
+        _logger.info(f"✅ Processed batch up to line ID {max_id}")
+        self._cr.commit()

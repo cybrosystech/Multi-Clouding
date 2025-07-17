@@ -9,12 +9,13 @@
     'depends': ['base', 'lease_management'],
     'data':
         [
+            'data/leasee_contract_data.xml',
             'security/ir.model.access.csv',
             'views/lease_electricity_views.xml',
             'views/leasee_contract_template_views.xml',
             'views/leasee_contract_views.xml',
         ],
-  "license": 'AGPL-3',
+     "license": 'AGPL-3',
     'installable': True,
     'auto_install': False,
     'application': False,

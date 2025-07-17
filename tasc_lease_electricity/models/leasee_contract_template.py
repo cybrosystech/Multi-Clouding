@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from odoo import fields, models
 
 
@@ -11,4 +12,3 @@ class LeaseContractTemplate(models.Model):
                                                  string="Electricity Due From")
     electricity_liability_account_id = fields.Many2one('account.account',
                                                    string="Electricity Liability Account")
-
