@@ -431,11 +431,12 @@ class AccountMove(models.Model):
                                     precision_rounding=move_line.company_currency_id.rounding)
                             else:
                                 original_value = amount_left
-
-                            if len(rec.stock_move_id.move_line_ids) > 1:
-                                sn = rec.stock_move_id.move_line_ids[i].lot_id.name
-                            else:
-                                sn = rec.stock_move_id.move_line_ids[0].lot_id.name
+                            sn = ''
+                            if rec.stock_move_id and rec.stock_move_id.move_line_ids:
+                                if len(rec.stock_move_id.move_line_ids) > 1:
+                                    sn = rec.stock_move_id.move_line_ids[i].lot_id.name
+                                else:
+                                    sn = rec.stock_move_id.move_line_ids[0].lot_id.name
 
                             vals = {
                                 'name': move_line.name,
@@ -507,11 +508,12 @@ class AccountMove(models.Model):
                                 else:
                                     original_value = amount_left
 
-
-                                if len(rec.stock_move_id.move_line_ids) > 1:
-                                    sn = rec.stock_move_id.move_line_ids[i].lot_id.name
-                                else:
-                                    sn = rec.stock_move_id.move_line_ids[0].lot_id.name
+                                sn = ''
+                                if rec.stock_move_id and rec.stock_move_id.move_line_ids:
+                                    if len(rec.stock_move_id.move_line_ids) > 1:
+                                        sn = rec.stock_move_id.move_line_ids[i].lot_id.name
+                                    else:
+                                        sn = rec.stock_move_id.move_line_ids[0].lot_id.name
                                 vals = {
                                     'name': move_line.name,
                                     'company_id': move_line.company_id.id,
