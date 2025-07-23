@@ -15,6 +15,12 @@
                 <field name="project_site_id"/>
             </xpath>
 
+            <xpath expr="//form/sheet/group[1]/group[1]/field[@name='location_dest_id'][2]"
+                   position="replace">
+                <field name="location_dest_id" options="{'no_create': True}"
+                       groups="stock.group_stock_multi_locations"
+                       readonly="state == 'done'"/>
+            </xpath>
         </field>
     </record>
 
