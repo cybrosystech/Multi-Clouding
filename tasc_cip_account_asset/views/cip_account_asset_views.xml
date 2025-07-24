@@ -22,6 +22,7 @@
                     </div>
 
                     <group>
+                        <field name="name"/>
                         <field name="cip_asset_journal_entry_id"
                                invisible="1"/>
                         <field name="company_id"/>
@@ -69,7 +70,8 @@
         <field name="name">cip.account.asset.view.list</field>
         <field name="model">cip.account.asset</field>
         <field name="arch" type="xml">
-            <tree string="Samples">
+            <tree string="CIP Asset">
+                <field name="name"/>
                 <field name="t_budget"/>
                 <field name="site_status"/>
                 <field name="account_id"/>

@@ -9,6 +9,8 @@ class CipAccountAsset(models.Model):
     _name = 'cip.account.asset'
     _description = 'CIP Account Asset'
 
+
+    name = fields.Char(copy=False)
     site_status = fields.Selection(
         [('on_air', 'ON AIR'), ('off_air', 'OFF AIR'), ])
     t_budget = fields.Selection(
@@ -34,25 +36,29 @@ class CipAccountAsset(models.Model):
 
         for rec in self.cip_line_ids:
             invoice_lines.append((0, 0, {
+                'quantity': rec.quantity,
                 'analytic_account_id': rec.analytic_account_id.id,
                 'project_site_id': rec.project_site_id.id,
                 'account_id': rec.cip_account_id.id,
                 'debit': rec.amount ,
                 'credit': 0,
+                'product_uom_id': rec.product_id.uom_id.id,
             }))
             invoice_lines.append((0, 0, {
-                'name': rec.product_id.name,
+                'quantity': rec.quantity,
+                'name': rec.product_id.name +" - "+self.name,
                 'analytic_account_id': rec.analytic_account_id.id,
                 'project_site_id': rec.project_site_id.id,
                 'account_id': rec.asset_account_id.id,
                 'debit': 0,
                 'credit': rec.amount,
+                'product_uom_id': rec.product_id.uom_id.id,
             }))
 
         invoice = self.env['account.move'].create({
             'move_type': 'entry',
+            'ref': self.name,
             'currency_id': self.company_id.currency_id.id,
-            'ref': 'CIP Asset Entry',
             'line_ids': invoice_lines,
             'date': fields.Date.today(),
             'journal_id': journal_id.id,

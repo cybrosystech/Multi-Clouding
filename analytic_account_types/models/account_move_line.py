@@ -481,6 +481,7 @@ class AccountMove(models.Model):
                                     and not move.reversed_entry_id
                                     and not move_line.asset_ids
                             ):
+                                print("gggggggggggggggggg")
                                 if not move_line.name:
                                     # if self.env.context.get('cip_asset') and move_line.debit!=0:
                                     #     pass
@@ -490,12 +491,20 @@ class AccountMove(models.Model):
                                             account=move_line.account_id.display_name))
                                 amount_total = amount_left = move_line.debit + move_line.credit
                                 unit_uom = self.env.ref('uom.product_uom_unit')
+                                print("account",move_line.account_id.multiple_assets_per_line)
+                                print("hhhhhhhhhh",move_line.product_uom_id)
+                                print("kkkkkkkkkk",move_line.product_uom_id.category_id)
+                                print("yyyyyyyyyy",unit_uom.category_id)
+                                print("iiiiiiiiiii",move_line.product_uom_id)
                                 if move_line.account_id.multiple_assets_per_line and (
                                         (
                                                 move_line.product_uom_id and move_line.product_uom_id.category_id.id == unit_uom.category_id.id) or not move_line.product_uom_id):
+                                    print("jjjjjjjjjjj",move_line.quantity)
                                     units_quantity = move_line.product_uom_id._compute_quantity(
                                         move_line.quantity, unit_uom, False)
+                                    print("units_quantity",units_quantity)
                                 else:
+                                    print("ccccccccccccc")
                                     units_quantity = 1
                                 i = 0
                                 rec = self.env['stock.valuation.layer'].search(
@@ -519,7 +528,7 @@ class AccountMove(models.Model):
                                         else:
                                             sn = rec.stock_move_id.move_line_ids[0].lot_id.name
                                     vals = {
-                                        'name': move_line.name,
+                                        'name': move_line.move_id.name+" - "+move_line.name,
                                         'company_id': move_line.company_id.id,
                                         'currency_id': move_line.company_currency_id.id,
                                         'analytic_account_id': move_line.analytic_account_id.id,
@@ -567,12 +576,21 @@ class AccountMove(models.Model):
                                             account=move_line.account_id.display_name))
                                 amount_total = amount_left = move_line.debit + move_line.credit
                                 unit_uom = self.env.ref('uom.product_uom_unit')
+                                print("account1",
+                                      move_line.account_id.multiple_assets_per_line)
+                                print("hhhhhhhhhh1", move_line.product_uom_id)
+                                print("kkkkkkkkkk1",
+                                      move_line.product_uom_id.category_id)
+                                print("yyyyyyyyyy1", unit_uom.category_id)
+                                print("iiiiiiiiiii2", move_line.product_uom_id)
                                 if move_line.account_id.multiple_assets_per_line and (
                                         (
                                                 move_line.product_uom_id and move_line.product_uom_id.category_id.id == unit_uom.category_id.id) or not move_line.product_uom_id):
+                                    print("ssssssssssss")
                                     units_quantity = move_line.product_uom_id._compute_quantity(
                                         move_line.quantity, unit_uom, False)
                                 else:
+                                    print("tttttttttt")
                                     units_quantity = 1
                                 i = 0
                                 rec = self.env['stock.valuation.layer'].search(
