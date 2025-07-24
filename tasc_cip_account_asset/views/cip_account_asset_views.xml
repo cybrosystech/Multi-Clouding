@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- form view -->
+    <record id="cip_account_asset_view_form" model="ir.ui.view">
+        <field name="name">cip.account.asset.view.form</field>
+        <field name="model">cip.account.asset</field>
+        <field name="arch" type="xml">
+            <form string="CIP Asset">
+                <header>
+                    <button name="button_action_create_entry"
+                            string="Create Entry" type="object"
+                            class="btn-primary"
+                            invisible="cip_asset_journal_entry_id or not cip_line_ids"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button string="CIP Asset Entry "
+                                name="view_cip_asset_entry"
+                                type="object" class="btn-secondary"
+                                invisible="not cip_asset_journal_entry_id"
+                        />
+                    </div>
+
+                    <group>
+                        <field name="cip_asset_journal_entry_id"
+                               invisible="1"/>
+                        <field name="company_id"/>
+                        <field name="t_budget"/>
+                        <field name="site_status"/>
+                        <field name="account_id"/>
+                        <field name="project_site_id"/>
+                        <button name="action_generate_lines" string="Generate "
+                                type="object" class="btn-primary"
+                                invisible="cip_asset_journal_entry_id"/>
+                    </group>
+                    <notebook>
+                        <page string="Journal Items">
+                            <field name="cip_line_ids">
+                                <tree editable="bottom" create="false">
+                                    <field name="product_id" readonly="1"/>
+                                    <field name="quantity" readonly="1"/>
+                                    <field name="company_currency_id"
+                                           invisible="1"
+                                           column_invisible="1"/>
+                                    <field name="amount" readonly="1"/>
+                                    <field name="analytic_account_id" readonly="1"/>
+                                    <field name="project_site_id" readonly="1"/>
+                                    <field name="site_status" readonly="1"/>
+                                    <field name="t_budget" readonly="1"/>
+                                    <field name="cip_account_id" readonly="1"/>
+                                    <field name="asset_account_id" />
+                                    <field name="item_id" invisible="1"
+                                           column_invisible="1"/>
+                                    <field name="cip_account_asset_id"
+                                           invisible="1"
+                                           column_invisible="1"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- list view -->
+    <record id="cip_account_asset_view_list" model="ir.ui.view">
+        <field name="name">cip.account.asset.view.list</field>
+        <field name="model">cip.account.asset</field>
+        <field name="arch" type="xml">
+            <tree string="Samples">
+                <field name="t_budget"/>
+                <field name="site_status"/>
+                <field name="account_id"/>
+                <field name="project_site_id"/>
+            </tree>
+        </field>
+    </record>
+
+
+    <!-- Action -->
+    <record id="cip_account_asset_action" model="ir.actions.act_window">
+        <field name="name">CIP Asset</field>
+        <field name="res_model">cip.account.asset</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Menus -->
+
+    <menuitem name="Tasc Cip Asset"
+              id="cip_account_asset_menu"
+              parent="account.menu_finance_entries_management"
+              action="cip_account_asset_action"/>
+</odoo>

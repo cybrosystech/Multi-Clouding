@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_cip_account_asset_user,access.cip.account.asset.user,model_cip_account_asset,base.group_user,1,1,1,1
+access_cip_account_move_line_user,access.cip.account.move.line.user,model_cip_account_move_line,base.group_user,1,1,1,1
