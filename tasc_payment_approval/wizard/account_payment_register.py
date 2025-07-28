@@ -41,7 +41,6 @@ def _create_payment_vals_from_batch(self, batch_result):
             tasc_ref = ', '.join(tasc_ref)
         else:
             tasc_ref = ''
-
     payment_vals = {
         'date': self.payment_date,
         'amount': batch_values['source_amount_currency'],
@@ -190,8 +189,7 @@ class AccountPaymentRegister(models.TransientModel):
         else:
             tasc_ref = ''
         vals.update({'purpose_code_id': self.purpose_code_id.id,
-                     'tasc_reference':tasc_ref if tasc_ref else '',
-                     'dimension': move.dimension if move and move.dimension else ''})
+                     'tasc_reference':tasc_ref if tasc_ref else '',})
         return vals
 
     def _create_payment_vals_from_batch(self, batch_result):
@@ -206,5 +204,12 @@ class AccountPaymentRegister(models.TransientModel):
                 tasc_ref = ''
         res.update({'purpose_code_id': self.purpose_code_id.id,
                     'tasc_reference':batch_result["tasc_reference"] if batch_result.get("tasc_reference") else tasc_ref,
-                    'dimension': batch_result["dimension"] if batch_result.get('dimension') else ''})
+                    'dimension': batch_result["payment_values"]["dimension"] if batch_result["payment_values"].get('dimension') else ''})
+        return res
+
+    @api.model
+    def _get_line_batch_key(self, line):
+        # OVERRIDE to set the bank account defined on the employee
+        res = super()._get_line_batch_key(line)
+        res['dimension'] = line.move_id.dimension
         return res

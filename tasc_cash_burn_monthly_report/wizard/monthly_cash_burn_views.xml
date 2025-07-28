@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="cash_burn_report_gl_wizard_view_form" model="ir.ui.view">
+        <field name="name">TASC Cash Burn GL Test view</field>
+        <field name="model">monthly.cash.burn</field>
+        <field name="arch" type="xml">
+            <form string="Report Options">
+                <group>
+                    <group>
+                        <field name="company_id" readonly="True"/>
+                    </group>
+                    <group>
+                        <field name="year"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="print_report_xlsx" string="PRINT"
+                            type="object"
+                            default_focus="1" class="oe_highlight"/>
+                    <button string="Cancel" class="btn btn-default"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_cash_burn_report_gl_wizard"
+            model="ir.actions.act_window">
+        <field name="name">TASC Cash Burn Monthly</field>
+        <field name="res_model">monthly.cash.burn</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+    <menuitem id="menu_cash_burn_report_gl_test"
+              name="TASC Cash Burn Monthly"
+              parent="cash_flow_statement_report.tasc_dynamic_reports"
+              action="action_cash_burn_report_gl_wizard"/>
+</odoo>
